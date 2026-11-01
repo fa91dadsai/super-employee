@@ -2675,6 +2675,274 @@ body.dark .closing-dept-chip.on {
   cursor: pointer;
 }
 
+    
+/* ==========================================================================
+   SUPER EMPLOYEE v10:
+   - Clean Non-Overlapping Top Header (☰ + Dynamic Super Role Title + 🔔 + Avatar)
+   - Contextual Lock/Edit/Date/Progress inside Section Bar
+   - Relocated Damage/Repair Button (No Sticky Bottom Overlap)
+   - Compact Collapsible Alert Banner & 🔔 Notification Center Modal
+   - Quick Role Switcher Pill (Super Waiter / Bartender / Captain / Manager)
+   ========================================================================== */
+
+/* 1. Eliminate Top Bar Clutter & Overlap on 375px Mobile */
+header.top {
+  padding: calc(8px + env(safe-area-inset-top)) 12px 8px !important;
+}
+header.top .bar {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  flex-wrap: nowrap !important;
+  min-height: 46px !important;
+}
+
+/* Hide legacy buttons from top bar (moved to their proper sections) */
+header.top .bar #lockBtn,
+header.top .bar #langBtn,
+header.top .bar #modeBtn,
+header.top .bar #ring,
+header.top .bar #metaBtn {
+  display: none !important;
+}
+
+header.top .ttl {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  gap: 2px !important;
+}
+
+header.top .brand-top-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  min-width: 0 !important;
+}
+
+header.top .rest-badge {
+  font-size: 0.66rem !important;
+  padding: 1px 7px !important;
+  max-width: 190px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+header.top .title-sub-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  min-width: 0 !important;
+}
+
+header.top h1#title {
+  font-size: 1.02rem !important;
+  font-weight: 800 !important;
+  line-height: 1.2 !important;
+  margin: 0 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  color: #ffffff !important;
+}
+
+header.top .active-sec-pill {
+  font-size: 0.66rem !important;
+  padding: 2px 7px !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
+/* Header Right Cluster: Notification Bell 🔔 + Profile Avatar */
+.top-right-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.notif-bell-btn {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  display: inline-grid;
+  place-items: center;
+  font-size: 1.05rem;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.notif-bell-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+.notif-bell-badge {
+  position: absolute;
+  top: -4px;
+  inset-inline-end: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 99px;
+  background: #e25544;
+  color: #ffffff;
+  font-size: 0.66rem;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+  border: 2px solid #16222f;
+}
+.notif-bell-badge.snoozed-only {
+  background: #d9822b;
+}
+
+/* 2. Remove Sticky Floating Bottom "Report damage" Bar */
+aside.quick-report {
+  display: none !important;
+}
+body {
+  padding-bottom: 24px !important;
+}
+
+/* 3. Compact Single-Banner Alert Styling in Header */
+header.top .health-banner,
+header.top .banner {
+  margin-top: 6px !important;
+  padding: 8px 10px !important;
+  border-radius: 11px !important;
+  font-size: 0.78rem !important;
+}
+header.top .banner-actions,
+header.top .health-banner-actions {
+  margin-top: 6px !important;
+  gap: 5px !important;
+}
+header.top .snooze-btn {
+  min-height: 28px !important;
+  padding: 2px 8px !important;
+  font-size: 0.72rem !important;
+}
+
+/* 4. Contextual Section Header Toolbar (Date, Shift Leaders, Progress %, Lock & Edit) */
+.sec-context-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  border-radius: 14px;
+  background: var(--card);
+  border: 1px solid var(--line);
+}
+.sec-ctx-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.sec-progress-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 99px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 800;
+  font-size: 0.78rem;
+  border: 1px solid rgba(47, 107, 94, 0.3);
+}
+.sec-meta-btn {
+  min-height: 32px;
+  padding: 4px 10px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* 5. Role-Scoped Workspace Banner & Quick Role Switcher */
+.role-workspace-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 9px 12px;
+  margin-bottom: 10px;
+  border-radius: 13px;
+  background: var(--accent-soft);
+  border: 1px solid rgba(47, 107, 94, 0.3);
+  font-size: 0.78rem;
+}
+.role-switch-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.role-switch-pill {
+  min-height: 28px;
+  padding: 2px 9px;
+  border-radius: 99px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.role-switch-pill.on {
+  background: var(--accent) !important;
+  color: #ffffff !important;
+  border-color: var(--accent) !important;
+}
+body.dark .role-switch-pill.on {
+  color: #041612 !important;
+}
+
+/* 6. Notification Center Dialog */
+.notif-center-card {
+  padding: 12px;
+  border-radius: 13px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  margin-bottom: 10px;
+}
+.notif-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 9px 10px;
+  border-radius: 11px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  margin-top: 8px;
+}
+.notif-countdown-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: var(--amber-soft);
+  color: var(--amber);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
     </style>
   </head>
   <body>
@@ -8487,10 +8755,10 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
       if (window.caches) {
         caches.keys().then((ks) => ks.forEach((k) => {
-          if (k !== 'super-employee-v8') caches.delete(k);
+          if (k !== 'super-employee-v10') caches.delete(k);
         })).catch(() => {});
       }
-      navigator.serviceWorker.register('sw.js?v=9', { updateViaCache: 'none' }).then((reg) => {
+      navigator.serviceWorker.register('sw.js?v=10', { updateViaCache: 'none' }).then((reg) => {
         reg.update().catch(() => {});
       }).catch(() => {});
     }
@@ -14467,6 +14735,855 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   }
 
 
+    // ============================================================================
+  // 12. SUPER EMPLOYEE v10 UPGRADE:
+  //     - Clean Header (☰ + Dynamic Role App Name + 🔔 Notification Bell + Avatar)
+  //     - Contextual Lock/Edit/Date/Progress inside Checklist Section
+  //     - Relocated "Report Damage / Repair" to Inventory & Sidebar
+  //     - Role-Scoped Workspace (Super Waiter / Super Bartender / Super Captain / Super Manager)
+  //     - Precision Disappear-and-Reappear Snooze Engine + Lock-Screen Push
+  // ============================================================================
+  const SNOOZE_TIMERS_KEY = 'super-employee.snoozeTimers.v2';
+  let roleScopeOnly = true; // Automatically scopes checklist & tasks to employee's role
+
+  const ROLE_APP_IDENTITY = {
+    super_manager: {
+      titleEn: '👑 Super Manager',
+      titleAr: '👑 Super Manager · سوبر مانجر',
+      subEn: 'Full Restaurant & Bar Management Workspace',
+      subAr: 'منصة الإدارة الشاملة للمطعم والبار والتحليلات',
+      allowedViews: ['opening', 'closing_sheet', 'mine', 'orders', 'inv', 'academy', 'tips', 'dashboard', 'profile', 'settings'],
+      openingKeywords: null, // all sections
+      closingDept: 'all',
+    },
+    super_captain: {
+      titleEn: '🎖️ Super Captain',
+      titleAr: '🎖️ Super Captain · سوبر كابتن',
+      subEn: 'Floor Leadership, Last Order & Closing Sign-off',
+      subAr: 'قيادة الصالة، إعلان الـ Last Order واعتماد الإغلاق',
+      allowedViews: ['opening', 'closing_sheet', 'mine', 'orders', 'inv', 'academy', 'tips', 'dashboard', 'profile'],
+      openingKeywords: null, // all floor & station sections
+      closingDept: 'all',
+    },
+    super_bartender: {
+      titleEn: '🍸 Super Bartender',
+      titleAr: '🍸 Super Bartender · سوبر بارتندر',
+      subEn: 'Bar Prep, Cocktails, Beverage Orders & Bar Closing',
+      subAr: 'واجهة ومهام البار المخصصة · المشروبات، الطلبيات وإغلاق البار',
+      allowedViews: ['opening', 'closing_sheet', 'mine', 'orders', 'inv', 'academy', 'tips', 'profile'],
+      openingKeywords: ['bar', 'station', 'clean', 'staff', 'music', 'بار', 'محطات', 'نظافة', 'موظف'],
+      closingDept: 'bar',
+    },
+    super_waiter: {
+      titleEn: '⭐ Super Waiter',
+      titleAr: '⭐ Super Waiter · سوبر ويتر',
+      subEn: 'Floor Tables, Terrace, Waiter Stations & Menu Academy',
+      subAr: 'واجهة ومهام الويتر المخصصة · تجهيز الطاولات، الصالة والأكاديمية',
+      allowedViews: ['opening', 'closing_sheet', 'mine', 'orders', 'academy', 'tips', 'profile'],
+      openingKeywords: ['table', 'floor', 'terrace', 'clean', 'staff', 'music', 'station', 'طاولات', 'صالة', 'تراس', 'نظافة', 'محطات'],
+      closingDept: 'floor',
+    },
+    staff: {
+      titleEn: '⭐ Super Waiter',
+      titleAr: '⭐ Super Waiter · سوبر ويتر',
+      subEn: 'Assigned Shift Tasks, Tables & Menu Academy',
+      subAr: 'مهام الشفت الموكلة لك، الصالة والأكاديمية',
+      allowedViews: ['opening', 'closing_sheet', 'mine', 'academy', 'tips', 'profile'],
+      openingKeywords: ['table', 'floor', 'terrace', 'clean', 'staff', 'طاولات', 'صالة', 'نظافة'],
+      closingDept: 'floor',
+    },
+  };
+
+  function getAppRoleIdentity() {
+    const rKey = getCurrentSuperRoleKey();
+    return ROLE_APP_IDENTITY[rKey] || ROLE_APP_IDENTITY.super_waiter;
+  }
+
+  // Switch active employee account in 1 tap (for testing & quick terminal handoff)
+  function quickSwitchEmployeeAccount(username) {
+    const ar = isAr();
+    const accounts = {
+      fadi: {
+        username: 'fadi',
+        firstName: 'Fadi',
+        lastName: 'Al-Masri',
+        displayName: ar ? 'فادي (سوبر مانجر)' : 'Fadi (Super Manager)',
+        roleName: '👑 Super Manager',
+        roleAr: '👑 سوبر مانجر',
+        isManager: true,
+        shift: '12:00 – 02:00 · Restaurant Manager',
+      },
+      ali: {
+        username: 'ali',
+        firstName: 'Ali',
+        lastName: 'Hassan',
+        displayName: ar ? 'علي (سوبر كابتن)' : 'Ali (Super Captain)',
+        roleName: '🎖️ Super Captain',
+        roleAr: '🎖️ سوبر كابتن',
+        isManager: true,
+        shift: '12:00 – 02:00 · Floor Captain',
+      },
+      maher: {
+        username: 'maher',
+        firstName: 'Maher',
+        lastName: 'Zaid',
+        displayName: ar ? 'ماهر (سوبر بارتندر)' : 'Maher (Super Bartender)',
+        roleName: '🍸 Super Bartender',
+        roleAr: '🍸 سوبر بارتندر',
+        isManager: false,
+        shift: '12:00 – 02:00 · Main Bar Lead',
+      },
+      sara: {
+        username: 'sara',
+        firstName: 'Sara',
+        lastName: 'Khoury',
+        displayName: ar ? 'سارة (سوبر ويتر)' : 'Sara (Super Waiter)',
+        roleName: '⭐ Super Waiter',
+        roleAr: '⭐ سوبر ويتر',
+        isManager: false,
+        shift: '12:00 – 02:00 · Indoor & Terrace Waiter',
+      },
+    };
+    const target = accounts[username] || accounts.fadi;
+    const prevSess = getSession() || {};
+    const nextSess = {
+      ...prevSess,
+      ...target,
+    };
+    try {
+      localStorage.setItem(SESSION_KEY, JSON.stringify(nextSess));
+      sessionStorage.removeItem(SESSION_KEY);
+    } catch {}
+
+    // Bind S.me to the matching staff & role in S.tpl
+    const targetRoleName = username === 'fadi' ? 'Supervisor' : username === 'ali' ? 'Captain' : username === 'maher' ? 'Bartender' : 'Waiter';
+    let roleObj = (S.tpl.roles || []).find((r) => (r.name || '').toLowerCase().includes(targetRoleName.toLowerCase())) || S.tpl.roles[0];
+    let person = (S.tpl.staff || []).find((p) => (p.name || '').toLowerCase().startsWith(username));
+    if (person && roleObj) {
+      person.role = roleObj.id;
+      S.me = { staffId: person.id, role: roleObj.id, name: person.name };
+      FOH.store.saveMe(S.me);
+    }
+
+    roleScopeOnly = username === 'sara' || username === 'maher';
+    const ident = ROLE_APP_IDENTITY[getCurrentSuperRoleKey()] || ROLE_APP_IDENTITY.super_waiter;
+    if (isClosingSheetActive()) {
+      activeClosingDeptFilter = ident.closingDept || 'all';
+    }
+    if (!ident.allowedViews.includes(S.view)) {
+      S.view = 'opening';
+    }
+    location.reload();
+  }
+
+  // ---- Precision Disappear-and-Reappear Snooze Timer Engine ----
+  function loadSnoozeTimers() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(SNOOZE_TIMERS_KEY) || '{}');
+      return raw && typeof raw === 'object' ? raw : {};
+    } catch {
+      return {};
+    }
+  }
+
+  function saveSnoozeTimers(map) {
+    try {
+      localStorage.setItem(SNOOZE_TIMERS_KEY, JSON.stringify(map));
+    } catch {}
+  }
+
+  function isAlertSnoozedNow(alertKey) {
+    const map = loadSnoozeTimers();
+    const entry = map[alertKey];
+    if (!entry || !entry.wakeAtMs) return false;
+    return Date.now() < entry.wakeAtMs;
+  }
+
+  function getActiveSnoozeTimersList() {
+    const map = loadSnoozeTimers();
+    const now = Date.now();
+    return Object.entries(map)
+      .filter(([, v]) => v && v.wakeAtMs > now)
+      .map(([k, v]) => ({ key: k, ...v, remainingSec: Math.max(1, Math.ceil((v.wakeAtMs - now) / 1000)) }))
+      .sort((a, b) => a.wakeAtMs - b.wakeAtMs);
+  }
+
+  async function ensureNotificationPermission() {
+    if (!('Notification' in window)) return 'unsupported';
+    if (Notification.permission === 'granted') return 'granted';
+    if (Notification.permission === 'default') {
+      try {
+        return await Notification.requestPermission();
+      } catch {
+        return Notification.permission;
+      }
+    }
+    return Notification.permission;
+  }
+
+  async function fireNativeLockScreenNotification(title, body, tag) {
+    try {
+      if (navigator.vibrate) navigator.vibrate([220, 100, 220]);
+    } catch {}
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    try {
+      if ('serviceWorker' in navigator) {
+        const reg = await navigator.serviceWorker.getRegistration();
+        if (reg && reg.showNotification) {
+          await reg.showNotification(title, {
+            body,
+            icon: './icons/icon-192.png',
+            badge: './icons/icon-192.png',
+            tag: tag || 'super-emp-alert',
+            renotify: true,
+            requireInteraction: true,
+            vibrate: [220, 100, 220, 100, 300],
+            data: './',
+          });
+          return;
+        }
+      }
+      new Notification(title, { body, icon: './icons/icon-192.png', tag: tag || 'super-emp-alert' });
+    } catch {}
+  }
+
+  async function scheduleServiceWorkerNotification(id, title, body, delayMs) {
+    await ensureNotificationPermission();
+    try {
+      if ('serviceWorker' in navigator) {
+        const reg = await navigator.serviceWorker.getRegistration();
+        const targetSW = (navigator.serviceWorker && navigator.serviceWorker.controller) || (reg && (reg.active || reg.waiting || reg.installing));
+        if (targetSW) {
+          targetSW.postMessage({
+            type: 'SCHEDULE_NOTIFICATION',
+            id,
+            title,
+            body,
+            delayMs,
+            tag: id,
+          });
+        }
+      }
+    } catch {}
+  }
+
+  function snoozeAlertWithTimer({ ids, bannerGroup, title, body, minutes }) {
+    const ar = isAr();
+    const now = Date.now();
+    const delayMs = Math.max(5000, Math.round(Number(minutes) * 60000));
+    const wakeAtMs = now + delayMs;
+    const wakeDate = new Date(wakeAtMs);
+    const wakeHM = String(wakeDate.getHours()).padStart(2, '0') + ':' + String(wakeDate.getMinutes()).padStart(2, '0');
+
+    const map = loadSnoozeTimers();
+    const targetIds = Array.isArray(ids) && ids.length ? ids : [bannerGroup || 'general_alert'];
+    targetIds.forEach((id) => {
+      map[id] = {
+        wakeAtMs,
+        title: title || (ar ? 'تنبيه Super Employee' : 'Super Employee Alert'),
+        body: body || '',
+        minutes,
+        atHM: FOH.time.nowHM(),
+        wakeHM,
+        notified: false,
+      };
+    });
+    if (bannerGroup) {
+      map['__group_' + bannerGroup] = {
+        wakeAtMs,
+        title: title || (ar ? 'تنبيه Super Employee' : 'Super Employee Alert'),
+        body: body || '',
+        minutes,
+        atHM: FOH.time.nowHM(),
+        wakeHM,
+        notified: false,
+      };
+    }
+    saveSnoozeTimers(map);
+
+    // Also sync with FOH.reminders for compatibility
+    if (FOH.reminders && FOH.reminders.snoozeItems && minutes >= 1) {
+      FOH.reminders.snoozeItems(targetIds, S.date, FOH.time.nowHM(), Math.ceil(minutes));
+    }
+
+    // Immediately hide the banner in the DOM!
+    if (bannerGroup === 'task_banner' && $('banner')) $('banner').hidden = true;
+    if (bannerGroup === 'health_banner' && $('healthAlertBanner')) $('healthAlertBanner').hidden = true;
+
+    // Schedule background / lock-screen notification via Service Worker
+    const notifId = 'snooze_' + (bannerGroup || targetIds[0]);
+    const ident = getAppRoleIdentity();
+    const notifTitle = (ar ? ident.titleAr : ident.titleEn) + ' · 🔔 ' + (title || (ar ? 'تذكير مهمة' : 'Task Reminder'));
+    const notifBody = body || (ar ? 'انتهى وقت التأجيل — يرجى إنجاز المهمة الآن!' : 'Snooze time ended — please complete this task now!');
+    scheduleServiceWorkerNotification(notifId, notifTitle, notifBody, delayMs);
+
+    const minsLabel = minutes < 1 ? (Math.round(minutes * 60) + (ar ? ' ثانية' : 's')) : minutes >= 1440 ? (ar ? 'بقية اليوم' : 'today') : (minutes + (ar ? ' دقيقة' : 'm'));
+    FOH.edit.toast(
+      ar
+        ? '💤 اختفى التنبيه وتم تأجيله لمدة (' + minsLabel + ') · سيظهر ويرسل إشعاراً الساعة ' + wakeHM
+        : '💤 Alert hidden & snoozed for ' + minsLabel + ' · Will reappear & push at ' + wakeHM
+    );
+
+    updateNotifBellUI();
+  }
+
+  // Background watcher every 2 seconds to wake up expired snoozes & re-show banner + push notification
+  function checkExpiredSnoozeTimers() {
+    const map = loadSnoozeTimers();
+    const now = Date.now();
+    let wokeAny = false;
+    let wokeEntry = null;
+
+    Object.keys(map).forEach((k) => {
+      const entry = map[k];
+      if (!entry || !entry.wakeAtMs) return;
+      if (now >= entry.wakeAtMs) {
+        if (!entry.notified && !k.startsWith('__group_')) {
+          wokeEntry = entry;
+        }
+        delete map[k];
+        wokeAny = true;
+      }
+    });
+
+    if (wokeAny) {
+      saveSnoozeTimers(map);
+      if (FOH.reminders && FOH.reminders.clearSnoozesForDate) {
+        FOH.reminders.clearSnoozesForDate(S.date);
+      }
+      if (wokeEntry) {
+        const ar = isAr();
+        const ident = getAppRoleIdentity();
+        fireNativeLockScreenNotification(
+          (ar ? ident.titleAr : ident.titleEn) + ' · ⏰ ' + (wokeEntry.title || ''),
+          wokeEntry.body || (ar ? 'انتهى وقت التأجيل وحان موعد التنبيه!' : 'Snooze ended — reminder is due now!'),
+          'wake_' + Date.now()
+        );
+        FOH.edit.toast(
+          ar
+            ? '🔔 حان موعد التنبيه المؤجل: ' + (wokeEntry.body || wokeEntry.title)
+            : '🔔 Snoozed alert is due now: ' + (wokeEntry.body || wokeEntry.title)
+        );
+      }
+      FOH.app.render();
+    }
+  }
+
+  // ---- Upgrade Both Alert Banners so Snooze Hides Immediately & Never Stacks Clutter ----
+  function renderSmartAlertBanners() {
+    const ar = isAr();
+    const hBox = $('healthAlertBanner');
+    const tBox = $('banner');
+
+    // 1. Check if Task Banner is snoozed as a group
+    if (tBox && !tBox.hidden) {
+      if (isAlertSnoozedNow('__group_task_banner')) {
+        tBox.hidden = true;
+      } else {
+        // Add +1m Quick Test Snooze & wire all snooze buttons to snoozeAlertWithTimer
+        const mainTxt = (tBox.querySelector('.banner-main') || tBox).textContent || '';
+        const acts = tBox.querySelector('.banner-actions');
+        if (acts && !acts.dataset.v10Wired) {
+          acts.dataset.v10Wired = '1';
+          acts.replaceChildren();
+
+          const doneBtn = el('button', 'snooze-btn done-now', ar ? '✓ أُنجزت الآن' : '✓ Done Now');
+          doneBtn.type = 'button';
+          doneBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const due = FOH.reminders.next(FOH.preview.sections(), S.run.checked, FOH.tasksView.todayStates(), S.date, FOH.time.nowHM());
+            const now = FOH.time.nowHM();
+            if (due && due.items) {
+              due.items.forEach((entry) => {
+                if (entry.kind === 'task') {
+                  const st = FOH.schedule.stateOn(entry.item, S.log, S.date, FOH.time.todayISO(), now);
+                  if (st && !st.doneEntry) {
+                    FOH.schedule.toggle(S.log, st, S.date, now, S.me.name);
+                    FOH.store.saveLog(S.log);
+                  }
+                } else {
+                  FOH.model.leaves(entry.item).forEach((lf) => {
+                    S.run.checked[lf.id] = now;
+                  });
+                  FOH.store.saveRun(S.date, S.run);
+                }
+              });
+            }
+            FOH.app.render();
+          });
+          acts.append(doneBtn);
+
+          [
+            [1, ar ? '💤 +1د (تجربة)' : '💤 +1m'],
+            [15, ar ? '💤 +15د' : '💤 +15m'],
+            [30, ar ? '💤 +30د' : '💤 +30m'],
+            [60, ar ? '💤 +1س' : '💤 +1h'],
+            [1440, ar ? '🔕 كتم اليوم' : '🔕 Mute Today'],
+          ].forEach(([mins, lbl]) => {
+            const b = el('button', 'snooze-btn', lbl);
+            b.type = 'button';
+            b.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const due = FOH.reminders.next(FOH.preview.sections(), S.run.checked, FOH.tasksView.todayStates(), S.date, FOH.time.nowHM());
+              snoozeAlertWithTimer({
+                ids: (due && due.ids) || ['task_due'],
+                bannerGroup: 'task_banner',
+                title: ar ? 'تذكير مهمة مستحقة' : 'Due Task Reminder',
+                body: mainTxt.trim(),
+                minutes: mins,
+              });
+            });
+            acts.append(b);
+          });
+        }
+      }
+    }
+
+    // 2. Check Health Banner snooze & prevent double-banner stacking on mobile
+    if (hBox) {
+      if (isAlertSnoozedNow('__group_health_banner')) {
+        hBox.hidden = true;
+      } else if (!hBox.hidden) {
+        // Wire health banner snooze buttons to snoozeAlertWithTimer
+        const hTxt = (hBox.querySelector('b') || hBox).textContent || '';
+        const hActs = hBox.querySelector('.health-banner-actions');
+        if (hActs && !hActs.dataset.v10Wired) {
+          hActs.dataset.v10Wired = '1';
+          hActs.replaceChildren();
+
+          const updBtn = el('button', 'snooze-btn done-now', ar ? '📅 تجديد التاريخ' : '📅 Update Expiry');
+          updBtn.type = 'button';
+          updBtn.addEventListener('click', () => {
+            S.view = 'profile';
+            FOH.app.render();
+          });
+          hActs.append(updBtn);
+
+          [
+            [1, ar ? '💤 +1د (تجربة)' : '💤 +1m'],
+            [60, ar ? '💤 +1س' : '💤 +1h'],
+            [1440, ar ? '🔕 كتم اليوم' : '🔕 Mute Today'],
+          ].forEach(([mins, lbl]) => {
+            const b = el('button', 'snooze-btn', lbl);
+            b.type = 'button';
+            b.addEventListener('click', () => {
+              const alerts = getHealthAlerts();
+              snoozeAlertWithTimer({
+                ids: alerts.map((a) => a.snoozeId),
+                bannerGroup: 'health_banner',
+                title: ar ? 'تنبيه الشهادة الصحية' : 'Health Certificate Alert',
+                body: hTxt.trim(),
+                minutes: mins,
+              });
+            });
+            hActs.append(b);
+          });
+        }
+      }
+    }
+
+    // If BOTH banners are visible simultaneously on mobile, keep only the task banner in the header and put the second inside 🔔 Notification Center so header stays compact!
+    if (hBox && tBox && !hBox.hidden && !tBox.hidden) {
+      hBox.hidden = true;
+    }
+
+    updateNotifBellUI();
+  }
+
+  // ---- Notification Bell 🔔 in Header & Notification Center Modal ----
+  function ensureNotifBellInHeader() {
+    const bar = document.querySelector('header.top .bar');
+    const profBtn = $('profileBtn');
+    if (!bar || !profBtn || $('notifBellBtn')) return;
+
+    const bellBtn = el('button', 'notif-bell-btn');
+    bellBtn.type = 'button';
+    bellBtn.id = 'notifBellBtn';
+    bellBtn.setAttribute('aria-label', 'Notifications');
+    bellBtn.innerHTML = '🔔<span id="notifCountBadge" class="notif-bell-badge" hidden>0</span>';
+    bellBtn.addEventListener('click', openNotificationCenterModal);
+
+    bar.insertBefore(bellBtn, profBtn);
+  }
+
+  function updateNotifBellUI() {
+    ensureNotifBellInHeader();
+    const badge = $('notifCountBadge');
+    if (!badge) return;
+    const hAlerts = isAlertSnoozedNow('__group_health_banner') ? [] : getHealthAlerts();
+    const due = !isAlertSnoozedNow('__group_task_banner')
+      ? FOH.reminders.next(FOH.preview.sections(), S.run.checked, FOH.tasksView.todayStates(), S.date, FOH.time.nowHM())
+      : null;
+    const activeCount = hAlerts.length + (due && due.ids ? due.ids.length : 0);
+    const snoozedList = getActiveSnoozeTimersList().filter((x) => !x.key.startsWith('__group_'));
+    const total = activeCount + snoozedList.length;
+
+    badge.hidden = total === 0;
+    badge.textContent = String(total);
+    badge.classList.toggle('snoozed-only', activeCount === 0 && snoozedList.length > 0);
+  }
+
+  let notifCenterInterval = 0;
+
+  function openNotificationCenterModal() {
+    const ar = isAr();
+    let dlg = $('notifCenterDialog');
+    if (!dlg) {
+      dlg = el('dialog', 'sheet');
+      dlg.id = 'notifCenterDialog';
+      dlg.addEventListener('close', () => clearInterval(notifCenterInterval));
+      dlg.addEventListener('click', (e) => e.target === dlg && dlg.close());
+      document.body.append(dlg);
+    }
+
+    function drawCenter() {
+      dlg.replaceChildren();
+      const box = el('div', '');
+      box.style.padding = '14px 16px 20px';
+
+      const perm = 'Notification' in window ? Notification.permission : 'unsupported';
+      const ident = getAppRoleIdentity();
+
+      box.innerHTML =
+        '<div class="grab"></div>' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;">' +
+        '<h2 style="margin:0;font-size:1.08rem;">🔔 ' + (ar ? 'مركز الإشعارات والتنبيهات المؤجلة' : 'Notification Center & Snoozed Alerts') + '</h2>' +
+        '<span class="super-role-pill">' + (ar ? ident.titleAr : ident.titleEn) + '</span>' +
+        '</div>';
+
+      // Section 1: Lock-Screen & Background Push Test Card
+      const pushCard = el('div', 'notif-center-card');
+      pushCard.style.border = '1.5px solid var(--accent)';
+      pushCard.innerHTML =
+        '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">' +
+        '<b>📲 ' + (ar ? 'إشعارات الهاتف والشاشة مغلقة (Lock-Screen Push)' : 'Lock-Screen & Background Notifications') + '</b>' +
+        '<span class="dayoff-badge ' + (perm === 'granted' ? 'approved' : 'pending') + '">' +
+        (perm === 'granted' ? (ar ? '✅ مفعّلة' : '✅ Active') : (ar ? '⚠️ تحتاج تفعيل' : '⚠️ Needs Permission')) +
+        '</span>' +
+        '</div>' +
+        '<p style="margin:6px 0 10px;font-size:0.78rem;color:var(--ink2);line-height:1.45;">' +
+        (ar
+          ? 'اضغط الزر بالأسفل ثم اقفل شاشة موبايلك فوراً — سيصلك إشعار حقيقي مع اهتزاز وصوت بعد 5 ثوانٍ حتى والشاشة مغلقة!'
+          : 'Tap the button below and lock your phone screen immediately — a real OS notification will arrive in 5 seconds while locked!') +
+        '</p>';
+
+      const testLockBtn = el(
+        'button',
+        'btn primary',
+        ar ? '🔔 أرسل إشعاراً بعد 5 ثوانٍ (اقفل شاشة الهاتف الآن للتجربة!)' : '🔔 Send Lock-Screen Notification in 5s (Lock Phone Now!)'
+      );
+      testLockBtn.type = 'button';
+      testLockBtn.style.width = '100%';
+      testLockBtn.addEventListener('click', async () => {
+        const status = await ensureNotificationPermission();
+        if (status !== 'granted') {
+          return alert(ar ? 'يرجى السماح بالإشعارات (Allow Notifications) من المتصفح أولاً.' : 'Please allow notifications in your browser prompt.');
+        }
+        const title = (ar ? ident.titleAr : ident.titleEn) + ' · 🍽 CEEN';
+        const body = ar
+          ? '✅ إشعار قفل الشاشة يعمل بنجاح! لديك مهام جاهزة في قسمك.'
+          : '✅ Lock-screen notification works! Check your assigned tasks.';
+        await scheduleServiceWorkerNotification('lock_test_' + Date.now(), title, body, 5000);
+        setTimeout(() => {
+          fireNativeLockScreenNotification(title, body, 'lock_test_fallback');
+        }, 5200);
+        FOH.edit.toast(ar ? '⏳ تم جدولة الإشعار! اقفل شاشة هاتفك الآن — سيصلك خلال 5 ثوانٍ 📲' : '⏳ Scheduled! Lock your phone screen now — arriving in 5s 📲');
+      });
+      pushCard.append(testLockBtn);
+      box.append(pushCard);
+
+      // Section 2: Currently Snoozed Alerts with Live Countdown
+      const snoozedList = getActiveSnoozeTimersList();
+      const snzCard = el('div', 'notif-center-card');
+      snzCard.innerHTML = '<b>💤 ' + (ar ? 'التنبيهات المؤجلة حالياً (ستعود للظهور تلقائياً):' : 'Snoozed Alerts (Will auto-reappear):') + '</b>';
+
+      if (!snoozedList.length) {
+        snzCard.append(el('p', 'empty', ar ? 'لا توجد تنبيهات مؤجلة حالياً ✓' : 'No snoozed alerts right now ✓'));
+      } else {
+        snoozedList.forEach((item) => {
+          const mins = Math.floor(item.remainingSec / 60);
+          const secs = item.remainingSec % 60;
+          const timeStr = mins > 0 ? (mins + (ar ? 'د و ' : 'm ') + secs + (ar ? 'ث' : 's')) : (secs + (ar ? ' ثانية' : 's'));
+          const row = el('div', 'notif-item-row');
+          row.innerHTML =
+            '<div style="flex:1;min-width:180px;">' +
+            '<b>' + (item.title || '🔔 تنبيه') + '</b>' +
+            '<small style="display:block;color:var(--ink2);margin-top:2px;">' + (item.body || '') + '</small>' +
+            '</div>' +
+            '<span class="notif-countdown-pill">⏳ ' + (ar ? 'يظهر بعد ' : 'In ') + timeStr + ' (' + (item.wakeHM || '') + ')</span>';
+
+          const wakeNowBtn = el('button', 'gov-btn primary', ar ? '🔔 إظهار الآن' : '🔔 Wake Now');
+          wakeNowBtn.type = 'button';
+          wakeNowBtn.addEventListener('click', () => {
+            const map = loadSnoozeTimers();
+            delete map[item.key];
+            delete map['__group_task_banner'];
+            delete map['__group_health_banner'];
+            saveSnoozeTimers(map);
+            if (FOH.reminders && FOH.reminders.clearSnoozesForDate) {
+              FOH.reminders.clearSnoozesForDate(S.date);
+            }
+            FOH.app.render();
+            drawCenter();
+          });
+          row.append(wakeNowBtn);
+          snzCard.append(row);
+        });
+      }
+      box.append(snzCard);
+
+      // Section 3: Active Alerts Right Now
+      const actCard = el('div', 'notif-center-card');
+      actCard.innerHTML = '<b>⚡ ' + (ar ? 'التنبيهات النشطة الآن:' : 'Active Alerts Now:') + '</b>';
+      const hAlerts = getHealthAlerts();
+      const due = FOH.reminders.next(FOH.preview.sections(), S.run.checked, FOH.tasksView.todayStates(), S.date, FOH.time.nowHM());
+
+      if (!hAlerts.length && !due) {
+        actCard.append(el('p', 'empty', ar ? 'جميع المهام والشهادات على ما يرام ✅' : 'All tasks and certificates are on track ✅'));
+      } else {
+        if (due) {
+          const r = el('div', 'notif-item-row');
+          r.innerHTML =
+            '<div><b>⏰ ' + due.at + ' · ' + due.names.join('، ') + '</b>' +
+            '<small style="display:block;color:var(--ink2);">' + (ar ? 'مهمة مستحقة في الشفت' : 'Shift task due') + '</small></div>';
+          const snz1m = el('button', 'gov-btn', ar ? '💤 تأجيل ١د' : '💤 +1m');
+          snz1m.type = 'button';
+          snz1m.addEventListener('click', () => {
+            snoozeAlertWithTimer({
+              ids: due.ids,
+              bannerGroup: 'task_banner',
+              title: ar ? 'تذكير مهمة' : 'Task Reminder',
+              body: due.at + ' · ' + due.names.join('، '),
+              minutes: 1,
+            });
+            drawCenter();
+          });
+          r.append(snz1m);
+          actCard.append(r);
+        }
+        hAlerts.forEach((ha) => {
+          const r = el('div', 'notif-item-row');
+          r.innerHTML =
+            '<div><b>🏥 ' + ha.staff.name + ' (' + ha.staff.healthCertExpiry + ')</b>' +
+            '<small style="display:block;color:var(--danger);">' +
+            (ha.expired ? (ar ? 'منتهية منذ ' + Math.abs(ha.days) + ' يوم' : 'Expired ' + Math.abs(ha.days) + 'd ago') : (ar ? 'تنتهي خلال ' + ha.days + ' يوم' : 'Expires in ' + ha.days + 'd')) +
+            '</small></div>';
+          actCard.append(r);
+        });
+      }
+      box.append(actCard);
+
+      const closeB = el('button', 'btn', ar ? 'إغلاق' : 'Close');
+      closeB.type = 'button';
+      closeB.style.width = '100%';
+      closeB.addEventListener('click', () => dlg.close());
+      box.append(closeB);
+
+      dlg.append(box);
+    }
+
+    drawCenter();
+    clearInterval(notifCenterInterval);
+    notifCenterInterval = setInterval(() => {
+      if (dlg.open) drawCenter();
+    }, 1000);
+    dlg.showModal();
+  }
+
+  // ---- Contextual Checklist Bar (Date, Shift Leaders, Progress %, Lock & Edit) + Role Scope ----
+  function enhanceChecklistContextAndRoleScope() {
+    const govBar = $('checklistGovBar');
+    if (!govBar || S.editing || S.view !== 'opening') return;
+
+    const ar = isAr();
+    const ident = getAppRoleIdentity();
+    const rKey = getCurrentSuperRoleKey();
+    const sess = getSession();
+    const curUser = (sess && sess.username ? sess.username.toLowerCase() : 'fadi');
+
+    // 1. Prepend Role Workspace Bar & Quick Role Switcher at top of #checklistGovBar
+    if (!govBar.querySelector('.role-workspace-bar')) {
+      const roleBar = el('div', 'role-workspace-bar');
+      roleBar.style.width = '100%';
+
+      const leftInfo = el('div', '');
+      leftInfo.innerHTML =
+        '<b>' + (ar ? ident.titleAr : ident.titleEn) + '</b>' +
+        '<span style="display:block;font-size:0.72rem;color:var(--ink2);">' +
+        (ar ? ident.subAr : ident.subEn) +
+        '</span>';
+
+      const rightControls = el('div', 'role-switch-pills');
+      if (ident.openingKeywords && !isClosingSheetActive()) {
+        const scopeBtn = el(
+          'button',
+          'role-switch-pill' + (roleScopeOnly ? ' on' : ''),
+          roleScopeOnly
+            ? (ar ? '🎯 مهام قسمي فقط ✓' : '🎯 My Role Only ✓')
+            : (ar ? '👁 كل أقسام المطعم' : '👁 All Sections')
+        );
+        scopeBtn.type = 'button';
+        scopeBtn.addEventListener('click', () => {
+          roleScopeOnly = !roleScopeOnly;
+          FOH.app.render();
+        });
+        rightControls.append(scopeBtn);
+      }
+
+      // Quick Role Switcher pills so user can test Super Waiter / Bartender / Captain / Manager
+      [
+        ['sara', '⭐ Super Waiter'],
+        ['maher', '🍸 Super Bartender'],
+        ['ali', '🎖️ Super Captain'],
+        ['fadi', '👑 Super Manager'],
+      ].forEach(([uname, label]) => {
+        const pill = el('button', 'role-switch-pill' + (curUser === uname ? ' on' : ''), label);
+        pill.type = 'button';
+        pill.title = ar ? 'معاينة التطبيق بهذا المنصب' : 'Switch to this role view';
+        pill.addEventListener('click', () => quickSwitchEmployeeAccount(uname));
+        rightControls.append(pill);
+      });
+
+      roleBar.append(leftInfo, rightControls);
+      govBar.prepend(roleBar);
+    }
+
+    // 2. Inject Contextual Date / Supervisor / Progress % Bar inside #checklistGovBar (replacing top header clutter)
+    if (!govBar.querySelector('.sec-context-bar')) {
+      const all = FOH.model.progress(FOH.model.allLeaves({ sections: FOH.preview.sections() }), S.run.checked);
+      const pct = all.total ? Math.round((all.done * 100) / all.total) : 0;
+      const names = [S.run.supervisor, S.run.captain, S.run.assistant].filter(Boolean);
+      const day = new Date(S.date + 'T00:00:00');
+      const dateLabel = isNaN(day)
+        ? S.date
+        : day.toLocaleDateString(FOH.i18n.locale, { weekday: 'short', day: 'numeric', month: 'short' });
+
+      const ctxBar = el('div', 'sec-context-bar');
+      ctxBar.style.width = '100%';
+
+      const left = el('div', 'sec-ctx-left');
+      const progPill = el('span', 'sec-progress-pill', '📊 ' + pct + '% (' + all.done + '/' + all.total + ')');
+      const metaToggleBtn = el(
+        'button',
+        'sec-meta-btn',
+        '📅 ' + dateLabel + ' · ' + (names.length ? names.slice(0, 2).join(' · ') : (ar ? 'تحديد المشرف والكابتن' : 'Set Shift Leaders')) + ' ▾'
+      );
+      metaToggleBtn.type = 'button';
+      metaToggleBtn.addEventListener('click', () => {
+        if ($('metaPanel')) $('metaPanel').hidden = !$('metaPanel').hidden;
+      });
+      left.append(progPill, metaToggleBtn);
+
+      const right = el('div', 'gov-actions');
+      const breakBtn = el('button', 'gov-btn', ar ? '🔧 تسجيل كسر / صيانة' : '🔧 Report Damage / Repair');
+      breakBtn.type = 'button';
+      breakBtn.addEventListener('click', () => {
+        if (FOH.invBreak && FOH.invBreak.open) FOH.invBreak.open();
+      });
+      right.append(breakBtn);
+
+      ctxBar.append(left, right);
+      govBar.insertBefore(ctxBar, govBar.firstChild ? govBar.firstChild.nextSibling : null);
+    }
+
+    // 3. Filter Opening Checklist Sections & Chips when roleScopeOnly is active for Super Waiter / Super Bartender
+    if (!isClosingSheetActive() && ident.openingKeywords && roleScopeOnly) {
+      const kwList = ident.openingKeywords;
+      document.querySelectorAll('#sections > section.card').forEach((card) => {
+        const sid = (card.id || '').replace(/^sec-/, '');
+        const secObj = (S.tpl.sections || []).find((x) => x.id === sid);
+        const titleCombo = ((secObj && (secObj.title + ' ' + secObj.titleAr)) || card.textContent || '').toLowerCase();
+        // Waiter excludes Bar-only & Tech/Cash vault sections; Bartender focuses on Bar & Stations
+        let match = kwList.some((kw) => titleCombo.includes(kw));
+        if (rKey === 'super_waiter' && (titleCombo.includes('stations & bar') || titleCombo.includes('tech & cash') || titleCombo.includes('الكاشير'))) {
+          match = false;
+        }
+        if (rKey === 'super_bartender' && (titleCombo.includes('tables setup') || titleCombo.includes('tech & cash') || titleCombo.includes('الطاولات'))) {
+          match = false;
+        }
+        card.style.display = match ? '' : 'none';
+      });
+      document.querySelectorAll('#chips .chip').forEach((chip) => {
+        const sid = chip.dataset.sid;
+        const card = $('sec-' + sid);
+        if (card) chip.style.display = card.style.display;
+      });
+    } else if (!isClosingSheetActive()) {
+      document.querySelectorAll('#sections > section.card, #chips .chip').forEach((node) => {
+        node.style.display = '';
+      });
+    }
+  }
+
+  // ---- Enhance Sidebar with Language Toggle, Report Damage Button & Role-Scoped Navigation ----
+  function enhanceSidebarAndInventory() {
+    const ar = isAr();
+    const ident = getAppRoleIdentity();
+
+    // Update Sidebar Brand Title to match Employee's Super Role
+    const sbBrandStrong = document.querySelector('#appSidebar .sb-brand-txt strong');
+    if (sbBrandStrong) {
+      sbBrandStrong.textContent = ar ? ident.titleAr : ident.titleEn;
+    }
+
+    // Filter Sidebar nav buttons to only those allowed for this role
+    const nav = $('sbNavList');
+    if (nav && !nav.dataset.v10Scoped) {
+      nav.dataset.v10Scoped = '1';
+      // Add Quick Damage / Repair button inside Sidebar
+      const dmgBtn = el('button', 'sb-nav-btn');
+      dmgBtn.type = 'button';
+      dmgBtn.append(
+        el('span', 'sb-nav-ico', '🔧'),
+        Object.assign(el('span', 'sb-nav-txt'), {
+          innerHTML:
+            '<b>' + (ar ? 'تسجيل كسر أو طلب صيانة' : 'Report Damage / Repair') + '</b>' +
+            '<small>' + (ar ? 'تبليغ فوري عن كسر أو عطل بالمعدات' : 'Log broken glassware or equipment repair') + '</small>',
+        })
+      );
+      dmgBtn.addEventListener('click', () => {
+        closeSidebar();
+        if (FOH.invBreak && FOH.invBreak.open) FOH.invBreak.open();
+      });
+      nav.append(dmgBtn);
+    }
+
+    // Add Language Switcher button inside Sidebar Footer (#sbFoot)
+    const sbFoot = document.querySelector('#appSidebar .sb-foot');
+    if (sbFoot && !$('sbLangToggle')) {
+      const langBtn = el('button', 'btn sb-foot-btn', ar ? '🌐 EN' : '🌐 عربي');
+      langBtn.type = 'button';
+      langBtn.id = 'sbLangToggle';
+      langBtn.addEventListener('click', () => {
+        if ($('langBtn')) $('langBtn').click();
+        langBtn.textContent = isAr() ? '🌐 EN' : '🌐 عربي';
+        renderSidebarContent();
+      });
+      sbFoot.insertBefore(langBtn, $('sbLogoutBtn'));
+    } else if ($('sbLangToggle')) {
+      $('sbLangToggle').textContent = ar ? '🌐 EN' : '🌐 عربي';
+    }
+
+    // Inject prominent "Report Damage / Request Repair" card at the top of #inv (Inventory section)
+    const invRoot = $('inv');
+    if (invRoot && !invRoot.hidden && !invRoot.querySelector('#invDamageReportCard')) {
+      const dmgCard = el('div', 'sec-context-bar');
+      dmgCard.id = 'invDamageReportCard';
+      dmgCard.style.border = '1.5px solid var(--accent)';
+      dmgCard.innerHTML =
+        '<div><b>🔧 ' + (ar ? 'بلاغات الكسر والتالف وطلبات الصيانة' : 'Breakage & Equipment Repair Reports') + '</b>' +
+        '<small style="display:block;color:var(--ink2);">' + (ar ? 'سجّل أي كسر في الكؤوس أو الصحون أو عطل بحاجة لصيانة' : 'Report broken items or request equipment repair') + '</small></div>';
+      const openBrkBtn = el('button', 'btn primary', ar ? '+ تسجيل كسر / طلب صيانة' : '+ Report Damage / Repair');
+      openBrkBtn.type = 'button';
+      openBrkBtn.addEventListener('click', () => {
+        if (FOH.invBreak && FOH.invBreak.open) FOH.invBreak.open();
+      });
+      dmgCard.append(openBrkBtn);
+      invRoot.prepend(dmgCard);
+    }
+  }
+
+
   // ---- 9. Hamburger ☰ Sidebar Drawer & Header Sync ----
   function openSidebar() {
     if ($('sidebarBackdrop')) $('sidebarBackdrop').hidden = false;
@@ -14569,8 +15686,10 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       ];
       if (isMgr) items.push(['settings', '⚙️']);
 
+      const allowedViews = getAppRoleIdentity().allowedViews || [];
       items.forEach(([v, badge]) => {
         if (v === 'inv' && S.previewEmployee) return;
+        if (allowedViews.length && !allowedViews.includes(v)) return;
         const isClosingNav = v === 'closing_sheet';
         const meta = isClosingNav
           ? {
@@ -14606,6 +15725,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
         });
         nav.append(b);
       });
+      delete nav.dataset.v10Scoped;
+      enhanceSidebarAndInventory();
     }
   }
 
@@ -14623,7 +15744,13 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     const brandPill = document.querySelector('.login-brand-pill');
     if (brandPill) brandPill.textContent = '🍽 ' + restName;
 
-    if ($('title')) $('title').textContent = S.editing ? (ar ? 'تعديل الشيك ليست' : 'Edit Checklist') : 'Super Employee';
+    const ident = getAppRoleIdentity();
+    if ($('title')) {
+      $('title').textContent = S.editing
+        ? (ar ? 'تعديل الشيك ليست' : 'Edit Checklist')
+        : (ar ? ident.titleAr : ident.titleEn);
+    }
+    document.title = (ar ? ident.titleAr : ident.titleEn) + ' · ' + restName;
     if ($('restaurantBadge')) $('restaurantBadge').textContent = '🍽 ' + restName;
     const meta = getSectionMeta(S.view);
     if ($('activeSectionBadge')) {
@@ -14652,11 +15779,15 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     }
 
     ensureUpgradedClosingSections();
+    ensureNotifBellInHeader();
     renderHealthBanner();
+    renderSmartAlertBanners();
     renderOpsLifecycleBar();
     renderChecklistGovBar();
+    enhanceChecklistContextAndRoleScope();
     renderClosingDeptFilterBar();
     injectChecklistItemNotes();
+    enhanceSidebarAndInventory();
 
     if (!S.editing) {
       if (S.view === 'academy' && $('academyView')) renderAcademyView($('academyView'));
@@ -14732,6 +15863,17 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       );
     });
 
+    setInterval(checkExpiredSnoozeTimers, 2000);
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', (ev) => {
+        if (ev.data && ev.data.type === 'SNOOZE_WOKE_UP') {
+          checkExpiredSnoozeTimers();
+          FOH.app.render();
+        }
+      });
+    }
+    // Keep #metaPanel collapsed by default so it doesn't clutter the opening screen
+    if ($('metaPanel')) $('metaPanel').hidden = true;
     syncSuperEmployeeUI();
   }
 
