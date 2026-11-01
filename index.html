@@ -2947,81 +2947,107 @@ body.dark .role-switch-pill.on {
     </style>
     <style id="super-employee-v11-css">
 /* ============================================================================
-   11. SUPER EMPLOYEE v11 DE-CLUTTER & ZERO-OVERLAP HEADER
+   11. SUPER EMPLOYEE v18: ZERO-CROWDING EXECUTIVE HEADER ARCHITECTURE
    ============================================================================ */
 header.top {
   padding: calc(8px + env(safe-area-inset-top)) 12px 8px !important;
+  background: #141e28 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 header.top .bar {
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  gap: 8px !important;
+  gap: 10px !important;
   flex-wrap: nowrap !important;
   min-height: 44px !important;
   width: 100% !important;
   box-sizing: border-box !important;
 }
-/* Strictly prevent .ttl from ever overflowing onto bell or profile buttons */
+/* Strictly prevent .ttl from ever overflowing or crowding buttons */
 header.top .ttl {
-  flex: 1 1 0% !important;
+  flex: 1 1 auto !important;
   min-width: 0 !important;
   max-width: 100% !important;
   overflow: hidden !important;
   display: flex !important;
   flex-direction: column !important;
   justify-content: center !important;
-  gap: 1px !important;
+  gap: 2px !important;
 }
-/* Reorder so Role Title (#title) is on top and subtle restaurant+section subtitle is below */
+/* Role Title (#title) on line 1 */
 header.top .title-sub-row {
-  order: 1 !important;
   display: block !important;
   width: 100% !important;
   min-width: 0 !important;
   overflow: hidden !important;
-}
-header.top .brand-top-row {
-  order: 2 !important;
-  display: block !important;
-  width: 100% !important;
-  min-width: 0 !important;
-  overflow: hidden !important;
-}
-/* Hide the colliding pills in the top header */
-header.top #checklistLockPill,
-header.top #activeSectionBadge {
-  display: none !important;
 }
 header.top h1#title {
   display: block !important;
-  font-size: 0.96rem !important;
+  font-size: 1.02rem !important;
   font-weight: 800 !important;
-  line-height: 1.2 !important;
+  line-height: 1.25 !important;
   margin: 0 !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
   color: #ffffff !important;
 }
-/* Make #restaurantBadge a sleek, borderless subtitle line instead of a bulky pill */
+/* Restaurant name and live dot on line 2 */
+header.top .brand-top-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+}
 header.top #restaurantBadge.rest-badge {
-  display: block !important;
+  display: inline-block !important;
   background: transparent !important;
   border: 0 !important;
   padding: 0 !important;
   margin: 0 !important;
   border-radius: 0 !important;
   color: #99f6e4 !important;
-  font-size: 0.7rem !important;
+  font-size: 0.72rem !important;
   font-weight: 600 !important;
   line-height: 1.2 !important;
-  max-width: 100% !important;
+  max-width: 170px !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
 }
-header.top #sidebarToggleBtn,
+/* Permanently hide colliding pills in header */
+header.top #checklistLockPill,
+header.top #activeSectionBadge,
+.lock-pill,
+.active-sec-pill {
+  display: none !important;
+}
+/* Header Right Actions Group */
+.top-right-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  flex-shrink: 0 !important;
+  margin-inline-start: auto !important;
+}
+header.top #sidebarToggleBtn {
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  padding: 0 !important;
+  flex: 0 0 38px !important;
+  border-radius: 11px !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  box-sizing: border-box !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  color: #ffffff !important;
+}
 header.top .notif-bell-btn,
 header.top #profileBtn {
   width: 38px !important;
@@ -3030,6 +3056,9 @@ header.top #profileBtn {
   padding: 0 !important;
   flex: 0 0 38px !important;
   border-radius: 11px !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  box-sizing: border-box !important;
 }
 header.top .profile-btn-name {
   display: none !important;
@@ -3575,26 +3604,29 @@ body.dark .rlh-btn.primary {
           <b id="sbAlertDot" class="sb-dot" hidden></b>
         </button>
         <div class="ttl">
+          <div class="title-sub-row">
+            <h1 id="title">Super Employee</h1>
+          </div>
           <div class="brand-top-row">
             <span id="restaurantBadge" class="rest-badge">🍽 CEEN Restaurant & Lounge</span>
             <span id="cloudRealtimeIndicator" class="realtime-status-pill connecting" title="Supabase Realtime Live Sync"><span class="realtime-dot"></span> ⚡ Live</span>
-            <span id="checklistLockPill" class="lock-pill" hidden>🔒 Locked</span>
           </div>
-          <div class="title-sub-row">
-            <h1 id="title">Super Employee</h1>
-            <span id="activeSectionBadge" class="active-sec-pill">☀️ Opening</span>
-          </div>
-          <button type="button" id="metaBtn" class="meta-pill run-only"></button>
-          <span class="autosave edit-only" data-i18n="autosave"></span>
+          <button type="button" id="metaBtn" class="meta-pill run-only" hidden></button>
+          <span class="autosave edit-only" data-i18n="autosave" hidden></span>
         </div>
-        <button type="button" id="profileBtn" class="profile-btn" aria-label="Employee Profile">
-          <span class="profile-avatar" id="headerAvatar">👤</span>
-          <span class="profile-btn-name" id="headerUserName">Profile</span>
-        </button>
+        <div class="top-right-actions">
+          <button type="button" id="notifBellBtn" class="notif-bell-btn" aria-label="Notifications">
+            🔔<span id="notifCountBadge" class="notif-bell-badge" hidden>0</span>
+          </button>
+          <button type="button" id="profileBtn" class="profile-btn" aria-label="Employee Profile">
+            <span class="profile-avatar" id="headerAvatar">👤</span>
+            <span class="profile-btn-name" id="headerUserName">Profile</span>
+          </button>
+        </div>
         <button type="button" id="lockBtn" class="ib" title="Lock / Unlock Checklist" hidden>🔓</button>
-        <button type="button" id="langBtn" class="ib" data-i18n="langBtn">ع</button>
-        <button type="button" id="modeBtn" class="ib mode">✎</button>
-        <div class="ring run-only" id="ring" aria-hidden="true"><span id="ringText"></span></div>
+        <button type="button" id="langBtn" class="ib" data-i18n="langBtn" hidden>ع</button>
+        <button type="button" id="modeBtn" class="ib mode" hidden>✎</button>
+        <div class="ring run-only" id="ring" aria-hidden="true" hidden><span id="ringText"></span></div>
       </div>
       <div id="healthAlertBanner" class="health-banner" hidden></div>
       <p class="banner" id="banner" role="status" hidden></p>
@@ -9309,10 +9341,10 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
       if (window.caches) {
         caches.keys().then((ks) => ks.forEach((k) => {
-          if (k !== 'super-employee-v10') caches.delete(k);
+          if (k !== 'super-employee-v18') caches.delete(k);
         })).catch(() => {});
       }
-      navigator.serviceWorker.register('sw.js?v=17', { updateViaCache: 'none' }).then((reg) => {
+      navigator.serviceWorker.register('sw.js?v=18', { updateViaCache: 'none' }).then((reg) => {
         reg.update().catch(() => {});
       }).catch(() => {});
     }
@@ -14479,6 +14511,10 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
         maher: 'super_bartender',
         sara: 'super_waiter',
       },
+      orderingDelegation: {
+        roles: ['super_manager', 'super_bartender'],
+        staffUsernames: ['sara'],
+      },
       rolePermissions: {
         super_manager: {
           canCloseRestaurant: true,
@@ -14548,6 +14584,14 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       return {
         hours: { ...d.hours, ...(raw.hours || {}) },
         staffSuperRoles: { ...d.staffSuperRoles, ...(raw.staffSuperRoles || {}) },
+        orderingDelegation: {
+          roles: (raw.orderingDelegation && Array.isArray(raw.orderingDelegation.roles))
+            ? raw.orderingDelegation.roles
+            : d.orderingDelegation.roles,
+          staffUsernames: (raw.orderingDelegation && Array.isArray(raw.orderingDelegation.staffUsernames))
+            ? raw.orderingDelegation.staffUsernames
+            : d.orderingDelegation.staffUsernames,
+        },
         rolePermissions: mergedPerms,
       };
     } catch {
@@ -14577,6 +14621,19 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     const roleKey = getCurrentSuperRoleKey();
     const rolePerms = (cfg.rolePermissions && cfg.rolePermissions[roleKey]) || cfg.rolePermissions.staff;
     return !!(rolePerms && rolePerms[permKey]);
+  }
+
+  function canCurrentUserAccessOrders() {
+    const sess = getSession();
+    if (!sess) return true;
+    if (sess.isManager) return true;
+    const cfg = loadOpsConfig();
+    const del = cfg.orderingDelegation || { roles: ['super_manager', 'super_bartender'], staffUsernames: ['sara'] };
+    const rKey = getCurrentSuperRoleKey();
+    if (Array.isArray(del.roles) && del.roles.includes(rKey)) return true;
+    const uname = (sess.username || '').toLowerCase().trim();
+    if (Array.isArray(del.staffUsernames) && del.staffUsernames.map((s) => (s || '').toLowerCase().trim()).includes(uname)) return true;
+    return false;
   }
 
   // Convert HH:MM to operational business-day minutes (06:00..29:59 so 00:00=24:00, 02:30=26:30)
@@ -15468,13 +15525,139 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       rolesCard.append(rCard);
     });
 
+    // Card 3: Warehouse & Bar Ordering Authority & Delegation (#orderingDelegationCard)
+    const ordCard = el('section', 'card');
+    ordCard.id = 'orderingDelegationSettingsCard';
+    ordCard.style.padding = '16px';
+    ordCard.style.border = '1.5px solid #10b981';
+    ordCard.innerHTML =
+      '<h3>🛒 ' +
+      (ar
+        ? 'تفويض وإدارة صلاحيات طلبيات المستودع والبار (Ordering Delegation & Missions)'
+        : 'Warehouse & Bar Ordering Authority & Delegation') +
+      '</h3>' +
+      '<p class="setting-note">' +
+      (ar
+        ? 'تحكّم بدقة بمن يرى قسم الطلبيات ويحق له إرسال طلبات المستودع والبار. يمكنك توجيه الطلبية لمنصب بالكامل (مثل البارتندر)، أو تخصيص ويتر أو كابتن محدد بالاسم دون فتحها لبقية الفريق منعاً للتشتت:'
+        : 'Control who sees the Orders section and submits warehouse requisitions. Grant access to an entire role (e.g. Bartenders) or designate specific staff members by name:') +
+      '</p>';
+
+    // Section A: By Role
+    const roleBox = el('div', 'super-role-card');
+    roleBox.style.marginBottom = '12px';
+    roleBox.innerHTML =
+      '<div class="super-role-card-head">' +
+      '<b>🏷️ ' + (ar ? '1. التوجيه حسب المنصب القيادي (Role / Position)' : '1. Authorize Entire Role / Position') + '</b>' +
+      '</div>' +
+      '<p style="font-size:0.75rem;color:var(--ink2);margin:4px 0 10px;">' +
+      (ar ? 'أي موظف يحمل المنصب المفعّل سيتمكن تلقائياً من فتح قسم الطلبيات (مثلاً: كافة البارتندرية الأربعة لمستلزمات البار).' : 'Any employee in an active role can access the Orders section (e.g. all 4 bartenders for bar supply).') +
+      '</p>';
+
+    const delRoles = (cfg.orderingDelegation && Array.isArray(cfg.orderingDelegation.roles))
+      ? cfg.orderingDelegation.roles
+      : ['super_manager', 'super_bartender'];
+
+    [
+      ['super_bartender', ar ? '🍸 سوبر بارتندر (Super Bartender)' : '🍸 Super Bartender', ar ? 'تمكين كافة البارتندرية الأربعة من طلب بضاعة ومستلزمات البار' : 'Allow all bartenders to place bar beverage orders'],
+      ['super_captain', ar ? '🎖️ سوبر كابتن (Super Captain)' : '🎖️ Super Captain', ar ? 'تمكين كافة الكباتن من إنشاء وإرسال الطلبيات' : 'Allow all captains to create orders'],
+      ['super_waiter', ar ? '⭐ سوبر ويتر (Super Waiter)' : '⭐ Super Waiter', ar ? 'تمكين كافة الويترية من قسم الطلبيات (غير موصى به لكثرة العدد)' : 'Allow all waiters to create orders (not recommended)'],
+    ].forEach(([rk, rkLabel, rkSub]) => {
+      const row = el('label', 'tog');
+      row.style.display = 'flex';
+      row.style.justifyContent = 'space-between';
+      row.style.alignItems = 'center';
+      row.style.padding = '8px 0';
+      row.style.borderBottom = '1px dashed var(--line)';
+      row.style.cursor = 'pointer';
+
+      row.innerHTML = '<div><b>' + rkLabel + '</b><small style="display:block;color:var(--ink2);font-size:0.72rem;">' + rkSub + '</small></div>';
+      const cb = el('input', 'sw');
+      cb.type = 'checkbox';
+      cb.checked = delRoles.includes(rk);
+      cb.addEventListener('change', () => {
+        if (!cfg.orderingDelegation) cfg.orderingDelegation = { roles: ['super_manager', 'super_bartender'], staffUsernames: ['sara'] };
+        if (!Array.isArray(cfg.orderingDelegation.roles)) cfg.orderingDelegation.roles = ['super_manager', 'super_bartender'];
+        if (cb.checked) {
+          if (!cfg.orderingDelegation.roles.includes(rk)) cfg.orderingDelegation.roles.push(rk);
+        } else {
+          cfg.orderingDelegation.roles = cfg.orderingDelegation.roles.filter((r) => r !== rk);
+        }
+        if (!cfg.orderingDelegation.roles.includes('super_manager')) cfg.orderingDelegation.roles.push('super_manager');
+        saveOpsConfig(cfg);
+        FOH.edit.toast(ar ? 'تم تحديث صلاحية الطلبيات لمنصب ' + rkLabel + ' ✓' : 'Updated ordering authority for ' + rkLabel + ' ✓');
+        FOH.app.render();
+      });
+      row.append(cb);
+      roleBox.append(row);
+    });
+    ordCard.append(roleBox);
+
+    // Section B: By Specific Staff Member by Name
+    const staffBox = el('div', 'super-role-card');
+    staffBox.innerHTML =
+      '<div class="super-role-card-head">' +
+      '<b>👤 ' + (ar ? '2. التخصيص بالاسم لموظف محدد (Specific Staff Delegation)' : '2. Specific Staff Member Delegation') + '</b>' +
+      '</div>' +
+      '<p style="font-size:0.75rem;color:var(--ink2);margin:4px 0 10px;">' +
+      (ar ? 'إذا كان لديك موظف معين (مثل سارة) مكلّف بالطلبيات، يمكنك تفعيل الصلاحية لها بالاسم دون إظهارها لبقية الويترية أو الكباتن:' : 'Designate a specific staff member (e.g. Sara) for orders without granting access to other waiters or captains:') +
+      '</p>';
+
+    const delStaff = (cfg.orderingDelegation && Array.isArray(cfg.orderingDelegation.staffUsernames))
+      ? cfg.orderingDelegation.staffUsernames
+      : ['sara'];
+
+    const staffList = [
+      ['sara', 'Sara Khoury (سارة - سوبر ويتر)', '⭐ Waiter'],
+      ['ali', 'Ali Hassan (علي - سوبر كابتن)', '🎖️ Captain'],
+      ['maher', 'Maher Zaid (ماهر - سوبر بارتندر)', '🍸 Bartender'],
+      ['fadi', 'Fadi Al-Masri (فادي - سوبر مانجر)', '👑 Manager'],
+    ];
+
+    staffList.forEach(([uname, fullName, roleTag]) => {
+      const row = el('label', 'tog');
+      row.style.display = 'flex';
+      row.style.justifyContent = 'space-between';
+      row.style.alignItems = 'center';
+      row.style.padding = '8px 0';
+      row.style.borderBottom = '1px dashed var(--line)';
+      row.style.cursor = uname === 'fadi' ? 'default' : 'pointer';
+
+      row.innerHTML = '<div><b>👤 ' + fullName + '</b><small style="display:block;color:var(--ink2);font-size:0.72rem;">' + (uname === 'fadi' ? (ar ? '👑 المدير العام (مفعل دائماً)' : '👑 General Manager (Always Active)') : (ar ? 'مهمة إدارة طلبيات الصالة والمستودع' : 'Floor & warehouse order mission')) + '</small></div>';
+
+      if (uname === 'fadi') {
+        const badge = el('span', 'tag mine', ar ? 'مفعل دائماً' : 'Always Active');
+        badge.style.fontSize = '0.72rem';
+        row.append(badge);
+      } else {
+        const cb = el('input', 'sw');
+        cb.type = 'checkbox';
+        cb.checked = delStaff.map((s) => s.toLowerCase()).includes(uname);
+        cb.addEventListener('change', () => {
+          if (!cfg.orderingDelegation) cfg.orderingDelegation = { roles: ['super_manager', 'super_bartender'], staffUsernames: ['sara'] };
+          if (!Array.isArray(cfg.orderingDelegation.staffUsernames)) cfg.orderingDelegation.staffUsernames = ['sara'];
+          if (cb.checked) {
+            if (!cfg.orderingDelegation.staffUsernames.includes(uname)) cfg.orderingDelegation.staffUsernames.push(uname);
+          } else {
+            cfg.orderingDelegation.staffUsernames = cfg.orderingDelegation.staffUsernames.filter((u) => u !== uname);
+          }
+          saveOpsConfig(cfg);
+          FOH.edit.toast(ar ? 'تم تحديث صلاحية الطلبيات للموظف ' + fullName + ' ✓' : 'Updated ordering authority for ' + fullName + ' ✓');
+          FOH.app.render();
+        });
+        row.append(cb);
+      }
+      staffBox.append(row);
+    });
+    ordCard.append(staffBox);
+
     // Insert at the top of #settingsView right after the Brand card
     const firstCard = root.querySelector('section.card');
     if (firstCard && firstCard.nextSibling) {
       root.insertBefore(hoursCard, firstCard.nextSibling);
       root.insertBefore(rolesCard, hoursCard.nextSibling);
+      root.insertBefore(ordCard, rolesCard.nextSibling);
     } else {
-      root.append(hoursCard, rolesCard);
+      root.append(hoursCard, rolesCard, ordCard);
     }
   }
 
@@ -15540,7 +15723,12 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
   function getAppRoleIdentity() {
     const rKey = getCurrentSuperRoleKey();
-    return ROLE_APP_IDENTITY[rKey] || ROLE_APP_IDENTITY.super_waiter;
+    const base = ROLE_APP_IDENTITY[rKey] || ROLE_APP_IDENTITY.super_waiter;
+    const copy = { ...base, allowedViews: [...(base.allowedViews || [])] };
+    if (!canCurrentUserAccessOrders()) {
+      copy.allowedViews = copy.allowedViews.filter((v) => v !== 'orders');
+    }
+    return copy;
   }
 
   // Switch active employee account in 1 tap (for testing & quick terminal handoff)
@@ -15962,18 +16150,23 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
   // ---- Notification Bell 🔔 in Header & Notification Center Modal ----
   function ensureNotifBellInHeader() {
-    const bar = document.querySelector('header.top .bar');
-    const profBtn = $('profileBtn');
-    if (!bar || !profBtn || $('notifBellBtn')) return;
-
-    const bellBtn = el('button', 'notif-bell-btn');
-    bellBtn.type = 'button';
-    bellBtn.id = 'notifBellBtn';
-    bellBtn.setAttribute('aria-label', 'Notifications');
-    bellBtn.innerHTML = '🔔<span id="notifCountBadge" class="notif-bell-badge" hidden>0</span>';
-    bellBtn.addEventListener('click', openNotificationCenterModal);
-
-    bar.insertBefore(bellBtn, profBtn);
+    let bellBtn = $('notifBellBtn');
+    if (!bellBtn) {
+      const cluster = document.querySelector('.top-right-actions');
+      const bar = document.querySelector('header.top .bar');
+      const profBtn = $('profileBtn');
+      bellBtn = el('button', 'notif-bell-btn');
+      bellBtn.type = 'button';
+      bellBtn.id = 'notifBellBtn';
+      bellBtn.setAttribute('aria-label', 'Notifications');
+      bellBtn.innerHTML = '🔔<span id="notifCountBadge" class="notif-bell-badge" hidden>0</span>';
+      if (cluster && profBtn) cluster.insertBefore(bellBtn, profBtn);
+      else if (bar && profBtn) bar.insertBefore(bellBtn, profBtn);
+    }
+    if (bellBtn && !bellBtn.dataset.v18Wired) {
+      bellBtn.dataset.v18Wired = '1';
+      bellBtn.addEventListener('click', openNotificationCenterModal);
+    }
   }
 
   function updateNotifBellUI() {
@@ -16368,6 +16561,13 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   }
 
   function switchView(nextView) {
+    if (nextView === 'orders' && !canCurrentUserAccessOrders()) {
+      const ar = isAr();
+      if (FOH.edit && FOH.edit.toast) {
+        FOH.edit.toast(ar ? '⚠️ ليس لديك صلاحية الوصول إلى قسم الطلبيات والمستودع' : '⚠️ You do not have permission to access Bar & FOH Orders');
+      }
+      return;
+    }
     S.editing = false;
     S.view = nextView;
     closeSidebar();
@@ -16539,8 +16739,6 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     const ar = isAr();
     const gov = loadGov();
     const ident = getAppRoleIdentity();
-    const meta = getSectionMeta(S.view);
-    const shortRest = ar ? (gov.restaurantNameAr || 'مطعم سين') : (gov.restaurantName || 'CEEN').split(' ')[0];
 
     if ($('title')) {
       $('title').textContent = S.editing
@@ -16548,13 +16746,10 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
         : (ar ? ident.titleAr.split('·')[0].trim() : ident.titleEn);
     }
     if ($('restaurantBadge')) {
-      const secTitle = S.editing
-        ? (ar ? 'وضع التعديل' : 'Edit Mode')
-        : (S.view === 'opening' ? (getActiveSheetType() === 'closing' ? (ar ? '🌙 شيت الإغلاق' : '🌙 Closing Sheet') : getActiveSheetType() === 'mid' ? (ar ? '🌤️ شيت منتصف الشفت' : '🌤️ Mid-Shift Sheet') : (ar ? '☀️ شيت الافتتاح' : '☀️ Opening Sheet')) : (meta.ico + ' ' + meta.title));
-      $('restaurantBadge').textContent = '🍽 ' + shortRest + ' · ' + secTitle;
+      $('restaurantBadge').textContent = '🍽 ' + (ar ? (gov.restaurantNameAr || 'مطعم سين') : (gov.restaurantName || 'CEEN Restaurant & Lounge'));
     }
-    if ($('checklistLockPill')) $('checklistLockPill').hidden = true;
-    if ($('activeSectionBadge')) $('activeSectionBadge').hidden = true;
+    if ($('checklistLockPill')) $('checklistLockPill').style.display = 'none';
+    if ($('activeSectionBadge')) $('activeSectionBadge').style.display = 'none';
   }
 
   function collapseOpsLifecycleBarToOneLine() {
@@ -17847,6 +18042,15 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
         }, 120);
       });
 
+      actions.append(bMine, bDayOff);
+
+      if (canCurrentUserAccessOrders()) {
+        const bOrd = el('button', 'rlh-btn', ar ? '🛒 طلبيات الصالة والمستودع' : '🛒 Store Orders');
+        bOrd.type = 'button';
+        bOrd.addEventListener('click', () => switchView('orders'));
+        actions.append(bOrd);
+      }
+
       const bAcad = el('button', 'rlh-btn', ar ? '🎓 منيو أكاديمي (+XP)' : '🎓 Menu Academy (+XP)');
       bAcad.type = 'button';
       bAcad.addEventListener('click', () => switchView('academy'));
@@ -17855,13 +18059,16 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       bDmg.type = 'button';
       bDmg.addEventListener('click', () => FOH.invBreak && FOH.invBreak.open && FOH.invBreak.open());
 
-      actions.append(bMine, bDayOff, bAcad, bDmg);
+      actions.append(bAcad, bDmg);
     } else if (rKey === 'super_bartender') {
-      const bOrd = el('button', 'rlh-btn primary', ar ? '🛒 طلبيات البار من المستودع' : '🛒 Bar Warehouse Orders');
-      bOrd.type = 'button';
-      bOrd.addEventListener('click', () => switchView('orders'));
+      if (canCurrentUserAccessOrders()) {
+        const bOrd = el('button', 'rlh-btn primary', ar ? '🛒 طلبيات البار من المستودع' : '🛒 Bar Warehouse Orders');
+        bOrd.type = 'button';
+        bOrd.addEventListener('click', () => switchView('orders'));
+        actions.append(bOrd);
+      }
 
-      const bMine = el('button', 'rlh-btn', ar ? '📋 مهام البار الخاصة بي' : '📋 My Bar Tasks');
+      const bMine = el('button', 'rlh-btn' + (!canCurrentUserAccessOrders() ? ' primary' : ''), ar ? '📋 مهام البار الخاصة بي' : '📋 My Bar Tasks');
       bMine.type = 'button';
       bMine.addEventListener('click', () => switchView('mine'));
 
@@ -17879,7 +18086,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       bInv.type = 'button';
       bInv.addEventListener('click', () => switchView('inv'));
 
-      actions.append(bOrd, bMine, bDayOff, bInv);
+      actions.append(bMine, bDayOff, bInv);
     } else if (rKey === 'super_captain') {
       const bAsg = el('button', 'rlh-btn primary', ar ? '➕ تعيين مهمة لويتر / بارتندر' : '➕ Assign Task to Staff');
       bAsg.type = 'button';
@@ -17888,6 +18095,13 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       const bMine = el('button', 'rlh-btn', ar ? '📋 مهامي الخاصة' : '📋 My Tasks');
       bMine.type = 'button';
       bMine.addEventListener('click', () => switchView('mine'));
+
+      if (canCurrentUserAccessOrders()) {
+        const bOrd = el('button', 'rlh-btn', ar ? '🛒 مراجعة طلبيات الصالة' : '🛒 Review Orders');
+        bOrd.type = 'button';
+        bOrd.addEventListener('click', () => switchView('orders'));
+        actions.append(bOrd);
+      }
 
       const bDayOff = el('button', 'rlh-btn', ar ? '🏖️ طلب يوم عطلة / أوف' : '🏖️ Request Day-Off');
       bDayOff.type = 'button';
@@ -17899,11 +18113,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
         }, 120);
       });
 
-      const bOrd = el('button', 'rlh-btn', ar ? '🛒 مراجعة طلبيات الصالة' : '🛒 Review Orders');
-      bOrd.type = 'button';
-      bOrd.addEventListener('click', () => switchView('orders'));
-
-      actions.append(bAsg, bMine, bDayOff, bOrd);
+      actions.append(bAsg, bMine, bDayOff);
     } else {
       const bAsg = el('button', 'rlh-btn primary', ar ? '➕ إضافة وتعيين مهمة' : '➕ Assign Task to Staff');
       bAsg.type = 'button';
@@ -17945,14 +18155,16 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     }
     document.title = (ar ? ident.titleAr : ident.titleEn) + ' · ' + restName;
     if ($('restaurantBadge')) $('restaurantBadge').textContent = '🍽 ' + restName;
-    const meta = getSectionMeta(S.view);
     if ($('activeSectionBadge')) {
-      $('activeSectionBadge').textContent = S.editing ? '✎ Edit Mode' : meta.ico + ' ' + meta.title;
+      $('activeSectionBadge').style.display = 'none';
     }
 
     if ($('checklistLockPill')) {
-      $('checklistLockPill').hidden = !gov.checklistLocked;
-      $('checklistLockPill').textContent = ar ? '🔒 مقفلة' : '🔒 Locked';
+      $('checklistLockPill').style.display = 'none';
+    }
+
+    if ($('ordersTab')) {
+      $('ordersTab').hidden = !canCurrentUserAccessOrders();
     }
     if ($('lockBtn')) {
       $('lockBtn').hidden = !isMgr || S.editing;
