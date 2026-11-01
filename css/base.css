@@ -1,3 +1,15 @@
+/* High-Performance Touch & Render Optimizations */
+button, input, select, textarea, a, .btn, .chip, .shift-nav-tab, .sb-nav-btn {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.card, .role-landing-hero, .ops-step-card {
+  contain: layout style;
+}
+#appSidebar {
+  will-change: transform;
+}
+
 /* Base look and run mode. Mobile first; touch targets are at least 44px.
    Directional spacing uses logical properties so Arabic (RTL) mirrors itself. */
 :root {

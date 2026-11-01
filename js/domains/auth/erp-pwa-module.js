@@ -18,7 +18,7 @@
 
   function loadPendingNameChanges() {
     try {
-      const list = JSON.parse(localStorage.getItem(PENDING_CHANGES_KEY) || '[]');
+      const list = FOH.safeJsonParse(localStorage.getItem(PENDING_CHANGES_KEY), '[]');
       return Array.isArray(list) ? list : [];
     } catch {
       return [];
@@ -498,7 +498,7 @@
     const customPass = localStorage.getItem(savedPassKey);
     const demo = DEMO_ACCOUNTS.find((d) => d.username === cleanUser);
     if (demo && (pass === (customPass || demo.pass) || pass === '1234')) {
-      const savedProf = JSON.parse(localStorage.getItem('foh-opening.prof.' + cleanUser) || '{}');
+      const savedProf = FOH.safeJsonParse(localStorage.getItem('foh-opening.prof.' + cleanUser), '{}');
       const nextSess = {
         username: demo.username,
         email,
@@ -731,8 +731,8 @@
       banner.innerHTML =
         '<div class="pab-head">⏳ ' + (ar ? 'طلب تعديل الاسم والـ Nickname قيد مراجعة المدير العام' : 'Pending General Manager Approval') + '</div>' +
         '<div class="pab-body">' +
-        '<b>' + (ar ? 'الاسم الجديد المطلوب:' : 'Requested Legal Name:') + '</b> ' + (pnc.reqFullName || (pnc.reqFirstName + ' ' + pnc.reqLastName)) + '<br>' +
-        '<b>' + (ar ? 'الـ Nickname المقترح:' : 'Requested Nickname:') + '</b> 🏷️ ' + (pnc.reqNickname || '—') + '<br>' +
+        '<b>' + (ar ? 'الاسم الجديد المطلوب:' : 'Requested Legal Name:') + '</b> ' + (FOH.escapeHtml(pnc.reqFullName || (pnc.reqFirstName + ' ' + pnc.reqLastName))) + '<br>' +
+        '<b>' + (ar ? 'الـ Nickname المقترح:' : 'Requested Nickname:') + '</b> 🏷️ ' + (FOH.escapeHtml(pnc.reqNickname || '—')) + '<br>' +
         '<small style="display:block;margin-top:4px;color:var(--muted);">' +
         (ar ? '💡 لمنع الغش والعبث ببيانات الشركة، يبقى اسمك الحالي معتمداً في الشفتات والتبس حتى يقوم المدير العام باعتماده رسمياً.' : '💡 For governance, your current name remains in place until Manager approval.') +
         '</small>' +
@@ -1040,7 +1040,7 @@
   // ---- Batch Tally Counter inside #countSheet ----
   function loadBatches() {
     try {
-      return JSON.parse(localStorage.getItem(BATCH_KEY) || '{}');
+      return FOH.safeJsonParse(localStorage.getItem(BATCH_KEY), '{}');
     } catch {
       return {};
     }
@@ -1333,7 +1333,7 @@
 
   function loadClaims() {
     try {
-      return JSON.parse(localStorage.getItem(CLAIMS_KEY) || '{}');
+      return FOH.safeJsonParse(localStorage.getItem(CLAIMS_KEY), '{}');
     } catch {
       return {};
     }
@@ -1394,7 +1394,7 @@
   // ---- Supervisor Sign-off Card on Opening / Closing View ----
   function loadSignoffs() {
     try {
-      return JSON.parse(localStorage.getItem(SIGNOFF_KEY) || '{}');
+      return FOH.safeJsonParse(localStorage.getItem(SIGNOFF_KEY), '{}');
     } catch {
       return {};
     }
@@ -1739,7 +1739,7 @@
 
   function loadOrdersDB() {
     try {
-      const raw = JSON.parse(localStorage.getItem(ORDERS_DB_KEY) || 'null');
+      const raw = FOH.safeJsonParse(localStorage.getItem(ORDERS_DB_KEY), 'null');
       if (raw && raw.version === 2 && raw.catalog && raw.order) {
         // Ensure any new seed groups/categories/items exist
         Object.entries(ORD_SEED.groups).forEach(([gid, g]) => {

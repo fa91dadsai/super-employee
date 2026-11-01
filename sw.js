@@ -12,6 +12,7 @@ const PRECACHE = [
   './css/components.css',
   './css/checklist.css',
   './css/super-employee.css',
+  './js/core/security.js',
   './js/core/i18n.js',
   './js/core/state.js',
   './js/domains/checklist/model.js',

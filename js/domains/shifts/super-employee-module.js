@@ -63,7 +63,7 @@
 
   function loadGov() {
     try {
-      const raw = JSON.parse(localStorage.getItem(GOV_KEY) || 'null');
+      const raw = FOH.safeJsonParse(localStorage.getItem(GOV_KEY), 'null');
       const d = defaultGov();
       if (!raw || typeof raw !== 'object') return d;
       return {
@@ -260,7 +260,7 @@
   // ---- 4. Checklist Suggestions & Item Notes ----
   function loadSuggestions() {
     try {
-      const list = JSON.parse(localStorage.getItem(SUG_KEY) || 'null');
+      const list = FOH.safeJsonParse(localStorage.getItem(SUG_KEY), 'null');
       if (Array.isArray(list)) return list;
     } catch {}
     return [
@@ -287,7 +287,7 @@
 
   function loadItemNotes() {
     try {
-      return JSON.parse(localStorage.getItem(NOTES_KEY) || '{}');
+      return FOH.safeJsonParse(localStorage.getItem(NOTES_KEY), '{}');
     } catch {
       return {};
     }
@@ -640,7 +640,7 @@
 
   function loadTipsData() {
     try {
-      const raw = JSON.parse(localStorage.getItem(TIPS_KEY) || 'null');
+      const raw = FOH.safeJsonParse(localStorage.getItem(TIPS_KEY), 'null');
       if (raw && raw.staff) return raw;
     } catch {}
     return defaultTipsData();
@@ -1389,8 +1389,8 @@
         it.innerHTML =
           '<div class="pac-item-info">' +
           '<b>' + st.name + '</b> (' + (st.role || 'Staff') + ')<br>' +
-          (ar ? 'الاسم الجديد المطلوب:' : 'Requested Legal Name:') + ' <b style="color:var(--accent);">' + (req.reqFullName || (req.reqFirstName + ' ' + req.reqLastName)) + '</b><br>' +
-          (ar ? 'الـ Nickname المقترح:' : 'Requested Nickname:') + ' <b style="color:#10b981;">🏷️ ' + (req.reqNickname || '—') + '</b>' +
+          (ar ? 'الاسم الجديد المطلوب:' : 'Requested Legal Name:') + ' <b style="color:var(--accent);">' + (FOH.escapeHtml(req.reqFullName || (req.reqFirstName + ' ' + req.reqLastName))) + '</b><br>' +
+          (ar ? 'الـ Nickname المقترح:' : 'Requested Nickname:') + ' <b style="color:#10b981;">🏷️ ' + (FOH.escapeHtml(req.reqNickname || '—')) + '</b>' +
           '</div>';
         const aRow = el('div', 'pac-item-actions');
         const okB = el('button', 'pac-btn approve', ar ? '✓ اعتماد وتطبيق في كافة الأنظمة' : '✓ Approve & Sync');
@@ -1596,7 +1596,7 @@
 
   function loadAcademyCatalog() {
     try {
-      const raw = JSON.parse(localStorage.getItem(ACAD_KEY) || 'null');
+      const raw = FOH.safeJsonParse(localStorage.getItem(ACAD_KEY), 'null');
       if (Array.isArray(raw) && raw.length) return raw;
     } catch {}
     return DEFAULT_ACADEMY_ITEMS;
@@ -1610,7 +1610,7 @@
 
   function loadAcadProgress() {
     try {
-      const raw = JSON.parse(localStorage.getItem(ACAD_PROG_KEY) || 'null');
+      const raw = FOH.safeJsonParse(localStorage.getItem(ACAD_PROG_KEY), 'null');
       if (raw && typeof raw === 'object') return raw;
     } catch {}
     return {
@@ -2155,7 +2155,7 @@
 
   function loadOpsConfig() {
     try {
-      const raw = JSON.parse(localStorage.getItem(OPS_CFG_KEY) || 'null');
+      const raw = FOH.safeJsonParse(localStorage.getItem(OPS_CFG_KEY), 'null');
       const d = defaultOpsConfig();
       if (!raw || typeof raw !== 'object') return d;
       const mergedPerms = { ...d.rolePermissions };
@@ -2247,7 +2247,7 @@
   function loadOpsDayState(dateStr) {
     const key = OPS_DAY_PREFIX + (dateStr || S.date);
     try {
-      const raw = JSON.parse(localStorage.getItem(key) || 'null');
+      const raw = FOH.safeJsonParse(localStorage.getItem(key), 'null');
       if (raw && typeof raw === 'object') return raw;
     } catch {}
     return {
@@ -2330,7 +2330,7 @@
   function ensureUpgradedClosingSections() {
     const CLOSING_KEY = 'foh-opening.closingSections.v1';
     try {
-      const existing = JSON.parse(localStorage.getItem(CLOSING_KEY) || 'null');
+      const existing = FOH.safeJsonParse(localStorage.getItem(CLOSING_KEY), 'null');
       const hasBarSec = Array.isArray(existing) && existing.some((s) => s.id === 'cls-bar' || s.dept === 'bar');
       if (!hasBarSec) {
         localStorage.setItem(CLOSING_KEY, JSON.stringify(DEPT_CLOSING_SECTIONS));
@@ -2794,8 +2794,8 @@
 
     // Calculate Closing Sheet progress across departments
     ensureUpgradedClosingSections();
-    const closingSecs = JSON.parse(localStorage.getItem('foh-opening.closingSections.v1') || 'null') || DEPT_CLOSING_SECTIONS;
-    const closingRun = JSON.parse(localStorage.getItem('foh-opening.closingRun.' + S.date) || '{"checked":{}}');
+    const closingSecs = FOH.safeJsonParse(localStorage.getItem('foh-opening.closingSections.v1'), 'null') || DEPT_CLOSING_SECTIONS;
+    const closingRun = FOH.safeJsonParse(localStorage.getItem('foh-opening.closingRun.' + S.date), '{"checked":{}}');
     const checkedMap = (isClosingSheetActive() ? S.run.checked : closingRun.checked) || {};
     const allClosingLeaves = closingSecs.flatMap((s) => s.items || []);
     const doneClosingCount = allClosingLeaves.filter((it) => checkedMap[it.id]).length;
@@ -3421,7 +3421,7 @@
   // ---- Precision Disappear-and-Reappear Snooze Timer Engine ----
   function loadSnoozeTimers() {
     try {
-      const raw = JSON.parse(localStorage.getItem(SNOOZE_TIMERS_KEY) || '{}');
+      const raw = FOH.safeJsonParse(localStorage.getItem(SNOOZE_TIMERS_KEY), '{}');
       return raw && typeof raw === 'object' ? raw : {};
     } catch {
       return {};
@@ -3856,9 +3856,9 @@
           const it = el('div', 'pac-item');
           it.innerHTML =
             '<div class="pac-item-info">' +
-            '<b>' + (req.currentName || (st && st.name) || 'Staff') + '</b> (' + (st ? roleName(st.role) : 'Staff') + ')<br>' +
-            (ar ? 'الاسم الجديد المطلوب:' : 'Requested Legal Name:') + ' <b style="color:var(--accent);">' + (req.reqFullName || (req.reqFirstName + ' ' + req.reqLastName)) + '</b><br>' +
-            (ar ? 'الـ Nickname المقترح:' : 'Requested Nickname:') + ' <b style="color:#10b981;">🏷️ ' + (req.reqNickname || '—') + '</b>' +
+            '<b>' + (FOH.escapeHtml(req.currentName || (st && st.name) || 'Staff')) + '</b> (' + (st ? roleName(st.role) : 'Staff') + ')<br>' +
+            (ar ? 'الاسم الجديد المطلوب:' : 'Requested Legal Name:') + ' <b style="color:var(--accent);">' + (FOH.escapeHtml(req.reqFullName || (req.reqFirstName + ' ' + req.reqLastName))) + '</b><br>' +
+            (ar ? 'الـ Nickname المقترح:' : 'Requested Nickname:') + ' <b style="color:#10b981;">🏷️ ' + (FOH.escapeHtml(req.reqNickname || '—')) + '</b>' +
             '</div>';
           const aRow = el('div', 'pac-item-actions');
           const okB = el('button', 'pac-btn approve', ar ? '✓ اعتماد وتطبيق' : '✓ Approve');
@@ -4016,7 +4016,7 @@
         hAlerts.forEach((ha) => {
           const r = el('div', 'notif-item-row');
           r.innerHTML =
-            '<div><b>🏥 ' + ha.staff.name + ' (' + ha.staff.healthCertExpiry + ')</b>' +
+            '<div><b>🏥 ' + FOH.escapeHtml(ha.staff.name) + ' (' + ha.staff.healthCertExpiry + ')</b>' +
             '<small style="display:block;color:var(--danger);">' +
             (ha.expired ? (ar ? 'منتهية منذ ' + Math.abs(ha.days) + ' يوم' : 'Expired ' + Math.abs(ha.days) + 'd ago') : (ar ? 'تنتهي خلال ' + ha.days + ' يوم' : 'Expires in ' + ha.days + 'd')) +
             '</small></div>';
@@ -4657,7 +4657,7 @@
 
   function loadTaskInbox() {
     try {
-      const arr = JSON.parse(localStorage.getItem(TASK_INBOX_KEY) || '[]');
+      const arr = FOH.safeJsonParse(localStorage.getItem(TASK_INBOX_KEY), '[]');
       return Array.isArray(arr) ? arr : [];
     } catch {
       return [];
@@ -5268,6 +5268,8 @@
 
   // Render Assignment Badges on Checklist Items & Filter Sections/Items by Assigned Employee/Role
   function renderAssignedTaskBadgesAndFilter() {
+    const secEl = $('sections');
+    if (!secEl || secEl.hidden || S.view !== 'opening' || S.editing) return;
     if (S.editing || S.view !== 'opening') return;
     const sess = getSession();
     const curUser = (sess && sess.username ? sess.username.toLowerCase() : 'fadi');
@@ -5584,7 +5586,7 @@
         }
         if (data.sheetType === 'closing') {
           try {
-            const cr = JSON.parse(localStorage.getItem('foh-opening.closingRun.' + S.date) || '{}');
+            const cr = FOH.safeJsonParse(localStorage.getItem('foh-opening.closingRun.' + S.date), '{}');
             cr.checked = cr.checked || {};
             if (data.checked) cr.checked[data.itemId] = S.run.checked[data.itemId];
             else delete cr.checked[data.itemId];
@@ -5839,8 +5841,8 @@
           it.innerHTML =
             '<div class="pac-item-info">' +
             '<b>' + st.name + '</b> (' + (st.role || 'Staff') + ')<br>' +
-            (ar ? 'الاسم الرسمي الجديد المطلوب:' : 'Requested Legal Name:') + ' <b style="color:var(--accent);">' + (req.reqFullName || (req.reqFirstName + ' ' + req.reqLastName)) + '</b><br>' +
-            (ar ? 'الـ Nickname المقترح (للتبس والجدول):' : 'Requested Nickname:') + ' <b style="color:#10b981;">🏷️ ' + (req.reqNickname || '—') + '</b>' +
+            (ar ? 'الاسم الرسمي الجديد المطلوب:' : 'Requested Legal Name:') + ' <b style="color:var(--accent);">' + (FOH.escapeHtml(req.reqFullName || (req.reqFirstName + ' ' + req.reqLastName))) + '</b><br>' +
+            (ar ? 'الـ Nickname المقترح (للتبس والجدول):' : 'Requested Nickname:') + ' <b style="color:#10b981;">🏷️ ' + (FOH.escapeHtml(req.reqNickname || '—')) + '</b>' +
             '</div>';
           const actDiv = el('div', 'pac-item-actions');
           const appBtn = el('button', 'pac-btn approve', ar ? '✓ اعتماد وتطبيق في كافة الأنظمة' : '✓ Approve & Sync');
