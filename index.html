@@ -7838,6 +7838,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   const S = FOH.state;
   const { t } = FOH.i18n;
   const { el, btn } = FOH.view;
+  const isAr = () => (FOH.i18n ? FOH.i18n.lang === 'ar' : false);
   let editing = null; // staff id being edited, or '' for a new person
 
   const roleName = (id) => (S.tpl.roles.find((r) => r.id === id) || {}).name || '';
@@ -9685,7 +9686,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
       if (window.caches) {
         caches.keys().then((ks) => ks.forEach((k) => {
-          if (k !== 'super-employee-v20') caches.delete(k);
+          if (k !== 'super-employee-v21') caches.delete(k);
         })).catch(() => {});
       }
       navigator.serviceWorker.register('sw.js?v=18', { updateViaCache: 'none' }).then((reg) => {
@@ -9848,11 +9849,29 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   const THEME_KEY = 'foh-opening.theme';
   const SIGNOFF_KEY = 'foh-opening.signoffs.v1';
   const BATCH_KEY = 'foh-opening.batches.v1';
+  const PENDING_CHANGES_KEY = 'super-employee.pendingNameChanges.v1';
+
+  function loadPendingNameChanges() {
+    try {
+      const list = JSON.parse(localStorage.getItem(PENDING_CHANGES_KEY) || '[]');
+      return Array.isArray(list) ? list : [];
+    } catch {
+      return [];
+    }
+  }
+  function savePendingNameChanges(list) {
+    try {
+      localStorage.setItem(PENDING_CHANGES_KEY, JSON.stringify(list));
+    } catch {}
+  }
+  FOH.loadPendingNameChanges = loadPendingNameChanges;
+  FOH.savePendingNameChanges = savePendingNameChanges;
 
   const $ = (id) => document.getElementById(id);
   const S = FOH.state;
   const { t } = FOH.i18n;
   const { el, btn } = FOH.view;
+  const isAr = () => (FOH.i18n ? FOH.i18n.lang === 'ar' : false);
 
   FOH.i18n.extend({
     en: {
@@ -10397,7 +10416,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
           alert(isAr() ? 'يرجى إدخال كود التفعيل الممنوح لك من الإدارة' : 'Please enter your invite code');
           return;
         }
-        ensureStaffHealthAndPerms();
+        if (typeof FOH.ensureStaffHealthAndPerms === 'function') FOH.ensureStaffHealthAndPerms();
         const match = (S.tpl.staff || []).find((p) => (p.inviteCode || '').toUpperCase() === rawCode);
         const demoMatch = DEMO_ACCOUNTS.find((d) => (d.inviteCode || '').toUpperCase() === rawCode);
         if (!match && !demoMatch) {
@@ -10475,14 +10494,34 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     body.replaceChildren();
     $('profSheetTitle').textContent = t('profTitle');
     const ar = isAr();
-    ensureStaffHealthAndPerms();
+    if (typeof FOH.ensureStaffHealthAndPerms === 'function') FOH.ensureStaffHealthAndPerms();
     const isMgr = !!(session && session.isManager);
 
-    const staffRec = (S.tpl.staff || []).find(
+    let staffRec = (S.tpl.staff || []).find(
       (p) => (p.id === session.staffId) ||
              (session.inviteCode && p.inviteCode === session.inviteCode) ||
              (p.name || '').toLowerCase().startsWith(((session.username) || '').toLowerCase())
-    ) || {};
+    );
+    if (!staffRec) {
+      staffRec = {
+        id: session.staffId || ('staff_' + session.username),
+        name: session.displayName || session.firstName || session.username,
+        nickname: session.nickname || session.firstName || session.username,
+        email: session.email || '',
+        phone: session.phone || '',
+        inviteCode: session.inviteCode || ('CEEN-' + Math.floor(1000 + Math.random() * 9000)),
+        role: session.roleId || 'staff',
+        active: true,
+        inv: true,
+      };
+      if (!S.tpl.staff) S.tpl.staff = [];
+      S.tpl.staff.push(staffRec);
+      FOH.store.saveTemplate(S.tpl);
+    }
+    const activeReq = (loadPendingNameChanges().find((r) => r.staffId === staffRec.id || r.staffUsername === session.username) || staffRec.pendingNameChange);
+    if (activeReq && activeReq.status === 'pending') {
+      staffRec.pendingNameChange = activeReq;
+    }
 
     const initials = ((session.firstName || session.displayName || 'U')[0] + ((session.lastName || '')[0] || '')).toUpperCase();
     const hero = el('div', 'prof-hero');
@@ -10646,7 +10685,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
         // Non-manager employee (Waiter, Bartender, Captain):
         // Name & Nickname changes require Manager Approval to prevent unauthorized alterations!
         if (nameChanged) {
-          staffRec.pendingNameChange = {
+          const reqObj = {
             id: 'pnc_' + Date.now(),
             staffId: staffRec.id || ('staff_' + session.username),
             staffUsername: session.username,
@@ -10659,9 +10698,13 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
             status: 'pending',
             requestedAt: new Date().toISOString(),
           };
+          staffRec.pendingNameChange = reqObj;
+          const pList = loadPendingNameChanges().filter((r) => r.staffId !== staffRec.id && r.staffUsername !== session.username);
+          pList.push(reqObj);
+          savePendingNameChanges(pList);
           FOH.store.saveTemplate(S.tpl);
           if (FOH.cloudRealtime && FOH.cloudRealtime.broadcast) {
-            FOH.cloudRealtime.broadcast('STAFF_NAME_CHANGE_REQUEST', staffRec.pendingNameChange);
+            FOH.cloudRealtime.broadcast('STAFF_NAME_CHANGE_REQUEST', reqObj);
           }
           saveSession(session, true);
           FOH.app.render();
@@ -13259,6 +13302,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     });
     if (changed) FOH.store.saveTemplate(S.tpl);
   }
+  FOH.ensureStaffHealthAndPerms = ensureStaffHealthAndPerms;
 
   function canCurrentUserEditChecklist() {
     const sess = getSession();
@@ -16321,11 +16365,21 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       : ['sara'];
 
     const staffList = [
-      ['sara', 'Sara Khoury (سارة - سوبر ويتر)', '⭐ Waiter'],
-      ['ali', 'Ali Hassan (علي - سوبر كابتن)', '🎖️ Captain'],
-      ['maher', 'Maher Zaid (ماهر - سوبر بارتندر)', '🍸 Bartender'],
-      ['fadi', 'Fadi Al-Masri (فادي - سوبر مانجر)', '👑 Manager'],
+      ['sara', ar ? 'سارة خوري (سوبر ويتر)' : 'Sara Khoury (Super Waiter)', '⭐ Waiter'],
+      ['ali', ar ? 'علي حسن (سوبر كابتن)' : 'Ali Hassan (Super Captain)', '🎖️ Captain'],
+      ['maher', ar ? 'ماهر زيد (سوبر بارتندر)' : 'Maher Zaid (Super Bartender)', '🍸 Bartender'],
+      ['fadi', ar ? 'فادي المصري (سوبر مانجر)' : 'Fadi Al-Masri (Super Manager)', '👑 Manager'],
     ];
+    const seenU = new Set(staffList.map((s) => s[0]));
+    (S.tpl.staff || []).forEach((st) => {
+      const u = (st.username || (st.name || '').split(' ')[0] || st.id || '').toLowerCase().trim();
+      if (u && !seenU.has(u)) {
+        seenU.add(u);
+        const rName = roleName(st.role) || 'Staff';
+        const disp = st.name + (st.nickname ? ' (' + st.nickname + ')' : '');
+        staffList.push([u, disp, rName]);
+      }
+    });
 
     staffList.forEach(([uname, fullName, roleTag]) => {
       const row = el('label', 'tog');
@@ -16899,6 +16953,21 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     }
   }
 
+  function getActivePendingNameChanges() {
+    const fromStorage = typeof loadPendingNameChanges === 'function' ? loadPendingNameChanges() : (typeof FOH.loadPendingNameChanges === 'function' ? FOH.loadPendingNameChanges() : []);
+    const fromStaff = (S.tpl.staff || []).map((p) => p.pendingNameChange).filter((p) => p && p.status === 'pending');
+    const map = new Map();
+    fromStorage.concat(fromStaff).forEach((it) => {
+      if (it && it.status === 'pending') {
+        const key = it.staffId || it.staffUsername || it.id;
+        if (!map.has(key) || (it.requestedAt && (!map.get(key).requestedAt || it.requestedAt > map.get(key).requestedAt))) {
+          map.set(key, it);
+        }
+      }
+    });
+    return Array.from(map.values());
+  }
+
   function updateNotifBellUI() {
     ensureNotifBellInHeader();
     const badge = $('notifCountBadge');
@@ -16912,7 +16981,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     const unreadTasks = (typeof loadTaskInbox === "function" ? loadTaskInbox().length : 0);
     const sess = getSession();
     const isMgr = !sess || !!sess.isManager;
-    const pendingChanges = isMgr ? (S.tpl.staff || []).filter((p) => p.pendingNameChange && p.pendingNameChange.status === 'pending') : [];
+    const pendingChanges = isMgr ? getActivePendingNameChanges() : [];
     const total = activeCount + snoozedList.length + unreadTasks + pendingChanges.length;
 
     badge.hidden = total === 0;
@@ -16942,7 +17011,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       const ident = getAppRoleIdentity();
       const sess = getSession();
       const isMgr = !sess || !!sess.isManager;
-      const pendingChanges = isMgr ? (S.tpl.staff || []).filter((p) => p.pendingNameChange && p.pendingNameChange.status === 'pending') : [];
+      const pendingChanges = isMgr ? getActivePendingNameChanges() : [];
 
       box.innerHTML =
         '<div class="grab"></div>' +
@@ -16957,12 +17026,12 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
         pac.innerHTML =
           '<div class="pac-head"><b>📝 ' + (ar ? 'طلبات تعديل الأسماء بانتظار اعتمادك:' : 'Pending Staff Name Change Approvals:') + '</b><span class="pac-badge">' + pendingChanges.length + '</span></div>';
         const pacList = el('div', 'pac-list');
-        pendingChanges.forEach((st) => {
-          const req = st.pendingNameChange;
+        pendingChanges.forEach((req) => {
+          let st = (S.tpl.staff || []).find((p) => p.id === req.staffId || (req.staffUsername && (p.name || '').toLowerCase().startsWith(req.staffUsername.toLowerCase())));
           const it = el('div', 'pac-item');
           it.innerHTML =
             '<div class="pac-item-info">' +
-            '<b>' + st.name + '</b> (' + (st.role || 'Staff') + ')<br>' +
+            '<b>' + (req.currentName || (st && st.name) || 'Staff') + '</b> (' + (st ? roleName(st.role) : 'Staff') + ')<br>' +
             (ar ? 'الاسم الجديد المطلوب:' : 'Requested Legal Name:') + ' <b style="color:var(--accent);">' + (req.reqFullName || (req.reqFirstName + ' ' + req.reqLastName)) + '</b><br>' +
             (ar ? 'الـ Nickname المقترح:' : 'Requested Nickname:') + ' <b style="color:#10b981;">🏷️ ' + (req.reqNickname || '—') + '</b>' +
             '</div>';
@@ -16970,9 +17039,16 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
           const okB = el('button', 'pac-btn approve', ar ? '✓ اعتماد وتطبيق' : '✓ Approve');
           okB.type = 'button';
           okB.addEventListener('click', () => {
-            st.name = req.reqFullName || ((req.reqFirstName + ' ' + req.reqLastName).trim()) || st.name;
-            if (req.reqNickname) st.nickname = req.reqNickname;
-            delete st.pendingNameChange;
+            if (!st) {
+              st = { id: req.staffId, name: req.reqFullName, nickname: req.reqNickname, role: 'staff', active: true, inv: true };
+              S.tpl.staff.push(st);
+            } else {
+              st.name = req.reqFullName || ((req.reqFirstName + ' ' + req.reqLastName).trim()) || st.name;
+              if (req.reqNickname) st.nickname = req.reqNickname;
+              delete st.pendingNameChange;
+            }
+            const allReqs = (typeof FOH.loadPendingNameChanges === 'function' ? FOH.loadPendingNameChanges() : []).filter((r) => r.id !== req.id && r.staffId !== req.staffId && r.staffUsername !== req.staffUsername);
+            if (typeof FOH.savePendingNameChanges === 'function') FOH.savePendingNameChanges(allReqs);
             FOH.store.saveTemplate(S.tpl);
             if (FOH.cloudRealtime && FOH.cloudRealtime.broadcast) {
               FOH.cloudRealtime.broadcast('STAFF_NAME_CHANGE_APPROVED', { staffId: st.id, name: st.name, nickname: st.nickname });
@@ -16985,7 +17061,9 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
           const noB = el('button', 'pac-btn reject', ar ? '✕ رفض' : '✕ Reject');
           noB.type = 'button';
           noB.addEventListener('click', () => {
-            delete st.pendingNameChange;
+            if (st) delete st.pendingNameChange;
+            const allReqs = (typeof FOH.loadPendingNameChanges === 'function' ? FOH.loadPendingNameChanges() : []).filter((r) => r.id !== req.id && r.staffId !== req.staffId && r.staffUsername !== req.staffUsername);
+            if (typeof FOH.savePendingNameChanges === 'function') FOH.savePendingNameChanges(allReqs);
             FOH.store.saveTemplate(S.tpl);
             FOH.edit.toast(ar ? 'تم رفض طلب التعديل' : 'Rejected');
             drawCenter();
@@ -18765,10 +18843,10 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
     hero.className = 'role-landing-hero run-only role-' + rKey;
 
-    // Hide the administrative #opsLifecycleBar for Waiters & Bartenders so they only see their operational focus!
+    // Hide the administrative #opsLifecycleBar for Waiters & Bartenders & Captains so only Manager sees restaurant open/close lifecycle!
     const opsBar = $('opsLifecycleBar');
     if (opsBar) {
-      if (rKey === 'super_waiter' || rKey === 'staff' || rKey === 'super_bartender') {
+      if (rKey !== 'super_manager') {
         opsBar.hidden = true;
       }
     }
