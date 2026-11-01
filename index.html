@@ -3166,6 +3166,113 @@ main#appMain > .health-banner .snooze-btn {
   border-color: var(--amber);
 }
     </style>
+    <style id="super-employee-v13-css">
+/* ============================================================================
+   13. SUPER EMPLOYEE v13: 3-TAB SHIFT NAV (OPENING · MID-SHIFT · CLOSING)
+       + TIME-BASED AUTO-SCHEDULE + TASK ASSIGNMENT BADGES
+   ============================================================================ */
+#sheetTypeBar.sheet-switcher {
+  margin: 0 0 8px !important;
+  padding: 8px 10px !important;
+  border-radius: 14px !important;
+  background: var(--card) !important;
+  border: 1.5px solid var(--line) !important;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.04) !important;
+}
+.shift-nav-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 7px;
+  font-size: 0.73rem;
+  color: var(--ink2);
+  font-weight: 700;
+}
+.shift-nav-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+.shift-nav-tab {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 8px 6px;
+  border-radius: 11px;
+  border: 1.5px solid var(--line);
+  background: var(--bg);
+  color: var(--ink);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+}
+.shift-nav-tab b {
+  font-size: 0.77rem;
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.shift-nav-tab small {
+  font-size: 0.64rem;
+  color: var(--ink2);
+  font-weight: 600;
+  direction: ltr;
+}
+.shift-nav-tab.on {
+  background: var(--accent) !important;
+  color: #ffffff !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 4px 12px rgba(47, 107, 94, 0.25);
+}
+body.dark .shift-nav-tab.on {
+  color: #041612 !important;
+}
+.shift-nav-tab.on small {
+  color: inherit !important;
+  opacity: 0.88;
+}
+.shift-now-dot {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 99px;
+  font-size: 0.6rem;
+  font-weight: 800;
+  background: rgba(245, 158, 11, 0.22);
+  color: #d97706;
+  margin-top: 2px;
+}
+.shift-nav-tab.on .shift-now-dot {
+  background: rgba(255, 255, 255, 0.25);
+  color: inherit;
+}
+.assigned-task-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-inline-start: 6px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: rgba(47, 107, 94, 0.14);
+  border: 1px solid rgba(47, 107, 94, 0.35);
+  color: var(--accent);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+.u-pill.primary-assign {
+  background: var(--accent) !important;
+  color: #ffffff !important;
+  border-color: var(--accent) !important;
+}
+body.dark .u-pill.primary-assign {
+  color: #041612 !important;
+}
+
+    </style>
   </head>
   <body>
     <section id="loginScreen" class="login-screen" hidden>
@@ -8980,7 +9087,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
           if (k !== 'super-employee-v10') caches.delete(k);
         })).catch(() => {});
       }
-      navigator.serviceWorker.register('sw.js?v=12', { updateViaCache: 'none' }).then((reg) => {
+      navigator.serviceWorker.register('sw.js?v=13', { updateViaCache: 'none' }).then((reg) => {
         reg.update().catch(() => {});
       }).catch(() => {});
     }
@@ -9999,8 +10106,50 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   // ---- Opening / Closing Sheet Mode & Section Claiming ----
   const CLAIMS_KEY = 'foh-opening.claims.v1';
   const CLOSING_TPL_KEY = 'foh-opening.closingSections.v1';
-  let sheetType = 'opening'; // 'opening' | 'closing'
+  const MID_TPL_KEY = 'foh-opening.midSections.v1';
+  let sheetType = 'opening'; // 'opening' | 'mid' | 'closing'
   let openingSectionsBackup = null;
+
+  const DEFAULT_MID_SECTIONS = [
+    {
+      id: 'mid-floor',
+      dept: 'floor',
+      icon: '🍽️',
+      title: 'Floor & Tables Mid-Shift Reset (03:00 PM – Evening Prep)',
+      titleAr: 'تجهيز الصالة والطاولات لمنتصف الشفت (بعد الساعة 3:00 عصراً)',
+      items: [
+        { id: 'mf1', text: 'Reset & sanitize all lunch tables, replace soiled placemats & napkins', textAr: 'إعادة ترتيب وتعقيم طاولات فترة الغداء وتبديل المفارش والمناديل', due: '15:15', role: '', assignedRoleKey: 'super_waiter', assignedRoleLabel: '⭐ Super Waiter', children: [] },
+        { id: 'mf2', text: 'Refill table salt/pepper grinders, soy sauce bottles, toothpicks & sugar caddies', textAr: 'إعادة تعبئة الملاحات وزجاجات الصويا صوص والمناديل على الطاولات', due: '15:30', role: '', assignedRoleKey: 'super_waiter', assignedRoleLabel: '⭐ Super Waiter', children: [] },
+        { id: 'mf3', text: 'Inspect & refresh guest restrooms (soap, paper towels, air freshener & floor)', textAr: 'فحص وتجهيز حمامات الزبائن (الصابون، المحارم، المعطر ونظافة الأرضية)', due: '15:45', role: '', assignedRoleKey: 'super_waiter', assignedRoleLabel: '⭐ Super Waiter', children: [] },
+        { id: 'mf4', text: 'Review evening table reservations & VIP requests with Floor Captain', textAr: 'مراجعة حجوزات المساء وطلبات الـ VIP وتوزيع الطاولات مع الكابتن', due: '16:15', role: '', assignedRoleKey: 'super_captain', assignedRoleLabel: '🎖️ Super Captain', children: [] },
+      ],
+    },
+    {
+      id: 'mid-bar',
+      dept: 'bar',
+      icon: '🍸',
+      title: 'Bar Mid-Shift Restock & Handover (03:00 PM – Evening Rush)',
+      titleAr: 'تدعيم البار وتجهيز منتصف الشفت لذروة المساء (3:00 عصراً)',
+      items: [
+        { id: 'mb1', text: 'Top up all ice wells, chillers, draft lines & speed-rail spirits for evening rush', textAr: 'تعبئة أحواض الثلج وثلاجات البيرة والنبيذ وزجاجات الـ Speed Rail لذروة المساء', due: '15:20', role: '', assignedRoleKey: 'super_bartender', assignedRoleLabel: '🍸 Super Bartender', children: [] },
+        { id: 'mb2', text: 'Cut fresh evening garnishes (lemon/lime/orange/mint) & check house syrups', textAr: 'تقطيع دفعة طازجة من الغارنيش والنعناع وفحص الـ Syrups والعصائر للمساء', due: '15:45', role: '', assignedRoleKey: 'super_bartender', assignedRoleLabel: '🍸 Super Bartender', children: [] },
+        { id: 'mb3', text: 'Purge espresso steam wands, empty knock-box & wipe coffee station', textAr: 'تنظيف ماكينة القهوة وتفريغ حاوية البن بعد موجة قهوة الظهيرة', due: '16:00', role: '', assignedRoleKey: 'super_bartender', assignedRoleLabel: '🍸 Super Bartender', children: [] },
+        { id: 'mb4', text: 'Wash, polish & rack all cocktail and wine glassware for evening service', textAr: 'غسيل وتلميع وترتيب كؤوس الكوكتيل والنبيذ استعداداً لشفت المساء', due: '16:30', role: '', assignedRoleKey: 'super_bartender', assignedRoleLabel: '🍸 Super Bartender', children: [] },
+      ],
+    },
+    {
+      id: 'mid-stations',
+      dept: 'floor',
+      icon: '☕',
+      title: 'Waiter Stations, Cutlery Polish & Ambiance Transition',
+      titleAr: 'تدعيم محطات الويتر وتلميع الفضيات وضبط الأجواء المسائية',
+      items: [
+        { id: 'ms1', text: 'Polish & restock forks, knives, spoons, side plates & water glasses in stations', textAr: 'تلميع وتدعيم الشوك والسكاكين والصحون الجانبية وكاسات الماء في المحطات', due: '15:40', role: '', assignedRoleKey: 'super_waiter', assignedRoleLabel: '⭐ Super Waiter', children: [] },
+        { id: 'ms2', text: 'Empty mid-day station trash bins and replace bags before dinner service', textAr: 'تفريغ سلات المهملات في المحطات وتبديل الأكياس قبل خدمة العشاء', due: '16:00', role: '', assignedRoleKey: 'super_waiter', assignedRoleLabel: '⭐ Super Waiter', children: [] },
+        { id: 'ms3', text: 'Transition music playlist & dimmer lighting to afternoon/evening mood', textAr: 'تحويل قائمة الموسيقى وتعديل الإضاءة والتكييف لأجواء المساء', due: '16:30', role: '', assignedRoleKey: 'super_captain', assignedRoleLabel: '🎖️ Super Captain', children: [] },
+      ],
+    },
+  ];
 
   const DEFAULT_CLOSING_SECTIONS = [
     {
@@ -10078,22 +10227,63 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     } catch {}
   }
 
-  function switchSheetType(nextType) {
-    if (nextType === sheetType) return;
+  function loadMidSections() {
+    try {
+      const raw = localStorage.getItem(MID_TPL_KEY);
+      return raw ? JSON.parse(raw) : JSON.parse(JSON.stringify(DEFAULT_MID_SECTIONS));
+    } catch {
+      return JSON.parse(JSON.stringify(DEFAULT_MID_SECTIONS));
+    }
+  }
+  function saveMidSections(secs) {
+    try {
+      localStorage.setItem(MID_TPL_KEY, JSON.stringify(secs));
+    } catch {}
+  }
+  function loadMidRun(date) {
+    try {
+      const raw = localStorage.getItem('foh-opening.midRun.' + date);
+      return raw ? JSON.parse(raw) : { supervisor: S.run.supervisor || '', captain: S.run.captain || '', assistant: S.run.assistant || '', checked: {} };
+    } catch {
+      return { supervisor: '', captain: '', assistant: '', checked: {} };
+    }
+  }
+  function saveMidRun(date, run) {
+    try {
+      localStorage.setItem('foh-opening.midRun.' + date, JSON.stringify(run));
+    } catch {}
+  }
+
+  function persistCurrentSheetState() {
     if (sheetType === 'opening') {
       openingSectionsBackup = JSON.parse(JSON.stringify(S.tpl.sections));
+      FOH.store.saveTemplate(S.tpl);
       FOH.store.saveRun(S.date, S.run);
-      sheetType = 'closing';
-      S.tpl.sections = loadClosingSections();
-      S.run = loadClosingRun(S.date);
-    } else {
+    } else if (sheetType === 'mid') {
+      saveMidSections(S.tpl.sections);
+      saveMidRun(S.date, S.run);
+    } else if (sheetType === 'closing') {
       try {
         localStorage.setItem(CLOSING_TPL_KEY, JSON.stringify(S.tpl.sections));
       } catch {}
       saveClosingRun(S.date, S.run);
-      sheetType = 'opening';
-      if (openingSectionsBackup) S.tpl.sections = openingSectionsBackup;
+    }
+  }
+
+  function switchSheetType(nextType) {
+    if (!['opening', 'mid', 'closing'].includes(nextType)) return;
+    if (nextType === sheetType) return;
+    persistCurrentSheetState();
+    sheetType = nextType;
+    if (nextType === 'opening') {
+      if (openingSectionsBackup) S.tpl.sections = JSON.parse(JSON.stringify(openingSectionsBackup));
       S.run = FOH.store.loadRun(S.date);
+    } else if (nextType === 'mid') {
+      S.tpl.sections = loadMidSections();
+      S.run = loadMidRun(S.date);
+    } else if (nextType === 'closing') {
+      S.tpl.sections = loadClosingSections();
+      S.run = loadClosingRun(S.date);
     }
     S.collapsed.clear();
     FOH.app.render();
@@ -10247,7 +10437,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       Object.entries(boot.run.checked).forEach(([itemId, val]) => {
         S.run.checked[itemId] = typeof val === 'object' && val !== null ? val.at || FOH.time.nowHM() : String(val);
       });
-      if (sheetType === 'closing') saveClosingRun(S.date, S.run);
+      if (sheetType === 'closing') saveClosingRun(S.date, S.run); else if (sheetType === 'mid') saveMidRun(S.date, S.run);
       else FOH.store.saveRun(S.date, S.run);
     }
     const remoteClaims = boot.run.section_claims || boot.run.claimed_sections;
@@ -12110,7 +12300,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     if (session && session.accessToken) syncFromCloud();
   }
 
-  FOH.erpPwa = { init, openProfile, setTheme, switchSheetType, renderOrdersView, buildDayOffSection };
+  FOH.erpPwa = { init, openProfile, setTheme, switchSheetType, getSheetType: () => sheetType, persistCurrentSheetState, loadMidSections, saveMidSections, loadClosingSections, getOpeningBackup: () => openingSectionsBackup, setOpeningBackup: (b) => { openingSectionsBackup = b; }, renderOrdersView, buildDayOffSection };
   document.addEventListener('DOMContentLoaded', init);
 })(window.FOH = window.FOH || {});
     </script>
@@ -14409,7 +14599,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     [
       ['', ar ? '🕒 وقت الساعة الفعلي (' + FOH.time.nowHM() + ')' : '🕒 Real Clock (' + FOH.time.nowHM() + ')'],
       ['12:15', ar ? '☀️ محاكاة 12:15 ظهراً (بداية دوام الموظفين قبل الفتح)' : '☀️ Sim 12:15 PM (Staff Prep before 1:00 PM Open)'],
-      ['13:30', ar ? '🍽️ محاكاة 01:30 ظهراً (المطعم مفتوح للزبائن)' : '🍽️ Sim 1:30 PM (Restaurant Open)'],
+      ['13:30', ar ? '☀️ محاكاة 01:30 ظهراً (شيت الافتتاح 12:00–3:00 م)' : '☀️ Sim 1:30 PM (Opening Sheet 12–3 PM)'],
+      ['15:30', ar ? '🌤️ محاكاة 03:30 عصراً (شيت منتصف الشفت Mid-Shift)' : '🌤️ Sim 3:30 PM (Mid-Shift Sheet 3–11 PM)'],
       ['23:30', ar ? '🚫 محاكاة 11:30 ليلاً (المطعم فارغ مبكراً — يُمنع الإغلاق)' : '🚫 Sim 11:30 PM (Empty Floor — Early Close Blocked)'],
       ['00:00', ar ? '🍳 محاكاة 12:00 منتصف الليل (Last Order المطبخ)' : '🍳 Sim 12:00 AM (Kitchen Last Order)'],
       ['01:00', ar ? '🍸 محاكاة 01:00 فجراً (Last Order البار + شيت إغلاق البار)' : '🍸 Sim 01:00 AM (Bar Last Order + Bar Closing)'],
@@ -14422,7 +14613,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     });
     simSel.addEventListener('change', () => {
       simulatedShiftTime = simSel.value;
-      renderOpsLifecycleBar();
+      manualSheetOverride = false;
+      FOH.app.render();
     });
     simWrap.append(simSel);
     topRow.append(leftBox, simWrap);
@@ -15832,7 +16024,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   function getSectionMeta(view) {
     const ar = isAr();
     const map = {
-      opening: { ico: '☀️', title: ar ? 'قائمة الافتتاح والإغلاق' : 'Opening & Closing', sub: ar ? 'فحص جاهزية الصالة والبار' : 'Shift readiness checklist' },
+      opening: { ico: '📋', title: ar ? 'شيتات الشفت (Opening · Mid · Closing)' : 'Shift Sheets (Opening · Mid · Closing)', sub: ar ? 'افتتاح (12–3) · منتصف الشفت (3–11) · إغلاق (11+)' : 'Time-scheduled: Opening · Mid-Shift · Closing' },
       mine: { ico: '📋', title: ar ? 'مهامي وطلب الإجازة' : 'My Tasks & Day-Off', sub: ar ? 'مهامك اليومية وطلب عطلة' : 'Personal tasks & schedule leave' },
       orders: { ico: '🛒', title: ar ? 'طلبيات البار والصالة' : 'Bar & FOH Orders', sub: ar ? 'Step-by-step و Quick list' : 'Step-by-step & Quick list' },
       inv: { ico: '📦', title: ar ? 'الجرد وبلاغات التالف' : 'Inventory & Breakage', sub: ar ? 'الجرد الأعمى وإدارة الأصناف' : 'Blind counts & breakage reports' },
@@ -15900,7 +16092,6 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
       const items = [
         ['opening', openLeft > 0 ? String(openLeft) : '✓'],
-        ['closing_sheet', '🌙'],
         ['mine', mineLeft > 0 ? String(mineLeft) : ''],
         ['orders', ordCount > 0 ? String(ordCount) : ''],
         ['inv', ''],
@@ -15954,6 +16145,10 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       enhanceSidebarAndInventory();
       injectRoleSwitcherInSidebar();
     wireAutomaticTaskCreationNotifications();
+    enforceTimeBasedSheetSchedule();
+    renderUnifiedThreeSheetNav();
+    renderAssignedTaskBadgesAndFilter();
+    injectAssignTaskBtnIntoToolbarAndMine();
     relocateHeaderSubbarsToMain();
     renderCleanHeaderText();
     collapseOpsLifecycleBarToOneLine();
@@ -16001,7 +16196,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     if ($('restaurantBadge')) {
       const secTitle = S.editing
         ? (ar ? 'وضع التعديل' : 'Edit Mode')
-        : (S.view === 'opening' && isClosingSheetActive() ? (ar ? '🌙 شيت الإغلاق' : '🌙 Closing Sheet') : (meta.ico + ' ' + meta.title));
+        : (S.view === 'opening' ? (getActiveSheetType() === 'closing' ? (ar ? '🌙 شيت الإغلاق' : '🌙 Closing Sheet') : getActiveSheetType() === 'mid' ? (ar ? '🌤️ شيت منتصف الشفت' : '🌤️ Mid-Shift Sheet') : (ar ? '☀️ شيت الافتتاح' : '☀️ Opening Sheet')) : (meta.ico + ' ' + meta.title));
       $('restaurantBadge').textContent = '🍽 ' + shortRest + ' · ' + secTitle;
     }
     if ($('checklistLockPill')) $('checklistLockPill').hidden = true;
@@ -16427,6 +16622,490 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     const firstCard = dlg.querySelector('.notif-center-card');
     if (firstCard && firstCard.parentElement) {
       firstCard.parentElement.insertBefore(card, firstCard.nextSibling);
+    }
+  }
+
+
+  // ============================================================================
+  // 15. SUPER EMPLOYEE v13: UNIFIED SHIFT SHEETS NAV (OPENING · MID · CLOSING)
+  //     WITH TIME-WINDOW AUTO-SWITCH + ASSIGN TASK TO EMPLOYEE OR ROLE
+  // ============================================================================
+  let manualSheetOverride = false;
+  let lastAutoSheetApplied = '';
+
+  function getActiveSheetType() {
+    return (FOH.erpPwa && FOH.erpPwa.getSheetType) ? FOH.erpPwa.getSheetType() : 'opening';
+  }
+
+  function getSheetScheduleWindows() {
+    const cfg = loadOpsConfig();
+    const w = (cfg && cfg.sheetWindows) || {};
+    return {
+      openingStart: w.openingStart || '00:00',
+      openingEnd: w.openingEnd || '15:00', // 12:00 AM / 12:00 PM until 3:00 PM
+      midStart: w.midStart || '15:00',     // 3:00 PM until 11:00 PM
+      midEnd: w.midEnd || '23:00',
+      closingStart: w.closingStart || '23:00', // 11:00 PM until Close
+    };
+  }
+
+  // Determine which sheet should appear right now based on clock (or simulated shift time)
+  function getScheduledSheetForNow() {
+    const hm = getEffectiveNowHM();
+    const [hh, mm] = (hm || '12:00').split(':').map(Number);
+    const totalMins = (hh || 0) * 60 + (mm || 0);
+
+    const win = getSheetScheduleWindows();
+    const [mSH, mSM] = win.midStart.split(':').map(Number);
+    const [cSH, cSM] = win.closingStart.split(':').map(Number);
+    const midStartMins = (mSH || 15) * 60 + (mSM || 0);     // default 15:00 (3:00 PM)
+    const closeStartMins = (cSH || 23) * 60 + (cSM || 0);   // default 23:00 (11:00 PM)
+
+    // Between 23:00 and 04:30 AM -> Closing Sheet
+    if (totalMins >= closeStartMins || totalMins < 270) {
+      return 'closing';
+    }
+    // Between 15:00 (3:00 PM) and 23:00 (11:00 PM) -> Mid-Shift Sheet
+    if (totalMins >= midStartMins && totalMins < closeStartMins) {
+      return 'mid';
+    }
+    // From 04:30 AM / 12:00 PM until 15:00 (3:00 PM) -> Opening Sheet
+    return 'opening';
+  }
+
+  function enforceTimeBasedSheetSchedule() {
+    if (S.editing || S.view !== 'opening') return;
+    const scheduled = getScheduledSheetForNow();
+    const cur = getActiveSheetType();
+    if (!manualSheetOverride && (cur !== scheduled || lastAutoSheetApplied !== scheduled)) {
+      lastAutoSheetApplied = scheduled;
+      if (FOH.erpPwa && FOH.erpPwa.switchSheetType && cur !== scheduled) {
+        FOH.erpPwa.switchSheetType(scheduled);
+      }
+    }
+  }
+
+  function renderUnifiedThreeSheetNav() {
+    const bar = $('sheetTypeBar');
+    const mainEl = $('appMain');
+    const govBar = $('checklistGovBar');
+    if (!bar || !mainEl) return;
+
+    // Place #sheetTypeBar right at the top of the checklist section (above #checklistGovBar)
+    if (govBar && bar.nextElementSibling !== govBar) {
+      mainEl.insertBefore(bar, govBar);
+    }
+
+    bar.hidden = S.editing || S.view !== 'opening';
+    if (bar.hidden) return;
+    bar.replaceChildren();
+
+    const ar = isAr();
+    const curType = getActiveSheetType();
+    const scheduledType = getScheduledSheetForNow();
+    const nowHM = getEffectiveNowHM();
+
+    const head = el('div', 'shift-nav-head');
+    const leftInfo = el('span', '');
+    const schedNames = {
+      opening: ar ? '☀️ شيت الافتتاح (12:00 ص – 3:00 م)' : '☀️ Opening (12:00 AM – 3:00 PM)',
+      mid: ar ? '🌤️ شيت منتصف الشفت (3:00 م – 11:00 م)' : '🌤️ Mid-Shift (3:00 PM – 11:00 PM)',
+      closing: ar ? '🌙 شيت الإغلاق (11:00 م – الإغلاق)' : '🌙 Closing (11:00 PM – Close)',
+    };
+    leftInfo.innerHTML =
+      '🕒 ' + (ar ? 'الساعة ' : 'Clock ') + '<b>' + nowHM + '</b> · ' +
+      (ar ? 'الفترة الحالية: ' : 'Current Window: ') +
+      '<b style="color:var(--accent);">' + schedNames[scheduledType] + '</b>';
+    head.append(leftInfo);
+
+    if (manualSheetOverride && curType !== scheduledType) {
+      const autoBtn = el('button', 'ops-compact-toggle', ar ? '🔄 عودة للشيت التلقائي (' + nowHM + ')' : '🔄 Auto by Clock');
+      autoBtn.type = 'button';
+      autoBtn.addEventListener('click', () => {
+        manualSheetOverride = false;
+        if (FOH.erpPwa && FOH.erpPwa.switchSheetType) {
+          FOH.erpPwa.switchSheetType(scheduledType);
+        }
+      });
+      head.append(autoBtn);
+    }
+    bar.append(head);
+
+    const grid = el('nav', 'shift-nav-grid');
+    grid.setAttribute('aria-label', 'Shift Sheets Navigation');
+
+    const tabs = [
+      {
+        id: 'opening',
+        titleAr: '☀️ Opening · الافتتاح',
+        titleEn: '☀️ Opening',
+        windowAr: '12:00 AM – 03:00 PM',
+        windowEn: '12:00 AM – 03:00 PM',
+      },
+      {
+        id: 'mid',
+        titleAr: '🌤️ Mid-Shift · منتصف',
+        titleEn: '🌤️ Mid-Shift',
+        windowAr: '03:00 PM – 11:00 PM',
+        windowEn: '03:00 PM – 11:00 PM',
+      },
+      {
+        id: 'closing',
+        titleAr: '🌙 Closing · الإغلاق',
+        titleEn: '🌙 Closing',
+        windowAr: '11:00 PM – Close',
+        windowEn: '11:00 PM – Close',
+      },
+    ];
+
+    tabs.forEach((tb) => {
+      const isCur = curType === tb.id;
+      const isNow = scheduledType === tb.id;
+      const btn = el('button', 'shift-nav-tab' + (isCur ? ' on' : ''));
+      btn.type = 'button';
+      btn.innerHTML =
+        '<b>' + (ar ? tb.titleAr : tb.titleEn) + '</b>' +
+        '<small>' + (ar ? tb.windowAr : tb.windowEn) + '</small>' +
+        (isNow ? '<span class="shift-now-dot">⏰ ' + (ar ? 'وقتها الآن' : 'Active Time') + '</span>' : '');
+      btn.addEventListener('click', () => {
+        manualSheetOverride = tb.id !== scheduledType;
+        if (FOH.erpPwa && FOH.erpPwa.switchSheetType) {
+          FOH.erpPwa.switchSheetType(tb.id);
+        }
+      });
+      grid.append(btn);
+    });
+
+    bar.append(grid);
+  }
+
+  // ---- Add & Assign Task to Specific Employee or Role Modal ----
+  function openAssignTaskToStaffOrRoleModal(defaultTargetSheet) {
+    const ar = isAr();
+    let dlg = $('assignTaskDialog');
+    if (!dlg) {
+      dlg = el('dialog', 'sheet');
+      dlg.id = 'assignTaskDialog';
+      dlg.addEventListener('click', (e) => e.target === dlg && dlg.close());
+      document.body.append(dlg);
+    }
+    dlg.replaceChildren();
+
+    const curSheet = defaultTargetSheet || getActiveSheetType();
+    const box = el('div', '');
+    box.style.padding = '14px 16px 20px';
+
+    box.innerHTML =
+      '<div class="grab"></div>' +
+      '<h2 style="margin:0 0 6px;font-size:1.08rem;">➕ ' +
+      (ar ? 'إضافة مهمة وتعيينها لموظف أو منصب معين' : 'Add & Assign Task to Employee or Role') +
+      '</h2>' +
+      '<p style="margin:0 0 12px;font-size:0.78rem;color:var(--ink2);">' +
+      (ar
+        ? 'اختر الشيت (Opening / Mid-Shift / Closing)، وحدد المنصب أو اسم الموظف المسؤول، وسيصله إشعار فوري على الموبايل:'
+        : 'Select the shift sheet, assign to a position or specific employee, and send an instant mobile alert:') +
+      '</p>';
+
+    // 1. Task Title Input
+    const titleLbl = el('label', '', ar ? '📝 عنوان المهمة المطلوبة:' : '📝 Task Description:');
+    const titleIn = el('input', 'in');
+    titleIn.placeholder = ar ? 'مثال: تجهيز طاولة VIP رقم 8 وتلميع كؤوس العصير...' : 'e.g. Prepare VIP Table 8 & polish wine glasses...';
+    titleIn.style.marginTop = '4px';
+    titleLbl.append(titleIn);
+    box.append(titleLbl);
+
+    // 2. Target Sheet & Section
+    const rowSheet = el('div', 'two');
+    rowSheet.style.marginTop = '10px';
+
+    const sheetLbl = el('label', '', ar ? '📋 ضمن أي شيت؟' : '📋 Target Shift Sheet:');
+    const sheetSel = el('select', 'in');
+    [
+      ['opening', ar ? '☀️ Opening Sheet (12:00 ص – 3:00 م)' : '☀️ Opening Sheet (12AM–3PM)'],
+      ['mid', ar ? '🌤️ Mid-Shift Sheet (3:00 م – 11:00 م)' : '🌤️ Mid-Shift Sheet (3PM–11PM)'],
+      ['closing', ar ? '🌙 Closing Sheet (11:00 م – الإغلاق)' : '🌙 Closing Sheet (11PM–Close)'],
+    ].forEach(([val, txt]) => {
+      const o = el('option', '', txt);
+      o.value = val;
+      o.selected = val === curSheet;
+      sheetSel.append(o);
+    });
+    sheetLbl.append(sheetSel);
+
+    const secLbl = el('label', '', ar ? '📂 القسم الفرعي:' : '📂 Section:');
+    const secSel = el('select', 'in');
+    secLbl.append(secSel);
+
+    function populateSectionsForSheet(sType) {
+      secSel.replaceChildren();
+      let list = S.tpl.sections || [];
+      if (sType !== getActiveSheetType()) {
+        if (sType === 'mid' && FOH.erpPwa && FOH.erpPwa.loadMidSections) list = FOH.erpPwa.loadMidSections();
+        else if (sType === 'closing' && FOH.erpPwa && FOH.erpPwa.loadClosingSections) list = FOH.erpPwa.loadClosingSections();
+        else if (sType === 'opening' && FOH.erpPwa && FOH.erpPwa.getOpeningBackup && FOH.erpPwa.getOpeningBackup()) {
+          list = FOH.erpPwa.getOpeningBackup();
+        }
+      }
+      list.forEach((s) => {
+        const o = el('option', '', (s.icon || '📌') + ' ' + (ar ? s.titleAr || s.title : s.title || s.titleAr));
+        o.value = s.id;
+        secSel.append(o);
+      });
+    }
+    populateSectionsForSheet(sheetSel.value);
+    sheetSel.addEventListener('change', () => populateSectionsForSheet(sheetSel.value));
+
+    rowSheet.append(sheetLbl, secLbl);
+    box.append(rowSheet);
+
+    // 3. Assign to Position (Super Role) AND/OR Specific Employee
+    const rowAssign = el('div', 'two');
+    rowAssign.style.marginTop = '10px';
+
+    const roleLbl = el('label', '', ar ? '🪪 تعيين لمنصب معين (Position):' : '🪪 Assign to Position (Role):');
+    const roleSel = el('select', 'in');
+    [
+      ['super_waiter', ar ? '⭐ Super Waiter (منصب الويتر)' : '⭐ Super Waiter'],
+      ['super_bartender', ar ? '🍸 Super Bartender (منصب البارتندر)' : '🍸 Super Bartender'],
+      ['super_captain', ar ? '🎖️ Super Captain (منصب الكابتن)' : '🎖️ Super Captain'],
+      ['super_manager', ar ? '👑 Super Manager (منصب المدير)' : '👑 Super Manager'],
+      ['all', ar ? '👥 عام لكل المناصب (All Roles)' : '👥 All Positions'],
+    ].forEach(([val, txt]) => {
+      const o = el('option', '', txt);
+      o.value = val;
+      roleSel.append(o);
+    });
+    roleLbl.append(roleSel);
+
+    const empLbl = el('label', '', ar ? '👤 تعيين لموظف محدد بالاسم:' : '👤 Specific Employee (Optional):');
+    const empSel = el('select', 'in');
+    [
+      ['', ar ? '— كل موظفي هذا المنصب —' : '— Any staff in this role —'],
+      ['sara', ar ? '👤 سارة خوري (Sara · Waiter)' : '👤 Sara Khoury (Waiter)'],
+      ['maher', ar ? '👤 ماهر زيد (Maher · Bartender)' : '👤 Maher Zaid (Bartender)'],
+      ['ali', ar ? '👤 علي حسن (Ali · Captain)' : '👤 Ali Hassan (Captain)'],
+      ['fadi', ar ? '👤 فادي المصري (Fadi · Manager)' : '👤 Fadi Al-Masri (Manager)'],
+    ].forEach(([val, txt]) => {
+      const o = el('option', '', txt);
+      o.value = val;
+      empSel.append(o);
+    });
+    empSel.addEventListener('change', () => {
+      const map = { sara: 'super_waiter', maher: 'super_bartender', ali: 'super_captain', fadi: 'super_manager' };
+      if (empSel.value && map[empSel.value]) {
+        roleSel.value = map[empSel.value];
+      }
+    });
+    empLbl.append(empSel);
+
+    rowAssign.append(roleLbl, empLbl);
+    box.append(rowAssign);
+
+    // 4. Due Time Input
+    const dueRow = el('div', 'two');
+    dueRow.style.marginTop = '10px';
+    const dueLbl = el('label', '', ar ? '⏰ وقت التنفيذ المطلوب (اختياري):' : '⏰ Due Time (Optional):');
+    const dueIn = el('input', 'in');
+    dueIn.type = 'time';
+    dueIn.value = FOH.time.nowHM();
+    dueLbl.append(dueIn);
+    dueRow.append(dueLbl);
+    box.append(dueRow);
+
+    // 5. Actions
+    const acts = el('div', 'sheet-actions');
+    acts.style.marginTop = '16px';
+    const cancelB = el('button', 'btn', ar ? 'إلغاء' : 'Cancel');
+    cancelB.type = 'button';
+    cancelB.addEventListener('click', () => dlg.close());
+
+    const saveB = el('button', 'btn primary', ar ? '✅ حفظ المهمة وإرسال إشعار للموظف' : '✅ Save & Notify Staff');
+    saveB.type = 'button';
+    saveB.addEventListener('click', () => {
+      const textVal = titleIn.value.trim();
+      if (!textVal) return titleIn.focus();
+
+      const targetSheet = sheetSel.value;
+      const targetSecId = secSel.value;
+      const rKey = roleSel.value;
+      const empUser = empSel.value;
+      const dueHM = dueIn.value || '';
+
+      const roleBadgeMap = {
+        super_waiter: '⭐ Super Waiter',
+        super_bartender: '🍸 Super Bartender',
+        super_captain: '🎖️ Super Captain',
+        super_manager: '👑 Super Manager',
+        all: ar ? '👥 الجميع' : '👥 All',
+      };
+      const empNameMap = {
+        sara: ar ? 'سارة (Sara)' : 'Sara',
+        maher: ar ? 'ماهر (Maher)' : 'Maher',
+        ali: ar ? 'علي (Ali)' : 'Ali',
+        fadi: ar ? 'فادي (Fadi)' : 'Fadi',
+      };
+
+      const assignedLabel = (empUser ? ('👤 ' + empNameMap[empUser] + ' · ') : '') + (roleBadgeMap[rKey] || '');
+
+      const newItem = {
+        id: 'asg_' + Date.now(),
+        text: textVal,
+        textAr: textVal,
+        due: dueHM,
+        role: '',
+        assignedRoleKey: rKey,
+        assignedUsername: empUser,
+        assignedRoleLabel: assignedLabel,
+        children: [],
+      };
+
+      if (targetSheet !== getActiveSheetType() && FOH.erpPwa && FOH.erpPwa.switchSheetType) {
+        manualSheetOverride = targetSheet !== getScheduledSheetForNow();
+        FOH.erpPwa.switchSheetType(targetSheet);
+      }
+
+      const secObj = (S.tpl.sections || []).find((s) => s.id === targetSecId) || S.tpl.sections[0];
+      if (secObj) {
+        secObj.items.unshift(newItem);
+      }
+      if (FOH.erpPwa && FOH.erpPwa.persistCurrentSheetState) {
+        FOH.erpPwa.persistCurrentSheetState();
+      }
+
+      // Also add to Scheduled Tasks (S.tpl.tasks) so it shows in "📋 My Tasks" (#mine) too
+      S.tpl.tasks.unshift({
+        id: newItem.id,
+        text: textVal,
+        textAr: textVal,
+        icon: targetSheet === 'opening' ? '☀️' : targetSheet === 'mid' ? '🌤️' : '🌙',
+        rule: { type: 'once', date: S.date },
+        start: S.date,
+        time: dueHM || '14:00',
+        lateAfter: 60,
+        role: '',
+        person: empUser ? empNameMap[empUser] : roleBadgeMap[rKey],
+        assignedRoleKey: rKey,
+        assignedUsername: empUser,
+        assignedSheet: targetSheet,
+        carry: true,
+        paused: false,
+      });
+      FOH.store.saveTemplate(S.tpl);
+
+      dlg.close();
+
+      notifyMobileOnNewTaskAdded({
+        titleEn: textVal,
+        titleAr: textVal,
+        dueHM,
+        sectionLabel: (secObj ? (ar ? secObj.titleAr || secObj.title : secObj.title) : targetSheet),
+        roleLabel: assignedLabel,
+        remindBefore: 0,
+      });
+
+      FOH.edit.toast(ar ? '✅ تم تعيين المهمة لـ (' + assignedLabel + ') وإرسال الإشعار!' : '✅ Task assigned to ' + assignedLabel + ' & notified!');
+      FOH.app.render();
+    });
+
+    acts.append(cancelB, saveB);
+    box.append(acts);
+    dlg.append(box);
+    dlg.showModal();
+    titleIn.focus();
+  }
+
+  // Render Assignment Badges on Checklist Items & Filter Sections/Items by Assigned Employee/Role
+  function renderAssignedTaskBadgesAndFilter() {
+    if (S.editing || S.view !== 'opening') return;
+    const sess = getSession();
+    const curUser = (sess && sess.username ? sess.username.toLowerCase() : 'fadi');
+    const curRole = getCurrentSuperRoleKey();
+    const isLeader = curRole === 'super_manager' || curRole === 'super_captain';
+
+    // 1. Section-level department filtering for Mid-Shift & Opening when roleScopeOnly is active
+    if (roleScopeOnly && !isLeader) {
+      document.querySelectorAll('#sections > section.card').forEach((card) => {
+        const sid = (card.id || '').replace(/^sec-/, '');
+        const secObj = (S.tpl.sections || []).find((x) => x.id === sid);
+        const dept = secObj && secObj.dept;
+        if (dept) {
+          if (curRole === 'super_waiter' && (dept === 'bar' || dept === 'cash')) {
+            card.style.display = 'none';
+          } else if (curRole === 'super_bartender' && (dept === 'floor' || dept === 'cash')) {
+            card.style.display = 'none';
+          } else {
+            card.style.display = '';
+          }
+        }
+      });
+      document.querySelectorAll('#chips .chip').forEach((chip) => {
+        const card = $('sec-' + chip.dataset.sid);
+        if (card) chip.style.display = card.style.display;
+      });
+    }
+
+    // 2. Item-level badges & filtering
+    const flatItems = new Map();
+    (S.tpl.sections || []).forEach((s) => {
+      (s.items || []).forEach((it) => {
+        flatItems.set(it.id, it);
+        (it.children || []).forEach((ch) => flatItems.set(ch.id, ch));
+      });
+    });
+
+    document.querySelectorAll('#sections li.item, #sections li.kid').forEach((li) => {
+      const cb = li.querySelector('input.ck[data-id]');
+      if (!cb) return;
+      const itemId = cb.dataset.id;
+      const itemObj = flatItems.get(itemId);
+      if (!itemObj) return;
+
+      const txtContainer = li.querySelector('.txt') || li.querySelector('label');
+      if (txtContainer && itemObj.assignedRoleLabel && !txtContainer.querySelector('.assigned-task-pill')) {
+        const pill = el('span', 'assigned-task-pill', '🎯 ' + itemObj.assignedRoleLabel);
+        txtContainer.append(pill);
+      }
+
+      if (roleScopeOnly && !isLeader) {
+        let visible = true;
+        if (itemObj.assignedUsername && itemObj.assignedUsername !== curUser) {
+          visible = false;
+        } else if (itemObj.assignedRoleKey && itemObj.assignedRoleKey !== 'all' && itemObj.assignedRoleKey !== curRole) {
+          visible = false;
+        }
+        li.style.display = visible ? '' : 'none';
+      } else {
+        li.style.display = '';
+      }
+    });
+  }
+
+  function injectAssignTaskBtnIntoToolbarAndMine() {
+    const ar = isAr();
+    const toolbar = document.querySelector('#checklistGovBar .unified-sec-toolbar');
+    if (toolbar && !toolbar.querySelector('#toolbarAssignTaskBtn')) {
+      const btn = el('button', 'u-pill primary-assign', ar ? '➕ إضافة وتعيين مهمة' : '➕ Assign Task');
+      btn.type = 'button';
+      btn.id = 'toolbarAssignTaskBtn';
+      btn.addEventListener('click', () => openAssignTaskToStaffOrRoleModal());
+      toolbar.prepend(btn);
+    }
+
+    const mineRoot = $('mine');
+    if (mineRoot && !mineRoot.hidden && !mineRoot.querySelector('#mineAssignTaskBar')) {
+      const card = el('div', 'sec-context-bar');
+      card.id = 'mineAssignTaskBar';
+      card.style.border = '1.5px solid var(--accent)';
+      card.innerHTML =
+        '<div><b>🎯 ' + (ar ? 'تعيين المهام للموظفين والمناصب' : 'Task Assignment by Staff & Position') + '</b>' +
+        '<small style="display:block;color:var(--ink2);">' +
+        (ar ? 'أضف مهمة جديدة وعيّنها لـ Waiter / Bartender / Captain أو لموظف بالاسم' : 'Create a task and assign it to a specific role or employee') +
+        '</small></div>';
+      const addB = el('button', 'btn primary', ar ? '➕ إضافة وتعيين مهمة' : '➕ Add & Assign Task');
+      addB.type = 'button';
+      addB.addEventListener('click', () => openAssignTaskToStaffOrRoleModal());
+      card.append(addB);
+      mineRoot.prepend(card);
     }
   }
 
