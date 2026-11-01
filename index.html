@@ -885,6 +885,7 @@ body.etab-other .tools.edit-only, body.etab-other .editbar { display: none !impo
 .quick-report .btn { display:flex; width:100%; max-width:732px; margin:auto; min-height:46px; color:var(--accent); border-color:#b8cec6; background:#fff; font-size:.9rem; }
 .toast { bottom:calc(82px + env(safe-area-inset-bottom)); }
 @media print { .quick-report { display:none !important; } }
+
     </style>
 
 <style>
@@ -2943,6 +2944,227 @@ body.dark .role-switch-pill.on {
   font-weight: 800;
 }
 
+    </style>
+    <style id="super-employee-v11-css">
+/* ============================================================================
+   11. SUPER EMPLOYEE v11 DE-CLUTTER & ZERO-OVERLAP HEADER
+   ============================================================================ */
+header.top {
+  padding: calc(8px + env(safe-area-inset-top)) 12px 8px !important;
+}
+header.top .bar {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  flex-wrap: nowrap !important;
+  min-height: 44px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+/* Strictly prevent .ttl from ever overflowing onto bell or profile buttons */
+header.top .ttl {
+  flex: 1 1 0% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  gap: 1px !important;
+}
+/* Reorder so Role Title (#title) is on top and subtle restaurant+section subtitle is below */
+header.top .title-sub-row {
+  order: 1 !important;
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+header.top .brand-top-row {
+  order: 2 !important;
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+/* Hide the colliding pills in the top header */
+header.top #checklistLockPill,
+header.top #activeSectionBadge {
+  display: none !important;
+}
+header.top h1#title {
+  display: block !important;
+  font-size: 0.96rem !important;
+  font-weight: 800 !important;
+  line-height: 1.2 !important;
+  margin: 0 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  color: #ffffff !important;
+}
+/* Make #restaurantBadge a sleek, borderless subtitle line instead of a bulky pill */
+header.top #restaurantBadge.rest-badge {
+  display: block !important;
+  background: transparent !important;
+  border: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  color: #99f6e4 !important;
+  font-size: 0.7rem !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+  max-width: 100% !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+header.top #sidebarToggleBtn,
+header.top .notif-bell-btn,
+header.top #profileBtn {
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  padding: 0 !important;
+  flex: 0 0 38px !important;
+  border-radius: 11px !important;
+}
+header.top .profile-btn-name {
+  display: none !important;
+}
+
+/* Move #chips look & feel cleanly inside <main> */
+body:not(.editing):not(.focused-non-opening) main#appMain > nav#chips {
+  display: flex !important;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 2px 0 10px;
+  margin: 0 0 6px;
+  scrollbar-width: none;
+}
+main#appMain > nav#chips::-webkit-scrollbar {
+  display: none;
+}
+main#appMain > nav#chips .chip {
+  background: var(--card) !important;
+  color: var(--ink) !important;
+  border: 1px solid var(--line) !important;
+  font-size: 0.76rem !important;
+  padding: 6px 11px !important;
+  border-radius: 99px !important;
+  white-space: nowrap !important;
+}
+main#appMain > nav#chips .chip.on {
+  background: var(--accent) !important;
+  color: #ffffff !important;
+  border-color: var(--accent) !important;
+}
+body.dark main#appMain > nav#chips .chip.on {
+  color: #041612 !important;
+}
+
+/* Alert banners inside <main> */
+main#appMain > .health-banner,
+main#appMain > .banner {
+  margin: 0 0 8px !important;
+  padding: 8px 11px !important;
+  border-radius: 12px !important;
+  font-size: 0.78rem !important;
+}
+main#appMain > .banner .banner-actions,
+main#appMain > .health-banner .health-banner-actions {
+  margin-top: 6px !important;
+  gap: 5px !important;
+}
+main#appMain > .banner .snooze-btn,
+main#appMain > .health-banner .snooze-btn {
+  min-height: 28px !important;
+  padding: 2px 8px !important;
+  font-size: 0.72rem !important;
+}
+
+/* Compact 1-Line Collapsible Operational Hours Bar */
+.ops-compact-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+.ops-compact-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ops-compact-toggle {
+  flex-shrink: 0;
+  padding: 4px 9px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.ops-lifecycle-bar {
+  padding: 8px 11px !important;
+  margin-bottom: 8px !important;
+  border-radius: 12px !important;
+}
+.ops-details-drawer {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+}
+
+/* Unified Single-Row Checklist Toolbar */
+#checklistGovBar.gov-bar {
+  padding: 7px 10px !important;
+  margin-bottom: 8px !important;
+  border-radius: 12px !important;
+}
+.unified-sec-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+.unified-sec-toolbar .u-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 30px;
+  padding: 3px 9px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 0.73rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.unified-sec-toolbar .u-pill.accent {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: rgba(47, 107, 94, 0.35);
+}
+.unified-sec-toolbar .u-pill.warn {
+  background: var(--amber-soft);
+  color: var(--amber);
+  border-color: var(--amber);
+}
     </style>
   </head>
   <body>
@@ -8758,7 +8980,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
           if (k !== 'super-employee-v10') caches.delete(k);
         })).catch(() => {});
       }
-      navigator.serviceWorker.register('sw.js?v=10', { updateViaCache: 'none' }).then((reg) => {
+      navigator.serviceWorker.register('sw.js?v=11', { updateViaCache: 'none' }).then((reg) => {
         reg.update().catch(() => {});
       }).catch(() => {});
     }
@@ -15727,7 +15949,260 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       });
       delete nav.dataset.v10Scoped;
       enhanceSidebarAndInventory();
+      injectRoleSwitcherInSidebar();
+    relocateHeaderSubbarsToMain();
+    renderCleanHeaderText();
+    collapseOpsLifecycleBarToOneLine();
+    renderUnifiedSingleRowChecklistBar();
+    injectRoleSwitcherInSidebar();
     }
+  }
+
+
+  // ============================================================================
+  // 13. SUPER EMPLOYEE v11 ULTRA-CLEAN HEADER & SINGLE-ROW TOOLBAR OVERRIDES
+  // ============================================================================
+  let opsBarExpanded = false;
+
+  function relocateHeaderSubbarsToMain() {
+    const mainEl = $('appMain');
+    if (!mainEl) return;
+    const chips = $('chips');
+    const sections = $('sections');
+    if (chips && chips.parentElement !== mainEl && sections && sections.parentElement === mainEl) {
+      mainEl.insertBefore(chips, sections);
+    }
+    const hBanner = $('healthAlertBanner');
+    const tBanner = $('banner');
+    if (tBanner && tBanner.parentElement !== mainEl) {
+      mainEl.prepend(tBanner);
+    }
+    if (hBanner && hBanner.parentElement !== mainEl) {
+      mainEl.prepend(hBanner);
+    }
+  }
+
+  function renderCleanHeaderText() {
+    const ar = isAr();
+    const gov = loadGov();
+    const ident = getAppRoleIdentity();
+    const meta = getSectionMeta(S.view);
+    const shortRest = ar ? (gov.restaurantNameAr || 'مطعم سين') : (gov.restaurantName || 'CEEN').split(' ')[0];
+
+    if ($('title')) {
+      $('title').textContent = S.editing
+        ? (ar ? '✎ تعديل الشيك ليست' : '✎ Edit Checklist')
+        : (ar ? ident.titleAr.split('·')[0].trim() : ident.titleEn);
+    }
+    if ($('restaurantBadge')) {
+      const secTitle = S.editing
+        ? (ar ? 'وضع التعديل' : 'Edit Mode')
+        : (S.view === 'opening' && isClosingSheetActive() ? (ar ? '🌙 شيت الإغلاق' : '🌙 Closing Sheet') : (meta.ico + ' ' + meta.title));
+      $('restaurantBadge').textContent = '🍽 ' + shortRest + ' · ' + secTitle;
+    }
+    if ($('checklistLockPill')) $('checklistLockPill').hidden = true;
+    if ($('activeSectionBadge')) $('activeSectionBadge').hidden = true;
+  }
+
+  function collapseOpsLifecycleBarToOneLine() {
+    const bar = $('opsLifecycleBar');
+    if (!bar || bar.hidden) return;
+    const ar = isAr();
+    const cfg = loadOpsConfig();
+    const h = cfg.hours;
+    const daySt = loadOpsDayState(S.date);
+    const nowHM = getEffectiveNowHM();
+    const nowBiz = toBizMinutes(nowHM);
+    const openBiz = toBizMinutes(h.doorsOpen);
+    const kLastBiz = toBizMinutes(h.kitchenLastOrder);
+    const minCloseBiz = toBizMinutes(h.minCloseTime);
+
+    let statusText = '';
+    if (daySt.closedAt) {
+      statusText = '🔒 ' + (ar ? 'مغلق (' + formatTime12Ar(daySt.closedAt) + ')' : 'Closed (' + formatTime12Ar(daySt.closedAt) + ')');
+    } else if (nowBiz < openBiz) {
+      statusText = '☀️ ' + (ar ? 'دوام التحضير ' + formatTime12Ar(h.prepStart) + ' · يفتح ' + formatTime12Ar(h.doorsOpen) : 'Prep ' + formatTime12Ar(h.prepStart) + ' · Opens ' + formatTime12Ar(h.doorsOpen));
+    } else if (nowBiz < kLastBiz - 15) {
+      statusText = '🟢 ' + (ar ? 'مفتوح (' + formatTime12Ar(h.doorsOpen) + '–' + formatTime12Ar(h.minCloseTime) + '+)' : 'Open (' + formatTime12Ar(h.doorsOpen) + '–' + formatTime12Ar(h.minCloseTime) + '+)');
+    } else if (nowBiz < minCloseBiz) {
+      statusText = '🔔 ' + (ar ? 'مرحلة Last Order (' + formatTime12Ar(h.kitchenLastOrder) + ' / ' + formatTime12Ar(h.barLastOrder) + ')' : 'Last Order (' + formatTime12Ar(h.kitchenLastOrder) + ' / ' + formatTime12Ar(h.barLastOrder) + ')');
+    } else {
+      statusText = '⏳ ' + (ar ? 'بعد ' + formatTime12Ar(h.minCloseTime) + ' · يغلق مع آخر زبون' : 'Past ' + formatTime12Ar(h.minCloseTime) + ' · Last Guest Mode');
+    }
+
+    const existingChildren = Array.from(bar.children);
+    bar.replaceChildren();
+
+    const summaryRow = el('div', 'ops-compact-summary');
+    const left = el('div', 'ops-compact-left');
+    left.textContent = statusText;
+
+    const right = el('div', '');
+    right.style.display = 'flex';
+    right.style.gap = '5px';
+    right.style.alignItems = 'center';
+
+    const toggleBtn = el(
+      'button',
+      'ops-compact-toggle',
+      opsBarExpanded
+        ? (ar ? 'إخفاء الأوقات ▲' : 'Hide Hours ▲')
+        : (ar ? '🕐 Last Order / إغلاق ▾' : '🕐 Hours & Close ▾')
+    );
+    toggleBtn.type = 'button';
+    toggleBtn.addEventListener('click', () => {
+      opsBarExpanded = !opsBarExpanded;
+      FOH.app.render();
+    });
+    right.append(toggleBtn);
+    summaryRow.append(left, right);
+    bar.append(summaryRow);
+
+    if (opsBarExpanded) {
+      const drawer = el('div', 'ops-details-drawer');
+      existingChildren.forEach((ch) => drawer.append(ch));
+      bar.append(drawer);
+    }
+  }
+
+  function renderUnifiedSingleRowChecklistBar() {
+    const govBar = $('checklistGovBar');
+    if (!govBar || S.editing || S.view !== 'opening') return;
+
+    const ar = isAr();
+    const gov = loadGov();
+    const sess = getSession();
+    const isMgr = !sess || !!sess.isManager;
+    const canEdit = canCurrentUserEditChecklist();
+    const ident = getAppRoleIdentity();
+
+    const all = FOH.model.progress(FOH.model.allLeaves({ sections: FOH.preview.sections() }), S.run.checked);
+    const pct = all.total ? Math.round((all.done * 100) / all.total) : 0;
+    const names = [S.run.supervisor, S.run.captain, S.run.assistant].filter(Boolean);
+    const day = new Date(S.date + 'T00:00:00');
+    const dateLabel = isNaN(day)
+      ? S.date
+      : day.toLocaleDateString(FOH.i18n.locale, { weekday: 'short', day: 'numeric', month: 'short' });
+
+    // Preserve pending suggestions box if any
+    const sugBox = govBar.querySelector('.sug-card');
+    govBar.replaceChildren();
+
+    const row = el('div', 'unified-sec-toolbar');
+
+    // 1. Progress Pill
+    row.append(el('span', 'u-pill accent', '📊 ' + pct + '% (' + all.done + '/' + all.total + ')'));
+
+    // 2. Date & Shift Leaders Toggle
+    const metaBtn = el(
+      'button',
+      'u-pill',
+      '📅 ' + dateLabel + (names.length ? ' · ' + names[0] : '') + ' ▾'
+    );
+    metaBtn.type = 'button';
+    metaBtn.addEventListener('click', () => {
+      if ($('metaPanel')) $('metaPanel').hidden = !$('metaPanel').hidden;
+    });
+    row.append(metaBtn);
+
+    // 3. Role Scope Toggle (for Waiter / Bartender)
+    if (ident.openingKeywords && !isClosingSheetActive()) {
+      const scopeBtn = el(
+        'button',
+        'u-pill' + (roleScopeOnly ? ' accent' : ''),
+        roleScopeOnly ? (ar ? '🎯 مهام قسمي ✓' : '🎯 My Dept ✓') : (ar ? '👁 كل الأقسام' : '👁 All Depts')
+      );
+      scopeBtn.type = 'button';
+      scopeBtn.addEventListener('click', () => {
+        roleScopeOnly = !roleScopeOnly;
+        FOH.app.render();
+      });
+      row.append(scopeBtn);
+    }
+
+    // 4. Lock / Unlock Button (for Manager / Captain) or Lock Status
+    if (isMgr || hasSuperPerm('canLockChecklist')) {
+      const lockB = el(
+        'button',
+        'u-pill' + (gov.checklistLocked ? ' warn' : ''),
+        gov.checklistLocked ? (ar ? '🔒 مقفلة' : '🔒 Locked') : (ar ? '🔓 مفتوحة' : '🔓 Unlocked')
+      );
+      lockB.type = 'button';
+      lockB.addEventListener('click', () => {
+        gov.checklistLocked = !gov.checklistLocked;
+        gov.lockedBy = (sess && sess.displayName) || 'Supervisor';
+        if (gov.checklistLocked) S.editing = false;
+        saveGov(gov);
+        FOH.app.render();
+      });
+      row.append(lockB);
+    } else if (gov.checklistLocked) {
+      row.append(el('span', 'u-pill warn', ar ? '🔒 مقفلة' : '🔒 Locked'));
+    }
+
+    // 5. Edit Checklist Button (or Suggest Edit for staff)
+    if (canEdit && !gov.checklistLocked) {
+      const editB = el('button', 'u-pill', ar ? '✎ تعديل' : '✎ Edit');
+      editB.type = 'button';
+      editB.addEventListener('click', () => {
+        S.editing = true;
+        FOH.app.render();
+      });
+      row.append(editB);
+    } else {
+      const sugB = el('button', 'u-pill', ar ? '💡 اقتراح' : '💡 Suggest');
+      sugB.type = 'button';
+      sugB.addEventListener('click', () => openSuggestionModal());
+      row.append(sugB);
+    }
+
+    // 6. Report Damage / Repair Button
+    const dmgB = el('button', 'u-pill', ar ? '🔧 كسر/صيانة' : '🔧 Damage');
+    dmgB.type = 'button';
+    dmgB.addEventListener('click', () => {
+      if (FOH.invBreak && FOH.invBreak.open) FOH.invBreak.open();
+    });
+    row.append(dmgB);
+
+    govBar.append(row);
+    if (sugBox) govBar.append(sugBox);
+  }
+
+  function injectRoleSwitcherInSidebar() {
+    const sb = $('appSidebar');
+    const profCard = $('sbProfileCard');
+    if (!sb || !profCard) return;
+    let switcher = $('sbRoleQuickSwitcher');
+    if (!switcher) {
+      switcher = el('div', '');
+      switcher.id = 'sbRoleQuickSwitcher';
+      switcher.style.marginBottom = '10px';
+      profCard.insertAdjacentElement('afterend', switcher);
+    }
+    switcher.replaceChildren();
+    const ar = isAr();
+    const sess = getSession();
+    const curUser = (sess && sess.username ? sess.username.toLowerCase() : 'fadi');
+
+    const lbl = el('div', 'sb-sec-label', ar ? 'معاينة التطبيق حسب المنصب (تجربة فورية)' : 'SWITCH ROLE VIEW (1-TAP)');
+    switcher.append(lbl);
+
+    const pills = el('div', 'role-switch-pills');
+    [
+      ['sara', '⭐ Waiter'],
+      ['maher', '🍸 Bartender'],
+      ['ali', '🎖️ Captain'],
+      ['fadi', '👑 Manager'],
+    ].forEach(([uname, label]) => {
+      const b = el('button', 'role-switch-pill' + (curUser === uname ? ' on' : ''), label);
+      b.type = 'button';
+      b.addEventListener('click', () => {
+        quickSwitchEmployeeAccount(uname);
+        closeSidebar();
+      });
+      pills.append(b);
+    });
+    switcher.append(pills);
   }
 
   function syncSuperEmployeeUI() {
