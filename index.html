@@ -6854,7 +6854,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     $('inv').addEventListener('click', FOH.invManage.onClick);
     $('inv').addEventListener('change', FOH.invManage.onChange);
     loadDate(time.todayISO());
-    if (![S.run.supervisor, S.run.captain].some(Boolean)) $('metaPanel').hidden = false;
+    if ($('metaPanel')) $('metaPanel').hidden = true;
     // Refresh the due banner and late items once a minute.
     setInterval(() => {
       if (!S.editing && !document.querySelector('dialog[open]')) render();
@@ -9208,7 +9208,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
           if (k !== 'super-employee-v10') caches.delete(k);
         })).catch(() => {});
       }
-      navigator.serviceWorker.register('sw.js?v=15', { updateViaCache: 'none' }).then((reg) => {
+      navigator.serviceWorker.register('sw.js?v=16', { updateViaCache: 'none' }).then((reg) => {
         reg.update().catch(() => {});
       }).catch(() => {});
     }
@@ -12618,12 +12618,33 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     msg.innerHTML = '<b>' + statusTxt + '</b>' + (alerts.length > 1 ? (ar ? ' <small>(+' + (alerts.length - 1) + ' تنبيه آخر)</small>' : ' <small>(+' + (alerts.length - 1) + ' more)</small>') : '');
 
     const acts = el('div', 'health-banner-actions');
-    const updBtn = el('button', 'snooze-btn done-now', ar ? '📅 تجديد / تحديث التاريخ' : '📅 Update Expiry');
-    updBtn.type = 'button';
-    updBtn.addEventListener('click', () => {
-      S.view = 'profile';
-      FOH.app.render();
-    });
+    const sess = getSession();
+    const isMgr = !!(sess && sess.isManager);
+    let actionBtn;
+    if (isMgr) {
+      actionBtn = el('button', 'snooze-btn done-now', ar ? '📅 تحديث التاريخ (مدير)' : '📅 Update Expiry (Manager)');
+      actionBtn.type = 'button';
+      actionBtn.addEventListener('click', () => {
+        S.view = 'profile';
+        FOH.app.render();
+      });
+    } else {
+      actionBtn = el('button', 'snooze-btn done-now', ar ? '🏥 إشعار الإدارة بالتجديد' : '🏥 Notify Manager');
+      actionBtn.type = 'button';
+      actionBtn.addEventListener('click', () => {
+        if (FOH.cloudRealtime && FOH.cloudRealtime.broadcast) {
+          FOH.cloudRealtime.broadcast('HEALTH_CERT_RENEWAL_REQUEST', {
+            by: (sess && sess.displayName) || S.me.name || 'Staff',
+            at: FOH.time.nowHM(),
+          });
+        }
+        FOH.edit.toast(ar ? 'تم إرسال إشعار لإدارة المطعم لمراجعة وتحديث الشهادة الصحية ✓' : 'Management notified of renewal request ✓');
+        if (FOH.reminders && FOH.reminders.snoozeItems) {
+          FOH.reminders.snoozeItems(alerts.map((a) => a.snoozeId), FOH.time.todayISO(), FOH.time.nowHM(), 1440);
+        }
+        renderHealthBanner();
+      });
+    }
 
     const snz1h = el('button', 'snooze-btn', ar ? '💤 تأجيل ١س' : '💤 +1h');
     snz1h.type = 'button';
@@ -13427,17 +13448,11 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     if (!root) return;
     root.replaceChildren();
     const ar = isAr();
-    const sess = getSession() || {
-      username: 'fadi',
-      firstName: 'Fadi',
-      lastName: 'Al-Masri',
-      displayName: 'Fadi (Supervisor)',
-      roleName: 'Supervisor',
-      isManager: true,
-    };
+    const sess = getSession();
+    const isMgr = !!(sess && sess.isManager);
     ensureStaffHealthAndPerms();
     const staffRec = (S.tpl.staff || []).find(
-      (p) => p.id === sess.staffId || (p.name || '').toLowerCase().startsWith((sess.username || 'fadi').toLowerCase())
+      (p) => p.id === (sess && sess.staffId) || (p.name || '').toLowerCase().startsWith(((sess && sess.username) || 'fadi').toLowerCase())
     ) || S.tpl.staff[0];
 
     const hcCard = el('section', 'card');
@@ -13488,22 +13503,94 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     });
     leadLbl.append(leadSel);
 
-    const saveHcBtn = el('button', 'btn primary', ar ? '💾 حفظ بيانات الشهادة الصحية وتفعيل التنبيه' : '💾 Save Health Certificate & Alert');
-    saveHcBtn.type = 'button';
-    saveHcBtn.style.width = '100%';
-    saveHcBtn.style.marginTop = '12px';
-    saveHcBtn.addEventListener('click', () => {
-      if (staffRec) {
-        staffRec.healthCertNo = noIn.value.trim();
-        staffRec.healthCertExpiry = expIn.value;
-        staffRec.healthCertRemindDays = Number(leadSel.value) || 30;
-        FOH.store.saveTemplate(S.tpl);
-      }
-      FOH.edit.toast(ar ? 'تم حفظ بيانات الشهادة الصحية وتحديث التنبيهات ✓' : 'Health certificate saved ✓');
-      FOH.app.render();
-    });
+    if (!isMgr) {
+      noIn.disabled = true;
+      noIn.style.opacity = '0.75';
+      noIn.style.cursor = 'not-allowed';
+      expIn.disabled = true;
+      expIn.style.opacity = '0.75';
+      expIn.style.cursor = 'not-allowed';
 
-    hcCard.append(row, leadLbl, saveHcBtn);
+      const secNotice = el('div', 'health-sec-notice');
+      secNotice.style.background = 'rgba(217, 130, 43, 0.12)';
+      secNotice.style.border = '1px solid rgba(217, 130, 43, 0.4)';
+      secNotice.style.borderRadius = '8px';
+      secNotice.style.padding = '8px 12px';
+      secNotice.style.margin = '10px 0';
+      secNotice.style.fontSize = '0.76rem';
+      secNotice.style.color = 'var(--ink)';
+      secNotice.innerHTML =
+        '🔒 <b>' +
+        (ar ? 'تاريخ الشهادة محمي بواسطة الإدارة:' : 'Expiry Date Protected by Management:') +
+        '</b> ' +
+        (ar
+          ? 'منعاً للتلاعب، لا يمكن تعديل تاريخ الانتهاء إلا بواسطة المدير العام بعد معاينة الشهادة الرسمية الأصلية.'
+          : 'To prevent tampering, health certificate expiry dates can only be updated by General Manager upon physical verification.');
+
+      const savePrefBtn = el('button', 'btn', ar ? '💾 حفظ تفضيل التنبيه المسبق فقط' : '💾 Save Reminder Lead Time');
+      savePrefBtn.type = 'button';
+      savePrefBtn.style.width = '100%';
+      savePrefBtn.style.marginTop = '10px';
+      savePrefBtn.addEventListener('click', () => {
+        if (staffRec) {
+          staffRec.healthCertRemindDays = Number(leadSel.value) || 30;
+          FOH.store.saveTemplate(S.tpl);
+        }
+        FOH.edit.toast(ar ? 'تم حفظ تفضيل التنبيه المسبق بنجاح ✓' : 'Reminder lead-time saved ✓');
+      });
+
+      hcCard.append(secNotice, row, leadLbl, savePrefBtn);
+
+      if (days !== null && days <= 30) {
+        const reqRenewalBtn = el('button', 'btn primary', ar ? '🏥 إشعار الإدارة بطلب اعتماد وتجديد الشهادة' : '🏥 Send Renewal Request to Management');
+        reqRenewalBtn.type = 'button';
+        reqRenewalBtn.style.width = '100%';
+        reqRenewalBtn.style.marginTop = '8px';
+        reqRenewalBtn.addEventListener('click', () => {
+          if (FOH.cloudRealtime && FOH.cloudRealtime.broadcast) {
+            FOH.cloudRealtime.broadcast('HEALTH_CERT_RENEWAL_REQUEST', {
+              staffName: (staffRec && staffRec.name) || (sess && sess.displayName) || 'Staff',
+              currentExpiry: (staffRec && staffRec.healthCertExpiry) || '',
+              at: FOH.time.nowHM(),
+            });
+          }
+          FOH.edit.toast(ar ? 'تم إشعار إدارة المطعم بطلب مراجعة واعتماد الشهادة الصحية ✓' : 'Management notified of renewal request ✓');
+        });
+        hcCard.append(reqRenewalBtn);
+      }
+    } else {
+      const mgrBadge = el('div', 'health-mgr-notice');
+      mgrBadge.style.background = 'rgba(16, 185, 129, 0.12)';
+      mgrBadge.style.border = '1px solid rgba(16, 185, 129, 0.4)';
+      mgrBadge.style.borderRadius = '8px';
+      mgrBadge.style.padding = '8px 12px';
+      mgrBadge.style.margin = '10px 0';
+      mgrBadge.style.fontSize = '0.76rem';
+      mgrBadge.style.color = 'var(--ink)';
+      mgrBadge.innerHTML =
+        '👑 <b>' +
+        (ar ? 'بصلاحية المدير العام:' : 'Super Manager Permission:') +
+        '</b> ' +
+        (ar ? 'يمكنك تدقيق وتعديل تاريخ انتهاء الشهادة الصحية بعد فحص الشهادة الورقية/الرسمية.' : 'You can inspect and update health certificate expiry dates.');
+
+      const saveHcBtn = el('button', 'btn primary', ar ? '💾 حفظ بيانات الشهادة الصحية وتفعيل التنبيه (كمدير)' : '💾 Save Health Certificate (Manager)');
+      saveHcBtn.type = 'button';
+      saveHcBtn.style.width = '100%';
+      saveHcBtn.style.marginTop = '12px';
+      saveHcBtn.addEventListener('click', () => {
+        if (staffRec) {
+          staffRec.healthCertNo = noIn.value.trim();
+          staffRec.healthCertExpiry = expIn.value;
+          staffRec.healthCertRemindDays = Number(leadSel.value) || 30;
+          FOH.store.saveTemplate(S.tpl);
+        }
+        FOH.edit.toast(ar ? 'تم حفظ بيانات الشهادة الصحية وتحديث التنبيهات ✓' : 'Health certificate saved ✓');
+        FOH.app.render();
+      });
+
+      hcCard.append(mgrBadge, row, leadLbl, saveHcBtn);
+    }
+
     root.append(hcCard);
 
     // Quick button to open full Profile Dialog & Day-Off Section
@@ -14634,7 +14721,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       else mainEl.prepend(bar);
     }
 
-    if (S.editing || (S.view !== 'opening' && S.view !== 'dashboard')) {
+    const rKey = getCurrentSuperRoleKey();
+    if (S.editing || (S.view !== 'opening' && S.view !== 'dashboard') || rKey !== 'super_manager') {
       bar.hidden = true;
       return;
     }
@@ -15313,7 +15401,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       titleAr: '🎖️ Super Captain · سوبر كابتن',
       subEn: 'Floor Leadership, Last Order & Closing Sign-off',
       subAr: 'قيادة الصالة، إعلان الـ Last Order واعتماد الإغلاق',
-      allowedViews: ['opening', 'closing_sheet', 'mine', 'orders', 'inv', 'academy', 'tips', 'dashboard', 'profile'],
+      allowedViews: ['opening', 'closing_sheet', 'mine', 'orders', 'inv', 'academy', 'tips', 'profile'],
       openingKeywords: null, // all floor & station sections
       closingDept: 'all',
     },
@@ -15372,7 +15460,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
         displayName: ar ? 'علي (سوبر كابتن)' : 'Ali (Super Captain)',
         roleName: '🎖️ Super Captain',
         roleAr: '🎖️ سوبر كابتن',
-        isManager: true,
+        isManager: false,
+        isCaptain: true,
         shift: '12:00 – 02:00 · Floor Captain',
       },
       maher: {
@@ -15703,13 +15792,38 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
           hActs.dataset.v10Wired = '1';
           hActs.replaceChildren();
 
-          const updBtn = el('button', 'snooze-btn done-now', ar ? '📅 تجديد التاريخ' : '📅 Update Expiry');
-          updBtn.type = 'button';
-          updBtn.addEventListener('click', () => {
-            S.view = 'profile';
-            FOH.app.render();
-          });
-          hActs.append(updBtn);
+          const isMgr = getCurrentSuperRoleKey() === 'super_manager';
+          let actionBtn;
+          if (isMgr) {
+            actionBtn = el('button', 'snooze-btn done-now', ar ? '📅 تحديث التاريخ (مدير)' : '📅 Update Expiry (Manager)');
+            actionBtn.type = 'button';
+            actionBtn.addEventListener('click', () => {
+              S.view = 'profile';
+              FOH.app.render();
+            });
+          } else {
+            actionBtn = el('button', 'snooze-btn done-now', ar ? '🏥 إشعار الإدارة بالتجديد' : '🏥 Notify Manager');
+            actionBtn.type = 'button';
+            actionBtn.addEventListener('click', () => {
+              const sess = getSession();
+              if (FOH.cloudRealtime && FOH.cloudRealtime.broadcast) {
+                FOH.cloudRealtime.broadcast('HEALTH_CERT_RENEWAL_REQUEST', {
+                  by: (sess && sess.displayName) || S.me.name || 'Staff',
+                  at: FOH.time.nowHM(),
+                });
+              }
+              FOH.edit.toast(ar ? 'تم إرسال إشعار لإدارة المطعم لمراجعة وتحديث الشهادة الصحية ✓' : 'Management notified of renewal request ✓');
+              const alerts = getHealthAlerts();
+              snoozeAlertWithTimer({
+                ids: alerts.map((a) => a.snoozeId),
+                bannerGroup: 'health_banner',
+                title: ar ? 'طلب تجديد الشهادة الصحية' : 'Health Certificate Renewal',
+                body: hTxt.trim(),
+                minutes: 1440,
+              });
+            });
+          }
+          hActs.append(actionBtn);
 
           [
             [1, ar ? '💤 +1د (تجربة)' : '💤 +1m'],
@@ -16341,7 +16455,13 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
   function collapseOpsLifecycleBarToOneLine() {
     const bar = $('opsLifecycleBar');
-    if (!bar || bar.hidden) return;
+    if (!bar) return;
+    const rKey = getCurrentSuperRoleKey();
+    if (rKey !== 'super_manager') {
+      bar.hidden = true;
+      return;
+    }
+    if (bar.hidden) return;
     const ar = isAr();
     const cfg = loadOpsConfig();
     const h = cfg.hours;
@@ -17580,27 +17700,33 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
         '<h3 class="rlh-title">⭐ ' + (ar ? 'أهلاً ' + dispName + ' · مساحة عمل الويتر والصالة' : 'Welcome ' + dispName + ' · Floor Waiter Workspace') + '</h3>' +
         '<p class="rlh-sub">' +
         (ar
-          ? 'لديك الآن ' + leftCount + ' مهام متبقية لتجهيز الطاولات والصالة ومحطات الخدمة في هذا الشفت.'
-          : 'You have ' + leftCount + ' floor & table tasks remaining in the current shift.') +
+          ? 'لديك الآن ' + leftCount + ' مهام متبقية في شيك ليست الشفت الحالي. ركّز على مهامك الموكلة وطاولاتك!'
+          : 'You have ' + leftCount + ' tasks remaining in current shift checklist.') +
         '</p>';
 
-      const bAcad = el('button', 'rlh-btn primary', ar ? '🎓 اختبر معلوماتك بالمنيو (+نقاط)' : '🎓 Menu Quiz (+XP)');
-      bAcad.type = 'button';
-      bAcad.addEventListener('click', () => switchView('academy'));
-
-      const bTips = el('button', 'rlh-btn', ar ? '💰 رصيدي من التبس وأيام عملي' : '💰 My Tips & Days');
-      bTips.type = 'button';
-      bTips.addEventListener('click', () => switchView('tips'));
-
-      const bMine = el('button', 'rlh-btn', ar ? '📋 مهامي الشخصية / طلب إجازة' : '📋 My Tasks & Day-Off');
+      const bMine = el('button', 'rlh-btn primary', ar ? '📋 مهامي الخاصة بهذا الشفت' : '📋 My Shift Tasks');
       bMine.type = 'button';
       bMine.addEventListener('click', () => switchView('mine'));
 
-      const bDmg = el('button', 'rlh-btn', ar ? '🔧 تبليغ عن كسر' : '🔧 Report Breakage');
+      const bDayOff = el('button', 'rlh-btn', ar ? '🏖️ طلب يوم عطلة / أوف' : '🏖️ Request Day-Off');
+      bDayOff.type = 'button';
+      bDayOff.addEventListener('click', () => {
+        switchView('mine');
+        setTimeout(() => {
+          const el = document.querySelector('.dayoff-form') || document.getElementById('mine');
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }, 120);
+      });
+
+      const bAcad = el('button', 'rlh-btn', ar ? '🎓 منيو أكاديمي (+XP)' : '🎓 Menu Academy (+XP)');
+      bAcad.type = 'button';
+      bAcad.addEventListener('click', () => switchView('academy'));
+
+      const bDmg = el('button', 'rlh-btn', ar ? '🔧 تبليغ كسر / صيانة' : '🔧 Report Breakage');
       bDmg.type = 'button';
       bDmg.addEventListener('click', () => FOH.invBreak && FOH.invBreak.open && FOH.invBreak.open());
 
-      actions.append(bAcad, bTips, bMine, bDmg);
+      actions.append(bMine, bDayOff, bAcad, bDmg);
     } else if (rKey === 'super_bartender') {
       left.innerHTML =
         '<h3 class="rlh-title">🍸 ' + (ar ? 'أهلاً ' + dispName + ' · محطة عمليات البار والمشروبات' : 'Welcome ' + dispName + ' · Bar Operations Station') + '</h3>' +
@@ -17614,41 +17740,57 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       bOrd.type = 'button';
       bOrd.addEventListener('click', () => switchView('orders'));
 
+      const bMine = el('button', 'rlh-btn', ar ? '📋 مهام البار الخاصة بي' : '📋 My Bar Tasks');
+      bMine.type = 'button';
+      bMine.addEventListener('click', () => switchView('mine'));
+
+      const bDayOff = el('button', 'rlh-btn', ar ? '🏖️ طلب يوم عطلة / أوف' : '🏖️ Request Day-Off');
+      bDayOff.type = 'button';
+      bDayOff.addEventListener('click', () => {
+        switchView('mine');
+        setTimeout(() => {
+          const el = document.querySelector('.dayoff-form') || document.getElementById('mine');
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }, 120);
+      });
+
       const bInv = el('button', 'rlh-btn', ar ? '📦 جرد البار وتسجيل التالف' : '📦 Bar Inventory & Breakage');
       bInv.type = 'button';
       bInv.addEventListener('click', () => switchView('inv'));
 
-      const bAcad = el('button', 'rlh-btn', ar ? '🍹 وصفات الكوكتيلات والاختبار' : '🍹 Cocktail Specs & Quiz');
-      bAcad.type = 'button';
-      bAcad.addEventListener('click', () => switchView('academy'));
-
-      const bTips = el('button', 'rlh-btn', ar ? '💰 حصتي من التبس' : '💰 My Tips');
-      bTips.type = 'button';
-      bTips.addEventListener('click', () => switchView('tips'));
-
-      actions.append(bOrd, bInv, bAcad, bTips);
+      actions.append(bOrd, bMine, bDayOff, bInv);
     } else if (rKey === 'super_captain') {
       left.innerHTML =
         '<h3 class="rlh-title">🎖️ ' + (ar ? 'قيادة الصالة والشفت · الكابتن ' + dispName : 'Floor Captain Cockpit · ' + dispName) + '</h3>' +
         '<p class="rlh-sub">' +
         (ar
-          ? 'متابعة إنجاز الصالة والبار (' + pct + '%)، توزيع المهام على الويترية، وإعلان الـ Last Order.'
-          : 'Monitor floor & bar readiness (' + pct + '%), assign tasks to staff, and trigger Last Order.') +
+          ? 'متابعة الصالة ومحطات الخدمة (' + pct + '%) · تعيين المهام للويترية ومتابعة طلبات الإجازات.'
+          : 'Monitor floor readiness (' + pct + '%), assign tasks to waitstaff, and manage day-off requests.') +
         '</p>';
 
       const bAsg = el('button', 'rlh-btn primary', ar ? '➕ تعيين مهمة لويتر / بارتندر' : '➕ Assign Task to Staff');
       bAsg.type = 'button';
       bAsg.addEventListener('click', () => openAssignTaskToStaffOrRoleModal());
 
-      const bDash = el('button', 'rlh-btn', ar ? '📊 متابعة إنجاز الشفت' : '📊 Shift Progress');
-      bDash.type = 'button';
-      bDash.addEventListener('click', () => switchView('dashboard'));
+      const bMine = el('button', 'rlh-btn', ar ? '📋 مهامي الخاصة' : '📋 My Tasks');
+      bMine.type = 'button';
+      bMine.addEventListener('click', () => switchView('mine'));
 
-      const bOrd = el('button', 'rlh-btn', ar ? '🛒 مراجعة الطلبيات' : '🛒 Review Orders');
+      const bDayOff = el('button', 'rlh-btn', ar ? '🏖️ طلب يوم عطلة / أوف' : '🏖️ Request Day-Off');
+      bDayOff.type = 'button';
+      bDayOff.addEventListener('click', () => {
+        switchView('mine');
+        setTimeout(() => {
+          const el = document.querySelector('.dayoff-form') || document.getElementById('mine');
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }, 120);
+      });
+
+      const bOrd = el('button', 'rlh-btn', ar ? '🛒 مراجعة طلبيات الصالة' : '🛒 Review Orders');
       bOrd.type = 'button';
       bOrd.addEventListener('click', () => switchView('orders'));
 
-      actions.append(bAsg, bDash, bOrd);
+      actions.append(bAsg, bMine, bDayOff, bOrd);
     } else {
       left.innerHTML =
         '<h3 class="rlh-title">👑 ' + (ar ? 'لوحة القيادة التنفيذية للمدير · ' + dispName : 'Manager Executive Pulse · ' + dispName) + '</h3>' +
