@@ -3518,6 +3518,108 @@ body.dark .rlh-btn.primary {
   50% { opacity: 0.4; transform: scale(0.85); }
 }
 
+/* Enterprise Tenant Architecture & Ops Hours Grid */
+.enterprise-tenant-box {
+  background: rgba(47, 107, 94, 0.08) !important;
+  border: 1px solid rgba(47, 107, 94, 0.25) !important;
+  border-radius: 14px !important;
+  padding: 12px 14px !important;
+  margin: 10px 0 14px !important;
+}
+body.dark .enterprise-tenant-box {
+  background: rgba(16, 185, 129, 0.08) !important;
+  border-color: rgba(52, 211, 153, 0.25) !important;
+}
+.etb-badge {
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  color: var(--accent) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  margin-bottom: 8px !important;
+}
+body.dark .etb-badge {
+  color: #34d399 !important;
+}
+.etb-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 8px 12px !important;
+  font-size: 0.78rem !important;
+}
+@media (max-width: 480px) {
+  .etb-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+.etb-grid small {
+  display: block !important;
+  font-size: 0.68rem !important;
+  color: var(--ink2) !important;
+  font-weight: 600 !important;
+}
+.etb-status-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+  padding: 1px 7px !important;
+  border-radius: 99px !important;
+  font-size: 0.68rem !important;
+  font-weight: 800 !important;
+  background: rgba(16, 185, 129, 0.2) !important;
+  color: #10b981 !important;
+}
+.etb-note {
+  font-size: 0.72rem !important;
+  line-height: 1.4 !important;
+  color: var(--ink2) !important;
+  margin: 10px 0 0 !important;
+  padding-top: 8px !important;
+  border-top: 1px dashed var(--line) !important;
+}
+.ops-hours-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  margin-top: 10px !important;
+}
+.ops-hours-grid label.ops-time-field {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  font-size: 0.76rem !important;
+  font-weight: 700 !important;
+  color: var(--ink) !important;
+}
+.ops-hours-grid label.ops-time-field span {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  display: block !important;
+}
+.ops-hours-grid label.ops-time-field input.in {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  min-height: 42px !important;
+  padding: 8px 10px !important;
+  border-radius: 10px !important;
+  border: 1.5px solid var(--line) !important;
+  background: var(--bg) !important;
+  font-size: 0.88rem !important;
+  font-weight: 700 !important;
+}
+.ops-hours-grid label.ops-time-field:last-child {
+  grid-column: 1 / -1 !important;
+}
+@media (max-width: 440px) {
+  .ops-hours-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
     </style>
   </head>
   <body>
@@ -3583,7 +3685,7 @@ body.dark .rlh-btn.primary {
           <div class="sb-logo">⚡</div>
           <div class="sb-brand-txt">
             <strong>Super Employee</strong>
-            <small id="sbRestaurantName">🍽 CEEN Restaurant & Lounge</small>
+            <small id="sbRestaurantName">🍽 CEEN</small>
           </div>
         </div>
         <button type="button" id="sbCloseBtn" class="ib-close" aria-label="Close Menu">✕</button>
@@ -3608,7 +3710,7 @@ body.dark .rlh-btn.primary {
             <h1 id="title">Super Employee</h1>
           </div>
           <div class="brand-top-row">
-            <span id="restaurantBadge" class="rest-badge">🍽 CEEN Restaurant & Lounge</span>
+            <span id="restaurantBadge" class="rest-badge">🍽 CEEN</span>
             <span id="cloudRealtimeIndicator" class="realtime-status-pill connecting" title="Supabase Realtime Live Sync"><span class="realtime-dot"></span> ⚡ Live</span>
           </div>
           <button type="button" id="metaBtn" class="meta-pill run-only" hidden></button>
@@ -9341,7 +9443,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
       if (window.caches) {
         caches.keys().then((ks) => ks.forEach((k) => {
-          if (k !== 'super-employee-v18') caches.delete(k);
+          if (k !== 'super-employee-v19') caches.delete(k);
         })).catch(() => {});
       }
       navigator.serviceWorker.register('sw.js?v=18', { updateViaCache: 'none' }).then((reg) => {
@@ -12611,8 +12713,13 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   // ---- 1. Governance & Restaurant Settings ----
   function defaultGov() {
     return {
-      restaurantName: 'CEEN Restaurant & Lounge',
-      restaurantNameAr: 'مطعم وبار سين · CEEN',
+      restaurantName: 'CEEN',
+      restaurantNameAr: 'CEEN',
+      shortBrand: 'CEEN',
+      preferEnglishBrand: true,
+      tenantId: 'ceen',
+      tenantSchema: 't_ceen',
+      branchName: 'Amman Main',
       checklistLocked: false,
       lockedBy: '',
       lockedAt: '',
@@ -12637,6 +12744,13 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       return {
         ...d,
         ...raw,
+        preferEnglishBrand: raw.preferEnglishBrand !== undefined ? !!raw.preferEnglishBrand : true,
+        restaurantName: raw.restaurantName || d.restaurantName,
+        restaurantNameAr: raw.restaurantNameAr || raw.restaurantName || d.restaurantName,
+        shortBrand: raw.shortBrand || raw.restaurantName || d.shortBrand,
+        tenantId: raw.tenantId || d.tenantId,
+        tenantSchema: raw.tenantSchema || d.tenantSchema,
+        branchName: raw.branchName || d.branchName,
         tipsVisibility: { ...d.tipsVisibility, ...(raw.tipsVisibility || {}) },
         editorUsernames: Array.isArray(raw.editorUsernames) ? raw.editorUsernames : d.editorUsernames,
       };
@@ -12800,7 +12914,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       renderHealthBanner();
     });
 
-    acts.append(updBtn, snz1h, snzDay);
+    acts.append(actionBtn, snz1h, snzDay);
     box.append(msg, acts);
   }
 
@@ -13755,28 +13869,72 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     const brandCard = el('section', 'card');
     brandCard.style.padding = '16px';
     brandCard.append(
-      el('h3', '', '🍽 ' + (ar ? 'هوية المطعم واسم التطبيق (Super Employee)' : 'Restaurant Identity & Branding'))
+      el('h3', '', '🍽 ' + (ar ? 'هوية المطعم وترخيص نظام ERP (Enterprise Identity)' : 'Restaurant Identity & ERP Tenant Provisioning'))
     );
+
+    const tenantBox = el('div', 'enterprise-tenant-box');
+    tenantBox.innerHTML =
+      '<div class="etb-badge">⚡ ' +
+      (ar ? 'ترخيص المنشأة الموحد في نظام ERP (Enterprise Tenant Identity)' : 'Unified ERP Tenant License & Database Schema') +
+      '</div>' +
+      '<div class="etb-grid">' +
+      '<div><small>' + (ar ? 'المطعم / المشترك:' : 'Tenant Name:') + '</small> <b>' + (gov.restaurantName || 'CEEN') + '</b></div>' +
+      '<div><small>' + (ar ? 'السكيمة في قاعدة البيانات:' : 'DB Schema:') + '</small> <code>' + (gov.tenantSchema || 't_ceen') + '</code></div>' +
+      '<div><small>' + (ar ? 'الفرع والموقع:' : 'Branch Code:') + '</small> <b>' + (gov.branchName || 'Amman Main') + ' (MAIN)</b></div>' +
+      '<div><small>' + (ar ? 'حالة الحزمة:' : 'License Status:') + '</small> <span class="etb-status-pill">✓ ' + (ar ? 'مرخّص ومفعّل' : 'Active Provisioned') + '</span></div>' +
+      '</div>' +
+      '<p class="etb-note">' +
+      (ar
+        ? '💡 في نظام ERP وحزمة البرامج المرتبطة (Bottle Vault، Tip Manager، Schedule، PWA)، يتم استيراد اسم المطعم وهويته تلقائياً من سكيمة قاعدة البيانات المركزية (platform.tenants / t_[tenant]) المرتبطة بحزمة الاشتراك. يمكنك تخصيص الاسم محلياً أدناه للتجربة والتهيئة.'
+        : '💡 Across the ERP suite (Bottle Vault, Tip Manager, Schedule, PWA), restaurant identity originates from the central database tenant schema (platform.tenants / t_[tenant]). Local edits below serve as an override for testing and site configuration.') +
+      '</p>';
+    brandCard.append(tenantBox);
+
+    const prefToggle = el('label', 'tog');
+    prefToggle.style.display = 'flex';
+    prefToggle.style.justifyContent = 'space-between';
+    prefToggle.style.alignItems = 'center';
+    prefToggle.style.padding = '10px 0';
+    prefToggle.style.marginTop = '10px';
+    prefToggle.style.borderTop = '1px solid var(--line)';
+    prefToggle.innerHTML =
+      '<span><b>🔤 ' +
+      (ar
+        ? 'اعتماد الاسم الإنجليزي المختصر كاسم أساسي دائماً (أولوية 95%)'
+        : 'Prefer Short English Brand Everywhere (95% Priority)') +
+      '</b><br><small style="color:var(--ink2);">' +
+      (ar
+        ? 'إظهار اسم المطعم بالإنجليزي (مثل CEEN) في الهيدر والسايدبار حتى عند استخدام الواجهة بالعربي'
+        : 'Display concise English brand (e.g. CEEN) even when Arabic UI language is active') +
+      '</small></span>';
+    const prefCb = el('input', 'sw');
+    prefCb.type = 'checkbox';
+    prefCb.checked = gov.preferEnglishBrand !== false;
+    prefToggle.append(prefCb);
+    brandCard.append(prefToggle);
+
     const bRow = el('div', 'two');
-    const enLbl = el('label', '', ar ? 'اسم المطعم (إنجليزي)' : 'Restaurant Name (EN)');
+    const enLbl = el('label', '', ar ? 'اسم المطعم (إنجليزي مختصر - Recommended)' : 'Restaurant Name (Short EN)');
     const enIn = el('input', 'in');
-    enIn.value = gov.restaurantName;
+    enIn.value = gov.restaurantName || 'CEEN';
     enLbl.append(enIn);
 
-    const arLbl = el('label', '', ar ? 'اسم المطعم (عربي)' : 'Restaurant Name (AR)');
+    const arLbl = el('label', '', ar ? 'اسم المطعم (عربي / تجاري ثانوي)' : 'Restaurant Name (Secondary AR)');
     const arIn = el('input', 'in');
-    arIn.value = gov.restaurantNameAr;
+    arIn.value = gov.restaurantNameAr || 'CEEN';
     arLbl.append(arIn);
     bRow.append(enLbl, arLbl);
 
-    const saveBrandBtn = el('button', 'btn primary', ar ? 'حفظ اسم المطعم' : 'Save Restaurant Name');
+    const saveBrandBtn = el('button', 'btn primary', ar ? '💾 حفظ هوية المطعم وتفضيل اللغة' : '💾 Save Restaurant Identity & Language Policy');
     saveBrandBtn.type = 'button';
     saveBrandBtn.style.marginTop = '10px';
+    saveBrandBtn.style.width = '100%';
     saveBrandBtn.addEventListener('click', () => {
-      gov.restaurantName = enIn.value.trim() || 'CEEN Restaurant & Lounge';
-      gov.restaurantNameAr = arIn.value.trim() || 'مطعم وبار سين · CEEN';
+      gov.restaurantName = enIn.value.trim() || 'CEEN';
+      gov.restaurantNameAr = arIn.value.trim() || gov.restaurantName;
+      gov.preferEnglishBrand = prefCb.checked;
       saveGov(gov);
-      FOH.edit.toast(ar ? 'تم تحديث اسم المطعم ✓' : 'Restaurant name updated ✓');
+      FOH.edit.toast(ar ? 'تم تحديث هوية المطعم وتفضيل اللغة الإنجليزية ✓' : 'Restaurant identity and English preference saved ✓');
       FOH.app.render();
     });
     brandCard.append(bRow, saveBrandBtn);
@@ -15378,22 +15536,22 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
         : 'Configure staff prep shift start, guest opening time, Kitchen/Bar Last Order, and minimum closing time:') +
       '</p>';
 
-    const grid = el('div', 'two');
-    grid.style.marginTop = '10px';
+    const grid = el('div', 'ops-hours-grid');
 
     const makeTimeField = (lblTxt, val) => {
-      const l = el('label', '', lblTxt);
+      const l = el('label', 'ops-time-field');
+      const sp = el('span', '', lblTxt);
       const inp = el('input', 'in');
       inp.type = 'time';
       inp.value = val;
-      l.append(inp);
+      l.append(sp, inp);
       return { l, inp };
     };
 
-    const fPrep = makeTimeField(ar ? '☀️ بداية دوام الموظفين والتحضير (قبل الفتح)' : '☀️ Staff Shift & Prep Start', h.prepStart);
+    const fPrep = makeTimeField(ar ? '☀️ بداية دوام التحضير (قبل الفتح)' : '☀️ Staff Shift & Prep Start', h.prepStart);
     const fOpen = makeTimeField(ar ? '🍽️ ساعة فتح المطعم للزبائن' : '🍽️ Restaurant Opens for Guests', h.doorsOpen);
-    const fKitchenLO = makeTimeField(ar ? '🍳 آخر طلب للمطبخ (Kitchen Last Order)' : '🍳 Kitchen Last Order', h.kitchenLastOrder);
-    const fBarLO = makeTimeField(ar ? '🍸 آخر طلب للبار (Bar Last Order)' : '🍸 Bar Last Order', h.barLastOrder);
+    const fKitchenLO = makeTimeField(ar ? '🍳 آخر طلب للمطبخ (Kitchen LO)' : '🍳 Kitchen Last Order', h.kitchenLastOrder);
+    const fBarLO = makeTimeField(ar ? '🍸 آخر طلب للبار (Bar LO)' : '🍸 Bar Last Order', h.barLastOrder);
     const fMinClose = makeTimeField(ar ? '🚪 الحد الأدنى لوقت إغلاق المطعم' : '🚪 Minimum Official Closing Time', h.minCloseTime);
 
     grid.append(fPrep.l, fOpen.l, fKitchenLO.l, fBarLO.l, fMinClose.l);
