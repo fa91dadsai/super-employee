@@ -3620,6 +3620,190 @@ body.dark .etb-badge {
     grid-template-columns: 1fr !important;
   }
 }
+
+/* Staff Profile Governance, Nickname, Invite Codes & Approvals */
+.st-invite-box {
+  background: rgba(47, 107, 94, 0.09) !important;
+  border: 1px dashed var(--accent) !important;
+  border-radius: 12px !important;
+  padding: 10px 12px !important;
+  margin: 10px 0 !important;
+}
+body.dark .st-invite-box {
+  background: rgba(16, 185, 129, 0.1) !important;
+  border-color: #34d399 !important;
+}
+.st-code-pill {
+  font-family: monospace !important;
+  font-size: 1rem !important;
+  font-weight: 800 !important;
+  color: var(--accent) !important;
+  background: var(--bg) !important;
+  padding: 3px 8px !important;
+  border-radius: 6px !important;
+  border: 1px solid var(--line) !important;
+  letter-spacing: 1px !important;
+}
+body.dark .st-code-pill {
+  color: #34d399 !important;
+}
+.pending-approval-banner {
+  background: rgba(245, 158, 11, 0.12) !important;
+  border: 1.5px solid #d97706 !important;
+  border-radius: 12px !important;
+  padding: 12px !important;
+  margin: 10px 0 14px !important;
+}
+.pending-approval-banner .pab-head {
+  font-weight: 800 !important;
+  font-size: 0.84rem !important;
+  color: #b45309 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+body.dark .pending-approval-banner .pab-head {
+  color: #fbbf24 !important;
+}
+.pending-approval-banner .pab-body {
+  font-size: 0.76rem !important;
+  color: var(--ink) !important;
+  margin-top: 6px !important;
+  line-height: 1.4 !important;
+}
+.pending-approvals-card {
+  background: var(--card) !important;
+  border: 1.5px solid #d97706 !important;
+  border-radius: 16px !important;
+  padding: 14px !important;
+  margin: 0 0 12px !important;
+  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.08) !important;
+}
+.pac-head {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin-bottom: 10px !important;
+  font-size: 0.82rem !important;
+  color: #b45309 !important;
+}
+body.dark .pac-head {
+  color: #fbbf24 !important;
+}
+.pac-badge {
+  background: rgba(245, 158, 11, 0.2) !important;
+  color: #b45309 !important;
+  padding: 2px 8px !important;
+  border-radius: 99px !important;
+  font-weight: 800 !important;
+  font-size: 0.68rem !important;
+}
+body.dark .pac-badge {
+  color: #fbbf24 !important;
+}
+.pac-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+}
+.pac-item {
+  background: var(--bg) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 12px !important;
+  padding: 10px 12px !important;
+}
+.pac-item-info {
+  font-size: 0.78rem !important;
+  line-height: 1.4 !important;
+  margin-bottom: 8px !important;
+}
+.pac-item-actions {
+  display: flex !important;
+  gap: 8px !important;
+}
+.pac-btn {
+  flex: 1 !important;
+  min-height: 36px !important;
+  font-size: 0.78rem !important;
+  font-weight: 800 !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+}
+.pac-btn.approve {
+  background: #10b981 !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+.pac-btn.reject {
+  background: transparent !important;
+  color: #ef4444 !important;
+  border: 1px solid #ef4444 !important;
+}
+.login-invite-divider {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 14px 0 10px !important;
+  position: relative !important;
+}
+.login-invite-divider::before {
+  content: "" !important;
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: 50% !important;
+  border-top: 1px solid var(--line) !important;
+}
+.login-invite-divider span {
+  position: relative !important;
+  background: var(--card) !important;
+  padding: 0 10px !important;
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  color: var(--muted) !important;
+}
+.login-invite-btn {
+  width: 100% !important;
+  min-height: 42px !important;
+  background: var(--bg) !important;
+  border: 1.5px dashed var(--accent) !important;
+  color: var(--accent) !important;
+  font-weight: 800 !important;
+  border-radius: 12px !important;
+  font-size: 0.82rem !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+body.dark .login-invite-btn {
+  color: #34d399 !important;
+  border-color: #34d399 !important;
+}
+.invite-code-form {
+  margin-top: 10px !important;
+  padding: 12px !important;
+  background: rgba(47, 107, 94, 0.06) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 14px !important;
+}
+.erp-sync-pill-row {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 6px !important;
+  margin: 6px 0 10px !important;
+}
+.erp-sync-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  font-size: 0.68rem !important;
+  font-weight: 700 !important;
+  padding: 2px 7px !important;
+  border-radius: 6px !important;
+  background: var(--bg) !important;
+  border: 1px solid var(--line) !important;
+  color: var(--ink2) !important;
+}
     </style>
   </head>
   <body>
@@ -3660,6 +3844,20 @@ body.dark .etb-badge {
             </div>
             <button type="submit" id="loginSubmitBtn" class="btn primary login-submit">Sign In</button>
           </form>
+          <div class="login-invite-divider">
+            <span id="loginDividerText">أو · OR</span>
+          </div>
+          <button type="button" id="loginWithCodeBtn" class="btn login-invite-btn">
+            🔑 تفعيل حساب جديد بكود الدعوة (Join with Activation Code)
+          </button>
+          <div id="inviteCodeBox" class="invite-code-form" hidden>
+            <label class="login-field">
+              <span id="inviteCodeLbl" style="font-weight:700;">🔑 أدخل كود التفعيل الممنوح لك من الإدارة:</span>
+              <input id="inviteCodeIn" class="in" type="text" autocapitalize="characters" spellcheck="false" placeholder="e.g. CEEN-3003" style="text-align:center;font-weight:800;letter-spacing:2px;font-size:1.15rem;margin-top:6px;" />
+            </label>
+            <button type="button" id="inviteSubmitBtn" class="btn primary" style="width:100%;min-height:44px;margin-top:8px;">🚀 تفعيل الحساب والدخول للبروفايل</button>
+            <button type="button" id="cancelInviteCodeBtn" class="btn small" style="width:100%;margin-top:6px;">العودة للدخول بكلمة المرور</button>
+          </div>
           <div class="login-demo-box">
             <p class="login-demo-title">
               <span id="loginDemoTitle">Quick Staff Login (Oasis Branch)</span>
@@ -3935,8 +4133,20 @@ body.dark .etb-badge {
         <div class="grab" aria-hidden="true"></div>
         <h2 id="staffTitle"></h2>
         <div class="two">
-          <label><span data-i18n="staffName"></span><input id="stName" class="in" maxlength="60" required /></label>
+          <label><span data-i18n="staffName"></span><input id="stName" class="in" maxlength="60" placeholder="e.g. Sara Nabeel Khoury" required /></label>
+          <label><span id="stNickLbl">🏷️ الاسم المستعار / Floor Nickname (Tip &amp; Schedule)</span><input id="stNickname" class="in" maxlength="30" placeholder="e.g. Sara, Simo, Leo" /></label>
+        </div>
+        <div class="two">
           <label><span data-i18n="position"></span><select id="stRole" class="in"></select></label>
+          <label><span id="stPhoneLbl">📱 رقم الهاتف والواتساب / Phone</span><input type="tel" id="stPhone" class="in" placeholder="+962 7 9xxx xxxx" /></label>
+        </div>
+        <label><span id="stEmailLbl">📧 البريد الإلكتروني / Email</span><input type="email" id="stEmail" class="in" placeholder="employee@ceenlounge.com" /></label>
+        <div id="stInviteBox" class="st-invite-box">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span>🔑 <b>كود التفعيل للموظف (Activation Code):</b></span>
+            <code id="stInviteCodeDisplay" class="st-code-pill">CEEN-XXXX</code>
+          </div>
+          <button type="button" id="stCopyInviteBtn" class="btn small" style="margin-top:6px;width:100%;">📋 نسخ كود التفعيل لإرساله للموظف عبر واتساب</button>
         </div>
         <div class="two">
           <label><span id="stHealthNoLbl">🪪 رقم الشهادة الصحية / Health Cert #</span><input id="stHealthNo" class="in" maxlength="60" placeholder="HC-2026-..." /></label>
@@ -7676,8 +7886,11 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
         tags.append(el('span', cls, txt));
       }
       if (p.inv) tags.append(el('span', 'tag mine', '📦 ' + t('inCounts')));
+      if (p.inviteCode) tags.append(el('span', 'tag', '🔑 ' + p.inviteCode));
+      if (p.pendingNameChange && p.pendingNameChange.status === 'pending') tags.append(el('span', 'tag late', '⏳ طلب تعديل معلق'));
       if (!p.active) tags.append(el('span', 'tag', t('inactive')));
-      b.append(el('span', 't', p.name), tags);
+      const dispTitle = p.nickname && p.nickname !== p.name ? `${p.name} (${p.nickname})` : p.name;
+      b.append(el('span', 't', dispTitle), tags);
       li.append(b);
       ul.append(li);
     });
@@ -7690,6 +7903,11 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     editing = p ? p.id : '';
     $('staffTitle').textContent = t('editStaff');
     $('stName').value = p ? p.name : '';
+    if ($('stNickname')) $('stNickname').value = (p && p.nickname) || '';
+    if ($('stPhone')) $('stPhone').value = (p && p.phone) || '';
+    if ($('stEmail')) $('stEmail').value = (p && p.email) || '';
+    const code = (p && p.inviteCode) ? p.inviteCode : ('CEEN-' + Math.floor(1000 + Math.random() * 9000));
+    if ($('stInviteCodeDisplay')) $('stInviteCodeDisplay').textContent = code;
     const sel = $('stRole');
     sel.replaceChildren();
     FOH.taskSheet.roleOptions().forEach(([v, name]) => {
@@ -7711,9 +7929,17 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   function save() {
     const name = $('stName').value.trim().slice(0, 60);
     if (!name) return;
+    const nickname = $('stNickname') ? $('stNickname').value.trim().slice(0, 30) : '';
+    const phone = $('stPhone') ? $('stPhone').value.trim().slice(0, 30) : '';
+    const email = $('stEmail') ? $('stEmail').value.trim().slice(0, 80) : '';
+    const inviteCode = $('stInviteCodeDisplay') ? $('stInviteCodeDisplay').textContent.trim() : ('CEEN-' + Math.floor(1000 + Math.random() * 9000));
     FOH.edit.checkpoint();
     const data = {
       name,
+      nickname: nickname || name.split(' ')[0],
+      phone,
+      email,
+      inviteCode,
       role: $('stRole').value,
       inv: $('stInv').checked,
       active: $('stActive').checked,
@@ -7739,6 +7965,22 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   function init() {
     const sheet = $('staffSheet');
     $('stDelete').addEventListener('click', remove);
+    if ($('stCopyInviteBtn')) {
+      $('stCopyInviteBtn').addEventListener('click', () => {
+        const code = $('stInviteCodeDisplay') ? $('stInviteCodeDisplay').textContent.trim() : '';
+        if (code) {
+          if (navigator.clipboard) {
+            navigator.clipboard.writeText(code).then(() => {
+              FOH.toast ? FOH.toast('✓ تم نسخ كود التفعيل: ' + code) : alert('Copied: ' + code);
+            }).catch(() => {
+              prompt('كود التفعيل:', code);
+            });
+          } else {
+            prompt('كود التفعيل:', code);
+          }
+        }
+      });
+    }
     $('staffForm').addEventListener('keydown', (e) => e.key === 'Enter' && e.target.tagName === 'INPUT' && e.preventDefault());
     sheet.addEventListener('click', (e) => e.target === sheet && sheet.close('cancel'));
     sheet.addEventListener('close', () => sheet.returnValue === 'save' && save());
@@ -9443,7 +9685,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
       if (window.caches) {
         caches.keys().then((ks) => ks.forEach((k) => {
-          if (k !== 'super-employee-v19') caches.delete(k);
+          if (k !== 'super-employee-v20') caches.delete(k);
         })).catch(() => {});
       }
       navigator.serviceWorker.register('sw.js?v=18', { updateViaCache: 'none' }).then((reg) => {
@@ -9826,6 +10068,11 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       pass: '1234',
       firstName: 'Fadi',
       lastName: 'Al-Masri',
+      nickname: 'Fadi',
+      nicknameAr: 'فادي',
+      phone: '+962 7 9000 1001',
+      email: 'fadi.m@ceenlounge.com',
+      inviteCode: 'CEEN-1001',
       displayName: 'Fadi (Super Manager)',
       displayNameAr: 'فادي (سوبر مانجر)',
       roleName: '👑 Super Manager',
@@ -9841,6 +10088,11 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       pass: '1234',
       firstName: 'Ali',
       lastName: 'Hassan',
+      nickname: 'Ali',
+      nicknameAr: 'علي',
+      phone: '+962 7 9000 2002',
+      email: 'ali.h@ceenlounge.com',
+      inviteCode: 'CEEN-2002',
       displayName: 'Ali (Super Captain)',
       displayNameAr: 'علي (سوبر كابتن)',
       roleName: '🎖️ Super Captain',
@@ -9856,6 +10108,11 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       pass: '1234',
       firstName: 'Sara',
       lastName: 'Khoury',
+      nickname: 'Sara',
+      nicknameAr: 'سارة',
+      phone: '+962 7 9000 3003',
+      email: 'sara.k@ceenlounge.com',
+      inviteCode: 'CEEN-3003',
       displayName: 'Sara (Super Waiter)',
       displayNameAr: 'سارة (سوبر ويتر)',
       roleName: '⭐ Super Waiter',
@@ -9871,6 +10128,11 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       pass: '1234',
       firstName: 'Maher',
       lastName: 'Zaid',
+      nickname: 'Leo',
+      nicknameAr: 'ليو (ماهر)',
+      phone: '+962 7 9000 4004',
+      email: 'maher.z@ceenlounge.com',
+      inviteCode: 'CEEN-4004',
       displayName: 'Maher (Super Bartender)',
       displayNameAr: 'ماهر (سوبر بارتندر)',
       roleName: '🍸 Super Bartender',
@@ -9932,12 +10194,16 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       if (!S.tpl.roles.length) S.tpl.roles.push(roleObj);
     }
     let person = S.tpl.staff.find(
-      (p) => p.id === sess.staffId || p.name.toLowerCase() === (sess.displayName || '').toLowerCase() || p.name.toLowerCase() === (sess.firstName || '').toLowerCase()
+      (p) => p.id === sess.staffId || (sess.inviteCode && p.inviteCode === sess.inviteCode) || p.name.toLowerCase() === (sess.displayName || '').toLowerCase() || p.name.toLowerCase() === (sess.firstName || '').toLowerCase()
     );
     if (!person) {
       person = {
         id: sess.staffId || 'staff_' + sess.username,
         name: sess.displayName || sess.firstName || sess.username,
+        nickname: sess.nickname || sess.firstName || sess.username,
+        email: sess.email || '',
+        phone: sess.phone || '',
+        inviteCode: sess.inviteCode || ('CEEN-' + Math.floor(1000 + Math.random() * 9000)),
         role: roleObj.id,
         inv: true,
         active: true,
@@ -9945,6 +10211,14 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       S.tpl.staff.push(person);
       FOH.store.saveTemplate(S.tpl);
     } else {
+      if (sess.nickname && !person.nickname) person.nickname = sess.nickname;
+      if (sess.phone && !person.phone) person.phone = sess.phone;
+      if (sess.email && !person.email) person.email = sess.email;
+      if (sess.inviteCode && !person.inviteCode) person.inviteCode = sess.inviteCode;
+      sess.nickname = person.nickname || sess.nickname || '';
+      sess.phone = person.phone || sess.phone || '';
+      sess.email = person.email || sess.email || '';
+      sess.inviteCode = person.inviteCode || sess.inviteCode || '';
       person.name = sess.displayName || person.name;
     }
     sess.staffId = person.id;
@@ -10095,6 +10369,79 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     $('loginDemoTitle').textContent = t('loginDemoTitle');
     $('loginLangBtn').textContent = FOH.i18n.lang === 'ar' ? 'EN' : 'ع';
 
+    // Wire invite code toggle and activation
+    const codeBtn = $('loginWithCodeBtn');
+    if (codeBtn && !codeBtn.dataset.wired) {
+      codeBtn.dataset.wired = '1';
+      codeBtn.addEventListener('click', () => {
+        const box = $('inviteCodeBox');
+        if (box) {
+          box.hidden = !box.hidden;
+          if (!box.hidden && $('inviteCodeIn')) $('inviteCodeIn').focus();
+        }
+      });
+    }
+    const cancelCodeBtn = $('cancelInviteCodeBtn');
+    if (cancelCodeBtn && !cancelCodeBtn.dataset.wired) {
+      cancelCodeBtn.dataset.wired = '1';
+      cancelCodeBtn.addEventListener('click', () => {
+        if ($('inviteCodeBox')) $('inviteCodeBox').hidden = true;
+      });
+    }
+    const subCodeBtn = $('inviteSubmitBtn');
+    if (subCodeBtn && !subCodeBtn.dataset.wired) {
+      subCodeBtn.dataset.wired = '1';
+      subCodeBtn.addEventListener('click', async () => {
+        const rawCode = ($('inviteCodeIn') ? $('inviteCodeIn').value : '').trim().toUpperCase();
+        if (!rawCode) {
+          alert(isAr() ? 'يرجى إدخال كود التفعيل الممنوح لك من الإدارة' : 'Please enter your invite code');
+          return;
+        }
+        ensureStaffHealthAndPerms();
+        const match = (S.tpl.staff || []).find((p) => (p.inviteCode || '').toUpperCase() === rawCode);
+        const demoMatch = DEMO_ACCOUNTS.find((d) => (d.inviteCode || '').toUpperCase() === rawCode);
+        if (!match && !demoMatch) {
+          alert(isAr() ? 'كود التفعيل غير صحيح أو غير مسجل في النظام. يرجى مراجعة إدارة المطعم.' : 'Invalid invite code. Please check with restaurant management.');
+          return;
+        }
+        const username = demoMatch ? demoMatch.username : ((match && match.name) ? match.name.toLowerCase().replace(/[^a-z0-9]/g, '') : 'staff');
+        const roleName = match ? (match.role ? (FOH.taskSheet.roleName ? FOH.taskSheet.roleName(match.role) : match.role) : 'Waiter') : (demoMatch ? demoMatch.roleName : 'Waiter');
+        const isMgr = /supervisor|manager/i.test(roleName);
+        const isCapt = /captain/i.test(roleName);
+        const nextSess = {
+          username,
+          email: (match && match.email) || (demoMatch && demoMatch.email) || '',
+          phone: (match && match.phone) || (demoMatch && demoMatch.phone) || '',
+          nickname: (match && match.nickname) || (demoMatch && demoMatch.nickname) || '',
+          inviteCode: rawCode,
+          accessToken: null,
+          cloudConnected: false,
+          firstName: (match && match.name ? match.name.split(' ')[0] : (demoMatch && demoMatch.firstName)) || 'Employee',
+          lastName: (match && match.name ? match.name.split(' ').slice(1).join(' ') : (demoMatch && demoMatch.lastName)) || '',
+          displayName: (match && match.name) || (demoMatch && demoMatch.displayName) || 'Employee',
+          roleName: demoMatch ? demoMatch.roleName : (isMgr ? '👑 Super Manager' : isCapt ? '🎖️ Super Captain' : '⭐ Super Waiter'),
+          roleAr: demoMatch ? demoMatch.roleAr : (isMgr ? '👑 سوبر مانجر' : isCapt ? '🎖️ سوبر كابتن' : '⭐ سوبر ويتر'),
+          isManager: isMgr,
+          isCaptain: isCapt,
+          shift: (demoMatch && demoMatch.shift) || '12:00 – 02:00',
+          locker: (demoMatch && demoMatch.locker) || '#Staff',
+          uniform: (demoMatch && demoMatch.uniform) || 'Standard',
+          healthCert: (match && match.healthCertExpiry) || 'Valid',
+          tenantSlug: TENANT_SLUG,
+          tenantName: TENANT_NAME,
+        };
+        bindSessionToStaff(nextSess);
+        saveSession(nextSess, true);
+        applyAuthUI();
+        if (!nextSess.isManager) S.view = 'mine';
+        FOH.app.render();
+        setTimeout(() => {
+          openProfile();
+          FOH.edit.toast(isAr() ? '🎉 مرحباً بك في CEEN! يرجى إكمال رقم هاتفك والبريد والـ Nickname المفضل' : 'Welcome to CEEN! Please complete your profile.');
+        }, 300);
+      });
+    }
+
     const grid = $('loginDemoGrid');
     grid.replaceChildren();
     DEMO_ACCOUNTS.forEach((acc) => {
@@ -10102,7 +10449,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       b.type = 'button';
       const name = FOH.i18n.lang === 'ar' ? acc.displayNameAr : acc.displayName;
       const role = FOH.i18n.lang === 'ar' ? acc.roleAr : acc.roleName;
-      b.append(el('b', '', '👤 ' + name), el('small', '', role + ' · ' + acc.username + ' / 1234'));
+      b.append(el('b', '', '👤 ' + name), el('small', '', role + ' · ' + acc.username + ' / 1234' + (acc.inviteCode ? ' · 🔑 ' + acc.inviteCode : '')));
       b.addEventListener('click', async () => {
         $('loginUser').value = acc.username;
         $('loginPass').value = '1234';
@@ -10127,12 +10474,23 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     const body = $('profSheetBody');
     body.replaceChildren();
     $('profSheetTitle').textContent = t('profTitle');
+    const ar = isAr();
+    ensureStaffHealthAndPerms();
+    const isMgr = !!(session && session.isManager);
+
+    const staffRec = (S.tpl.staff || []).find(
+      (p) => (p.id === session.staffId) ||
+             (session.inviteCode && p.inviteCode === session.inviteCode) ||
+             (p.name || '').toLowerCase().startsWith(((session.username) || '').toLowerCase())
+    ) || {};
 
     const initials = ((session.firstName || session.displayName || 'U')[0] + ((session.lastName || '')[0] || '')).toUpperCase();
     const hero = el('div', 'prof-hero');
     const av = el('div', 'prof-avatar-lg', initials);
     const info = el('div', 'prof-hero-info');
-    info.append(el('h3', '', (session.firstName + ' ' + session.lastName).trim() || session.displayName));
+    const curDisp = (session.firstName ? (session.firstName + ' ' + (session.lastName || '')).trim() : session.displayName) || 'Employee';
+    const nickBadge = session.nickname || staffRec.nickname ? ` (${session.nickname || staffRec.nickname})` : '';
+    info.append(el('h3', '', curDisp + nickBadge));
     const badges = el('div', 'prof-badges');
     const roleLabel = FOH.i18n.lang === 'ar' ? session.roleAr || session.roleName : session.roleName;
     badges.append(
@@ -10162,65 +10520,164 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     });
     body.append(stats);
 
+    // Pending Approval Banner if staff member submitted a name/nickname change
+    if (staffRec.pendingNameChange && staffRec.pendingNameChange.status === 'pending') {
+      const pnc = staffRec.pendingNameChange;
+      const banner = el('div', 'pending-approval-banner');
+      banner.innerHTML =
+        '<div class="pab-head">⏳ ' + (ar ? 'طلب تعديل الاسم والـ Nickname قيد مراجعة المدير العام' : 'Pending General Manager Approval') + '</div>' +
+        '<div class="pab-body">' +
+        '<b>' + (ar ? 'الاسم الجديد المطلوب:' : 'Requested Legal Name:') + '</b> ' + (pnc.reqFullName || (pnc.reqFirstName + ' ' + pnc.reqLastName)) + '<br>' +
+        '<b>' + (ar ? 'الـ Nickname المقترح:' : 'Requested Nickname:') + '</b> 🏷️ ' + (pnc.reqNickname || '—') + '<br>' +
+        '<small style="display:block;margin-top:4px;color:var(--muted);">' +
+        (ar ? '💡 لمنع الغش والعبث ببيانات الشركة، يبقى اسمك الحالي معتمداً في الشفتات والتبس حتى يقوم المدير العام باعتماده رسمياً.' : '💡 For governance, your current name remains in place until Manager approval.') +
+        '</small>' +
+        '</div>';
+      body.append(banner);
+    }
+
     // Section 1: PROF-01 User Profile Form
     const secProf = el('section', 'prof-section');
-    secProf.append(el('h4', '', '👤 ' + t('profIdentityHead')));
+    secProf.append(el('h4', '', '👤 ' + (ar ? 'البيانات الشخصية وهوية الموظف في النظام (ERP Profile)' : 'Personal Identity & ERP Profile')));
+
+    // Row 1: Contact Info (Email & Phone)
+    const rowContact = el('div', 'two');
+    const emailWrap = el('label', '', ar ? '📧 البريد الإلكتروني (Email)' : '📧 Email Address');
+    const emailIn = el('input', 'in');
+    emailIn.type = 'email';
+    emailIn.placeholder = 'employee@ceenlounge.com';
+    emailIn.value = session.email || staffRec.email || '';
+    emailWrap.append(emailIn);
+
+    const phoneWrap = el('label', '', ar ? '📱 رقم الهاتف والواتساب (Phone / WhatsApp)' : '📱 Phone / WhatsApp');
+    const phoneIn = el('input', 'in');
+    phoneIn.type = 'tel';
+    phoneIn.placeholder = '+962 7 9xxx xxxx';
+    phoneIn.value = session.phone || staffRec.phone || '';
+    phoneWrap.append(phoneIn);
+    rowContact.append(emailWrap, phoneWrap);
+
+    // Row 2: Floor Nickname with ERP sync badges
+    const nickWrap = el('label', '');
+    nickWrap.style.display = 'block';
+    nickWrap.style.marginTop = '10px';
+    nickWrap.innerHTML = '<b>🏷️ ' + (ar ? 'الاسم المستعار في الصالة (Floor Nickname):' : 'Floor Nickname:') + '</b>';
+    const nickIn = el('input', 'in');
+    nickIn.placeholder = ar ? 'مثال: سارة، سيمو، ليو...' : 'e.g. Sara, Simo, Leo...';
+    nickIn.value = session.nickname || staffRec.nickname || '';
+    nickWrap.append(nickIn);
+
+    const syncPills = el('div', 'erp-sync-pill-row');
+    syncPills.innerHTML =
+      '<span class="erp-sync-pill">🏷️ Tip Manager (' + (ar ? 'توزيع ونقاط التبس' : 'Tip Points & Envelope') + ')</span>' +
+      '<span class="erp-sync-pill">🗓️ OpsFlow Schedule (' + (ar ? 'جدول الشفتات الأسبوعي' : 'Weekly Roster') + ')</span>' +
+      '<span class="erp-sync-pill">👥 HR Directory (' + (ar ? 'الملف الوظيفي' : 'HR Staff Record') + ')</span>';
+    nickWrap.append(syncPills);
+
+    // Row 3: Official Legal Name
     const rowNames = el('div', 'two');
-    const fnWrap = el('label', '', t('profFirstName'));
+    rowNames.style.marginTop = '10px';
+    const fnWrap = el('label', '', ar ? 'الاسم الأول (Legal First Name)' : 'Legal First Name');
     const fnIn = el('input', 'in');
     fnIn.value = session.firstName || '';
     fnWrap.append(fnIn);
 
-    const lnWrap = el('label', '', t('profLastName'));
+    const lnWrap = el('label', '', ar ? 'اسم العائلة (Legal Last Name)' : 'Legal Last Name');
     const lnIn = el('input', 'in');
     lnIn.value = session.lastName || '';
     lnWrap.append(lnIn);
     rowNames.append(fnWrap, lnWrap);
 
-    const dnWrap = el('label', '', t('profDisplayName'));
-    dnWrap.style.display = 'block';
-    dnWrap.style.marginTop = '8px';
-    const dnIn = el('input', 'in');
-    dnIn.value = session.displayName || '';
-    dnWrap.append(dnIn);
+    // Row 4: Invite Code (Display Only)
+    const curCode = session.inviteCode || staffRec.inviteCode || 'CEEN-1001';
+    const codeBox = el('div', 'st-invite-box');
+    codeBox.style.marginTop = '10px';
+    codeBox.innerHTML =
+      '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+      '<span>🔑 <b>' + (ar ? 'كود التفعيل الخاص بك (Activation Code):' : 'Your Activation Code:') + '</b></span>' +
+      '<code class="st-code-pill">' + curCode + '</code>' +
+      '</div>' +
+      '<small style="display:block;margin-top:4px;color:var(--muted);">' +
+      (ar ? '💡 يمكنك استخدام هذا الكود لتسجيل الدخول السريع إلى النظام من أي جهاز.' : '💡 Use this code to sign in instantly from any device.') +
+      '</small>';
 
-    const saveProfBtn = el('button', 'btn primary', t('profSaveProfile'));
+    const saveProfBtn = el('button', 'btn primary', ar ? '💾 حفظ التعديلات وإرسال للاعتماد' : '💾 Save Profile & Submit');
     saveProfBtn.type = 'button';
-    saveProfBtn.style.marginTop = '10px';
+    saveProfBtn.style.marginTop = '12px';
     saveProfBtn.style.width = '100%';
     saveProfBtn.addEventListener('click', async () => {
-      session.firstName = fnIn.value.trim() || session.firstName;
-      session.lastName = lnIn.value.trim();
-      session.displayName = dnIn.value.trim() || session.firstName;
-      localStorage.setItem(
-        'foh-opening.prof.' + session.username,
-        JSON.stringify({ firstName: session.firstName, lastName: session.lastName, displayName: session.displayName })
-      );
-      if (session.accessToken) {
-        try {
-          await fetch(`${SUPABASE_URL}/functions/v1/api/v1/me/profile`, {
-            method: 'PATCH',
-            headers: {
-              apikey: SUPABASE_ANON_KEY,
-              Authorization: `Bearer ${session.accessToken}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              first_name: session.firstName,
-              last_name: session.lastName,
-              display_name: session.displayName,
-            }),
-          });
-        } catch {}
+      const newEmail = emailIn.value.trim();
+      const newPhone = phoneIn.value.trim();
+      const newFn = fnIn.value.trim() || session.firstName;
+      const newLn = lnIn.value.trim();
+      const newNick = nickIn.value.trim();
+      const newFullName = (newFn + ' ' + newLn).trim();
+
+      // Save contact details immediately
+      session.email = newEmail;
+      session.phone = newPhone;
+      if (staffRec.id) {
+        staffRec.email = newEmail;
+        staffRec.phone = newPhone;
       }
-      bindSessionToStaff(session);
-      saveSession(session, true);
-      applyAuthUI();
-      FOH.app.render();
-      renderProfileBody();
-      FOH.edit.toast(t('profSavedMsg'));
+
+      const curLegalFull = ((session.firstName || '') + ' ' + (session.lastName || '')).trim();
+      const curNick = session.nickname || staffRec.nickname || '';
+      const nameChanged = (newFullName !== curLegalFull) || (newNick && newNick !== curNick);
+
+      if (isMgr) {
+        // Super Manager has direct authorization to update names immediately
+        session.firstName = newFn;
+        session.lastName = newLn;
+        session.nickname = newNick || session.nickname;
+        session.displayName = newFullName || session.displayName;
+        if (staffRec.id) {
+          staffRec.name = session.displayName;
+          staffRec.nickname = session.nickname;
+          delete staffRec.pendingNameChange;
+        }
+        FOH.store.saveTemplate(S.tpl);
+        saveSession(session, true);
+        applyAuthUI();
+        FOH.app.render();
+        renderProfileBody();
+        FOH.edit.toast(t('profSavedMsg'));
+      } else {
+        // Non-manager employee (Waiter, Bartender, Captain):
+        // Name & Nickname changes require Manager Approval to prevent unauthorized alterations!
+        if (nameChanged) {
+          staffRec.pendingNameChange = {
+            id: 'pnc_' + Date.now(),
+            staffId: staffRec.id || ('staff_' + session.username),
+            staffUsername: session.username,
+            currentName: staffRec.name || curLegalFull,
+            currentNickname: curNick,
+            reqFirstName: newFn,
+            reqLastName: newLn,
+            reqFullName: newFullName,
+            reqNickname: newNick,
+            status: 'pending',
+            requestedAt: new Date().toISOString(),
+          };
+          FOH.store.saveTemplate(S.tpl);
+          if (FOH.cloudRealtime && FOH.cloudRealtime.broadcast) {
+            FOH.cloudRealtime.broadcast('STAFF_NAME_CHANGE_REQUEST', staffRec.pendingNameChange);
+          }
+          saveSession(session, true);
+          FOH.app.render();
+          renderProfileBody();
+          FOH.edit.toast(ar ? '⏳ تم حفظ جهات الاتصال وإرسال طلب تعديل الاسم/اللقب للمدير العام للاعتماد ✓' : '⏳ Contact info saved. Name change submitted for Manager approval ✓');
+        } else {
+          FOH.store.saveTemplate(S.tpl);
+          saveSession(session, true);
+          FOH.app.render();
+          renderProfileBody();
+          FOH.edit.toast(ar ? '✓ تم حفظ رقم الهاتف والبريد الإلكتروني بنجاح' : '✓ Contact info updated successfully');
+        }
+      }
     });
-    secProf.append(rowNames, dnWrap, saveProfBtn);
+
+    secProf.append(rowContact, nickWrap, rowNames, codeBox, saveProfBtn);
     body.append(secProf);
 
     // Section 2: OpsFlow Schedule (Shift, Locker, Uniform, Health Certificate) + Day-Off Request
@@ -12769,10 +13226,10 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   function ensureStaffHealthAndPerms() {
     const gov = loadGov();
     const defaultsByName = {
-      fadi: { no: 'HC-2026-101', exp: '2027-06-30', edit: true },
-      ali: { no: 'HC-2026-104', exp: '2027-04-15', edit: true },
-      sara: { no: 'HC-2026-209', exp: '2026-11-12', edit: false },
-      maher: { no: 'HC-2025-882', exp: '2026-10-25', edit: false },
+      fadi: { no: 'HC-2026-101', exp: '2027-06-30', edit: true, nickname: 'Fadi', phone: '+962 7 9000 1001', email: 'fadi.m@ceenlounge.com', inviteCode: 'CEEN-1001' },
+      ali: { no: 'HC-2026-104', exp: '2027-04-15', edit: true, nickname: 'Ali', phone: '+962 7 9000 2002', email: 'ali.h@ceenlounge.com', inviteCode: 'CEEN-2002' },
+      sara: { no: 'HC-2026-209', exp: '2026-11-12', edit: false, nickname: 'Sara', phone: '+962 7 9000 3003', email: 'sara.k@ceenlounge.com', inviteCode: 'CEEN-3003' },
+      maher: { no: 'HC-2025-882', exp: '2026-10-25', edit: false, nickname: 'Leo', phone: '+962 7 9000 4004', email: 'maher.z@ceenlounge.com', inviteCode: 'CEEN-4004' },
     };
     let changed = false;
     (S.tpl.staff || []).forEach((p) => {
@@ -12781,8 +13238,21 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       if (def) {
         if (!p.healthCertNo) { p.healthCertNo = def.no; changed = true; }
         if (!p.healthCertExpiry) { p.healthCertExpiry = def.exp; changed = true; }
+        if (!p.nickname) { p.nickname = def.nickname; changed = true; }
+        if (!p.phone) { p.phone = def.phone; changed = true; }
+        if (!p.email) { p.email = def.email; changed = true; }
+        if (!p.inviteCode) { p.inviteCode = def.inviteCode; changed = true; }
         if (typeof p.canEditChecklist !== 'boolean') {
           p.canEditChecklist = gov.editorUsernames.includes(key) || def.edit;
+          changed = true;
+        }
+      } else {
+        if (!p.inviteCode) {
+          p.inviteCode = 'CEEN-' + Math.floor(1000 + Math.random() * 9000);
+          changed = true;
+        }
+        if (!p.nickname && p.name) {
+          p.nickname = p.name.split(' ')[0];
           changed = true;
         }
       }
@@ -13844,12 +14314,12 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     root.append(hcCard);
 
     // Quick button to open full Profile Dialog & Day-Off Section
-    const openFullBtn = el('button', 'btn', ar ? '👤 تعديل الاسم وكلمة المرور وإعدادات الإشعارات' : '👤 Edit Name, Password & Push Settings');
+    const openFullBtn = el('button', 'btn primary', ar ? '👤 تعديل البيانات، الـ Nickname وجهات الاتصال' : '👤 Edit Profile, Nickname & Contact Info');
     openFullBtn.type = 'button';
     openFullBtn.style.width = '100%';
     openFullBtn.style.marginBottom = '12px';
     openFullBtn.addEventListener('click', () => {
-      if (FOH.erpPwa && FOH.erpPwa.openProfile) FOH.erpPwa.openProfile();
+      openProfile();
     });
     root.append(openFullBtn);
 
@@ -14029,6 +14499,92 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       tipsCfgCard.append(r);
     });
     root.append(tipsCfgCard);
+
+    // Staff Directory & Activation Codes Card
+    const staffDirCard = el('section', 'card');
+    staffDirCard.style.padding = '16px';
+    staffDirCard.append(
+      el('h3', '', '👥 ' + (ar ? 'دليل الموظفين وأكواد التفعيل (Staff Directory & Activation Codes)' : 'Staff Directory & Activation Codes')),
+      el('p', 'setting-note', ar ? 'أكواد التفعيل المخصصة لتسجيل دخول الموظفين الجدد وربط الـ Nicknames مع التبس وجدول الشفتات.' : 'Unique activation codes for staff onboarding, synced with tips and weekly roster.')
+    );
+
+    const pendingStaff = (S.tpl.staff || []).filter((p) => p.pendingNameChange && p.pendingNameChange.status === 'pending');
+    if (pendingStaff.length > 0) {
+      const pBlock = el('div', 'pending-approvals-card');
+      pBlock.innerHTML =
+        '<div class="pac-head"><b>📝 ' + (ar ? 'طلبات تعديل الأسماء بانتظار اعتمادك:' : 'Pending Name Change Approvals:') + '</b><span class="pac-badge">' + pendingStaff.length + '</span></div>';
+      const pList = el('div', 'pac-list');
+      pendingStaff.forEach((st) => {
+        const req = st.pendingNameChange;
+        const it = el('div', 'pac-item');
+        it.innerHTML =
+          '<div class="pac-item-info">' +
+          '<b>' + st.name + '</b> (' + (st.role || 'Staff') + ')<br>' +
+          (ar ? 'الاسم الجديد المطلوب:' : 'Requested Legal Name:') + ' <b style="color:var(--accent);">' + (req.reqFullName || (req.reqFirstName + ' ' + req.reqLastName)) + '</b><br>' +
+          (ar ? 'الـ Nickname المقترح:' : 'Requested Nickname:') + ' <b style="color:#10b981;">🏷️ ' + (req.reqNickname || '—') + '</b>' +
+          '</div>';
+        const aRow = el('div', 'pac-item-actions');
+        const okB = el('button', 'pac-btn approve', ar ? '✓ اعتماد وتطبيق في كافة الأنظمة' : '✓ Approve & Sync');
+        okB.type = 'button';
+        okB.addEventListener('click', () => {
+          st.name = req.reqFullName || ((req.reqFirstName + ' ' + req.reqLastName).trim()) || st.name;
+          if (req.reqNickname) st.nickname = req.reqNickname;
+          delete st.pendingNameChange;
+          FOH.store.saveTemplate(S.tpl);
+          if (FOH.cloudRealtime && FOH.cloudRealtime.broadcast) {
+            FOH.cloudRealtime.broadcast('STAFF_NAME_CHANGE_APPROVED', { staffId: st.id, name: st.name, nickname: st.nickname });
+          }
+          FOH.edit.toast(ar ? '✓ تم اعتماد تعديل اسم ' + st.name + ' بنجاح' : 'Name change approved ✓');
+          renderSettingsView(root);
+        });
+        const noB = el('button', 'pac-btn reject', ar ? '✕ رفض الطلب' : '✕ Reject');
+        noB.type = 'button';
+        noB.addEventListener('click', () => {
+          delete st.pendingNameChange;
+          FOH.store.saveTemplate(S.tpl);
+          FOH.edit.toast(ar ? 'تم رفض طلب التعديل' : 'Request rejected');
+          renderSettingsView(root);
+        });
+        aRow.append(okB, noB);
+        it.append(aRow);
+        pList.append(it);
+      });
+      pBlock.append(pList);
+      staffDirCard.append(pBlock);
+    }
+
+    const sList = el('div', 'pac-list');
+    (S.tpl.staff || []).forEach((st) => {
+      const it = el('div', 'pac-item');
+      it.style.background = 'var(--card)';
+      it.style.border = '1px solid var(--line)';
+      const nickStr = st.nickname ? '<span class="tag role" style="margin-inline-start:6px;">🏷️ ' + st.nickname + '</span>' : '';
+      const codeStr = st.inviteCode || 'CEEN-XXXX';
+      it.innerHTML =
+        '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">' +
+        '<div><b>' + st.name + '</b>' + nickStr + '<br><small style="color:var(--ink2);">' + (st.email || 'No email') + ' · ' + (st.phone || 'No phone') + '</small></div>' +
+        '<div style="display:flex;align-items:center;gap:6px;"><code class="st-code-pill">' + codeStr + '</code></div>' +
+        '</div>';
+      const copyBtn = el('button', 'btn small', ar ? '📋 نسخ كود التفعيل' : '📋 Copy Invite Code');
+      copyBtn.type = 'button';
+      copyBtn.style.marginTop = '8px';
+      copyBtn.style.width = '100%';
+      copyBtn.addEventListener('click', () => {
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(codeStr).then(() => {
+            FOH.edit.toast(ar ? '✓ تم نسخ كود التفعيل: ' + codeStr : 'Copied: ' + codeStr);
+          }).catch(() => {
+            prompt(ar ? 'كود التفعيل للموظف:' : 'Invite code:', codeStr);
+          });
+        } else {
+          prompt(ar ? 'كود التفعيل للموظف:' : 'Invite code:', codeStr);
+        }
+      });
+      it.append(copyBtn);
+      sList.append(it);
+    });
+    staffDirCard.append(sList);
+    root.append(staffDirCard);
   }
 
   
@@ -15897,6 +16453,10 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
         username: 'fadi',
         firstName: 'Fadi',
         lastName: 'Al-Masri',
+        nickname: 'Fadi',
+        phone: '+962 7 9000 1001',
+        email: 'fadi.m@ceenlounge.com',
+        inviteCode: 'CEEN-1001',
         displayName: ar ? 'فادي (سوبر مانجر)' : 'Fadi (Super Manager)',
         roleName: '👑 Super Manager',
         roleAr: '👑 سوبر مانجر',
@@ -15907,6 +16467,10 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
         username: 'ali',
         firstName: 'Ali',
         lastName: 'Hassan',
+        nickname: 'Ali',
+        phone: '+962 7 9000 2002',
+        email: 'ali.h@ceenlounge.com',
+        inviteCode: 'CEEN-2002',
         displayName: ar ? 'علي (سوبر كابتن)' : 'Ali (Super Captain)',
         roleName: '🎖️ Super Captain',
         roleAr: '🎖️ سوبر كابتن',
@@ -15918,6 +16482,10 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
         username: 'maher',
         firstName: 'Maher',
         lastName: 'Zaid',
+        nickname: 'Leo',
+        phone: '+962 7 9000 4004',
+        email: 'maher.z@ceenlounge.com',
+        inviteCode: 'CEEN-4004',
         displayName: ar ? 'ماهر (سوبر بارتندر)' : 'Maher (Super Bartender)',
         roleName: '🍸 Super Bartender',
         roleAr: '🍸 سوبر بارتندر',
@@ -15928,6 +16496,10 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
         username: 'sara',
         firstName: 'Sara',
         lastName: 'Khoury',
+        nickname: 'Sara',
+        phone: '+962 7 9000 3003',
+        email: 'sara.k@ceenlounge.com',
+        inviteCode: 'CEEN-3003',
         displayName: ar ? 'سارة (سوبر ويتر)' : 'Sara (Super Waiter)',
         roleName: '⭐ Super Waiter',
         roleAr: '⭐ سوبر ويتر',
@@ -16338,11 +16910,14 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     const activeCount = hAlerts.length + (due && due.ids ? due.ids.length : 0);
     const snoozedList = getActiveSnoozeTimersList().filter((x) => !x.key.startsWith('__group_'));
     const unreadTasks = (typeof loadTaskInbox === "function" ? loadTaskInbox().length : 0);
-    const total = activeCount + snoozedList.length + unreadTasks;
+    const sess = getSession();
+    const isMgr = !sess || !!sess.isManager;
+    const pendingChanges = isMgr ? (S.tpl.staff || []).filter((p) => p.pendingNameChange && p.pendingNameChange.status === 'pending') : [];
+    const total = activeCount + snoozedList.length + unreadTasks + pendingChanges.length;
 
     badge.hidden = total === 0;
     badge.textContent = String(total);
-    badge.classList.toggle('snoozed-only', activeCount === 0 && snoozedList.length > 0);
+    badge.classList.toggle('snoozed-only', activeCount === 0 && snoozedList.length > 0 && pendingChanges.length === 0);
   }
 
   let notifCenterInterval = 0;
@@ -16365,6 +16940,9 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
       const perm = 'Notification' in window ? Notification.permission : 'unsupported';
       const ident = getAppRoleIdentity();
+      const sess = getSession();
+      const isMgr = !sess || !!sess.isManager;
+      const pendingChanges = isMgr ? (S.tpl.staff || []).filter((p) => p.pendingNameChange && p.pendingNameChange.status === 'pending') : [];
 
       box.innerHTML =
         '<div class="grab"></div>' +
@@ -16372,6 +16950,55 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
         '<h2 style="margin:0;font-size:1.08rem;">🔔 ' + (ar ? 'مركز الإشعارات والتنبيهات المؤجلة' : 'Notification Center & Snoozed Alerts') + '</h2>' +
         '<span class="super-role-pill">' + (ar ? ident.titleAr : ident.titleEn) + '</span>' +
         '</div>';
+
+      // Section 0: Manager Pending Approvals if any
+      if (pendingChanges.length > 0) {
+        const pac = el('div', 'pending-approvals-card');
+        pac.innerHTML =
+          '<div class="pac-head"><b>📝 ' + (ar ? 'طلبات تعديل الأسماء بانتظار اعتمادك:' : 'Pending Staff Name Change Approvals:') + '</b><span class="pac-badge">' + pendingChanges.length + '</span></div>';
+        const pacList = el('div', 'pac-list');
+        pendingChanges.forEach((st) => {
+          const req = st.pendingNameChange;
+          const it = el('div', 'pac-item');
+          it.innerHTML =
+            '<div class="pac-item-info">' +
+            '<b>' + st.name + '</b> (' + (st.role || 'Staff') + ')<br>' +
+            (ar ? 'الاسم الجديد المطلوب:' : 'Requested Legal Name:') + ' <b style="color:var(--accent);">' + (req.reqFullName || (req.reqFirstName + ' ' + req.reqLastName)) + '</b><br>' +
+            (ar ? 'الـ Nickname المقترح:' : 'Requested Nickname:') + ' <b style="color:#10b981;">🏷️ ' + (req.reqNickname || '—') + '</b>' +
+            '</div>';
+          const aRow = el('div', 'pac-item-actions');
+          const okB = el('button', 'pac-btn approve', ar ? '✓ اعتماد وتطبيق' : '✓ Approve');
+          okB.type = 'button';
+          okB.addEventListener('click', () => {
+            st.name = req.reqFullName || ((req.reqFirstName + ' ' + req.reqLastName).trim()) || st.name;
+            if (req.reqNickname) st.nickname = req.reqNickname;
+            delete st.pendingNameChange;
+            FOH.store.saveTemplate(S.tpl);
+            if (FOH.cloudRealtime && FOH.cloudRealtime.broadcast) {
+              FOH.cloudRealtime.broadcast('STAFF_NAME_CHANGE_APPROVED', { staffId: st.id, name: st.name, nickname: st.nickname });
+            }
+            FOH.edit.toast(ar ? '✓ تم اعتماد تعديل اسم ' + st.name + ' بنجاح' : 'Approved ✓');
+            drawCenter();
+            updateNotifBellUI();
+            FOH.app.render();
+          });
+          const noB = el('button', 'pac-btn reject', ar ? '✕ رفض' : '✕ Reject');
+          noB.type = 'button';
+          noB.addEventListener('click', () => {
+            delete st.pendingNameChange;
+            FOH.store.saveTemplate(S.tpl);
+            FOH.edit.toast(ar ? 'تم رفض طلب التعديل' : 'Rejected');
+            drawCenter();
+            updateNotifBellUI();
+            FOH.app.render();
+          });
+          aRow.append(okB, noB);
+          it.append(aRow);
+          pacList.append(it);
+        });
+        pac.append(pacList);
+        box.append(pac);
+      }
 
       // Section 1: Lock-Screen & Background Push Test Card
       const pushCard = el('div', 'notif-center-card');
@@ -18289,6 +18916,68 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     }
 
     hero.append(headerRow, progressTrack, actions);
+
+    // If Manager and there are pending staff name/nickname change requests, display pending approvals card
+    if (rKey === 'super_manager') {
+      const pendingChanges = (S.tpl.staff || []).filter(
+        (p) => p.pendingNameChange && p.pendingNameChange.status === 'pending'
+      );
+      if (pendingChanges.length > 0) {
+        const pac = el('div', 'pending-approvals-card');
+        pac.innerHTML =
+          '<div class="pac-head">' +
+          '<span><b>📝 ' + (ar ? 'طلبات اعتماد تعديل أسماء الموظفين والـ Nicknames' : 'Pending Staff Name Change Approvals') + '</b></span>' +
+          '<span class="pac-badge">' + pendingChanges.length + ' ' + (ar ? 'طلب جديد' : 'New') + '</span>' +
+          '</div>';
+        const pacList = el('div', 'pac-list');
+        pendingChanges.forEach((st) => {
+          const req = st.pendingNameChange;
+          const it = el('div', 'pac-item');
+          it.innerHTML =
+            '<div class="pac-item-info">' +
+            '<b>' + st.name + '</b> (' + (st.role || 'Staff') + ')<br>' +
+            (ar ? 'الاسم الرسمي الجديد المطلوب:' : 'Requested Legal Name:') + ' <b style="color:var(--accent);">' + (req.reqFullName || (req.reqFirstName + ' ' + req.reqLastName)) + '</b><br>' +
+            (ar ? 'الـ Nickname المقترح (للتبس والجدول):' : 'Requested Nickname:') + ' <b style="color:#10b981;">🏷️ ' + (req.reqNickname || '—') + '</b>' +
+            '</div>';
+          const actDiv = el('div', 'pac-item-actions');
+          const appBtn = el('button', 'pac-btn approve', ar ? '✓ اعتماد وتطبيق في كافة الأنظمة' : '✓ Approve & Sync');
+          appBtn.type = 'button';
+          appBtn.addEventListener('click', () => {
+            st.name = req.reqFullName || ((req.reqFirstName + ' ' + req.reqLastName).trim()) || st.name;
+            if (req.reqNickname) st.nickname = req.reqNickname;
+            delete st.pendingNameChange;
+            FOH.store.saveTemplate(S.tpl);
+            if (sess && (sess.staffId === st.id || (sess.username || '').toLowerCase() === (st.name || '').toLowerCase())) {
+              sess.firstName = req.reqFirstName;
+              sess.lastName = req.reqLastName;
+              sess.displayName = st.name;
+              sess.nickname = st.nickname;
+              saveSession(sess, true);
+            }
+            if (FOH.cloudRealtime && FOH.cloudRealtime.broadcast) {
+              FOH.cloudRealtime.broadcast('STAFF_NAME_CHANGE_APPROVED', { staffId: st.id, name: st.name, nickname: st.nickname });
+            }
+            FOH.edit.toast(ar ? ('✓ تم اعتماد تعديل اسم ' + st.name + ' ولقب ' + (st.nickname || '') + ' بنجاح') : 'Approved and synced across all apps ✓');
+            FOH.app.render();
+          });
+
+          const rejBtn = el('button', 'pac-btn reject', ar ? '✕ رفض الطلب' : '✕ Reject');
+          rejBtn.type = 'button';
+          rejBtn.addEventListener('click', () => {
+            delete st.pendingNameChange;
+            FOH.store.saveTemplate(S.tpl);
+            FOH.edit.toast(ar ? 'تم رفض طلب التعديل' : 'Request rejected');
+            FOH.app.render();
+          });
+
+          actDiv.append(appBtn, rejBtn);
+          it.append(actDiv);
+          pacList.append(it);
+        });
+        pac.append(pacList);
+        hero.append(pac);
+      }
+    }
   }
 
   function syncSuperEmployeeUI() {
