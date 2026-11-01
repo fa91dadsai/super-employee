@@ -1,0 +1,853 @@
+/* ============================================================================
+   11. SUPER EMPLOYEE v18: ZERO-CROWDING EXECUTIVE HEADER ARCHITECTURE
+   ============================================================================ */
+header.top {
+  padding: calc(8px + env(safe-area-inset-top)) 12px 8px !important;
+  background: #141e28 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+header.top .bar {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  flex-wrap: nowrap !important;
+  min-height: 44px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+/* Strictly prevent .ttl from ever overflowing or crowding buttons */
+header.top .ttl {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  gap: 2px !important;
+}
+/* Role Title (#title) on line 1 */
+header.top .title-sub-row {
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+header.top h1#title {
+  display: block !important;
+  font-size: 1.02rem !important;
+  font-weight: 800 !important;
+  line-height: 1.25 !important;
+  margin: 0 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  color: #ffffff !important;
+}
+/* Restaurant name and live dot on line 2 */
+header.top .brand-top-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+}
+header.top #restaurantBadge.rest-badge {
+  display: inline-block !important;
+  background: transparent !important;
+  border: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  color: #99f6e4 !important;
+  font-size: 0.72rem !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+  max-width: 170px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+/* Permanently hide colliding pills in header */
+header.top #checklistLockPill,
+header.top #activeSectionBadge,
+.lock-pill,
+.active-sec-pill {
+  display: none !important;
+}
+/* Header Right Actions Group */
+.top-right-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  flex-shrink: 0 !important;
+  margin-inline-start: auto !important;
+}
+header.top #sidebarToggleBtn {
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  padding: 0 !important;
+  flex: 0 0 38px !important;
+  border-radius: 11px !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  box-sizing: border-box !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  color: #ffffff !important;
+}
+header.top .notif-bell-btn,
+header.top #profileBtn {
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  padding: 0 !important;
+  flex: 0 0 38px !important;
+  border-radius: 11px !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  box-sizing: border-box !important;
+}
+header.top .profile-btn-name {
+  display: none !important;
+}
+
+/* Move #chips look & feel cleanly inside <main> */
+body:not(.editing):not(.focused-non-opening) main#appMain > nav#chips {
+  display: flex !important;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 2px 0 10px;
+  margin: 0 0 6px;
+  scrollbar-width: none;
+}
+main#appMain > nav#chips::-webkit-scrollbar {
+  display: none;
+}
+main#appMain > nav#chips .chip {
+  background: var(--card) !important;
+  color: var(--ink) !important;
+  border: 1px solid var(--line) !important;
+  font-size: 0.76rem !important;
+  padding: 6px 11px !important;
+  border-radius: 99px !important;
+  white-space: nowrap !important;
+}
+main#appMain > nav#chips .chip.on {
+  background: var(--accent) !important;
+  color: #ffffff !important;
+  border-color: var(--accent) !important;
+}
+body.dark main#appMain > nav#chips .chip.on {
+  color: #041612 !important;
+}
+
+/* Alert banners inside <main> */
+main#appMain > .health-banner,
+main#appMain > .banner {
+  margin: 0 0 8px !important;
+  padding: 8px 11px !important;
+  border-radius: 12px !important;
+  font-size: 0.78rem !important;
+}
+main#appMain > .banner .banner-actions,
+main#appMain > .health-banner .health-banner-actions {
+  margin-top: 6px !important;
+  gap: 5px !important;
+}
+main#appMain > .banner .snooze-btn,
+main#appMain > .health-banner .snooze-btn {
+  min-height: 28px !important;
+  padding: 2px 8px !important;
+  font-size: 0.72rem !important;
+}
+
+/* Compact 1-Line Collapsible Operational Hours Bar */
+.ops-compact-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+.ops-compact-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ops-compact-toggle {
+  flex-shrink: 0;
+  padding: 4px 9px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.ops-lifecycle-bar {
+  padding: 8px 11px !important;
+  margin-bottom: 8px !important;
+  border-radius: 12px !important;
+}
+.ops-details-drawer {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+}
+
+/* Unified Single-Row Checklist Toolbar */
+#checklistGovBar.gov-bar {
+  padding: 7px 10px !important;
+  margin-bottom: 8px !important;
+  border-radius: 12px !important;
+}
+.unified-sec-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+.unified-sec-toolbar .u-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 30px;
+  padding: 3px 9px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 0.73rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.unified-sec-toolbar .u-pill.accent {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: rgba(47, 107, 94, 0.35);
+}
+.unified-sec-toolbar .u-pill.warn {
+  background: var(--amber-soft);
+  color: var(--amber);
+  border-color: var(--amber);
+}
+
+/* ============================================================================
+   13. SUPER EMPLOYEE v13: 3-TAB SHIFT NAV (OPENING · MID-SHIFT · CLOSING)
+       + TIME-BASED AUTO-SCHEDULE + TASK ASSIGNMENT BADGES
+   ============================================================================ */
+#sheetTypeBar,
+#sheetTypeBar.sheet-switcher {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  gap: 10px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 12px 14px !important;
+  margin: 0 0 12px !important;
+  border-radius: 16px !important;
+  background: var(--card) !important;
+  border: 1.5px solid var(--line) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04) !important;
+}
+.shift-nav-head {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  width: 100% !important;
+  font-size: 0.74rem !important;
+  color: var(--ink2) !important;
+  font-weight: 700 !important;
+}
+.shift-nav-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+.shift-nav-tab {
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 3px !important;
+  padding: 8px 4px !important;
+  min-height: 60px !important;
+  border-radius: 12px !important;
+  border: 1.5px solid var(--line) !important;
+  background: var(--bg) !important;
+  color: var(--ink) !important;
+  cursor: pointer !important;
+  text-align: center !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  transition: all 0.15s ease !important;
+}
+.shift-nav-tab b {
+  font-size: 0.76rem !important;
+  font-weight: 800 !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 100% !important;
+}
+.shift-nav-tab small {
+  font-size: 0.60rem !important;
+  color: var(--ink2) !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+  direction: ltr !important;
+  opacity: 0.85 !important;
+}
+.shift-nav-tab.on {
+  background: var(--accent) !important;
+  color: #ffffff !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 4px 12px rgba(47, 107, 94, 0.28) !important;
+}
+body.dark .shift-nav-tab.on {
+  background: #10b981 !important;
+  color: #041612 !important;
+  border-color: #10b981 !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.28) !important;
+}
+.shift-nav-tab.on small {
+  color: inherit !important;
+  opacity: 0.9 !important;
+}
+.shift-now-dot {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+  padding: 1px 6px !important;
+  border-radius: 99px !important;
+  font-size: 0.58rem !important;
+  font-weight: 800 !important;
+  background: rgba(245, 158, 11, 0.18) !important;
+  color: #d97706 !important;
+  margin-top: 2px !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+}
+.shift-nav-tab.on .shift-now-dot {
+  background: rgba(255, 255, 255, 0.25) !important;
+  color: inherit !important;
+}
+.assigned-task-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-inline-start: 6px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: rgba(47, 107, 94, 0.14);
+  border: 1px solid rgba(47, 107, 94, 0.35);
+  color: var(--accent);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+.u-pill.primary-assign {
+  background: var(--accent) !important;
+  color: #ffffff !important;
+  border-color: var(--accent) !important;
+}
+body.dark .u-pill.primary-assign {
+  color: #041612 !important;
+}
+
+/* ============================================================================
+   14. SUPER EMPLOYEE v14: ROLE-SPECIFIC FIRST PAGE COCKPIT (#roleLandingHero)
+   ============================================================================ */
+.role-landing-hero {
+  padding: 14px 16px !important;
+  margin-bottom: 12px !important;
+  border-radius: 16px !important;
+  background: var(--card) !important;
+  border: 1.5px solid var(--line) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05) !important;
+}
+.role-landing-hero.role-super_waiter {
+  border-color: rgba(47, 107, 94, 0.45) !important;
+  background: linear-gradient(135deg, rgba(47, 107, 94, 0.10) 0%, var(--card) 100%) !important;
+}
+.role-landing-hero.role-super_bartender {
+  border-color: rgba(59, 130, 246, 0.45) !important;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.10) 0%, var(--card) 100%) !important;
+}
+.role-landing-hero.role-super_captain {
+  border-color: rgba(217, 119, 6, 0.45) !important;
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.10) 0%, var(--card) 100%) !important;
+}
+.role-landing-hero.role-super_manager {
+  border-color: rgba(139, 92, 246, 0.45) !important;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.10) 0%, var(--card) 100%) !important;
+}
+.rlh-header-row {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  margin-bottom: 10px !important;
+}
+.rlh-title-block {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+.rlh-title {
+  font-size: 0.95rem !important;
+  font-weight: 800 !important;
+  color: var(--ink) !important;
+  margin: 0 !important;
+  line-height: 1.3 !important;
+}
+.rlh-sub {
+  font-size: 0.74rem !important;
+  color: var(--ink2) !important;
+  margin: 3px 0 0 !important;
+  line-height: 1.35 !important;
+}
+/* Sleek KPI Badge in Corner - NEVER distorted or squeezed */
+.rlh-kpi-badge {
+  flex-shrink: 0 !important;
+  min-width: 68px !important;
+  padding: 6px 10px !important;
+  border-radius: 12px !important;
+  background: rgba(47, 107, 94, 0.12) !important;
+  border: 1px solid rgba(47, 107, 94, 0.3) !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+}
+body.dark .rlh-kpi-badge {
+  background: rgba(47, 107, 94, 0.22) !important;
+  border-color: rgba(52, 211, 153, 0.35) !important;
+}
+.rlh-kpi-num {
+  font-size: 1.15rem !important;
+  font-weight: 900 !important;
+  color: var(--accent) !important;
+  line-height: 1 !important;
+}
+.rlh-kpi-num small {
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  margin-inline-start: 1px !important;
+}
+.rlh-kpi-sub {
+  font-size: 0.62rem !important;
+  font-weight: 700 !important;
+  color: var(--ink2) !important;
+  margin-top: 2px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.4px !important;
+}
+/* Sleek Linear Progress Track */
+.rlh-progress-track {
+  width: 100% !important;
+  height: 6px !important;
+  border-radius: 99px !important;
+  background: var(--surface-sunken, rgba(0, 0, 0, 0.08)) !important;
+  margin-bottom: 12px !important;
+  overflow: hidden !important;
+}
+body.dark .rlh-progress-track {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+.rlh-progress-fill {
+  height: 100% !important;
+  border-radius: 99px !important;
+  background: linear-gradient(90deg, #2f6b5e 0%, #10b981 100%) !important;
+  transition: width 0.3s ease !important;
+}
+body.dark .rlh-progress-fill {
+  background: linear-gradient(90deg, #10b981 0%, #34d399 100%) !important;
+}
+/* Modern Touch-First Action Grid */
+.rlh-actions {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)) !important;
+  gap: 8px !important;
+}
+.rlh-btn {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  min-height: 38px !important;
+  padding: 6px 12px !important;
+  border-radius: 11px !important;
+  border: 1px solid var(--line) !important;
+  background: var(--bg) !important;
+  color: var(--ink) !important;
+  font-size: 0.76rem !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03) !important;
+  transition: all 0.15s ease !important;
+}
+.rlh-btn:active {
+  transform: scale(0.98) !important;
+}
+.rlh-btn.primary {
+  background: #2f6b5e !important;
+  color: #ffffff !important;
+  border-color: #2f6b5e !important;
+  box-shadow: 0 2px 8px rgba(47, 107, 94, 0.28) !important;
+}
+body.dark .rlh-btn.primary {
+  background: #10b981 !important;
+  color: #041612 !important;
+  border-color: #10b981 !important;
+}
+
+/* ============================================================================
+   15. SUPER EMPLOYEE v15: SUPABASE REALTIME LIVE CLOUD SYNC & PEER NOTIFICATIONS
+   ============================================================================ */
+.realtime-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 99px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+.realtime-status-pill.online {
+  background: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(52, 211, 153, 0.4);
+  color: #a7f3d0;
+}
+.realtime-status-pill.offline {
+  background: rgba(239, 68, 68, 0.18);
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  color: #fca5a5;
+}
+.realtime-status-pill.connecting {
+  background: rgba(245, 158, 11, 0.18);
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  color: #fde68a;
+}
+.realtime-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  display: inline-block;
+  animation: pulse-dot 2s infinite ease-in-out;
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+/* Enterprise Tenant Architecture & Ops Hours Grid */
+.enterprise-tenant-box {
+  background: rgba(47, 107, 94, 0.08) !important;
+  border: 1px solid rgba(47, 107, 94, 0.25) !important;
+  border-radius: 14px !important;
+  padding: 12px 14px !important;
+  margin: 10px 0 14px !important;
+}
+body.dark .enterprise-tenant-box {
+  background: rgba(16, 185, 129, 0.08) !important;
+  border-color: rgba(52, 211, 153, 0.25) !important;
+}
+.etb-badge {
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  color: var(--accent) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  margin-bottom: 8px !important;
+}
+body.dark .etb-badge {
+  color: #34d399 !important;
+}
+.etb-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 8px 12px !important;
+  font-size: 0.78rem !important;
+}
+@media (max-width: 480px) {
+  .etb-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+.etb-grid small {
+  display: block !important;
+  font-size: 0.68rem !important;
+  color: var(--ink2) !important;
+  font-weight: 600 !important;
+}
+.etb-status-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+  padding: 1px 7px !important;
+  border-radius: 99px !important;
+  font-size: 0.68rem !important;
+  font-weight: 800 !important;
+  background: rgba(16, 185, 129, 0.2) !important;
+  color: #10b981 !important;
+}
+.etb-note {
+  font-size: 0.72rem !important;
+  line-height: 1.4 !important;
+  color: var(--ink2) !important;
+  margin: 10px 0 0 !important;
+  padding-top: 8px !important;
+  border-top: 1px dashed var(--line) !important;
+}
+.ops-hours-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  margin-top: 10px !important;
+}
+.ops-hours-grid label.ops-time-field {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  font-size: 0.76rem !important;
+  font-weight: 700 !important;
+  color: var(--ink) !important;
+}
+.ops-hours-grid label.ops-time-field span {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  display: block !important;
+}
+.ops-hours-grid label.ops-time-field input.in {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  min-height: 42px !important;
+  padding: 8px 10px !important;
+  border-radius: 10px !important;
+  border: 1.5px solid var(--line) !important;
+  background: var(--bg) !important;
+  font-size: 0.88rem !important;
+  font-weight: 700 !important;
+}
+.ops-hours-grid label.ops-time-field:last-child {
+  grid-column: 1 / -1 !important;
+}
+@media (max-width: 440px) {
+  .ops-hours-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Staff Profile Governance, Nickname, Invite Codes & Approvals */
+.st-invite-box {
+  background: rgba(47, 107, 94, 0.09) !important;
+  border: 1px dashed var(--accent) !important;
+  border-radius: 12px !important;
+  padding: 10px 12px !important;
+  margin: 10px 0 !important;
+}
+body.dark .st-invite-box {
+  background: rgba(16, 185, 129, 0.1) !important;
+  border-color: #34d399 !important;
+}
+.st-code-pill {
+  font-family: monospace !important;
+  font-size: 1rem !important;
+  font-weight: 800 !important;
+  color: var(--accent) !important;
+  background: var(--bg) !important;
+  padding: 3px 8px !important;
+  border-radius: 6px !important;
+  border: 1px solid var(--line) !important;
+  letter-spacing: 1px !important;
+}
+body.dark .st-code-pill {
+  color: #34d399 !important;
+}
+.pending-approval-banner {
+  background: rgba(245, 158, 11, 0.12) !important;
+  border: 1.5px solid #d97706 !important;
+  border-radius: 12px !important;
+  padding: 12px !important;
+  margin: 10px 0 14px !important;
+}
+.pending-approval-banner .pab-head {
+  font-weight: 800 !important;
+  font-size: 0.84rem !important;
+  color: #b45309 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+body.dark .pending-approval-banner .pab-head {
+  color: #fbbf24 !important;
+}
+.pending-approval-banner .pab-body {
+  font-size: 0.76rem !important;
+  color: var(--ink) !important;
+  margin-top: 6px !important;
+  line-height: 1.4 !important;
+}
+.pending-approvals-card {
+  background: var(--card) !important;
+  border: 1.5px solid #d97706 !important;
+  border-radius: 16px !important;
+  padding: 14px !important;
+  margin: 0 0 12px !important;
+  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.08) !important;
+}
+.pac-head {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin-bottom: 10px !important;
+  font-size: 0.82rem !important;
+  color: #b45309 !important;
+}
+body.dark .pac-head {
+  color: #fbbf24 !important;
+}
+.pac-badge {
+  background: rgba(245, 158, 11, 0.2) !important;
+  color: #b45309 !important;
+  padding: 2px 8px !important;
+  border-radius: 99px !important;
+  font-weight: 800 !important;
+  font-size: 0.68rem !important;
+}
+body.dark .pac-badge {
+  color: #fbbf24 !important;
+}
+.pac-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+}
+.pac-item {
+  background: var(--bg) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 12px !important;
+  padding: 10px 12px !important;
+}
+.pac-item-info {
+  font-size: 0.78rem !important;
+  line-height: 1.4 !important;
+  margin-bottom: 8px !important;
+}
+.pac-item-actions {
+  display: flex !important;
+  gap: 8px !important;
+}
+.pac-btn {
+  flex: 1 !important;
+  min-height: 36px !important;
+  font-size: 0.78rem !important;
+  font-weight: 800 !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+}
+.pac-btn.approve {
+  background: #10b981 !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+.pac-btn.reject {
+  background: transparent !important;
+  color: #ef4444 !important;
+  border: 1px solid #ef4444 !important;
+}
+.login-invite-divider {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 14px 0 10px !important;
+  position: relative !important;
+}
+.login-invite-divider::before {
+  content: "" !important;
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: 50% !important;
+  border-top: 1px solid var(--line) !important;
+}
+.login-invite-divider span {
+  position: relative !important;
+  background: var(--card) !important;
+  padding: 0 10px !important;
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  color: var(--muted) !important;
+}
+.login-invite-btn {
+  width: 100% !important;
+  min-height: 42px !important;
+  background: var(--bg) !important;
+  border: 1.5px dashed var(--accent) !important;
+  color: var(--accent) !important;
+  font-weight: 800 !important;
+  border-radius: 12px !important;
+  font-size: 0.82rem !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+body.dark .login-invite-btn {
+  color: #34d399 !important;
+  border-color: #34d399 !important;
+}
+.invite-code-form {
+  margin-top: 10px !important;
+  padding: 12px !important;
+  background: rgba(47, 107, 94, 0.06) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 14px !important;
+}
+.erp-sync-pill-row {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 6px !important;
+  margin: 6px 0 10px !important;
+}
+.erp-sync-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  font-size: 0.68rem !important;
+  font-weight: 700 !important;
+  padding: 2px 7px !important;
+  border-radius: 6px !important;
+  background: var(--bg) !important;
+  border: 1px solid var(--line) !important;
+  color: var(--ink2) !important;
+}

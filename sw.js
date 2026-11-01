@@ -1,12 +1,42 @@
 'use strict';
 
-const CACHE = 'super-employee-v21';
+const CACHE = 'super-employee-v22';
 const PRECACHE = [
   './',
   './index.html',
   './manifest.webmanifest',
   './icons/icon-192.png',
-  './icons/icon-512.png'
+  './icons/icon-512.png',
+  './css/base.css',
+  './css/themes.css',
+  './css/components.css',
+  './css/checklist.css',
+  './css/super-employee.css',
+  './js/core/i18n.js',
+  './js/core/state.js',
+  './js/domains/checklist/model.js',
+  './js/core/time.js',
+  './js/domains/inventory/store.js',
+  './js/domains/checklist/view.js',
+  './js/domains/tasks/tasks-view.js',
+  './js/domains/tasks/reminders.js',
+  './js/domains/checklist/app.js',
+  './js/domains/checklist/edit-sheet.js',
+  './js/domains/tasks/task-sheet.js',
+  './js/domains/tasks/task-actions.js',
+  './js/domains/auth/staff.js',
+  './js/domains/inventory/breakage.js',
+  './js/domains/inventory/count.js',
+  './js/domains/inventory/item-sheet.js',
+  './js/domains/inventory/items.js',
+  './js/domains/inventory/results.js',
+  './js/domains/inventory/stock.js',
+  './js/domains/inventory/manage.js',
+  './js/domains/checklist/edit-actions.js',
+  './js/core/pwa-install.js',
+  './js/core/preview-demo.js',
+  './js/domains/auth/erp-pwa-module.js',
+  './js/domains/shifts/super-employee-module.js'
 ];
 
 const scheduledTimers = new Map();
@@ -28,7 +58,7 @@ self.addEventListener('activate', (event) => {
       self.clients.matchAll({ type: 'window' }).then((windowClients) => {
         windowClients.forEach((client) => {
           if (client.url && 'navigate' in client) {
-            client.navigate(client.url).catch(() => {});
+            client.navigate(client.url);
           }
         });
       })
@@ -37,123 +67,84 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  const request = event.request;
-  const url = new URL(request.url);
-  if (request.method !== 'GET' || url.origin !== self.location.origin) return;
-  const isLocal = url.hostname === 'localhost' || url.hostname === '127.0.0.1';
-  if (request.mode === 'navigate' || isLocal || url.pathname.endsWith('.html') || url.pathname.endsWith('/')) {
+  const req = event.request;
+  if (req.method !== 'GET') return;
+
+  const url = new URL(req.url);
+
+  // Network-first for dynamic API routes, navigation, and realtime channels
+  if (
+    url.pathname.includes('/rest/v1/') ||
+    url.pathname.includes('/realtime/v1/') ||
+    url.pathname.includes('/auth/v1/')
+  ) {
     event.respondWith(
-      fetch(request, { cache: 'no-store' })
-        .then((response) => {
-          if (!response.ok) throw new Error('Network failed');
-          const copy = response.clone();
-          caches.open(CACHE).then((cache) => cache.put(request.mode === 'navigate' ? './index.html' : request, copy));
-          return response;
-        })
-        .catch(() => caches.match(request.mode === 'navigate' ? './index.html' : request))
-    );
-  } else {
-    event.respondWith(
-      caches.match(request).then(
-        (cached) =>
-          cached ||
-          fetch(request).then((response) => {
-            if (!response.ok) return response;
-            const copy = response.clone();
-            caches.open(CACHE).then((cache) => cache.put(request, copy));
-            return response;
-          })
+      fetch(req).catch(() =>
+        caches.match(req).then((cached) => cached || new Response('{"offline":true}', { status: 503, headers: { 'Content-Type': 'application/json' } }))
       )
     );
+    return;
   }
-});
 
-// Background & Lock-Screen Scheduled Notifications (Snooze Wakeup & Alerts)
-self.addEventListener('message', (event) => {
-  const data = event.data || {};
-  if (data.type === 'SCHEDULE_NOTIFICATION') {
-    const id = String(data.id || 'notif_' + Date.now());
-    const delayMs = Math.max(500, Number(data.delayMs) || 1000);
-    const title = data.title || 'Super Employee · CEEN';
-    const body = data.body || 'حان موعد التنبيه المؤجل!';
-    const tag = data.tag || id;
-
-    if (scheduledTimers.has(id)) {
-      clearTimeout(scheduledTimers.get(id));
-      scheduledTimers.delete(id);
-    }
-
-    const work = new Promise((resolve) => {
-      const tid = setTimeout(() => {
-        scheduledTimers.delete(id);
-        self.registration
-          .showNotification(title, {
-            body,
-            icon: './icons/icon-192.png',
-            badge: './icons/icon-192.png',
-            tag,
-            renotify: true,
-            requireInteraction: true,
-            vibrate: [220, 100, 220, 100, 300],
-            data: './',
-          })
-          .then(() => {
-            return self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-          })
-          .then((clients) => {
-            (clients || []).forEach((c) => {
-              c.postMessage({ type: 'SNOOZE_WOKE_UP', id, title, body });
-            });
-          })
-          .catch(() => {})
-          .finally(resolve);
-      }, delayMs);
-      scheduledTimers.set(id, tid);
-    });
-
-    if (event.waitUntil) event.waitUntil(work);
-  } else if (data.type === 'CANCEL_NOTIFICATION') {
-    const id = String(data.id || '');
-    if (scheduledTimers.has(id)) {
-      clearTimeout(scheduledTimers.get(id));
-      scheduledTimers.delete(id);
-    }
-  }
-});
-
-// Web Push Notification handler (Android & iOS 16.4+ Standalone PWA)
-self.addEventListener('push', (event) => {
-  let payload = { title: 'Super Employee · CEEN', body: 'New task or inventory update', tag: 'foh-notify' };
-  if (event.data) {
-    try {
-      payload = Object.assign(payload, event.data.json());
-    } catch (e) {
-      payload.body = event.data.text();
-    }
-  }
-  event.waitUntil(
-    self.registration.showNotification(payload.title, {
-      body: payload.body,
-      icon: './icons/icon-192.png',
-      badge: './icons/icon-192.png',
-      tag: payload.tag || 'foh-notify',
-      renotify: true,
-      requireInteraction: true,
-      data: payload.url || './',
-      vibrate: [200, 80, 200]
+  // Cache-first, network fallback for static assets
+  event.respondWith(
+    caches.match(req).then((cached) => {
+      if (cached) {
+        fetch(req).then((resp) => {
+          if (resp && resp.ok) {
+            caches.open(CACHE).then((cache) => cache.put(req, resp));
+          }
+        }).catch(() => {});
+        return cached;
+      }
+      return fetch(req).then((resp) => {
+        if (resp && resp.ok) {
+          const clone = resp.clone();
+          caches.open(CACHE).then((cache) => cache.put(req, clone));
+        }
+        return resp;
+      });
     })
   );
 });
 
+// Precision Push & Background Alarms for Due Tasks
+self.addEventListener('message', (event) => {
+  if (!event.data) return;
+  const { type, taskId, text, dueTime, msUntilDue } = event.data;
+
+  if (type === 'SCHEDULE_TASK_ALARM') {
+    if (scheduledTimers.has(taskId)) {
+      clearTimeout(scheduledTimers.get(taskId));
+    }
+    const timer = setTimeout(() => {
+      self.registration.showNotification('⏰ تذكير مهمة شفت الافتتاح', {
+        body: `${text} (موعدها: ${dueTime})`,
+        icon: './icons/icon-192.png',
+        badge: './icons/icon-192.png',
+        tag: `task-${taskId}`,
+        vibrate: [200, 100, 200],
+        data: { taskId }
+      });
+      scheduledTimers.delete(taskId);
+    }, Math.max(0, msUntilDue || 0));
+    scheduledTimers.set(taskId, timer);
+  } else if (type === 'CANCEL_TASK_ALARM') {
+    if (scheduledTimers.has(taskId)) {
+      clearTimeout(scheduledTimers.get(taskId));
+      scheduledTimers.delete(taskId);
+    }
+  }
+});
+
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const targetUrl = event.notification.data || './';
   event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
-      for (const client of windowClients) {
-        if ('focus' in client) return client.focus();
+    self.clients.matchAll({ type: 'window' }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url && 'focus' in client) return client.focus();
       }
-      if (self.clients.openWindow) return self.clients.openWindow(targetUrl);
+      if (self.clients.openWindow) return self.clients.openWindow('./');
     })
   );
 });
