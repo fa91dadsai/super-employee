@@ -1,0 +1,26 @@
+{
+  "name": "Super Employee · CEEN Restaurant & Lounge",
+  "short_name": "Super Employee",
+  "description": "Super Employee Operations PWA — Checklists, Orders, Blind Inventory, Tips, Schedule & Analytics",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#1d2733",
+  "theme_color": "#1d2733",
+  "icons": [
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "id": "./"
+}
