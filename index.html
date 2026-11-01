@@ -3273,6 +3273,81 @@ body.dark .u-pill.primary-assign {
 }
 
     </style>
+    <style id="super-employee-v14-css">
+/* ============================================================================
+   14. SUPER EMPLOYEE v14: ROLE-SPECIFIC FIRST PAGE COCKPIT (#roleLandingHero)
+   ============================================================================ */
+.role-landing-hero {
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  border-radius: 15px;
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+}
+.role-landing-hero.role-super_waiter {
+  border-color: rgba(47, 107, 94, 0.45);
+  background: linear-gradient(135deg, rgba(47, 107, 94, 0.10) 0%, var(--card) 100%);
+}
+.role-landing-hero.role-super_bartender {
+  border-color: rgba(59, 130, 246, 0.45);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.10) 0%, var(--card) 100%);
+}
+.role-landing-hero.role-super_captain {
+  border-color: rgba(217, 119, 6, 0.45);
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.10) 0%, var(--card) 100%);
+}
+.role-landing-hero.role-super_manager {
+  border-color: rgba(139, 92, 246, 0.45);
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.10) 0%, var(--card) 100%);
+}
+.rlh-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.rlh-title {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--ink);
+  margin: 0;
+}
+.rlh-sub {
+  font-size: 0.74rem;
+  color: var(--ink2);
+  margin: 2px 0 0;
+}
+.rlh-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.rlh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 32px;
+  padding: 4px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.rlh-btn.primary {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+}
+body.dark .rlh-btn.primary {
+  color: #041612;
+}
+
+    </style>
   </head>
   <body>
     <section id="loginScreen" class="login-screen" hidden>
@@ -9087,7 +9162,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
           if (k !== 'super-employee-v10') caches.delete(k);
         })).catch(() => {});
       }
-      navigator.serviceWorker.register('sw.js?v=13', { updateViaCache: 'none' }).then((reg) => {
+      navigator.serviceWorker.register('sw.js?v=14', { updateViaCache: 'none' }).then((reg) => {
         reg.update().catch(() => {});
       }).catch(() => {});
     }
@@ -17109,6 +17184,152 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     }
   }
 
+
+  // ============================================================================
+  // 16. SUPER EMPLOYEE v14: ROLE-SPECIFIC LANDING PAGE COCKPIT
+  // ============================================================================
+  function renderRoleSpecificLandingHero() {
+    const mainEl = $('appMain');
+    if (!mainEl) return;
+    let hero = $('roleLandingHero');
+    if (S.editing || S.view !== 'opening') {
+      if (hero) hero.hidden = true;
+      return;
+    }
+    if (!hero) {
+      hero = el('section', 'role-landing-hero run-only');
+      hero.id = 'roleLandingHero';
+      mainEl.prepend(hero);
+    }
+    hero.hidden = false;
+    hero.replaceChildren();
+
+    const ar = isAr();
+    const rKey = getCurrentSuperRoleKey();
+    const sess = getSession();
+    const dispName = (sess && (ar ? sess.displayNameAr || sess.displayName : sess.displayName)) || S.me.name || 'Staff';
+    const all = FOH.model.progress(FOH.model.allLeaves({ sections: FOH.preview.sections() }), S.run.checked);
+    const pct = all.total ? Math.round((all.done * 100) / all.total) : 0;
+    const leftCount = all.total - all.done;
+
+    hero.className = 'role-landing-hero run-only role-' + rKey;
+
+    // Hide the administrative #opsLifecycleBar for Waiters & Bartenders so they only see their operational focus!
+    const opsBar = $('opsLifecycleBar');
+    if (opsBar) {
+      if (rKey === 'super_waiter' || rKey === 'staff' || rKey === 'super_bartender') {
+        opsBar.hidden = true;
+      }
+    }
+
+    const top = el('div', 'rlh-top');
+    const left = el('div', '');
+    const rightBadge = el('span', 'sec-progress-pill', '📊 ' + pct + '% (' + all.done + '/' + all.total + ')');
+
+    const actions = el('div', 'rlh-actions');
+
+    if (rKey === 'super_waiter' || rKey === 'staff') {
+      left.innerHTML =
+        '<h3 class="rlh-title">⭐ ' + (ar ? 'أهلاً ' + dispName + ' · مساحة عمل الويتر والصالة' : 'Welcome ' + dispName + ' · Floor Waiter Workspace') + '</h3>' +
+        '<p class="rlh-sub">' +
+        (ar
+          ? 'لديك الآن ' + leftCount + ' مهام متبقية لتجهيز الطاولات والصالة ومحطات الخدمة في هذا الشفت.'
+          : 'You have ' + leftCount + ' floor & table tasks remaining in the current shift.') +
+        '</p>';
+
+      const bAcad = el('button', 'rlh-btn primary', ar ? '🎓 اختبر معلوماتك بالمنيو (+نقاط)' : '🎓 Menu Quiz (+XP)');
+      bAcad.type = 'button';
+      bAcad.addEventListener('click', () => switchView('academy'));
+
+      const bTips = el('button', 'rlh-btn', ar ? '💰 رصيدي من التبس وأيام عملي' : '💰 My Tips & Days');
+      bTips.type = 'button';
+      bTips.addEventListener('click', () => switchView('tips'));
+
+      const bMine = el('button', 'rlh-btn', ar ? '📋 مهامي الشخصية / طلب إجازة' : '📋 My Tasks & Day-Off');
+      bMine.type = 'button';
+      bMine.addEventListener('click', () => switchView('mine'));
+
+      const bDmg = el('button', 'rlh-btn', ar ? '🔧 تبليغ عن كسر' : '🔧 Report Breakage');
+      bDmg.type = 'button';
+      bDmg.addEventListener('click', () => FOH.invBreak && FOH.invBreak.open && FOH.invBreak.open());
+
+      actions.append(bAcad, bTips, bMine, bDmg);
+    } else if (rKey === 'super_bartender') {
+      left.innerHTML =
+        '<h3 class="rlh-title">🍸 ' + (ar ? 'أهلاً ' + dispName + ' · محطة عمليات البار والمشروبات' : 'Welcome ' + dispName + ' · Bar Operations Station') + '</h3>' +
+        '<p class="rlh-sub">' +
+        (ar
+          ? 'تركيزك المباشر: جاهزية البار، الغارنيش والثلج (' + leftCount + ' مهام متبقية) + طلبيات وجرد البار.'
+          : 'Your focus: Bar prep, ice & garnishes (' + leftCount + ' tasks left) + Bar Orders & Blind Count.') +
+        '</p>';
+
+      const bOrd = el('button', 'rlh-btn primary', ar ? '🛒 طلبيات البار من المستودع' : '🛒 Bar Warehouse Orders');
+      bOrd.type = 'button';
+      bOrd.addEventListener('click', () => switchView('orders'));
+
+      const bInv = el('button', 'rlh-btn', ar ? '📦 جرد البار وتسجيل التالف' : '📦 Bar Inventory & Breakage');
+      bInv.type = 'button';
+      bInv.addEventListener('click', () => switchView('inv'));
+
+      const bAcad = el('button', 'rlh-btn', ar ? '🍹 وصفات الكوكتيلات والاختبار' : '🍹 Cocktail Specs & Quiz');
+      bAcad.type = 'button';
+      bAcad.addEventListener('click', () => switchView('academy'));
+
+      const bTips = el('button', 'rlh-btn', ar ? '💰 حصتي من التبس' : '💰 My Tips');
+      bTips.type = 'button';
+      bTips.addEventListener('click', () => switchView('tips'));
+
+      actions.append(bOrd, bInv, bAcad, bTips);
+    } else if (rKey === 'super_captain') {
+      left.innerHTML =
+        '<h3 class="rlh-title">🎖️ ' + (ar ? 'قيادة الصالة والشفت · الكابتن ' + dispName : 'Floor Captain Cockpit · ' + dispName) + '</h3>' +
+        '<p class="rlh-sub">' +
+        (ar
+          ? 'متابعة إنجاز الصالة والبار (' + pct + '%)، توزيع المهام على الويترية، وإعلان الـ Last Order.'
+          : 'Monitor floor & bar readiness (' + pct + '%), assign tasks to staff, and trigger Last Order.') +
+        '</p>';
+
+      const bAsg = el('button', 'rlh-btn primary', ar ? '➕ تعيين مهمة لويتر / بارتندر' : '➕ Assign Task to Staff');
+      bAsg.type = 'button';
+      bAsg.addEventListener('click', () => openAssignTaskToStaffOrRoleModal());
+
+      const bDash = el('button', 'rlh-btn', ar ? '📊 متابعة إنجاز الشفت' : '📊 Shift Progress');
+      bDash.type = 'button';
+      bDash.addEventListener('click', () => switchView('dashboard'));
+
+      const bOrd = el('button', 'rlh-btn', ar ? '🛒 مراجعة الطلبيات' : '🛒 Review Orders');
+      bOrd.type = 'button';
+      bOrd.addEventListener('click', () => switchView('orders'));
+
+      actions.append(bAsg, bDash, bOrd);
+    } else {
+      left.innerHTML =
+        '<h3 class="rlh-title">👑 ' + (ar ? 'لوحة القيادة التنفيذية للمدير · ' + dispName : 'Manager Executive Pulse · ' + dispName) + '</h3>' +
+        '<p class="rlh-sub">' +
+        (ar
+          ? 'إشراف كامل على الشيتات الثلاثة (Opening · Mid · Closing)، تعيين المهام، التبس، وأوقات فتح وإغلاق المطعم.'
+          : 'Full oversight of all shift sheets, task assignment, tips wallet, and restaurant opening/closing hours.') +
+        '</p>';
+
+      const bAsg = el('button', 'rlh-btn primary', ar ? '➕ إضافة وتعيين مهمة لموظف/منصب' : '➕ Assign Task to Staff/Role');
+      bAsg.type = 'button';
+      bAsg.addEventListener('click', () => openAssignTaskToStaffOrRoleModal());
+
+      const bDash = el('button', 'rlh-btn', ar ? '📊 لوحة التحليلات والتقارير' : '📊 Analytics Dashboard');
+      bDash.type = 'button';
+      bDash.addEventListener('click', () => switchView('dashboard'));
+
+      const bSet = el('button', 'rlh-btn', ar ? '⚙️ الإعدادات والصلاحيات' : '⚙️ Settings & Permissions');
+      bSet.type = 'button';
+      bSet.addEventListener('click', () => switchView('settings'));
+
+      actions.append(bAsg, bDash, bSet);
+    }
+
+    top.append(left, rightBadge);
+    hero.append(top, actions);
+  }
+
   function syncSuperEmployeeUI() {
     ensureStaffHealthAndPerms();
     const ar = isAr();
@@ -17167,6 +17388,17 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     renderClosingDeptFilterBar();
     injectChecklistItemNotes();
     enhanceSidebarAndInventory();
+    wireAutomaticTaskCreationNotifications();
+    enforceTimeBasedSheetSchedule();
+    relocateHeaderSubbarsToMain();
+    renderCleanHeaderText();
+    collapseOpsLifecycleBarToOneLine();
+    renderUnifiedSingleRowChecklistBar();
+    renderUnifiedThreeSheetNav();
+    renderRoleSpecificLandingHero();
+    renderAssignedTaskBadgesAndFilter();
+    injectAssignTaskBtnIntoToolbarAndMine();
+    injectRoleSwitcherInSidebar();
 
     if (!S.editing) {
       if (S.view === 'academy' && $('academyView')) renderAcademyView($('academyView'));
