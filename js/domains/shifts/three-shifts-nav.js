@@ -115,7 +115,7 @@
 
     const schedShortNames = {
       opening: ar ? '☀️ الافتتاح' : '☀️ Opening',
-      mid: ar ? '🌤️ منتصف الشفت' : '🌤️ Mid-Shift',
+      mid: ar ? '🌤️ المنتصف' : '🌤️ Mid-Shift',
       closing: ar ? '🌙 الإغلاق' : '🌙 Closing',
     };
     const schedWindows = {
@@ -161,7 +161,7 @@
       {
         id: 'mid',
         icon: '🌤️',
-        titleAr: 'منتصف الشفت',
+        titleAr: 'المنتصف',
         titleEn: 'Mid-Shift',
         windowAr: '3 – 11 م',
         windowEn: '3 – 11 PM',
