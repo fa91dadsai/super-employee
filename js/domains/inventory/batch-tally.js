@@ -1,0 +1,111 @@
+// foh-opening/js/domains/inventory/batch-tally.js
+// Blind Inventory Count: Batch Tally Calculator & Unit Summation
+(function (FOH) {
+  'use strict';
+
+  const $ = (id) => document.getElementById(id);
+  const S = FOH.state;
+  const { t } = FOH.i18n;
+  const { el } = FOH.view;
+  const SESSION_KEY = 'foh-opening.erpSession.v1';
+
+  const BATCH_KEY = 'foh-opening.batches.v1';
+
+  // ---- Batch Tally Counter inside #countSheet ----
+  function loadBatches() {
+    try {
+      return FOH.safeJsonParse(localStorage.getItem(BATCH_KEY), '{}');
+    } catch {
+      return {};
+    }
+  }
+  function saveBatches(map) {
+    try {
+      localStorage.setItem(BATCH_KEY, JSON.stringify(map));
+    } catch {}
+  }
+
+  function injectBatchCounter() {
+    const countBody = $('countBody');
+    if (!countBody || countBody.querySelector('.batch-box')) return;
+    const goodInput = countBody.querySelector('input.count-in[data-field="good"]');
+    if (!goodInput) return;
+
+    const itemTitle = (countBody.querySelector('.iname') || {}).textContent || 'item';
+    const bKey = S.date + '|' + itemTitle;
+    const allBatches = loadBatches();
+    const list = Array.isArray(allBatches[bKey]) ? allBatches[bKey] : [];
+
+    const box = el('div', 'batch-box');
+    const head = el('div', 'batch-head');
+    head.append(el('span', '', t('batchTitle')));
+    box.append(head);
+
+    const chips = el('div', 'batch-chips');
+    if (!list.length) {
+      chips.append(el('span', '', t('batchEmpty')));
+    } else {
+      list.forEach((n, idx) => {
+        chips.append(el('span', 'batch-chip', (idx ? '+ ' : '') + n));
+      });
+      const sum = list.reduce((a, b) => a + b, 0);
+      chips.append(el('span', 'batch-chip', '= ' + sum));
+    }
+    box.append(chips);
+
+    const btns = el('div', 'batch-btns');
+    const applyBatch = (delta) => {
+      const cur = Number(goodInput.value) || 0;
+      const nextVal = Math.max(0, cur + delta);
+      list.push(delta);
+      allBatches[bKey] = list;
+      saveBatches(allBatches);
+      goodInput.value = String(nextVal);
+      goodInput.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+
+    [6, 12, 24, 36].forEach((n) => {
+      const b = el('button', 'btn', '+' + n);
+      b.type = 'button';
+      b.addEventListener('click', () => applyBatch(n));
+      btns.append(b);
+    });
+
+    const customBtn = el('button', 'btn', t('batchCustom'));
+    customBtn.type = 'button';
+    customBtn.addEventListener('click', () => {
+      const raw = prompt(t('batchPrompt'));
+      const n = Math.floor(Number(raw));
+      if ( n > 0 && n <= 9999 ) applyBatch(n);
+    });
+    btns.append(customBtn);
+
+    if (list.length) {
+      const undoB = el('button', 'btn', t('batchUndo'));
+      undoB.type = 'button';
+      undoB.addEventListener('click', () => {
+        const last = list.pop() || 0;
+        allBatches[bKey] = list;
+        saveBatches(allBatches);
+        const cur = Number(goodInput.value) || 0;
+        goodInput.value = String(Math.max(0, cur - last));
+        goodInput.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+      btns.append(undoB);
+    }
+
+    box.append(btns);
+    const bigRow = goodInput.closest('.cr.big');
+    if (bigRow && bigRow.parentElement) {
+      bigRow.parentElement.insertBefore(box, bigRow.nextSibling);
+    }
+  }
+
+
+
+  FOH.batchTally = {
+    loadBatches,
+    saveBatches,
+    injectBatchCounter,
+  };
+})(window.FOH = window.FOH || {});

@@ -86,8 +86,16 @@
       o.selected = v === (p ? p.role : '');
       sel.append(o);
     });
-    if ($('stHealthNo')) $('stHealthNo').value = (p && p.healthCertNo) || '';
-    if ($('stHealthExp')) $('stHealthExp').value = (p && p.healthCertExpiry) || '';
+    const sess = FOH.sessionAuth ? FOH.sessionAuth.getSession() : null;
+    const isMgr = !!(sess && sess.isManager);
+    if ($('stHealthNo')) {
+      $('stHealthNo').value = (p && p.healthCertNo) || '';
+      $('stHealthNo').disabled = !isMgr;
+    }
+    if ($('stHealthExp')) {
+      $('stHealthExp').value = (p && p.healthCertExpiry) || '';
+      $('stHealthExp').disabled = !isMgr;
+    }
     if ($('stCanEdit')) $('stCanEdit').checked = !!(p && p.canEditChecklist);
     $('stInv').checked = p ? p.inv : true;
     $('stActive').checked = p ? p.active : true;
@@ -97,6 +105,8 @@
   }
 
   function save() {
+    const sess = FOH.sessionAuth ? FOH.sessionAuth.getSession() : null;
+    const isMgr = !!(sess && sess.isManager);
     const name = $('stName').value.trim().slice(0, 60);
     if (!name) return;
     const nickname = $('stNickname') ? $('stNickname').value.trim().slice(0, 30) : '';
@@ -114,8 +124,8 @@
       inv: $('stInv').checked,
       active: $('stActive').checked,
       canEditChecklist: $('stCanEdit') ? $('stCanEdit').checked : false,
-      healthCertNo: $('stHealthNo') ? $('stHealthNo').value.trim().slice(0, 60) : '',
-      healthCertExpiry: $('stHealthExp') ? $('stHealthExp').value : '',
+      healthCertNo: isMgr ? ($('stHealthNo') ? $('stHealthNo').value.trim().slice(0, 60) : '') : ((byId(editing) && byId(editing).healthCertNo) || ''),
+      healthCertExpiry: isMgr ? ($('stHealthExp') ? $('stHealthExp').value : '') : ((byId(editing) && byId(editing).healthCertExpiry) || ''),
     };
     const p = byId(editing);
     if (p) Object.assign(p, data);

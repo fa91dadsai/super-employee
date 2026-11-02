@@ -280,9 +280,13 @@ main#appMain > .health-banner .snooze-btn {
 .shift-nav-grid {
   display: grid !important;
   grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-  gap: 8px !important;
+  gap: 6px !important;
   width: 100% !important;
   box-sizing: border-box !important;
+  background: var(--bg2, rgba(0, 0, 0, 0.04)) !important;
+  padding: 4px !important;
+  border-radius: 14px !important;
+  border: 1px solid var(--line) !important;
 }
 .shift-nav-tab {
   position: relative !important;
@@ -290,18 +294,25 @@ main#appMain > .health-banner .snooze-btn {
   flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 3px !important;
-  padding: 8px 4px !important;
-  min-height: 60px !important;
-  border-radius: 12px !important;
-  border: 1.5px solid var(--line) !important;
-  background: var(--bg) !important;
-  color: var(--ink) !important;
+  gap: 2px !important;
+  padding: 6px 4px !important;
+  min-height: 48px !important;
+  border-radius: 10px !important;
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  color: var(--ink2) !important;
   cursor: pointer !important;
   text-align: center !important;
   box-sizing: border-box !important;
   width: 100% !important;
-  transition: all 0.15s ease !important;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+.shift-nav-tab:hover {
+  background: rgba(0, 0, 0, 0.04) !important;
+  color: var(--ink) !important;
+}
+body.dark .shift-nav-tab:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
 }
 .shift-nav-tab b {
   font-size: 0.76rem !important;
@@ -322,16 +333,29 @@ main#appMain > .health-banner .snooze-btn {
   opacity: 0.85 !important;
 }
 .shift-nav-tab.on {
-  background: var(--accent) !important;
-  color: #ffffff !important;
-  border-color: var(--accent) !important;
-  box-shadow: 0 4px 12px rgba(47, 107, 94, 0.28) !important;
+  background: var(--surface, #ffffff) !important;
+  color: var(--accent) !important;
+  border-color: rgba(47, 107, 94, 0.25) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
 }
 body.dark .shift-nav-tab.on {
-  background: #10b981 !important;
-  color: #041612 !important;
-  border-color: #10b981 !important;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.28) !important;
+  background: #15221e !important;
+  color: #10b981 !important;
+  border-color: rgba(16, 185, 129, 0.4) !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25) !important;
+}
+.shift-nav-tab.on b {
+  color: var(--accent) !important;
+}
+body.dark .shift-nav-tab.on b {
+  color: #10b981 !important;
+}
+.shift-nav-tab.on small {
+  color: var(--ink) !important;
+  opacity: 0.9 !important;
+}
+body.dark .shift-nav-tab.on small {
+  color: #a7f3d0 !important;
 }
 .shift-nav-tab.on small {
   color: inherit !important;
@@ -431,23 +455,35 @@ body.dark .u-pill.primary-assign {
 /* Sleek KPI Badge in Corner - NEVER distorted or squeezed */
 .rlh-kpi-badge {
   flex-shrink: 0 !important;
-  min-width: 68px !important;
-  padding: 6px 10px !important;
-  border-radius: 12px !important;
-  background: rgba(47, 107, 94, 0.12) !important;
-  border: 1px solid rgba(47, 107, 94, 0.3) !important;
+  min-width: 76px !important;
+  padding: 8px 12px !important;
+  border-radius: 14px !important;
+  background: rgba(47, 107, 94, 0.08) !important;
+  border: 1px solid rgba(47, 107, 94, 0.25) !important;
   text-align: center !important;
   white-space: nowrap !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03) !important;
 }
 body.dark .rlh-kpi-badge {
-  background: rgba(47, 107, 94, 0.22) !important;
-  border-color: rgba(52, 211, 153, 0.35) !important;
+  background: rgba(16, 185, 129, 0.12) !important;
+  border-color: rgba(52, 211, 153, 0.3) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
 }
 .rlh-kpi-num {
-  font-size: 1.15rem !important;
+  font-size: 1.3rem !important;
   font-weight: 900 !important;
-  color: var(--accent) !important;
+  color: #047857 !important;
   line-height: 1 !important;
+  display: flex !important;
+  align-items: baseline !important;
+  justify-content: center !important;
+}
+body.dark .rlh-kpi-num {
+  color: #34d399 !important;
 }
 .rlh-kpi-num small {
   font-size: 0.72rem !important;

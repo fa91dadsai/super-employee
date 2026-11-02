@@ -1,17 +1,19 @@
 'use strict';
 
-const CACHE = 'super-employee-v22';
+const CACHE = 'super-employee-v23';
 const PRECACHE = [
   './',
   './index.html',
   './manifest.webmanifest',
   './icons/icon-192.png',
   './icons/icon-512.png',
+  // CSS Architecture
   './css/base.css',
   './css/themes.css',
   './css/components.css',
   './css/checklist.css',
   './css/super-employee.css',
+  // JS Core & Checklist Engine
   './js/core/security.js',
   './js/core/i18n.js',
   './js/core/state.js',
@@ -36,8 +38,44 @@ const PRECACHE = [
   './js/domains/checklist/edit-actions.js',
   './js/core/pwa-install.js',
   './js/core/preview-demo.js',
-  './js/domains/auth/erp-pwa-module.js',
-  './js/domains/shifts/super-employee-module.js'
+  // JS Domain Modules: Auth & Inventory
+  './js/domains/auth/pending-approvals.js',
+  './js/domains/auth/session-auth.js',
+  './js/domains/auth/profile-dialog.js',
+  './js/domains/inventory/batch-tally.js',
+  // JS Domain Modules: Shifts & Cloud
+  './js/domains/shifts/sheet-state.js',
+  './js/domains/shifts/section-claims.js',
+  './js/domains/cloud/cloud-sync.js',
+  './js/domains/cloud/realtime-broadcast.js',
+  // JS Domain Modules: Tasks & Orders
+  './js/domains/tasks/day-off.js',
+  './js/domains/tasks/task-inbox-notif.js',
+  './js/domains/tasks/task-assignment.js',
+  './js/domains/orders/orders-view.js',
+  // JS Domain Modules: Governance & Identity
+  './js/domains/governance/restaurant-gov.js',
+  './js/domains/governance/suggestions.js',
+  './js/domains/shifts/role-identity.js',
+  // JS Domain Modules: Operations & Lifecycle
+  './js/domains/operations/ops-lifecycle.js',
+  './js/domains/operations/hours-settings.js',
+  // JS Domain Modules: Tips, Dashboard, Settings, Profile & Academy
+  './js/domains/tips/tips-view.js',
+  './js/domains/dashboard/dashboard-view.js',
+  './js/domains/profile/health-profile-view.js',
+  './js/domains/settings/settings-view.js',
+  './js/domains/academy/academy-view.js',
+  // JS Domain Modules: Notifications & Navigation
+  './js/domains/notifications/snooze-engine.js',
+  './js/domains/notifications/notif-center.js',
+  './js/domains/navigation/sidebar-nav.js',
+  // JS Domain Modules: UI Header, Navigation, Hero & Orchestration
+  './js/domains/shifts/header-subbars.js',
+  './js/domains/shifts/three-shifts-nav.js',
+  './js/domains/shifts/landing-hero.js',
+  './js/domains/shifts/signoff-gate.js',
+  './js/domains/shifts/super-employee-init.js',
 ];
 
 const scheduledTimers = new Map();
@@ -138,14 +176,55 @@ self.addEventListener('message', (event) => {
   }
 });
 
+// Web Push API: Fires even when PWA and screen are completely closed!
+self.addEventListener('push', (event) => {
+  let data = {};
+  if (event.data) {
+    try {
+      data = event.data.json();
+    } catch {
+      data = { body: event.data.text() };
+    }
+  }
+  const title = data.title || '🔔 تنبيه عمليات المطعم (CEEN Operations)';
+  const options = {
+    body: data.body || 'لديك إشعار تشغيلي مهم في نظام المطعم.',
+    icon: './icons/icon-192.png',
+    badge: './icons/icon-192.png',
+    tag: data.tag || 'ceen-alert-' + Date.now(),
+    renotify: true,
+    requireInteraction: true,
+    vibrate: [200, 100, 200, 100, 300],
+    data: data.data || { url: './' },
+    actions: [
+      { action: 'open', title: 'عرض التفاصيل (View)' },
+      { action: 'dismiss', title: 'تجاهل (Dismiss)' }
+    ]
+  };
+  event.waitUntil(
+    Promise.all([
+      self.registration.showNotification(title, options),
+      ('setAppBadge' in self.navigator) ? self.navigator.setAppBadge(data.badgeCount || 1).catch(() => {}) : Promise.resolve()
+    ])
+  );
+});
+
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
+  if ('clearAppBadge' in self.navigator) {
+    self.navigator.clearAppBadge().catch(() => {});
+  }
+  if (event.action === 'dismiss') return;
   event.waitUntil(
-    self.clients.matchAll({ type: 'window' }).then((clientList) => {
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {
-        if (client.url && 'focus' in client) return client.focus();
+        if (client.url && 'focus' in client) {
+          return client.focus();
+        }
       }
-      if (self.clients.openWindow) return self.clients.openWindow('./');
+      if (self.clients.openWindow) {
+        return self.clients.openWindow('./');
+      }
     })
   );
 });
