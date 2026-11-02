@@ -17665,6 +17665,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   FOH.healthProfile = {
     renderProfilePageView,
   };
+  FOH.healthProfileView = FOH.healthProfile;
 })(window.FOH = window.FOH || {});
 
 </script>
@@ -21349,7 +21350,11 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   }
 
   function renderProfilePageView(el) {
-    if (FOH.healthProfileView) FOH.healthProfileView.renderProfilePageView(el);
+    if (FOH.healthProfileView && FOH.healthProfileView.renderProfilePageView) {
+      FOH.healthProfileView.renderProfilePageView(el);
+    } else if (FOH.healthProfile && FOH.healthProfile.renderProfilePageView) {
+      FOH.healthProfile.renderProfilePageView(el);
+    }
   }
 
   function renderSettingsView(el) {
