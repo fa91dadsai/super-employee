@@ -198,9 +198,17 @@
     const isMgr = !!(sess && sess.isManager);
     let actionBtn;
     if (isMgr) {
-      actionBtn = el('button', 'snooze-btn done-now', ar ? '📅 تحديث التاريخ (مدير)' : '📅 Update Expiry (Manager)');
+      const targetName = (top.staff && top.staff.name) || '';
+      actionBtn = el(
+        'button',
+        'snooze-btn done-now',
+        ar ? (targetName ? '📅 تحديث شهادة (' + targetName + ')' : '📅 تحديث الشهادة (مدير)') : (targetName ? '📅 Update (' + targetName + ')' : '📅 Update Expiry (Manager)')
+      );
       actionBtn.type = 'button';
       actionBtn.addEventListener('click', () => {
+        if (top.staff && top.staff.id) {
+          S.selectedHealthStaffId = top.staff.id;
+        }
         S.view = 'profile';
         FOH.app.render();
       });

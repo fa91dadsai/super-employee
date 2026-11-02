@@ -1258,10 +1258,14 @@
     row2.style.marginTop = '8px';
     const destLbl = el('label', '', ar ? 'إرسال إلى (Send to)' : 'Send to');
     const destSel = el('select', 'in');
-    ['Store', 'Purchasing', 'Manager'].forEach((v) => {
-      const o = el('option', '', v);
-      o.value = v;
-      o.selected = m.destination === v;
+    [
+      { value: 'Store', label: ar ? '📦 المستودع (Store)' : '📦 Store Warehouse' },
+      { value: 'Purchasing', label: ar ? '🛒 المشتريات (Purchasing)' : '🛒 Purchasing' },
+      { value: 'Manager', label: ar ? '👑 الإدارة (Manager)' : '👑 Manager' },
+    ].forEach((it) => {
+      const o = el('option', '', it.label);
+      o.value = it.value;
+      o.selected = m.destination === it.value;
       destSel.append(o);
     });
     destSel.addEventListener('change', () => {
@@ -1272,12 +1276,19 @@
 
     const prioLbl = el('label', '', ar ? 'الأولوية (Priority)' : 'Priority');
     const prioSel = el('select', 'in');
-    ['Normal', 'Urgent'].forEach((v) => {
-      const o = el('option', '', v);
-      o.value = v;
-      o.selected = m.priority === v;
+    [
+      { value: 'Normal', label: ar ? '🟢 عادي (Normal)' : '🟢 Normal' },
+      { value: 'Urgent', label: ar ? '🔴 عاجل (Urgent)' : '🔴 Urgent' },
+    ].forEach((it) => {
+      const o = el('option', '', it.label);
+      o.value = it.value;
+      o.selected = m.priority === it.value;
       prioSel.append(o);
     });
+    if (FOH.modalPicker && FOH.modalPicker.enhanceSelect) {
+      FOH.modalPicker.enhanceSelect(destSel, { title: ar ? 'وجهة الطلبية' : 'Order Destination', icon: '📦' });
+      FOH.modalPicker.enhanceSelect(prioSel, { title: ar ? 'أولوية الطلبية' : 'Order Priority', icon: '⚡' });
+    }
     prioSel.addEventListener('change', () => {
       m.priority = prioSel.value;
       saveOrdersDB();

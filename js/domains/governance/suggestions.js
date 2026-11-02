@@ -33,7 +33,13 @@
   }
 
   function notifyMobileOnNewTaskAdded(t) {
-    if (FOH.realtime) FOH.realtime.notifyMobileOnNewTaskAdded(t);
+    if (FOH.taskInbox && FOH.taskInbox.notifyMobileOnNewTaskAdded) {
+      FOH.taskInbox.notifyMobileOnNewTaskAdded(t);
+    } else if (FOH.notifCenter && FOH.notifCenter.notifyMobileOnNewTaskAdded) {
+      FOH.notifCenter.notifyMobileOnNewTaskAdded(t);
+    } else if (FOH.realtime && FOH.realtime.notifyMobileOnNewTaskAdded) {
+      FOH.realtime.notifyMobileOnNewTaskAdded(t);
+    }
   }
 
   // ---- 4. Checklist Suggestions & Item Notes ----
@@ -268,6 +274,17 @@
       kindSel.append(o);
     });
     kindLbl.append(kindSel);
+
+    if (FOH.modalPicker && FOH.modalPicker.enhanceSelect) {
+      FOH.modalPicker.enhanceSelect(secSel, {
+        title: ar ? 'اختر القسم المقترح' : 'Select Target Section',
+        icon: '📂',
+      });
+      FOH.modalPicker.enhanceSelect(kindSel, {
+        title: ar ? 'اختر نوع الاقتراح' : 'Select Suggestion Type',
+        icon: '💡',
+      });
+    }
 
     const txtArLbl = el('label', '', ar ? 'نص المهمة المقترحة / التعديل (عربي أو إنجليزي)' : 'Suggested Task / Change Text');
     const txtArIn = el('textarea', 'in');

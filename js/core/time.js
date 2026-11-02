@@ -42,6 +42,8 @@
   // 'done' | 'upcoming' | 'due' | 'late'.
   function stateOn(task, log, date, today, nowHM) {
     if (task.paused) return null;
+    if (task.start && date < task.start) return null;
+    if (task.endDate && date > task.endDate) return null;
     const doneToday = entries(log, task).find((e) => e.done === date);
     if (doneToday) return { task, occ: doneToday.occ, doneEntry: doneToday, status: 'done' };
     let occ = null;
@@ -69,10 +71,12 @@
   // Projected due dates after `date` (up to `count`, within `days` days).
   function upcoming(task, log, date, today, days, count) {
     if (task.paused) return [];
+    if (task.endDate && date > task.endDate) return [];
     const out = [];
     const end = addDays(date, days);
     if (task.rule.type === 'once') {
       const d = task.rule.date;
+      if (task.endDate && d > task.endDate) return [];
       const handled = entries(log, task).some((e) => e.occ === d);
       return d && d > date && d <= end && !handled ? [d] : [];
     }
@@ -85,7 +89,10 @@
     // Interval: if due on/before `date`, assume it gets done on `date`.
     const due = intervalDue(task, log, today);
     let d = due > date ? due : addDays(date, task.rule.every);
-    for (; d <= end && out.length < count; d = addDays(d, task.rule.every)) out.push(d);
+    for (; d <= end && out.length < count; d = addDays(d, task.rule.every)) {
+      if (task.endDate && d > task.endDate) break;
+      out.push(d);
+    }
     return out;
   }
 
@@ -116,8 +123,17 @@
   }
 
   // Fixed-date occurrence on `date` (weekly or one-time; not interval).
-  const scheduledOn = (task, date) =>
-    task.rule.type === 'once' ? task.rule.date === date : task.rule.type === 'weekly' && task.rule.days.includes(weekday(date));
+  const scheduledOn = (task, date) => {
+    if (task.start && date < task.start) return false;
+    if (task.endDate && date > task.endDate) return false;
+    if (task.rule.type === 'once') return task.rule.date === date;
+    if (task.rule.type === 'weekly') return task.rule.days.includes(weekday(date));
+    if (task.rule.type === 'interval') {
+      const diff = diffDays(date, task.start || date);
+      return diff >= 0 && (diff % task.rule.every === 0);
+    }
+    return false;
+  };
 
   // First day of the week containing `iso`; `first` = 0 Sunday … 6 Saturday.
   const weekStart = (iso, first) => addDays(iso, -((weekday(iso) - (first || 0) + 7) % 7));

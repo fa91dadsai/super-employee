@@ -168,7 +168,11 @@
   }
 
   function renderProfilePageView(el) {
-    if (FOH.healthProfileView) FOH.healthProfileView.renderProfilePageView(el);
+    if (FOH.healthProfileView && FOH.healthProfileView.renderProfilePageView) {
+      FOH.healthProfileView.renderProfilePageView(el);
+    } else if (FOH.healthProfile && FOH.healthProfile.renderProfilePageView) {
+      FOH.healthProfile.renderProfilePageView(el);
+    }
   }
 
   function renderSettingsView(el) {

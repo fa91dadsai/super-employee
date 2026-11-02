@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE = 'super-employee-v26';
+const CACHE = 'super-employee-v27';
 const PRECACHE = [
   './',
   './index.html',
@@ -19,6 +19,7 @@ const PRECACHE = [
   './js/core/state.js',
   './js/domains/checklist/model.js',
   './js/core/time.js',
+  './js/core/modal-picker.js',
   './js/domains/inventory/store.js',
   './js/domains/checklist/view.js',
   './js/domains/tasks/tasks-view.js',

@@ -15,6 +15,12 @@
     });
     select.value = initial;
     label.append(select);
+    if (FOH.modalPicker && FOH.modalPicker.enhanceSelect) {
+      FOH.modalPicker.enhanceSelect(select, {
+        title: (FOH.i18n && FOH.i18n.t) ? FOH.i18n.t('reminderLead') : 'وقت التنبيه المسبق',
+        icon: '⏰',
+      });
+    }
     const customLabel = el('label', '', t('reminderCustomLabel'));
     const input = el('input', 'in'); input.type = 'number'; input.min = '0'; input.max = '1440'; input.step = '1'; input.inputMode = 'numeric'; input.required = true; input.value = String(owner.remindBefore === null ? 30 : owner.remindBefore);
     customLabel.append(input);

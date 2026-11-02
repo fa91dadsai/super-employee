@@ -34,6 +34,7 @@
     let when = t('everyN', { n: r.every });
     if (r.type === 'weekly') when = r.days.slice().sort((a, b) => order(a) - order(b)).map((d) => dayNames()[d]).join(' · ');
     if (r.type === 'once') when = t('onceOn', { date: r.date ? fmtDay(r.date) : '—' });
+    if (tk.endDate) when += (FOH.i18n && FOH.i18n.lang === 'ar' ? ' (حتى ' + tk.endDate + ')' : ' (until ' + tk.endDate + ')');
     return when + ' · ' + tk.time;
   }
 

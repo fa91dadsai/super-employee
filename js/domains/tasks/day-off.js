@@ -76,13 +76,16 @@
 
     const kindLbl = el('label', '', t('dayOffKindLbl'));
     const kindSel = el('select', 'in');
+    const ar = isAr();
     [
-      ['off', t('dayOffKindOff')],
-      ['comp_off', t('dayOffKindComp')],
-      ['leave', t('dayOffKindLeave')],
-    ].forEach(([v, txt]) => {
-      const o = el('option', '', txt);
+      ['off', t('dayOffKindOff'), ar ? 'اليوم الأسبوعي المعتاد للراحة' : 'Official weekly rest day', '🏖️'],
+      ['comp_off', t('dayOffKindComp'), ar ? 'عطلة تعويضية مقابل ساعات عمل إضافية' : 'In lieu of extra worked hours', '🔄'],
+      ['leave', t('dayOffKindLeave'), ar ? 'طلب إجازة سنوية أو ظرف شخصي' : 'Annual or personal leave request', '🌴'],
+    ].forEach(([v, txt, sub, ic]) => {
+      const o = el('option', '', ic + ' ' + txt);
       o.value = v;
+      o.dataset.subtitle = sub;
+      o.dataset.icon = ic;
       kindSel.append(o);
     });
     kindLbl.append(kindSel);
@@ -90,14 +93,59 @@
 
     const dowLbl = el('label', '', t('dayOffPrefDowLbl'));
     const dowSel = el('select', 'in');
+    const dayIcons = ['☀️', '🌙', '⚡', '🌿', '🌤️', '🕌', '⭐'];
     const daysLong = t('daysLong').split(',');
     daysLong.forEach((dName, idx) => {
-      const o = el('option', '', dName);
+      const o = el('option', '', (dayIcons[idx] || '📅') + ' ' + dName);
       o.value = String(idx);
+      o.dataset.icon = dayIcons[idx] || '📅';
       if (idx === 5) o.selected = true;
       dowSel.append(o);
     });
     dowLbl.append(dowSel);
+
+    // Quick Day-of-Week selector chips
+    const dowPillsRow = el('div', 'dow-quick-pills');
+    dowPillsRow.style.display = 'flex';
+    dowPillsRow.style.gap = '4px';
+    dowPillsRow.style.flexWrap = 'wrap';
+    dowPillsRow.style.marginTop = '6px';
+    dowPillsRow.style.marginBottom = '6px';
+
+    const shortDays = (ar ? 'أحد,اثنين,ثلاثاء,أربعاء,خميس,جمعة,سبت' : 'Sun,Mon,Tue,Wed,Thu,Fri,Sat').split(',');
+    shortDays.forEach((sd, idx) => {
+      const isSel = idx === 5;
+      const chip = el('button', 'date-chip' + (isSel ? ' on' : ''), (dayIcons[idx] || '') + ' ' + sd);
+      chip.type = 'button';
+      chip.style.padding = '4px 8px';
+      chip.style.fontSize = '0.74rem';
+      chip.addEventListener('click', () => {
+        dowPillsRow.querySelectorAll('.date-chip').forEach(c => c.classList.remove('on'));
+        chip.classList.add('on');
+        dowSel.value = String(idx);
+        dowSel.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+      dowPillsRow.append(chip);
+    });
+    dowSel.addEventListener('change', () => {
+      dowPillsRow.querySelectorAll('.date-chip').forEach((c, idx) => {
+        c.classList.toggle('on', String(idx) === String(dowSel.value));
+      });
+    });
+    dowLbl.append(dowPillsRow);
+
+    if (FOH.modalPicker && FOH.modalPicker.enhanceSelect) {
+      FOH.modalPicker.enhanceSelect(kindSel, {
+        title: ar ? 'اختر نوع طلب العطلة' : 'Select Request Type',
+        subtitle: ar ? 'حدد طبيعة العطلة المطلوبة لتثبيتها في الجدول' : 'Select category to sync with OpsFlow Schedule',
+        icon: '🏖️',
+      });
+      FOH.modalPicker.enhanceSelect(dowSel, {
+        title: ar ? 'اختر يوم العطلة الأسبوعي المفضل' : 'Select Preferred Off Day',
+        subtitle: ar ? 'اليوم المفضل لك للاستراحة الأسبوعية' : 'Your preferred weekly rest day',
+        icon: '🗓️',
+      });
+    }
 
     const reasonIn = el('input', 'in');
     reasonIn.placeholder = t('dayOffReasonPlaceholder');

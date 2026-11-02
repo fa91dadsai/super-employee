@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#1d2733" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Super Employee" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="icons/icon-192.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAACWElEQVR4nO1Wy4oTQRQ9VV2ddDohk8ckkZmRIMQHKCLjahB1L/h/foA7wb0b94K4GoZRYR4icSSSl0mmX1UltzriDMRMmlay6bPoTrpu7jn31K2bZuV6VWON4OskzwRkDmQOZA6s7ABjDFrTfcEagIujlC8KSjuIvCCCsBjCSEGpmM7isahIaQgek9J16oWXxF0FsWyREhDB3t1t+GGEzYobk0qF0cTDeBZg99Y1HBz3UHLz8IIQe/d28OL1Bzx/fBMHxz9w1B0gJ6xLLq3kAGcMMz/E/U4Td9p1vDvo4tOXvtmGrc2S2ZaT7hCVUh6tWhHjqY+Pp300Ki6ePepg/6iH8cwH5/yv5EsFUPmR1GhsFDD1Q6hQ4vPXAc79yLgQSoUglPBDCc4Zpl6AfE7g5Zt91MoOnjy4jskswHx3kgvQSsN1bLw/PEPRsdFp13FjawP1csH0RH90jqe7bRQLNk7PxmhWi3h4u4XOThWv3h6iVStBWMurN3Uuex8gu6nx3LyNatlBbzhDteSYSqn3SUjeFtBaGxfIERJ98m0EIXjcQ1IvPD0rCSDQj6nzKZEtOPxAQipleoDWaDsIGtr0DT13chaUip9fdSrF8uWYgJLmbAY6gc2aG3f1fDCYOTD/rJTCcOIbwauOA7Fa2J9KaVOJkL7KiMrUsCxuAijGiEkAkSSYiur/9AyJVNo0JFX6fTAxg8kkJDH/SwCBph5j3By/7UbJONEfe/NhE7uQBCzNWzF1PilQSVnTOHARUsbECf9//p0AloL4N3j6FJmAdOBYM3gmAGvGL//Q9FNjQG6LAAAAAElFTkSuQmCC" />
+    <title>Super Employee · CEEN Restaurant & Lounge</title>
+        <!-- Modular Clean CSS Architecture -->
+    <link rel="stylesheet" href="css/base.css?v=v27">
+    <link rel="stylesheet" href="css/themes.css?v=v27">
+    <link rel="stylesheet" href="css/components.css?v=v27">
+    <link rel="stylesheet" href="css/checklist.css?v=v27">
+    <link rel="stylesheet" href="css/super-employee.css?v=v27">
+  </head>
+  <body>
+    <section id="loginScreen" class="login-screen" hidden>
+      <div class="login-shell">
+        <div class="login-topbar">
+          <span class="login-brand-pill">🌿 Oasis ERP · FOH</span>
+          <div style="display:flex;gap:8px;">
+            <button type="button" id="loginThemeBtn" class="ib" aria-label="Toggle theme">🌙</button>
+            <button type="button" id="loginLangBtn" class="ib">ع</button>
+          </div>
+        </div>
+        <div class="login-card">
+          <div class="login-head">
+            <div class="login-logo">🍽</div>
+            <h2 id="loginTitle">Opening Sheet FOH</h2>
+            <p id="loginSubtitle">Sign in with your employee username & password</p>
+          </div>
+          <p id="loginError" class="login-err" hidden></p>
+          <form id="loginForm" novalidate>
+            <label class="login-field">
+              <span id="loginUserLbl">Username</span>
+              <input id="loginUser" class="in" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="e.g. fadi, ali, sara" required />
+            </label>
+            <label class="login-field">
+              <span id="loginPassLbl">Password</span>
+              <div class="login-pass-wrap">
+                <input id="loginPass" class="in" type="password" autocomplete="current-password" placeholder="••••••••" required />
+                <button type="button" id="loginEyeBtn" class="login-eye" aria-label="Show password">👁</button>
+              </div>
+            </label>
+            <div class="login-remember">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                <input type="checkbox" id="loginRemember" checked />
+                <span id="loginRememberLbl">Keep me signed in on this phone</span>
+              </label>
+              <small id="loginCloudBadge" style="color:var(--accent);font-weight:700;">⚡ Supabase ERP</small>
+            </div>
+            <button type="submit" id="loginSubmitBtn" class="btn primary login-submit">Sign In</button>
+          </form>
+          <div class="login-invite-divider">
+            <span id="loginDividerText">أو · OR</span>
+          </div>
+          <button type="button" id="loginWithCodeBtn" class="btn login-invite-btn">
+            🔑 تفعيل حساب جديد بكود الدعوة (Join with Activation Code)
+          </button>
+          <div id="inviteCodeBox" class="invite-code-form" hidden>
+            <label class="login-field">
+              <span id="inviteCodeLbl" style="font-weight:700;">🔑 أدخل كود التفعيل الممنوح لك من الإدارة:</span>
+              <input id="inviteCodeIn" class="in" type="text" autocapitalize="characters" spellcheck="false" placeholder="e.g. CEEN-3003" style="text-align:center;font-weight:800;letter-spacing:2px;font-size:1.15rem;margin-top:6px;" />
+            </label>
+            <button type="button" id="inviteSubmitBtn" class="btn primary" style="width:100%;min-height:44px;margin-top:8px;">🚀 تفعيل الحساب والدخول للبروفايل</button>
+            <button type="button" id="cancelInviteCodeBtn" class="btn small" style="width:100%;margin-top:6px;">العودة للدخول بكلمة المرور</button>
+          </div>
+          <div class="login-demo-box">
+            <p class="login-demo-title">
+              <span id="loginDemoTitle">Quick Staff Login (Oasis Branch)</span>
+              <small>1-Tap</small>
+            </p>
+            <div class="login-demo-grid" id="loginDemoGrid"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="preview-toolbar">
+      <div class="preview-mode"><span id="previewModeLabel"></span><button type="button" id="previewToggle" class="btn"></button></div>
+      <label id="previewPersonRow" hidden><span data-i18n="previewAs"></span><select id="previewPerson" class="in"></select></label>
+      <p id="previewHelp" hidden data-i18n="previewEmployeeHelp"></p>
+      <button type="button" id="previewCountDemo" class="btn" hidden></button>
+      <p id="previewDemoNote" hidden data-i18n="countDemoNote"></p>
+    </aside>
+    <div id="sidebarBackdrop" class="sb-backdrop" hidden></div>
+    <aside id="appSidebar" class="app-sidebar" aria-label="Main Navigation" hidden>
+      <div class="sb-head">
+        <div class="sb-brand">
+          <div class="sb-logo">⚡</div>
+          <div class="sb-brand-txt">
+            <strong>Super Employee</strong>
+            <small id="sbRestaurantName">🍽 CEEN</small>
+          </div>
+        </div>
+        <button type="button" id="sbCloseBtn" class="ib-close" aria-label="Close Menu">✕</button>
+      </div>
+      <div id="sbProfileCard" class="sb-profile-card"></div>
+      <div class="sb-sec-label" id="sbNavTitle">الأقسام الرئيسية · WORKSPACE</div>
+      <nav id="sbNavList" class="sb-nav"></nav>
+      <div class="sb-foot">
+        <button type="button" id="sbThemeToggle" class="btn sb-foot-btn">🌙 Dark / ☀️ Light</button>
+        <button type="button" id="sbLogoutBtn" class="btn danger sb-foot-btn">🚪</button>
+      </div>
+    </aside>
+
+    <header class="top">
+      <div class="bar">
+        <button type="button" id="sidebarToggleBtn" class="ib sb-ham-btn" aria-label="Open Navigation Menu">
+          <span class="ham-lines"><i></i><i></i><i></i></span>
+          <b id="sbAlertDot" class="sb-dot" hidden></b>
+        </button>
+        <div class="ttl">
+          <div class="title-sub-row">
+            <h1 id="title">Super Employee</h1>
+          </div>
+          <div class="brand-top-row">
+            <span id="restaurantBadge" class="rest-badge">🍽 CEEN</span>
+            <span id="cloudRealtimeIndicator" class="realtime-status-pill connecting" title="Supabase Realtime Live Sync"><span class="realtime-dot"></span> ⚡ Live</span>
+          </div>
+          <button type="button" id="metaBtn" class="meta-pill run-only" hidden></button>
+          <span class="autosave edit-only" data-i18n="autosave" hidden></span>
+        </div>
+        <div class="top-right-actions">
+          <button type="button" id="notifBellBtn" class="notif-bell-btn" aria-label="Notifications">
+            🔔<span id="notifCountBadge" class="notif-bell-badge" hidden>0</span>
+          </button>
+          <button type="button" id="profileBtn" class="profile-btn" aria-label="Employee Profile">
+            <span class="profile-avatar" id="headerAvatar">👤</span>
+            <span class="profile-btn-name" id="headerUserName">Profile</span>
+          </button>
+        </div>
+        <button type="button" id="lockBtn" class="ib" title="Lock / Unlock Checklist" hidden>🔓</button>
+        <button type="button" id="langBtn" class="ib" data-i18n="langBtn" hidden>ع</button>
+        <button type="button" id="modeBtn" class="ib mode" hidden>✎</button>
+        <div class="ring run-only" id="ring" aria-hidden="true" hidden><span id="ringText"></span></div>
+      </div>
+      <div id="healthAlertBanner" class="health-banner" hidden></div>
+      <p class="banner" id="banner" role="status" hidden></p>
+      <nav class="tabs run-only" aria-label="Views" hidden>
+        <button type="button" data-view="opening"><span data-i18n="tabOpening"></span><b id="badgeOpening"></b></button>
+        <button type="button" data-view="mine"><span data-i18n="tabMine"></span><b id="badgeMine"></b></button>
+        <button type="button" data-view="orders" id="ordersTab"><span id="ordersTabLbl">🛒 Orders</span><b id="badgeOrders" hidden>0</b></button>
+        <button type="button" data-view="inv" id="invTab"><span data-i18n="tabInv"></span></button>
+        <button type="button" data-view="tips" id="tipsTab"><span>💰 Tips</span></button>
+        <button type="button" data-view="dashboard" id="dashTab"><span>📊 Dashboard</span></button>
+        <button type="button" data-view="profile" id="profTab"><span>👤 Profile</span></button>
+        <button type="button" data-view="settings" id="setTab"><span>⚙️ Settings</span></button>
+      </nav>
+      <nav class="tabs edit-only" aria-label="Edit">
+        <button type="button" data-etab="list" data-i18n="tabChecklist"></button>
+        <button type="button" data-etab="sched" data-i18n="tabScheduled"></button>
+        <button type="button" data-etab="roles" data-i18n="tabRoles"></button>
+      </nav>
+      <nav class="chips run-only" id="chips"></nav>
+    </header>
+    <p class="editbar edit-only" data-i18n="editBar"></p>
+
+    <main id="appMain">
+      <section class="meta-panel run-only" id="metaPanel" hidden>
+        <label><span data-i18n="date"></span><input type="date" id="date" /></label>
+        <label><span data-i18n="day"></span><output id="day"></output></label>
+        <label><span data-i18n="supervisor"></span><input id="supervisor" autocomplete="off" maxlength="300" /></label>
+        <label><span data-i18n="captain"></span><input id="captain" autocomplete="off" maxlength="300" /></label>
+        <label class="wide"><span data-i18n="assistant"></span><input id="assistant" autocomplete="off" maxlength="300" /></label>
+      </section>
+
+      <div id="checklistGovBar" class="gov-bar run-only" hidden></div>
+      <div id="today"></div>
+      <div id="mine" hidden></div>
+      <div id="ordersView" hidden></div>
+      <div id="academyView" hidden></div>
+      <div id="tipsView" hidden></div>
+      <div id="dashboardView" hidden></div>
+      <div id="profilePageView" hidden></div>
+      <div id="settingsView" hidden></div>
+      <div id="sched" hidden></div>
+      <div id="rolesView" hidden></div>
+      <div id="inv" hidden></div>
+
+      <div id="sheetTypeBar" class="sheet-switcher run-only"></div>
+
+      <div class="filter run-only">
+        <span id="doneOf"></span>
+        <div class="seg" role="group">
+          <button type="button" data-filter="all" data-i18n="all"></button>
+          <button type="button" data-filter="left" data-i18n="remaining"></button>
+        </div>
+      </div>
+
+      <div id="sections"></div>
+      <section id="signoffBox" class="signoff-card run-only" hidden></section>
+
+      <div class="tools edit-only">
+        <button type="button" id="addSectionBtn" class="btn" data-i18n="addSection"></button>
+        <button type="button" id="exportBtn" class="btn" data-i18n="export"></button>
+        <label class="btn"><span data-i18n="import"></span><input type="file" id="importInput" accept="application/json,.json" hidden /></label>
+        <button type="button" id="resetTplBtn" class="btn danger" data-i18n="restore"></button>
+      </div>
+      <div class="tools run-only">
+        <button type="button" id="printBtn" class="btn" data-i18n="print"></button>
+        <button type="button" id="clearDayBtn" class="btn danger" data-i18n="clearTicks"></button>
+      </div>
+
+      <div class="signatures print-only">
+        <span data-i18n="supSign"></span>
+        <span data-i18n="capSign"></span>
+      </div>
+    </main>
+    <aside class="quick-report run-only">
+      <button type="button" class="btn" id="quickReportBtn" data-act="break-open" data-i18n="quickDamageReport"></button>
+    </aside>
+
+    <dialog id="sheet" class="sheet">
+      <form method="dialog" id="sheetForm">
+        <div class="grab" aria-hidden="true"></div>
+        <h2 id="sheetTitle"></h2>
+        <p class="sub-of" id="subOf" hidden></p>
+        <label><span data-i18n="taskEn"></span><textarea id="dlgText" class="in" rows="2" maxlength="300" dir="ltr" lang="en"></textarea></label>
+        <label><span data-i18n="taskAr"></span><textarea id="dlgTextAr" class="in" rows="2" maxlength="300" dir="rtl" lang="ar"></textarea></label>
+        <div class="two">
+          <label id="sectionField"><span data-i18n="section"></span><select id="dlgSection" class="in"></select></label>
+          <label class="due-field"><span data-i18n="dueBy"></span><input type="time" id="dlgDue" class="in" /></label>
+        </div>
+        <div id="dlgReminder"></div>
+        <label><span data-i18n="responsible"></span><select id="dlgRole" class="in"></select></label>
+        <div id="subsBlock">
+          <p class="lb"><span data-i18n="subItems"></span><span id="subCount"></span></p>
+          <ol class="sub-list" id="subList"></ol>
+          <button type="button" id="addSubBtn" class="add-sub" data-i18n="addSub"></button>
+        </div>
+        <div class="sheet-actions">
+          <button type="button" id="dlgDelete" class="btn danger" data-i18n="delete"></button>
+          <button value="cancel" class="btn" formnovalidate data-i18n="cancel"></button>
+          <button value="save" class="btn primary" data-i18n="save"></button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="taskSheet" class="sheet">
+      <form method="dialog" id="taskForm">
+        <div class="grab" aria-hidden="true"></div>
+        <h2 id="taskTitle"></h2>
+        <div class="icon-row">
+          <select id="tkIcon" class="in icon-sel" aria-label="Icon"></select>
+          <label><span data-i18n="taskEn"></span><input id="tkText" class="in" maxlength="300" dir="ltr" lang="en" /></label>
+        </div>
+        <label><span data-i18n="taskAr"></span><input id="tkTextAr" class="in" maxlength="300" dir="rtl" lang="ar" /></label>
+        <p class="lb" data-i18n="repeat"></p>
+        <div class="seg wide" id="tkType">
+          <button type="button" data-rt="weekly" data-i18n="weekly"></button>
+          <button type="button" data-rt="interval" data-i18n="interval"></button>
+          <button type="button" data-rt="once" data-i18n="once"></button>
+        </div>
+        <label id="tkOnceRow"><span data-i18n="onDate"></span><input type="date" id="tkOnce" class="in" /></label>
+        <div class="days" id="tkDays"></div>
+        <div class="two" id="tkIntervalRow">
+          <div class="stepper">
+            <span data-i18n="every"></span>
+            <button type="button" id="tkMinus" aria-label="−">−</button>
+            <b id="tkEvery">3</b>
+            <button type="button" id="tkPlus" aria-label="+">+</button>
+            <span data-i18n="daysWord"></span>
+          </div>
+          <label><span data-i18n="startOn"></span><input type="date" id="tkStart" class="in" /></label>
+        </div>
+        <div class="two">
+          <label><span data-i18n="time"></span><input type="time" id="tkTime" class="in" /></label>
+          <label><span data-i18n="lateAfter"></span><select id="tkLate" class="in"></select></label>
+        </div>
+        <div id="tkReminder"></div>
+        <div class="two">
+          <label><span data-i18n="responsible"></span><select id="tkRole" class="in"></select></label>
+          <label><span data-i18n="person"></span><input id="tkPerson" class="in" maxlength="60" /></label>
+        </div>
+        <label class="tog"><span data-i18n="carry"></span><input type="checkbox" id="tkCarry" class="sw" /></label>
+        <label class="tog"><span data-i18n="paused"></span><input type="checkbox" id="tkPaused" class="sw" /></label>
+        <p class="next" id="tkNext"></p>
+        <div class="sheet-actions">
+          <button type="button" id="tkDelete" class="btn danger" data-i18n="delete"></button>
+          <button value="cancel" class="btn" formnovalidate data-i18n="cancel"></button>
+          <button value="save" class="btn primary" data-i18n="save"></button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="pickDialog" class="sheet">
+      <form method="dialog">
+        <div class="grab" aria-hidden="true"></div>
+        <h2 id="pickTitle"></h2>
+        <p class="sub-of" id="pickMsg" hidden></p>
+        <select id="pickSelect" class="in"></select>
+        <label id="pickNameRow"><span data-i18n="yourName"></span><input id="pickName" class="in" maxlength="60" /></label>
+        <div class="sheet-actions">
+          <button value="cancel" class="btn" formnovalidate data-i18n="cancel"></button>
+          <button value="ok" class="btn primary" data-i18n="ok"></button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="countSheet" class="sheet count-sheet">
+      <div class="count-top">
+        <h2 id="countTitle"></h2>
+        <button type="button" id="countClose" class="ib-close" aria-label="Close">✕</button>
+      </div>
+      <div id="countBody"></div>
+    </dialog>
+
+    <dialog id="breakSheet" class="sheet report-v2">
+      <form method="dialog" id="breakForm">
+        <header class="report-head">
+          <div><p class="report-eyebrow" data-i18n="equipmentReport"></p><h2 data-i18n="breakTitle"></h2></div>
+          <button value="cancel" class="report-close" formnovalidate aria-label="Close">✕</button>
+        </header>
+        <div class="report-steps" aria-hidden="true"><span id="brStep1" data-i18n="reportStep1"></span><span id="brStep2" data-i18n="reportStep2"></span></div>
+        <select id="brItem" hidden aria-hidden="true" tabindex="-1"></select>
+        <section id="brPicker">
+          <div class="report-search"><span aria-hidden="true">⌕</span><input id="brSearch" type="search" autocomplete="off" maxlength="100" data-i18n-placeholder="searchExample" /><button type="button" id="brClearSearch" hidden aria-label="Clear search">✕</button></div>
+          <div class="report-browse-head"><button type="button" id="brBack" class="report-back" hidden></button><div><h3 id="brBrowseTitle"></h3><p id="brBrowseHint"></p></div></div>
+          <div id="brCategories" class="report-category-grid"></div>
+          <p id="brMatches" class="report-result-count" role="status" aria-live="polite"></p>
+          <div id="brResults" class="report-results"></div>
+        </section>
+        <section id="brDetails" hidden>
+          <p id="brLinkInfo" class="count-info" hidden></p>
+          <div class="report-selected"><div id="brSelectedImage" class="report-selected-image"></div><div class="report-selected-text"><strong id="brSelected"></strong><small id="brSelectedMeta"></small></div><button type="button" id="brChoose" class="report-change" data-i18n="changeItem"></button></div>
+          <select id="brCond" hidden aria-hidden="true" tabindex="-1"><option value=""></option><option value="repair"></option><option value="writeoff"></option></select>
+          <h3 class="report-field-title" data-i18n="whatHappened"></h3>
+          <div id="brConditionCards" class="report-condition-grid"></div>
+          <div class="report-quantity"><div><h3 data-i18n="howMany"></h3><p data-i18n="piecesAffected"></p></div><div class="report-stepper"><button type="button" id="brMinus" aria-label="Decrease quantity">−</button><input type="number" id="brQty" min="1" max="9999" step="1" inputmode="numeric" /><button type="button" id="brPlus" aria-label="Increase quantity">+</button></div></div>
+          <details class="report-extra" id="brExtra"><summary data-i18n="extraDetails"></summary><label><span data-i18n="note"></span><textarea id="brNote" class="in" rows="2" maxlength="200"></textarea></label><label class="camera"><span id="brPhotoLbl"></span><input type="file" id="brPhoto" accept="image/*" capture="environment" hidden /></label></details>
+          <p class="report-local-note" data-i18n="reportReviewNote"></p>
+        </section>
+        <footer class="report-footer"><button value="cancel" class="btn" formnovalidate data-i18n="cancel"></button><button type="button" id="brReturnDetails" class="btn primary" hidden data-i18n="backToReport"></button><button id="brSave" value="save" class="btn primary" data-i18n="saveReport" hidden disabled></button></footer>
+      </form>
+    </dialog>
+
+    <dialog id="staffSheet" class="sheet">
+      <form method="dialog" id="staffForm">
+        <div class="grab" aria-hidden="true"></div>
+        <h2 id="staffTitle"></h2>
+        <div class="two">
+          <label><span data-i18n="staffName"></span><input id="stName" class="in" maxlength="60" placeholder="e.g. Sara Nabeel Khoury" required /></label>
+          <label><span id="stNickLbl">🏷️ الاسم المستعار / Floor Nickname (Tip &amp; Schedule)</span><input id="stNickname" class="in" maxlength="30" placeholder="e.g. Sara, Simo, Leo" /></label>
+        </div>
+        <div class="two">
+          <label><span data-i18n="position"></span><select id="stRole" class="in"></select></label>
+          <label><span id="stPhoneLbl">📱 رقم الهاتف والواتساب / Phone</span><input type="tel" id="stPhone" class="in" placeholder="+962 7 9xxx xxxx" /></label>
+        </div>
+        <label><span id="stEmailLbl">📧 البريد الإلكتروني / Email</span><input type="email" id="stEmail" class="in" placeholder="employee@ceenlounge.com" /></label>
+        <div id="stInviteBox" class="st-invite-box">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span>🔑 <b>كود التفعيل للموظف (Activation Code):</b></span>
+            <code id="stInviteCodeDisplay" class="st-code-pill">CEEN-XXXX</code>
+          </div>
+          <button type="button" id="stCopyInviteBtn" class="btn small" style="margin-top:6px;width:100%;">📋 نسخ كود التفعيل لإرساله للموظف عبر واتساب</button>
+        </div>
+        <div class="two">
+          <label><span id="stHealthNoLbl">🪪 رقم الشهادة الصحية / Health Cert #</span><input id="stHealthNo" class="in" maxlength="60" placeholder="HC-2026-..." /></label>
+          <label><span id="stHealthExpLbl">📅 تاريخ انتهاء الشهادة / Expiry Date</span><input type="date" id="stHealthExp" class="in" /></label>
+        </div>
+        <label class="tog"><span id="stCanEditLbl">✎ السماح للموظف بتعديل الشيك ليست (Allow Checklist Edit)</span><input type="checkbox" id="stCanEdit" class="sw" /></label>
+        <label class="tog"><span data-i18n="takesPart"></span><input type="checkbox" id="stInv" class="sw" /></label>
+        <label class="tog"><span data-i18n="activeLbl"></span><input type="checkbox" id="stActive" class="sw" /></label>
+        <div class="sheet-actions">
+          <button type="button" id="stDelete" class="btn danger" data-i18n="delete"></button>
+          <button value="cancel" class="btn" formnovalidate data-i18n="cancel"></button>
+          <button value="save" class="btn primary" data-i18n="save"></button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="invCatSheet" class="sheet">
+      <form method="dialog">
+        <div class="grab" aria-hidden="true"></div>
+        <h2 id="icTitle"></h2>
+        <div class="icon-row">
+          <select id="icIcon" class="in icon-sel" aria-label="Icon"></select>
+          <label><span data-i18n="nameEn"></span><input id="icName" class="in" maxlength="120" dir="ltr" /></label>
+        </div>
+        <label><span data-i18n="nameAr"></span><input id="icNameAr" class="in" maxlength="120" dir="rtl" /></label>
+        <div class="sheet-actions">
+          <button type="button" id="icDelete" class="btn danger" data-i18n="delete"></button>
+          <button value="cancel" class="btn" formnovalidate data-i18n="cancel"></button>
+          <button value="save" class="btn primary" data-i18n="save"></button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="invItemSheet" class="sheet">
+      <form method="dialog">
+        <div class="grab" aria-hidden="true"></div>
+        <h2 id="iiTitle"></h2>
+        <div class="two">
+          <label><span data-i18n="nameEn"></span><input id="iiName" class="in" maxlength="120" dir="ltr" /></label>
+          <label><span data-i18n="nameAr"></span><input id="iiNameAr" class="in" maxlength="120" dir="rtl" /></label>
+        </div>
+        <div class="two">
+          <label><span data-i18n="location"></span><input id="iiLocation" class="in" maxlength="120" /></label>
+          <label><span data-i18n="unit"></span><select id="iiUnit" class="in"></select></label>
+        </div>
+        <div class="two">
+          <label><span data-i18n="hintLbl"></span><input id="iiHint" class="in" maxlength="200" dir="ltr" /></label>
+          <label><span data-i18n="hintArLbl"></span><input id="iiHintAr" class="in" maxlength="200" dir="rtl" /></label>
+        </div>
+        <section class="damage-setting">
+          <h3 data-i18n="repairQuestion"></h3>
+          <select id="iiRepair" class="in">
+            <option value="no" data-i18n="repairNo"></option>
+            <option value="yes" data-i18n="repairYes"></option>
+          </select>
+          <p id="iiCountPreview" class="setting-note" role="status"></p>
+          <p class="setting-note" data-i18n="damageSeparate"></p>
+        </section>
+        <details id="iiVariants"><summary data-i18n="optionalVariants"></summary><div id="iiAttrs"></div></details>
+        <p class="lb" id="iiQtyLabel"></p>
+        <p class="setting-note" data-i18n="expectedHelp"></p>
+        <div class="vgrid" id="iiGrid"></div>
+        <p class="lb" data-i18n="refPhoto"></p>
+        <div class="photo-row">
+          <img id="iiPhotoImg" class="photo-prev" alt="" hidden />
+          <label class="camera"><span data-i18n="addPhoto"></span><input type="file" id="iiPhotoFile" accept="image/*" hidden /></label>
+          <button type="button" id="iiPhotoRemove" class="btn danger" data-i18n="removePhoto" hidden></button>
+        </div>
+        <div class="sheet-actions">
+          <button type="button" id="iiDelete" class="btn danger" data-i18n="delete"></button>
+          <button value="cancel" class="btn" formnovalidate data-i18n="cancel"></button>
+          <button value="save" class="btn primary" data-i18n="save"></button>
+        </div>
+      </form>
+    </dialog>
+
+    <div id="toast" class="toast" role="status" hidden>
+      <span id="toastMsg"></span>
+      <button type="button" id="toastUndo" data-i18n="undo"></button>
+    </div>
+
+    
+    <dialog id="profileSheet" class="sheet">
+      <div class="grab" aria-hidden="true"></div>
+      <div class="count-top" style="margin-bottom:10px;">
+        <h2 id="profSheetTitle" style="margin:0;">Employee Profile</h2>
+        <button type="button" id="profCloseBtn" class="ib-close" aria-label="Close">✕</button>
+      </div>
+      <div id="profSheetBody"></div>
+    </dialog>
+
+        <!-- Modular Clean JS Architecture -->
+    <script src="js/core/security.js?v=v27"></script>
+    <script src="js/core/i18n.js?v=v27"></script>
+    <script src="js/core/state.js?v=v27"></script>
+    <script src="js/domains/checklist/model.js?v=v27"></script>
+    <script src="js/core/time.js?v=v27"></script>
+    <script src="js/core/modal-picker.js?v=v27"></script>
+    <script src="js/domains/inventory/store.js?v=v27"></script>
+    <script src="js/domains/checklist/view.js?v=v27"></script>
+    <script src="js/domains/tasks/tasks-view.js?v=v27"></script>
+    <script src="js/domains/tasks/reminders.js?v=v27"></script>
+    <script src="js/domains/checklist/app.js?v=v27"></script>
+    <script src="js/domains/checklist/edit-sheet.js?v=v27"></script>
+    <script src="js/domains/tasks/task-sheet.js?v=v27"></script>
+    <script src="js/domains/tasks/task-actions.js?v=v27"></script>
+    <script src="js/domains/auth/staff.js?v=v27"></script>
+    <script src="js/domains/inventory/breakage.js?v=v27"></script>
+    <script src="js/domains/inventory/count.js?v=v27"></script>
+    <script src="js/domains/inventory/item-sheet.js?v=v27"></script>
+    <script src="js/domains/inventory/items.js?v=v27"></script>
+    <script src="js/domains/inventory/results.js?v=v27"></script>
+    <script src="js/domains/inventory/stock.js?v=v27"></script>
+    <script src="js/domains/inventory/manage.js?v=v27"></script>
+    <script src="js/domains/checklist/edit-actions.js?v=v27"></script>
+    <script src="js/core/pwa-install.js?v=v27"></script>
+    <script src="js/core/preview-demo.js?v=v27"></script>
+    <script src="js/domains/auth/pending-approvals.js?v=v27"></script>
+    <script src="js/domains/auth/session-auth.js?v=v27"></script>
+    <script src="js/domains/auth/profile-dialog.js?v=v27"></script>
+    <script src="js/domains/inventory/batch-tally.js?v=v27"></script>
+    <script src="js/domains/shifts/sheet-state.js?v=v27"></script>
+    <script src="js/domains/shifts/section-claims.js?v=v27"></script>
+    <script src="js/domains/cloud/cloud-sync.js?v=v27"></script>
+    <script src="js/domains/cloud/realtime-broadcast.js?v=v27"></script>
+    <script src="js/domains/tasks/day-off.js?v=v27"></script>
+    <script src="js/domains/tasks/task-inbox-notif.js?v=v27"></script>
+    <script src="js/domains/tasks/task-assignment.js?v=v27"></script>
+    <script src="js/domains/orders/orders-view.js?v=v27"></script>
+    <script src="js/domains/governance/restaurant-gov.js?v=v27"></script>
+    <script src="js/domains/governance/suggestions.js?v=v27"></script>
+    <script src="js/domains/shifts/role-identity.js?v=v27"></script>
+    <script src="js/domains/operations/ops-lifecycle.js?v=v27"></script>
+    <script src="js/domains/operations/hours-settings.js?v=v27"></script>
+    <script src="js/domains/tips/tips-view.js?v=v27"></script>
+    <script src="js/domains/dashboard/dashboard-view.js?v=v27"></script>
+    <script src="js/domains/profile/health-profile-view.js?v=v27"></script>
+    <script src="js/domains/settings/settings-view.js?v=v27"></script>
+    <script src="js/domains/academy/academy-view.js?v=v27"></script>
+    <script src="js/domains/notifications/snooze-engine.js?v=v27"></script>
+    <script src="js/domains/notifications/notif-center.js?v=v27"></script>
+    <script src="js/domains/navigation/sidebar-nav.js?v=v27"></script>
+    <script src="js/domains/shifts/header-subbars.js?v=v27"></script>
+    <script src="js/domains/shifts/three-shifts-nav.js?v=v27"></script>
+    <script src="js/domains/shifts/landing-hero.js?v=v27"></script>
+    <script src="js/domains/shifts/signoff-gate.js?v=v27"></script>
+    <script src="js/domains/shifts/super-employee-init.js?v=v27"></script>
+
+  </body>
+</html>

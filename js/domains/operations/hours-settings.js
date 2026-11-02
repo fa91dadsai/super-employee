@@ -174,6 +174,13 @@
         FOH.app.render();
       });
 
+      if (FOH.modalPicker && FOH.modalPicker.enhanceSelect) {
+        FOH.modalPicker.enhanceSelect(sel, {
+          title: ar ? 'تغيير منصب الموظف' : 'Change Staff Role',
+          subtitle: ar ? ('اختر المنصب الجديد لـ ' + fullLabel) : ('Select role for ' + fullLabel),
+          icon: '👑',
+        });
+      }
       row.append(el('b', '', '👤 ' + fullLabel), sel);
       assignBox.append(row);
     });

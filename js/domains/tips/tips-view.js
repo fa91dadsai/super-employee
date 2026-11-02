@@ -149,6 +149,13 @@
         selectedTipsUser = empSel.value;
         renderTipsView(root);
       });
+      if (FOH.modalPicker && FOH.modalPicker.enhanceSelect) {
+        FOH.modalPicker.enhanceSelect(empSel, {
+          title: ar ? 'عرض تبس الموظف' : 'Select Staff Tips View',
+          subtitle: ar ? 'اختر الموظف لعرض حصته وسجل إكرامياته' : 'Select employee to view tips allocation',
+          icon: '💰',
+        });
+      }
       const cfgBtn = el('button', 'snooze-btn', ar ? '⚙️ إعدادات ظهور التبس' : '⚙️ Visibility Settings');
       cfgBtn.type = 'button';
       cfgBtn.addEventListener('click', () => {

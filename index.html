@@ -3986,6 +3986,234 @@ body.dark .seg-btn.on {
   color: #0d1217 !important;
 }
 
+/* ---- 29. Custom Modal Picker Bottom Sheet Window ---- */
+#customModalPickerDlg.sheet {
+  max-width: 520px !important;
+  max-height: 85dvh !important;
+  border-radius: 24px 24px 0 0 !important;
+  overflow: hidden !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: 0 -12px 48px rgba(0, 0, 0, 0.35) !important;
+}
+@media (min-width: 640px) {
+  #customModalPickerDlg.sheet {
+    border-radius: 24px !important;
+    max-height: 75dvh !important;
+  }
+}
+.modal-picker-box {
+  display: flex !important;
+  flex-direction: column !important;
+  max-height: 85dvh !important;
+  background: var(--card) !important;
+  color: var(--ink) !important;
+  padding: 14px 18px 20px !important;
+}
+.modal-picker-head {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  margin-bottom: 12px !important;
+}
+.modal-picker-title-box {
+  flex: 1 !important;
+}
+.modal-picker-title {
+  margin: 0 !important;
+  font-size: 1.12rem !important;
+  font-weight: 800 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  color: var(--ink) !important;
+}
+.picker-head-icon {
+  font-size: 1.25rem !important;
+}
+.modal-picker-sub {
+  margin: 4px 0 0 !important;
+  font-size: 0.78rem !important;
+  color: var(--ink2) !important;
+  line-height: 1.4 !important;
+}
+.modal-picker-close {
+  background: none !important;
+  border: none !important;
+  font-size: 1.25rem !important;
+  cursor: pointer !important;
+  color: var(--muted) !important;
+  padding: 4px 8px !important;
+  border-radius: 8px !important;
+  transition: all 0.15s ease !important;
+}
+.modal-picker-close:hover {
+  background: var(--bg2, rgba(0, 0, 0, 0.05)) !important;
+  color: var(--ink) !important;
+}
+.modal-picker-search-box {
+  margin-bottom: 10px !important;
+}
+.modal-picker-search-input {
+  width: 100% !important;
+  min-height: 40px !important;
+  border-radius: 12px !important;
+  font-size: 0.88rem !important;
+  padding: 8px 12px !important;
+}
+.modal-picker-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  padding: 4px 2px !important;
+  max-height: 52dvh !important;
+}
+.modal-picker-item {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  min-height: 52px !important;
+  padding: 12px 14px !important;
+  border-radius: 14px !important;
+  border: 1.5px solid var(--line) !important;
+  background: var(--bg2, rgba(0, 0, 0, 0.03)) !important;
+  color: var(--ink) !important;
+  text-align: start !important;
+  cursor: pointer !important;
+  transition: all 0.16s ease !important;
+  user-select: none !important;
+}
+.modal-picker-item:hover {
+  background: var(--bg, #f5f4ef) !important;
+  border-color: var(--accent) !important;
+  transform: translateY(-1px) !important;
+}
+.modal-picker-item.selected {
+  background: rgba(16, 185, 129, 0.1) !important;
+  border-color: var(--accent) !important;
+}
+.modal-picker-item-content {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  flex: 1 !important;
+}
+.modal-picker-item-icon {
+  font-size: 1.25rem !important;
+  flex-shrink: 0 !important;
+}
+.modal-picker-item-texts {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+}
+.modal-picker-item-label {
+  font-size: 0.92rem !important;
+  font-weight: 700 !important;
+  color: var(--ink) !important;
+}
+.modal-picker-item-sub {
+  font-size: 0.74rem !important;
+  color: var(--muted) !important;
+}
+.modal-picker-item-trailing {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+.modal-picker-check {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 50% !important;
+  background: var(--accent) !important;
+  color: #fff !important;
+  font-weight: 800 !important;
+  font-size: 0.85rem !important;
+}
+.modal-picker-bottom {
+  margin-top: 14px !important;
+  padding-top: 8px !important;
+  border-top: 1px solid var(--line) !important;
+}
+.modal-picker-cancel {
+  width: 100% !important;
+  min-height: 46px !important;
+  border-radius: 12px !important;
+  font-weight: 700 !important;
+}
+
+/* Custom Trigger Button replacing native <select> */
+.modal-picker-trigger {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  min-height: 44px !important;
+  padding: 8px 12px !important;
+  border-radius: 12px !important;
+  border: 1px solid var(--line) !important;
+  background: var(--card) !important;
+  color: var(--ink) !important;
+  font-size: 0.88rem !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  text-align: start !important;
+  transition: all 0.15s ease !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+}
+.modal-picker-trigger:hover {
+  border-color: var(--accent) !important;
+  background: var(--bg2, rgba(0, 0, 0, 0.02)) !important;
+}
+.picker-trigger-val {
+  flex: 1 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+.picker-trigger-arrow {
+  color: var(--muted) !important;
+  font-size: 0.95rem !important;
+  margin-inline-start: 8px !important;
+}
+
+/* Dark mode parity */
+body.dark #customModalPickerDlg.sheet {
+  background: #141a21 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+body.dark .modal-picker-box {
+  background: #141a21 !important;
+  color: #f1f5f9 !important;
+}
+body.dark .modal-picker-item {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #f1f5f9 !important;
+}
+body.dark .modal-picker-item:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: #34d399 !important;
+}
+body.dark .modal-picker-item.selected {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border-color: #34d399 !important;
+}
+body.dark .modal-picker-trigger {
+  background: #19202a !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #f1f5f9 !important;
+}
+body.dark .modal-picker-trigger:hover {
+  border-color: #34d399 !important;
+}
+
 </style>
   </head>
   <body>
@@ -6108,6 +6336,277 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 </script>
 
 <script>
+// --- js/core/modal-picker.js ---
+// foh-opening/js/core/modal-picker.js
+// Custom Modal Picker Bottom Sheet Window replacing native desktop dropdowns
+(function (FOH) {
+  'use strict';
+
+  const $ = (id) => document.getElementById(id);
+  const el = (tag, cls, text) => {
+    const node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  };
+
+  function isAr() {
+    return FOH.i18n && FOH.i18n.lang === 'ar';
+  }
+
+  function ensurePickerModal() {
+    let dlg = $('customModalPickerDlg');
+    if (!dlg) {
+      dlg = document.createElement('dialog');
+      dlg.id = 'customModalPickerDlg';
+      dlg.className = 'sheet modal-picker-sheet';
+      dlg.addEventListener('click', (e) => {
+        if (e.target === dlg) close();
+      });
+      document.body.append(dlg);
+    }
+    return dlg;
+  }
+
+  function close() {
+    const dlg = $('customModalPickerDlg');
+    if (dlg && dlg.open) {
+      dlg.close();
+    }
+  }
+
+  /**
+   * Opens an interactive bottom sheet modal window with rich option cards
+   */
+  function open({ title, subtitle, icon, items = [], current = '', onSelect }) {
+    const ar = isAr();
+    const dlg = ensurePickerModal();
+    dlg.replaceChildren();
+
+    const box = el('div', 'modal-picker-box');
+
+    // 1. Grab Bar
+    const grab = el('div', 'grab');
+
+    // 2. Header
+    const headRow = el('div', 'modal-picker-head');
+    const titleBox = el('div', 'modal-picker-title-box');
+    const h3 = el('h3', 'modal-picker-title');
+    h3.innerHTML = (icon ? `<span class="picker-head-icon">${icon}</span> ` : '') + (title || (ar ? 'اختر من القائمة' : 'Select an Option'));
+    titleBox.append(h3);
+    if (subtitle) {
+      const sub = el('p', 'modal-picker-sub', subtitle);
+      titleBox.append(sub);
+    }
+
+    const closeBtn = el('button', 'modal-picker-close', '✕');
+    closeBtn.type = 'button';
+    closeBtn.setAttribute('aria-label', ar ? 'إغلاق' : 'Close');
+    closeBtn.addEventListener('click', () => close());
+
+    headRow.append(titleBox, closeBtn);
+    box.append(grab, headRow);
+
+    // 3. Normalize items
+    const normalizedItems = items.map((it) => {
+      if (Array.isArray(it)) {
+        return { value: String(it[0]), label: String(it[1]), subtitle: '', icon: '' };
+      }
+      let label = String(it.label || '');
+      let icon = String(it.icon || '');
+      if (icon && label.startsWith(icon)) {
+        label = label.slice(icon.length).trim();
+      } else if (!icon) {
+        const emojiMatch = label.match(/^(\p{Extended_Pictographic}[\uFE0F\u200D\p{Extended_Pictographic}]*|\p{Emoji_Presentation})\s*/u);
+        if (emojiMatch) {
+          icon = emojiMatch[1];
+          label = label.slice(emojiMatch[0].length).trim();
+        }
+      }
+      return { ...it, value: String(it.value), label, icon };
+    });
+
+    const listContainer = el('div', 'modal-picker-list');
+
+    function renderList(listToRender) {
+      listContainer.replaceChildren();
+      if (!listToRender.length) {
+        const empty = el('div', 'modal-picker-empty', ar ? 'لا توجد خيارات مطابقة' : 'No matching options');
+        listContainer.append(empty);
+        return;
+      }
+
+      listToRender.forEach((it) => {
+        const isSelected = String(it.value) === String(current);
+        const card = el('button', 'modal-picker-item' + (isSelected ? ' selected' : ''));
+        card.type = 'button';
+
+        const itemContent = el('div', 'modal-picker-item-content');
+        if (it.icon) {
+          const iconSpan = el('span', 'modal-picker-item-icon', it.icon);
+          itemContent.append(iconSpan);
+        }
+        const textWrapper = el('div', 'modal-picker-item-texts');
+        const mainLabel = el('div', 'modal-picker-item-label', it.label);
+        textWrapper.append(mainLabel);
+        if (it.subtitle) {
+          const subLabel = el('div', 'modal-picker-item-sub', it.subtitle);
+          textWrapper.append(subLabel);
+        }
+        itemContent.append(textWrapper);
+
+        const trailing = el('div', 'modal-picker-item-trailing');
+        if (it.badge) {
+          const b = el('span', 'dayoff-badge ' + (it.badgeClass || 'approved'), it.badge);
+          trailing.append(b);
+        }
+        if (isSelected) {
+          const check = el('span', 'modal-picker-check', '✓');
+          trailing.append(check);
+        }
+
+        card.append(itemContent, trailing);
+
+        card.addEventListener('click', () => {
+          if (navigator.vibrate) {
+            try { navigator.vibrate(10); } catch (e) {}
+          }
+          close();
+          if (onSelect) onSelect(it.value, it);
+        });
+
+        listContainer.append(card);
+      });
+    }
+
+    // Search bar if list is long
+    if (normalizedItems.length > 7) {
+      const searchBox = el('div', 'modal-picker-search-box');
+      const searchIn = el('input', 'in modal-picker-search-input');
+      searchIn.type = 'search';
+      searchIn.placeholder = ar ? '🔍 ابحث في الخيارات...' : '🔍 Search options...';
+      searchIn.addEventListener('input', () => {
+        const q = searchIn.value.trim().toLowerCase();
+        if (!q) {
+          renderList(normalizedItems);
+        } else {
+          const filtered = normalizedItems.filter((it) =>
+            (it.label || '').toLowerCase().includes(q) || (it.subtitle || '').toLowerCase().includes(q)
+          );
+          renderList(filtered);
+        }
+      });
+      searchBox.append(searchIn);
+      box.append(searchBox);
+    }
+
+    renderList(normalizedItems);
+    box.append(listContainer);
+
+    // Cancel Button
+    const bottomRow = el('div', 'modal-picker-bottom');
+    const cancelBtn = el('button', 'btn modal-picker-cancel', ar ? 'إلغاء' : 'Cancel');
+    cancelBtn.type = 'button';
+    cancelBtn.addEventListener('click', () => close());
+    bottomRow.append(cancelBtn);
+    box.append(bottomRow);
+
+    dlg.append(box);
+    dlg.showModal();
+  }
+
+  /**
+   * Enhances any standard <select> element so clicking it opens the Modal Window Picker!
+   */
+  function enhanceSelect(selectEl, customConfig = {}) {
+    if (!selectEl) return null;
+    if (selectEl.dataset.modalPickerEnhanced) {
+      const oldTrigger = selectEl.nextElementSibling;
+      if (oldTrigger && oldTrigger.classList.contains('modal-picker-trigger')) {
+        return oldTrigger;
+      }
+    }
+    selectEl.dataset.modalPickerEnhanced = '1';
+    selectEl.style.display = 'none';
+
+    const trigger = el('button', 'in modal-picker-trigger');
+    trigger.type = 'button';
+    trigger.setAttribute('aria-haspopup', 'dialog');
+
+    const updateTriggerText = () => {
+      const selOpt = selectEl.options[selectEl.selectedIndex];
+      const text = selOpt ? selOpt.textContent : (customConfig.placeholder || 'Select...');
+      trigger.replaceChildren();
+
+      const valWrapper = el('span', 'picker-trigger-val');
+      valWrapper.textContent = text;
+
+      const arrow = el('span', 'picker-trigger-arrow', '▾');
+      trigger.append(valWrapper, arrow);
+    };
+
+    updateTriggerText();
+
+    trigger.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const items = Array.from(selectEl.options).map((opt) => ({
+        value: opt.value,
+        label: opt.textContent,
+        subtitle: opt.dataset.subtitle || '',
+        icon: opt.dataset.icon || '',
+        badge: opt.dataset.badge || '',
+        badgeClass: opt.dataset.badgeClass || '',
+      }));
+
+      let title = customConfig.title;
+      if (!title) {
+        const lbl = selectEl.closest('label');
+        if (lbl) {
+          const firstSpan = lbl.querySelector('span');
+          title = firstSpan ? firstSpan.textContent.replace(/[:：]/g, '').trim() : '';
+        }
+      }
+
+      open({
+        title: title || (isAr() ? 'اختر من القائمة' : 'Select Option'),
+        subtitle: customConfig.subtitle || '',
+        icon: customConfig.icon || '📌',
+        items,
+        current: selectEl.value,
+        onSelect: (val) => {
+          selectEl.value = val;
+          updateTriggerText();
+          selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+          if (customConfig.onSelect) customConfig.onSelect(val);
+        },
+      });
+    });
+
+    selectEl.addEventListener('change', updateTriggerText);
+    selectEl._updatePickerTrigger = updateTriggerText;
+
+    if (window.MutationObserver) {
+      const observer = new MutationObserver(() => updateTriggerText());
+      observer.observe(selectEl, { childList: true, subtree: true });
+    }
+
+    selectEl.parentNode.insertBefore(trigger, selectEl.nextSibling);
+
+    return trigger;
+  }
+
+  FOH.modalPicker = {
+    open,
+    close,
+    enhanceSelect,
+  };
+})(window.FOH = window.FOH || {});
+
+</script>
+
+<script>
 // --- js/domains/inventory/store.js ---
 // Inventory (blind count) data and rules. Kept apart from the checklist so
 // expected quantities are never part of the checklist export.
@@ -7191,6 +7690,12 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     });
     select.value = initial;
     label.append(select);
+    if (FOH.modalPicker && FOH.modalPicker.enhanceSelect) {
+      FOH.modalPicker.enhanceSelect(select, {
+        title: (FOH.i18n && FOH.i18n.t) ? FOH.i18n.t('reminderLead') : 'وقت التنبيه المسبق',
+        icon: '⏰',
+      });
+    }
     const customLabel = el('label', '', t('reminderCustomLabel'));
     const input = el('input', 'in'); input.type = 'number'; input.min = '0'; input.max = '1440'; input.step = '1'; input.inputMode = 'numeric'; input.required = true; input.value = String(owner.remindBefore === null ? 30 : owner.remindBefore);
     customLabel.append(input);
@@ -12373,13 +12878,16 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
     const kindLbl = el('label', '', t('dayOffKindLbl'));
     const kindSel = el('select', 'in');
+    const ar = isAr();
     [
-      ['off', t('dayOffKindOff')],
-      ['comp_off', t('dayOffKindComp')],
-      ['leave', t('dayOffKindLeave')],
-    ].forEach(([v, txt]) => {
-      const o = el('option', '', txt);
+      ['off', t('dayOffKindOff'), ar ? 'اليوم الأسبوعي المعتاد للراحة' : 'Official weekly rest day', '🏖️'],
+      ['comp_off', t('dayOffKindComp'), ar ? 'عطلة تعويضية مقابل ساعات عمل إضافية' : 'In lieu of extra worked hours', '🔄'],
+      ['leave', t('dayOffKindLeave'), ar ? 'طلب إجازة سنوية أو ظرف شخصي' : 'Annual or personal leave request', '🌴'],
+    ].forEach(([v, txt, sub, ic]) => {
+      const o = el('option', '', ic + ' ' + txt);
       o.value = v;
+      o.dataset.subtitle = sub;
+      o.dataset.icon = ic;
       kindSel.append(o);
     });
     kindLbl.append(kindSel);
@@ -12387,14 +12895,59 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
     const dowLbl = el('label', '', t('dayOffPrefDowLbl'));
     const dowSel = el('select', 'in');
+    const dayIcons = ['☀️', '🌙', '⚡', '🌿', '🌤️', '🕌', '⭐'];
     const daysLong = t('daysLong').split(',');
     daysLong.forEach((dName, idx) => {
-      const o = el('option', '', dName);
+      const o = el('option', '', (dayIcons[idx] || '📅') + ' ' + dName);
       o.value = String(idx);
+      o.dataset.icon = dayIcons[idx] || '📅';
       if (idx === 5) o.selected = true;
       dowSel.append(o);
     });
     dowLbl.append(dowSel);
+
+    // Quick Day-of-Week selector chips
+    const dowPillsRow = el('div', 'dow-quick-pills');
+    dowPillsRow.style.display = 'flex';
+    dowPillsRow.style.gap = '4px';
+    dowPillsRow.style.flexWrap = 'wrap';
+    dowPillsRow.style.marginTop = '6px';
+    dowPillsRow.style.marginBottom = '6px';
+
+    const shortDays = (ar ? 'أحد,اثنين,ثلاثاء,أربعاء,خميس,جمعة,سبت' : 'Sun,Mon,Tue,Wed,Thu,Fri,Sat').split(',');
+    shortDays.forEach((sd, idx) => {
+      const isSel = idx === 5;
+      const chip = el('button', 'date-chip' + (isSel ? ' on' : ''), (dayIcons[idx] || '') + ' ' + sd);
+      chip.type = 'button';
+      chip.style.padding = '4px 8px';
+      chip.style.fontSize = '0.74rem';
+      chip.addEventListener('click', () => {
+        dowPillsRow.querySelectorAll('.date-chip').forEach(c => c.classList.remove('on'));
+        chip.classList.add('on');
+        dowSel.value = String(idx);
+        dowSel.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+      dowPillsRow.append(chip);
+    });
+    dowSel.addEventListener('change', () => {
+      dowPillsRow.querySelectorAll('.date-chip').forEach((c, idx) => {
+        c.classList.toggle('on', String(idx) === String(dowSel.value));
+      });
+    });
+    dowLbl.append(dowPillsRow);
+
+    if (FOH.modalPicker && FOH.modalPicker.enhanceSelect) {
+      FOH.modalPicker.enhanceSelect(kindSel, {
+        title: ar ? 'اختر نوع طلب العطلة' : 'Select Request Type',
+        subtitle: ar ? 'حدد طبيعة العطلة المطلوبة لتثبيتها في الجدول' : 'Select category to sync with OpsFlow Schedule',
+        icon: '🏖️',
+      });
+      FOH.modalPicker.enhanceSelect(dowSel, {
+        title: ar ? 'اختر يوم العطلة الأسبوعي المفضل' : 'Select Preferred Off Day',
+        subtitle: ar ? 'اليوم المفضل لك للاستراحة الأسبوعية' : 'Your preferred weekly rest day',
+        icon: '🗓️',
+      });
+    }
 
     const reasonIn = el('input', 'in');
     reasonIn.placeholder = t('dayOffReasonPlaceholder');
@@ -13327,7 +13880,10 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       });
     }
     populateSectionsForSheet(sheetSel.value);
-    sheetSel.addEventListener('change', () => populateSectionsForSheet(sheetSel.value));
+    sheetSel.addEventListener('change', () => {
+      populateSectionsForSheet(sheetSel.value);
+      secSel.dispatchEvent(new Event('change', { bubbles: true }));
+    });
 
     rowSheet.append(sheetLbl, secLbl);
     box.append(rowSheet);
@@ -13403,12 +13959,20 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       const map = { sara: 'super_waiter', maher: 'super_bartender', ali: 'super_captain', fadi: 'super_manager' };
       if (empSel.value && map[empSel.value]) {
         roleSel.value = map[empSel.value];
+        roleSel.dispatchEvent(new Event('change', { bubbles: true }));
       }
     });
     empLbl.append(empSel);
 
     rowAssign.append(roleLbl, empLbl);
     box.append(rowAssign);
+
+    if (FOH.modalPicker && FOH.modalPicker.enhanceSelect) {
+      FOH.modalPicker.enhanceSelect(sheetSel, { title: ar ? 'الشيت المستهدف' : 'Target Shift Sheet', icon: '📋' });
+      FOH.modalPicker.enhanceSelect(secSel, { title: ar ? 'القسم الفرعي' : 'Target Section', icon: '📂' });
+      FOH.modalPicker.enhanceSelect(roleSel, { title: ar ? 'المنصب التشغيلي (Position)' : 'Position (Role)', icon: '🪪' });
+      FOH.modalPicker.enhanceSelect(empSel, { title: ar ? 'الموظف المسؤول' : 'Assignee Staff', icon: '👤' });
+    }
 
     // 5. Actions
     const acts = el('div', 'sheet-actions');
@@ -14964,10 +15528,14 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     row2.style.marginTop = '8px';
     const destLbl = el('label', '', ar ? 'إرسال إلى (Send to)' : 'Send to');
     const destSel = el('select', 'in');
-    ['Store', 'Purchasing', 'Manager'].forEach((v) => {
-      const o = el('option', '', v);
-      o.value = v;
-      o.selected = m.destination === v;
+    [
+      { value: 'Store', label: ar ? '📦 المستودع (Store)' : '📦 Store Warehouse' },
+      { value: 'Purchasing', label: ar ? '🛒 المشتريات (Purchasing)' : '🛒 Purchasing' },
+      { value: 'Manager', label: ar ? '👑 الإدارة (Manager)' : '👑 Manager' },
+    ].forEach((it) => {
+      const o = el('option', '', it.label);
+      o.value = it.value;
+      o.selected = m.destination === it.value;
       destSel.append(o);
     });
     destSel.addEventListener('change', () => {
@@ -14978,12 +15546,19 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
     const prioLbl = el('label', '', ar ? 'الأولوية (Priority)' : 'Priority');
     const prioSel = el('select', 'in');
-    ['Normal', 'Urgent'].forEach((v) => {
-      const o = el('option', '', v);
-      o.value = v;
-      o.selected = m.priority === v;
+    [
+      { value: 'Normal', label: ar ? '🟢 عادي (Normal)' : '🟢 Normal' },
+      { value: 'Urgent', label: ar ? '🔴 عاجل (Urgent)' : '🔴 Urgent' },
+    ].forEach((it) => {
+      const o = el('option', '', it.label);
+      o.value = it.value;
+      o.selected = m.priority === it.value;
       prioSel.append(o);
     });
+    if (FOH.modalPicker && FOH.modalPicker.enhanceSelect) {
+      FOH.modalPicker.enhanceSelect(destSel, { title: ar ? 'وجهة الطلبية' : 'Order Destination', icon: '📦' });
+      FOH.modalPicker.enhanceSelect(prioSel, { title: ar ? 'أولوية الطلبية' : 'Order Priority', icon: '⚡' });
+    }
     prioSel.addEventListener('change', () => {
       m.priority = prioSel.value;
       saveOrdersDB();
@@ -15729,6 +16304,17 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       kindSel.append(o);
     });
     kindLbl.append(kindSel);
+
+    if (FOH.modalPicker && FOH.modalPicker.enhanceSelect) {
+      FOH.modalPicker.enhanceSelect(secSel, {
+        title: ar ? 'اختر القسم المقترح' : 'Select Target Section',
+        icon: '📂',
+      });
+      FOH.modalPicker.enhanceSelect(kindSel, {
+        title: ar ? 'اختر نوع الاقتراح' : 'Select Suggestion Type',
+        icon: '💡',
+      });
+    }
 
     const txtArLbl = el('label', '', ar ? 'نص المهمة المقترحة / التعديل (عربي أو إنجليزي)' : 'Suggested Task / Change Text');
     const txtArIn = el('textarea', 'in');
@@ -17240,6 +17826,13 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
         FOH.app.render();
       });
 
+      if (FOH.modalPicker && FOH.modalPicker.enhanceSelect) {
+        FOH.modalPicker.enhanceSelect(sel, {
+          title: ar ? 'تغيير منصب الموظف' : 'Change Staff Role',
+          subtitle: ar ? ('اختر المنصب الجديد لـ ' + fullLabel) : ('Select role for ' + fullLabel),
+          icon: '👑',
+        });
+      }
       row.append(el('b', '', '👤 ' + fullLabel), sel);
       assignBox.append(row);
     });
@@ -17586,6 +18179,13 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
         selectedTipsUser = empSel.value;
         renderTipsView(root);
       });
+      if (FOH.modalPicker && FOH.modalPicker.enhanceSelect) {
+        FOH.modalPicker.enhanceSelect(empSel, {
+          title: ar ? 'عرض تبس الموظف' : 'Select Staff Tips View',
+          subtitle: ar ? 'اختر الموظف لعرض حصته وسجل إكرامياته' : 'Select employee to view tips allocation',
+          icon: '💰',
+        });
+      }
       const cfgBtn = el('button', 'snooze-btn', ar ? '⚙️ إعدادات ظهور التبس' : '⚙️ Visibility Settings');
       cfgBtn.type = 'button';
       cfgBtn.addEventListener('click', () => {
@@ -18102,6 +18702,14 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
       pickerBox.append(pickerHead, sel);
       hcCard.append(pickerBox);
+
+      if (FOH.modalPicker && FOH.modalPicker.enhanceSelect) {
+        FOH.modalPicker.enhanceSelect(sel, {
+          title: ar ? 'اختيار الموظف لتدقيق وتحديث الشهادة' : 'Select Employee to View & Update Certificate',
+          subtitle: ar ? 'اختر موظفاً من طاقم المطعم لمراجعة شهادته الصحية وتعديل تاريخها' : 'Choose staff member to inspect and update certificate',
+          icon: '👥',
+        });
+      }
     }
 
     const days = staffRec ? calcDaysLeft(staffRec.healthCertExpiry) : null;
@@ -18156,6 +18764,13 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       leadSel.append(o);
     });
     leadLbl.append(leadSel);
+    if (FOH.modalPicker && FOH.modalPicker.enhanceSelect) {
+      FOH.modalPicker.enhanceSelect(leadSel, {
+        title: ar ? 'التنبيه المسبق قبل الانتهاء بـ' : 'Alert Me Before Expiry By',
+        subtitle: ar ? 'تحديد فترة الإشعار الاستباقي قبل تاريخ انتهاء الشهادة' : 'Lead time notification before certificate expires',
+        icon: '⏰',
+      });
+    }
 
     if (!isMgr) {
       noIn.disabled = true;

@@ -196,6 +196,16 @@
     const list = el('ol', 'items');
     sec.items.forEach((item) => {
       if (st.editing) return list.append(editRow(item, nums, 0));
+      if (item.scheduleDate && !item.isRecurring && item.scheduleDate !== st.date) return;
+      if (item.isRecurring && item.recurrence) {
+        if (item.recurrence.start && st.date < item.recurrence.start) return;
+        if (item.recurrence.endDate && st.date > item.recurrence.endDate) return;
+        const ev = item.recurrence.every || 1;
+        if (ev > 1 && FOH.schedule && FOH.schedule.diffDays) {
+          const diff = FOH.schedule.diffDays(st.date, item.recurrence.start || st.date);
+          if (diff < 0 || (diff % ev !== 0)) return;
+        }
+      }
       const done = M.progress(M.leaves(item), st.run.checked).complete;
       if (onlyLeft && done) return;
       list.append(M.isParent(item) ? runParent(item, nums, onlyLeft) : runLeaf(item, nums.get(item.id), 'item'));
