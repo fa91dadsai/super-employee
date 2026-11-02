@@ -244,7 +244,7 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: var(--a
 .ck:checked { background: var(--accent); border-color: var(--accent); transform: scale(1.06); }
 .ck:checked::after { content: '✓'; color: #fff; font-size: 0.85rem; font-weight: 800; }
 .ck:focus-visible { box-shadow: 0 0 0 3px #e2efea; }
-.done > .row .t { color: #9aa0a8; text-decoration: line-through; text-decoration-color: #c3c7cd; }
+.done > .row .t { color: var(--ink); text-decoration: none !important; opacity: 0.9; font-weight: 550; }
 .due, .stamp, .cnt {
   display: inline-block;
   margin-inline-start: 6px;

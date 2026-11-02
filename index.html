@@ -261,7 +261,7 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: var(--a
 .ck:checked { background: var(--accent); border-color: var(--accent); transform: scale(1.06); }
 .ck:checked::after { content: '✓'; color: #fff; font-size: 0.85rem; font-weight: 800; }
 .ck:focus-visible { box-shadow: 0 0 0 3px #e2efea; }
-.done > .row .t { color: #9aa0a8; text-decoration: line-through; text-decoration-color: #c3c7cd; }
+.done > .row .t { color: var(--ink); text-decoration: none !important; opacity: 0.9; font-weight: 550; }
 .due, .stamp, .cnt {
   display: inline-block;
   margin-inline-start: 6px;
@@ -4214,6 +4214,199 @@ body.dark .modal-picker-trigger:hover {
   border-color: #34d399 !important;
 }
 
+/* ============================================================================
+   SUPER EMPLOYEE v20: EXECUTIVE SECTION HEADER & NO-STRIKETHROUGH POLICY
+   ============================================================================ */
+
+/* 1. Never strike through completed task text */
+.done > .row .t,
+.item.done .t,
+.task-item.done .task-title,
+.done .tx .t,
+.done .t {
+  text-decoration: none !important;
+  color: var(--ink) !important;
+  opacity: 0.92 !important;
+  font-weight: 550 !important;
+}
+body.dark .done > .row .t,
+body.dark .item.done .t,
+body.dark .task-item.done .task-title,
+body.dark .done .tx .t,
+body.dark .done .t {
+  color: #f1f5f9 !important;
+}
+
+/* Subtle completed row background with emerald hint */
+.item.done {
+  background: rgba(16, 185, 129, 0.04) !important;
+}
+body.dark .item.done {
+  background: rgba(16, 185, 129, 0.08) !important;
+}
+
+/* 2. Executive Section Card Header Architecture */
+.card .head {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  padding: 14px 16px 12px !important;
+  background: var(--card) !important;
+  border-bottom: 1px solid var(--line) !important;
+}
+
+.card .head-main-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  width: 100% !important;
+}
+
+.card .head .nm {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  text-align: start !important;
+  cursor: pointer !important;
+}
+
+.card .head .ico {
+  flex: 0 0 42px !important;
+  width: 42px !important;
+  height: 42px !important;
+  border-radius: 12px !important;
+  display: grid !important;
+  place-items: center !important;
+  font-size: 1.3rem !important;
+  background: color-mix(in srgb, var(--c, var(--accent)) 15%, var(--bg)) !important;
+  border: 1px solid color-mix(in srgb, var(--c, var(--accent)) 25%, transparent) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+}
+
+.card .head .nm-t {
+  font-size: 1.05rem !important;
+  font-weight: 800 !important;
+  line-height: 1.35 !important;
+  color: var(--ink) !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+}
+
+.card .head .ct {
+  flex: 0 0 auto !important;
+  font-size: 0.84rem !important;
+  font-weight: 800 !important;
+  padding: 4px 12px !important;
+  border-radius: 99px !important;
+  background: var(--bg2, rgba(0, 0, 0, 0.04)) !important;
+  border: 1px solid var(--line) !important;
+  color: var(--ink) !important;
+  white-space: nowrap !important;
+}
+.complete .card .head .ct,
+.card.complete .head .ct {
+  background: rgba(16, 185, 129, 0.12) !important;
+  border-color: #34d399 !important;
+  color: #059669 !important;
+}
+body.dark .card.complete .head .ct {
+  color: #34d399 !important;
+}
+
+/* Action sub-row inside section header */
+.card .head-meta-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  width: 100% !important;
+  padding-inline-start: 54px !important;
+}
+.card .head-meta-row:empty {
+  display: none !important;
+}
+
+.sec-claim-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  min-height: 32px !important;
+  padding: 4px 12px !important;
+  border-radius: 99px !important;
+  border: 1px solid var(--line) !important;
+  background: var(--bg) !important;
+  font-size: 0.78rem !important;
+  font-weight: 700 !important;
+  color: var(--ink) !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+.sec-claim-btn:hover {
+  border-color: var(--accent) !important;
+  color: var(--accent) !important;
+  background: var(--card) !important;
+}
+.sec-claim-btn.claimed {
+  background: rgba(16, 185, 129, 0.12) !important;
+  border-color: #34d399 !important;
+  color: #059669 !important;
+}
+body.dark .sec-claim-btn.claimed {
+  color: #34d399 !important;
+}
+
+/* 3. Filter Bar Upgrade */
+.filter {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  padding: 8px 12px 12px !important;
+  margin-bottom: 4px !important;
+}
+#doneOf {
+  font-size: 0.85rem !important;
+  font-weight: 800 !important;
+  color: var(--ink) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+.filter .seg {
+  display: inline-flex !important;
+  padding: 3px !important;
+  border-radius: 12px !important;
+  background: var(--card) !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+}
+.filter .seg button {
+  min-height: 32px !important;
+  padding: 0 14px !important;
+  border-radius: 9px !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: var(--muted) !important;
+  font-size: 0.8rem !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+.filter .seg button.on {
+  background: var(--accent) !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3) !important;
+}
+body.dark .filter .seg button.on {
+  color: #041612 !important;
+}
+
 </style>
   </head>
   <body>
@@ -7279,10 +7472,14 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       h.append(ico, btn('nm', sectionName(section), 's-rename', { sid: section.id }), more);
       return h;
     }
+    const mainRow = el('div', 'head-main-row');
     const toggle = btn('nm', '', 'collapse', { sid: section.id });
     toggle.append(ico, el('span', 'nm-t', sectionName(section)));
     toggle.setAttribute('aria-expanded', String(!S().collapsed.has(section.id)));
-    h.append(toggle, el('span', 'ct', p.done + ' / ' + p.total));
+    mainRow.append(toggle, el('span', 'ct', p.done + ' / ' + p.total));
+
+    const metaRow = el('div', 'head-meta-row');
+    h.append(mainRow, metaRow);
     return h;
   }
 
@@ -7354,7 +7551,13 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
   function chips(root) {
     root.replaceChildren();
-    FOH.preview.sections().forEach((sec) => {
+    const secs = FOH.preview.sections();
+    if (secs.length <= 1) {
+      root.hidden = true;
+      return;
+    }
+    root.hidden = false;
+    secs.forEach((sec) => {
       const p = M.progress(M.sectionLeaves(sec), S().run.checked);
       const c = btn('chip', '', 'jump', { sid: sec.id });
       c.classList.toggle('on', S().activeSection === sec.id);
@@ -12337,9 +12540,14 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
         FOH.app.render();
       });
 
-      const ct = head.querySelector('.ct');
-      if (ct) head.insertBefore(b, ct);
-      else head.append(b);
+      const metaRow = head.querySelector('.head-meta-row');
+      if (metaRow) {
+        metaRow.append(b);
+      } else {
+        const ct = head.querySelector('.ct');
+        if (ct) head.insertBefore(b, ct);
+        else head.append(b);
+      }
     });
   }
 
@@ -22090,8 +22298,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     if (FOH.batchTally) FOH.batchTally.injectBatchCounter(el);
   }
 
-  function buildDayOffSection(el) {
-    if (FOH.dayOff) FOH.dayOff.buildDayOffSection(el);
+  function buildDayOffSection(inDialog) {
+    return FOH.dayOff ? FOH.dayOff.buildDayOffSection(inDialog) : null;
   }
 
   function renderOrdersView(el) {
@@ -22207,7 +22415,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       renderSignoffCard();
       updateOrderBadge();
       if (!S.editing && S.view === 'mine' && $('mine') && !$('mine').querySelector('.dayoff-form')) {
-        $('mine').append(buildDayOffSection(false));
+        const sec = buildDayOffSection(false);
+        if (sec) $('mine').append(sec);
       }
       if (!S.editing && S.view === 'orders' && $('ordersView')) {
         renderOrdersView($('ordersView'));
@@ -22222,6 +22431,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
         const cb = ev.target;
         if (cb.type !== 'checkbox') return;
         const myName = (session && session.displayName) || S.me.name || 'Staff';
+        const sheetType = getSheetType();
         if (cb.dataset.id) {
           if (FOH.cloudRealtime && FOH.cloudRealtime.broadcast) {
             FOH.cloudRealtime.broadcast('TASK_TICKED', {

@@ -75,8 +75,8 @@
     if (FOH.batchTally) FOH.batchTally.injectBatchCounter(el);
   }
 
-  function buildDayOffSection(el) {
-    if (FOH.dayOff) FOH.dayOff.buildDayOffSection(el);
+  function buildDayOffSection(inDialog) {
+    return FOH.dayOff ? FOH.dayOff.buildDayOffSection(inDialog) : null;
   }
 
   function renderOrdersView(el) {
@@ -192,7 +192,8 @@
       renderSignoffCard();
       updateOrderBadge();
       if (!S.editing && S.view === 'mine' && $('mine') && !$('mine').querySelector('.dayoff-form')) {
-        $('mine').append(buildDayOffSection(false));
+        const sec = buildDayOffSection(false);
+        if (sec) $('mine').append(sec);
       }
       if (!S.editing && S.view === 'orders' && $('ordersView')) {
         renderOrdersView($('ordersView'));
@@ -207,6 +208,7 @@
         const cb = ev.target;
         if (cb.type !== 'checkbox') return;
         const myName = (session && session.displayName) || S.me.name || 'Staff';
+        const sheetType = getSheetType();
         if (cb.dataset.id) {
           if (FOH.cloudRealtime && FOH.cloudRealtime.broadcast) {
             FOH.cloudRealtime.broadcast('TASK_TICKED', {

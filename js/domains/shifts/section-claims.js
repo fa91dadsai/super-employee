@@ -84,9 +84,14 @@
         FOH.app.render();
       });
 
-      const ct = head.querySelector('.ct');
-      if (ct) head.insertBefore(b, ct);
-      else head.append(b);
+      const metaRow = head.querySelector('.head-meta-row');
+      if (metaRow) {
+        metaRow.append(b);
+      } else {
+        const ct = head.querySelector('.ct');
+        if (ct) head.insertBefore(b, ct);
+        else head.append(b);
+      }
     });
   }
 

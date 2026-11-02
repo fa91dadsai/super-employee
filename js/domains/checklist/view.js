@@ -156,10 +156,14 @@
       h.append(ico, btn('nm', sectionName(section), 's-rename', { sid: section.id }), more);
       return h;
     }
+    const mainRow = el('div', 'head-main-row');
     const toggle = btn('nm', '', 'collapse', { sid: section.id });
     toggle.append(ico, el('span', 'nm-t', sectionName(section)));
     toggle.setAttribute('aria-expanded', String(!S().collapsed.has(section.id)));
-    h.append(toggle, el('span', 'ct', p.done + ' / ' + p.total));
+    mainRow.append(toggle, el('span', 'ct', p.done + ' / ' + p.total));
+
+    const metaRow = el('div', 'head-meta-row');
+    h.append(mainRow, metaRow);
     return h;
   }
 
@@ -231,7 +235,13 @@
 
   function chips(root) {
     root.replaceChildren();
-    FOH.preview.sections().forEach((sec) => {
+    const secs = FOH.preview.sections();
+    if (secs.length <= 1) {
+      root.hidden = true;
+      return;
+    }
+    root.hidden = false;
+    secs.forEach((sec) => {
       const p = M.progress(M.sectionLeaves(sec), S().run.checked);
       const c = btn('chip', '', 'jump', { sid: sec.id });
       c.classList.toggle('on', S().activeSection === sec.id);

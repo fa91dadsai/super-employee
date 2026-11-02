@@ -179,21 +179,27 @@
     S().tpl.tasks.filter(isMine).forEach((tk) =>
       SC.upcoming(tk, S().log, S().date, today, 7, 7).forEach((d) => next.push({ d, tk }))
     );
-    if (!next.length) return;
-    next.sort((a, b) => a.d.localeCompare(b.d) || a.tk.time.localeCompare(b.tk.time));
-    const up = card('', '📅', t('comingUp'));
-    const ul = el('ol', 'items');
-    next.forEach(({ d, tk }) => {
-      const li = el('li', 'item up');
-      const day = el('span', 'd', dayNames()[SC.weekday(d)]);
-      day.append(el('b', '', String(Number(d.slice(8)))));
-      const tags = el('span', 'tags');
-      tags.append(el('span', 'tag time', tk.time));
-      li.append(day, el('span', 'up-t', tk.icon + ' ' + taskName(tk)), tags);
-      ul.append(li);
-    });
-    up.append(ul, el('p', 'note', t('movesNote')));
-    root.append(up);
+    if (next.length) {
+      next.sort((a, b) => a.d.localeCompare(b.d) || a.tk.time.localeCompare(b.tk.time));
+      const up = card('', '📅', t('comingUp'));
+      const ul = el('ol', 'items');
+      next.forEach(({ d, tk }) => {
+        const li = el('li', 'item up');
+        const day = el('span', 'd', dayNames()[SC.weekday(d)]);
+        day.append(el('b', '', String(Number(d.slice(8)))));
+        const tags = el('span', 'tags');
+        tags.append(el('span', 'tag time', tk.time));
+        li.append(day, el('span', 'up-t', tk.icon + ' ' + taskName(tk)), tags);
+        ul.append(li);
+      });
+      up.append(ul, el('p', 'note', t('movesNote')));
+      root.append(up);
+    }
+
+    // Always append Day-Off & Leave Card to My Tasks
+    if (FOH.dayOff && FOH.dayOff.buildDayOffSection) {
+      root.append(FOH.dayOff.buildDayOffSection(false));
+    }
   }
 
   // Edit mode, "Scheduled" tab: week grid + list of tasks.
