@@ -14783,9 +14783,17 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     const isMgr = !!(sess && sess.isManager);
     let actionBtn;
     if (isMgr) {
-      actionBtn = el('button', 'snooze-btn done-now', ar ? '📅 تحديث التاريخ (مدير)' : '📅 Update Expiry (Manager)');
+      const targetName = (top.staff && top.staff.name) || '';
+      actionBtn = el(
+        'button',
+        'snooze-btn done-now',
+        ar ? (targetName ? '📅 تحديث شهادة (' + targetName + ')' : '📅 تحديث الشهادة (مدير)') : (targetName ? '📅 Update (' + targetName + ')' : '📅 Update Expiry (Manager)')
+      );
       actionBtn.type = 'button';
       actionBtn.addEventListener('click', () => {
+        if (top.staff && top.staff.id) {
+          S.selectedHealthStaffId = top.staff.id;
+        }
         S.view = 'profile';
         FOH.app.render();
       });
@@ -17404,7 +17412,6 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   const S = FOH.state;
   const { t } = FOH.i18n;
   const { el } = FOH.view;
-  const SESSION_KEY = 'foh-opening.erpSession.v1';
 
   function isAr() {
     return FOH.i18n.lang === 'ar';
@@ -17434,13 +17441,67 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     const sess = getSession();
     const isMgr = !!(sess && sess.isManager);
     ensureStaffHealthAndPerms();
-    const staffRec = (S.tpl.staff || []).find(
-      (p) => p.id === (sess && sess.staffId) || (p.name || '').toLowerCase().startsWith(((sess && sess.username) || 'fadi').toLowerCase())
-    ) || S.tpl.staff[0];
+
+    // In manager mode, allow selecting any staff member to view and update their certificate
+    let selectedId = (isMgr && S.selectedHealthStaffId) ? S.selectedHealthStaffId : (sess && sess.staffId);
+    let staffRec = (S.tpl.staff || []).find((p) => p.id === selectedId) ||
+      (S.tpl.staff || []).find((p) => (p.name || '').toLowerCase().startsWith(((sess && sess.username) || 'fadi').toLowerCase())) ||
+      (S.tpl.staff && S.tpl.staff[0]);
 
     const hcCard = el('section', 'card');
     hcCard.style.padding = '16px';
     hcCard.style.border = '1.5px solid var(--accent)';
+
+    // Manager Staff Selector: allows General Manager to inspect & update ANY staff certificate with 1 tap
+    if (isMgr && Array.isArray(S.tpl.staff) && S.tpl.staff.length > 0) {
+      const pickerBox = el('div', 'hc-staff-picker-box');
+      pickerBox.style.background = 'var(--bg2, rgba(0, 0, 0, 0.04))';
+      pickerBox.style.border = '1px solid var(--line)';
+      pickerBox.style.borderRadius = '12px';
+      pickerBox.style.padding = '10px 12px';
+      pickerBox.style.marginBottom = '14px';
+
+      const pickerHead = el('div', '');
+      pickerHead.style.display = 'flex';
+      pickerHead.style.justifyContent = 'space-between';
+      pickerHead.style.alignItems = 'center';
+      pickerHead.style.marginBottom = '6px';
+      pickerHead.innerHTML =
+        '<span style="font-size:0.82rem;font-weight:700;">👥 ' +
+        (ar ? 'اختيار الموظف لتدقيق وتحديث شهادته الصحية:' : 'Select Employee to View & Update Certificate:') +
+        '</span>';
+
+      const sel = el('select', 'in');
+      sel.style.fontWeight = '600';
+      (S.tpl.staff || []).forEach((st) => {
+        const d = calcDaysLeft(st.healthCertExpiry);
+        const tag = d === null
+          ? ''
+          : d < 0
+          ? (ar ? ` [🚨 منتهية (${st.healthCertExpiry})]` : ` [🚨 Expired (${st.healthCertExpiry})]`)
+          : d <= 30
+          ? (ar ? ` [⚠️ تنتهي قريباً (${st.healthCertExpiry})]` : ` [⚠️ Expiring soon (${st.healthCertExpiry})]`)
+          : (ar ? ` [✓ سارية (${st.healthCertExpiry})]` : ` [✓ Valid (${st.healthCertExpiry})]`);
+
+        const isMeTag = sess && (st.id === sess.staffId || (st.name || '').toLowerCase().startsWith((sess.username || '').toLowerCase()))
+          ? (ar ? ' (حسابي الحالي)' : ' (My Profile)')
+          : '';
+
+        const opt = el('option', '', `${st.name}${isMeTag}${tag}`);
+        opt.value = st.id;
+        opt.selected = st.id === (staffRec && staffRec.id);
+        sel.append(opt);
+      });
+
+      sel.addEventListener('change', () => {
+        S.selectedHealthStaffId = sel.value;
+        renderProfilePageView(root);
+      });
+
+      pickerBox.append(pickerHead, sel);
+      hcCard.append(pickerBox);
+    }
+
     const days = staffRec ? calcDaysLeft(staffRec.healthCertExpiry) : null;
     const statusBadge = days === null
       ? (ar ? '⚪ لم يتم إدخال تاريخ الانتهاء' : '⚪ Expiry date not set')
@@ -17450,22 +17511,30 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       ? (ar ? '⚠️ قاربت على الانتهاء · متبقي ' + days + ' يوم' : '⚠️ Expiring soon · ' + days + ' days left')
       : (ar ? '✅ صالحة · متبقي ' + days + ' يوم' : '✅ Valid · ' + days + ' days remaining');
 
-    hcCard.innerHTML =
-      '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">' +
-      '<h3 style="margin:0;">🏥 ' + (ar ? 'الشهادة الصحية وتنبيه الانتهاء (Health Certificate)' : 'Health Certificate & Expiry Alert') + '</h3>' +
-      '<span class="dayoff-badge ' + (days !== null && days < 0 ? 'rejected' : days !== null && days <= 30 ? 'pending' : 'approved') + '">' + statusBadge + '</span>' +
-      '</div>';
+    const topHeader = el('div', '');
+    topHeader.style.display = 'flex';
+    topHeader.style.justifyContent = 'space-between';
+    topHeader.style.alignItems = 'center';
+    topHeader.style.flexWrap = 'wrap';
+    topHeader.style.gap = '8px';
+    topHeader.style.marginBottom = '12px';
+    topHeader.innerHTML =
+      '<h3 style="margin:0;">🏥 ' +
+      (ar ? 'الشهادة الصحية وتنبيه الانتهاء (' + (staffRec ? staffRec.name : '') + ')' : 'Health Certificate: ' + (staffRec ? staffRec.name : '')) +
+      '</h3>' +
+      '<span class="dayoff-badge ' + (days !== null && days < 0 ? 'rejected' : days !== null && days <= 30 ? 'pending' : 'approved') + '">' + statusBadge + '</span>';
+    hcCard.append(topHeader);
 
     const row = el('div', 'two');
     const noLbl = el('label', '', ar ? 'رقم الشهادة الصحية' : 'Certificate Number');
     const noIn = el('input', 'in');
-    noIn.value = (staffRec && staffRec.healthCertNo) || 'HC-2026-101';
+    noIn.value = (staffRec && staffRec.healthCertNo) || '';
     noLbl.append(noIn);
 
     const expLbl = el('label', '', ar ? 'تاريخ انتهاء الشهادة الصحية' : 'Expiry Date');
     const expIn = el('input', 'in');
     expIn.type = 'date';
-    expIn.value = (staffRec && staffRec.healthCertExpiry) || '2027-06-30';
+    expIn.value = (staffRec && staffRec.healthCertExpiry) || '';
     expLbl.append(expIn);
     row.append(noLbl, expLbl);
 
@@ -17554,7 +17623,9 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
         '👑 <b>' +
         (ar ? 'بصلاحية المدير العام:' : 'Super Manager Permission:') +
         '</b> ' +
-        (ar ? 'يمكنك تدقيق وتعديل تاريخ انتهاء الشهادة الصحية بعد فحص الشهادة الورقية/الرسمية.' : 'You can inspect and update health certificate expiry dates.');
+        (ar
+          ? 'يمكنك تدقيق وتعديل تاريخ انتهاء الشهادة الصحية للموظف (' + (staffRec ? staffRec.name : '') + ') بعد فحص الشهادة الورقية/الرسمية.'
+          : 'You can inspect and update health certificate expiry dates for (' + (staffRec ? staffRec.name : '') + ').');
 
       const saveHcBtn = el('button', 'btn primary', ar ? '💾 حفظ بيانات الشهادة الصحية وتفعيل التنبيه (كمدير)' : '💾 Save Health Certificate (Manager)');
       saveHcBtn.type = 'button';
@@ -17567,7 +17638,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
           staffRec.healthCertRemindDays = Number(leadSel.value) || 30;
           FOH.store.saveTemplate(S.tpl);
         }
-        FOH.edit.toast(ar ? 'تم حفظ بيانات الشهادة الصحية وتحديث التنبيهات ✓' : 'Health certificate saved ✓');
+        FOH.edit.toast(ar ? 'تم حفظ بيانات الشهادة الصحية للموظف وتحديث التنبيهات ✓' : 'Health certificate saved ✓');
         FOH.app.render();
       });
 
@@ -17591,9 +17662,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     }
   }
 
-
-
-  FOH.healthProfileView = {
+  FOH.healthProfile = {
     renderProfilePageView,
   };
 })(window.FOH = window.FOH || {});
@@ -18863,9 +18932,19 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
           const isMgr = getCurrentSuperRoleKey() === 'super_manager';
           let actionBtn;
           if (isMgr) {
-            actionBtn = el('button', 'snooze-btn done-now', ar ? '📅 تحديث التاريخ (مدير)' : '📅 Update Expiry (Manager)');
+            const alerts = getHealthAlerts();
+            const top = alerts && alerts[0];
+            const targetName = (top && top.staff && top.staff.name) || '';
+            actionBtn = el(
+              'button',
+              'snooze-btn done-now',
+              ar ? (targetName ? '📅 تحديث شهادة (' + targetName + ')' : '📅 تحديث الشهادة (مدير)') : (targetName ? '📅 Update (' + targetName + ')' : '📅 Update Expiry (Manager)')
+            );
             actionBtn.type = 'button';
             actionBtn.addEventListener('click', () => {
+              if (top && top.staff && top.staff.id) {
+                S.selectedHealthStaffId = top.staff.id;
+              }
               S.view = 'profile';
               FOH.app.render();
             });
