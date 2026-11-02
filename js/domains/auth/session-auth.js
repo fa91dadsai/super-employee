@@ -508,35 +508,6 @@
       /* Fallback to local Oasis verification when offline */
     }
 
-    // 2. Match against Oasis Staff Directory (or custom saved password)
-    const savedPassKey = 'foh-opening.pass.' + cleanUser;
-    const customPass = localStorage.getItem(savedPassKey);
-    const demo = DEMO_ACCOUNTS.find((d) => d.username === cleanUser);
-    if (demo && (pass === (customPass || demo.pass) || pass === '1234')) {
-      const savedProf = FOH.safeJsonParse(localStorage.getItem('foh-opening.prof.' + cleanUser), '{}');
-      const nextSess = {
-        username: demo.username,
-        email,
-        accessToken: null,
-        cloudConnected: false,
-        firstName: savedProf.firstName || demo.firstName,
-        lastName: savedProf.lastName || demo.lastName,
-        displayName: savedProf.displayName || (FOH.i18n.lang === 'ar' ? demo.displayNameAr : demo.displayName),
-        roleName: demo.roleName,
-        roleAr: demo.roleAr,
-        isManager: demo.isManager,
-        shift: demo.shift,
-        locker: demo.locker,
-        uniform: demo.uniform,
-        healthCert: demo.healthCert,
-        tenantSlug: TENANT_SLUG,
-        tenantName: TENANT_NAME,
-      };
-      bindSessionToStaff(nextSess);
-      saveSession(nextSess, remember);
-      return nextSess;
-    }
-
     throw new Error(t('loginInvalid'));
   }
 
