@@ -205,6 +205,9 @@
       /* language just won't be remembered */
     }
     apply();
+    if (FOH.app && typeof FOH.app.render === 'function') {
+      FOH.app.render();
+    }
   }
 
   // Lets other files add their own strings: extend({ en: {...}, ar: {...} }).

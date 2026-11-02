@@ -3231,17 +3231,79 @@ main#appMain > .health-banner .snooze-btn {
   justify-content: space-between !important;
   gap: 8px !important;
   width: 100% !important;
-  font-size: 0.74rem !important;
-  color: var(--ink2) !important;
+  flex-wrap: wrap !important;
+}
+.shift-nav-head-left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  flex-wrap: wrap !important;
+}
+.shift-clock-chip {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  padding: 3px 9px !important;
+  border-radius: 99px !important;
+  background: var(--bg2, rgba(0, 0, 0, 0.05)) !important;
+  border: 1px solid var(--line) !important;
+  font-size: 0.72rem !important;
   font-weight: 700 !important;
+  color: var(--ink) !important;
+  line-height: 1.2 !important;
+}
+.shift-status-chip {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  padding: 3px 9px !important;
+  border-radius: 99px !important;
+  background: rgba(16, 185, 129, 0.12) !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+  font-size: 0.72rem !important;
+  color: #065f46 !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+}
+body.dark .shift-status-chip {
+  background: rgba(16, 185, 129, 0.18) !important;
+  border-color: rgba(16, 185, 129, 0.4) !important;
+  color: #6ee7b7 !important;
+}
+.shift-live-pulse-dot {
+  width: 6px !important;
+  height: 6px !important;
+  border-radius: 50% !important;
+  background: #10b981 !important;
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7) !important;
+  animation: shiftPulse 1.8s infinite ease-out !important;
+  flex-shrink: 0 !important;
+}
+@keyframes shiftPulse {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1.05); box-shadow: 0 0 0 5px rgba(16, 185, 129, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+.shift-auto-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  padding: 3px 8px !important;
+  border-radius: 99px !important;
+  font-size: 0.70rem !important;
+  font-weight: 700 !important;
+  background: rgba(217, 130, 43, 0.12) !important;
+  border: 1px solid rgba(217, 130, 43, 0.4) !important;
+  color: #d97706 !important;
+  cursor: pointer !important;
 }
 .shift-nav-grid {
   display: grid !important;
   grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-  gap: 6px !important;
+  gap: 5px !important;
   width: 100% !important;
   box-sizing: border-box !important;
-  background: var(--bg2, rgba(0, 0, 0, 0.04)) !important;
+  background: var(--bg2, rgba(0, 0, 0, 0.05)) !important;
   padding: 4px !important;
   border-radius: 14px !important;
   border: 1px solid var(--line) !important;
@@ -3253,89 +3315,91 @@ main#appMain > .health-banner .snooze-btn {
   align-items: center !important;
   justify-content: center !important;
   gap: 2px !important;
-  padding: 6px 4px !important;
-  min-height: 48px !important;
-  border-radius: 10px !important;
-  border: 1px solid transparent !important;
+  padding: 7px 4px !important;
+  min-height: 52px !important;
+  border-radius: 11px !important;
+  border: 1.5px solid transparent !important;
   background: transparent !important;
   color: var(--ink2) !important;
   cursor: pointer !important;
   text-align: center !important;
   box-sizing: border-box !important;
   width: 100% !important;
-  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  -webkit-tap-highlight-color: transparent !important;
 }
 .shift-nav-tab:hover {
   background: rgba(0, 0, 0, 0.04) !important;
   color: var(--ink) !important;
 }
 body.dark .shift-nav-tab:hover {
-  background: rgba(255, 255, 255, 0.06) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
 }
-.shift-nav-tab b {
-  font-size: 0.76rem !important;
-  font-weight: 800 !important;
+.shift-tab-top {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  width: 100% !important;
+}
+.shift-tab-ico {
+  font-size: 0.85rem !important;
+  line-height: 1 !important;
+  flex-shrink: 0 !important;
+}
+.shift-tab-title {
+  font-size: 0.78rem !important;
+  font-weight: 700 !important;
   line-height: 1.2 !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
-  max-width: 100% !important;
 }
-.shift-nav-tab small {
-  font-size: 0.60rem !important;
-  color: var(--ink2) !important;
+.shift-now-dot-micro {
+  width: 6px !important;
+  height: 6px !important;
+  border-radius: 50% !important;
+  background: #10b981 !important;
+  box-shadow: 0 0 5px #10b981 !important;
+  flex-shrink: 0 !important;
+}
+.shift-tab-time-pill {
+  direction: ltr !important;
+  unicode-bidi: isolate !important;
+  font-size: 0.64rem !important;
   font-weight: 600 !important;
   line-height: 1.2 !important;
-  white-space: nowrap !important;
-  direction: ltr !important;
+  color: var(--ink2) !important;
   opacity: 0.85 !important;
+  white-space: nowrap !important;
+  letter-spacing: 0.01em !important;
 }
 .shift-nav-tab.on {
   background: var(--surface, #ffffff) !important;
   color: var(--accent) !important;
-  border-color: rgba(47, 107, 94, 0.25) !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+  border-color: rgba(47, 107, 94, 0.3) !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08) !important;
 }
 body.dark .shift-nav-tab.on {
-  background: #15221e !important;
-  color: #10b981 !important;
-  border-color: rgba(16, 185, 129, 0.4) !important;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25) !important;
+  background: #192722 !important;
+  color: #34d399 !important;
+  border-color: rgba(16, 185, 129, 0.45) !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3) !important;
 }
-.shift-nav-tab.on b {
+.shift-nav-tab.on .shift-tab-title {
   color: var(--accent) !important;
-}
-body.dark .shift-nav-tab.on b {
-  color: #10b981 !important;
-}
-.shift-nav-tab.on small {
-  color: var(--ink) !important;
-  opacity: 0.9 !important;
-}
-body.dark .shift-nav-tab.on small {
-  color: #a7f3d0 !important;
-}
-.shift-nav-tab.on small {
-  color: inherit !important;
-  opacity: 0.9 !important;
-}
-.shift-now-dot {
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 3px !important;
-  padding: 1px 6px !important;
-  border-radius: 99px !important;
-  font-size: 0.58rem !important;
   font-weight: 800 !important;
-  background: rgba(245, 158, 11, 0.18) !important;
-  color: #d97706 !important;
-  margin-top: 2px !important;
-  line-height: 1.2 !important;
-  white-space: nowrap !important;
 }
-.shift-nav-tab.on .shift-now-dot {
-  background: rgba(255, 255, 255, 0.25) !important;
-  color: inherit !important;
+body.dark .shift-nav-tab.on .shift-tab-title {
+  color: #34d399 !important;
+}
+.shift-nav-tab.on .shift-tab-time-pill {
+  color: var(--ink) !important;
+  opacity: 0.95 !important;
+  font-weight: 700 !important;
+}
+body.dark .shift-nav-tab.on .shift-tab-time-pill {
+  color: #a7f3d0 !important;
 }
 .assigned-task-pill {
   display: inline-flex;
@@ -4585,6 +4649,9 @@ body.dark .login-invite-btn {
       /* language just won't be remembered */
     }
     apply();
+    if (FOH.app && typeof FOH.app.render === 'function') {
+      FOH.app.render();
+    }
   }
 
   // Lets other files add their own strings: extend({ en: {...}, ar: {...} }).
@@ -20146,9 +20213,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
   const $ = (id) => document.getElementById(id);
   const S = FOH.state;
-  const { t } = FOH.i18n;
   const { el } = FOH.view;
-  const SESSION_KEY = 'foh-opening.erpSession.v1';
 
   function isAr() {
     return FOH.i18n.lang === 'ar';
@@ -20156,10 +20221,6 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
   function loadOpsConfig() {
     return FOH.opsLifecycle ? FOH.opsLifecycle.loadOpsConfig() : {};
-  }
-
-  function toBizMinutes(hm) {
-    return FOH.opsLifecycle ? FOH.opsLifecycle.toBizMinutes(hm) : 0;
   }
 
   function getEffectiveNowHM() {
@@ -20245,21 +20306,42 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     const scheduledType = getScheduledSheetForNow();
     const nowHM = getEffectiveNowHM();
 
+    // 1. Sleek Modern Header (Live Clock Chip + Current Window Status Pill)
     const head = el('div', 'shift-nav-head');
-    const leftInfo = el('span', '');
-    const schedNames = {
-      opening: ar ? '☀️ شيت الافتتاح (12:00 ص – 3:00 م)' : '☀️ Opening (12:00 AM – 3:00 PM)',
-      mid: ar ? '🌤️ شيت منتصف الشفت (3:00 م – 11:00 م)' : '🌤️ Mid-Shift (3:00 PM – 11:00 PM)',
-      closing: ar ? '🌙 شيت الإغلاق (11:00 م – الإغلاق)' : '🌙 Closing (11:00 PM – Close)',
+    head.style.display = 'flex';
+    head.style.alignItems = 'center';
+    head.style.justifyContent = 'space-between';
+    head.style.gap = '8px';
+    head.style.flexWrap = 'wrap';
+    head.style.width = '100%';
+
+    const leftInfo = el('div', 'shift-nav-head-left');
+    leftInfo.style.display = 'flex';
+    leftInfo.style.alignItems = 'center';
+    leftInfo.style.gap = '8px';
+    leftInfo.style.flexWrap = 'wrap';
+
+    const schedShortNames = {
+      opening: ar ? '☀️ الافتتاح' : '☀️ Opening',
+      mid: ar ? '🌤️ منتصف الشفت' : '🌤️ Mid-Shift',
+      closing: ar ? '🌙 الإغلاق' : '🌙 Closing',
     };
+    const schedWindows = {
+      opening: ar ? '12 – 3 م' : '12 – 3 PM',
+      mid: ar ? '3 – 11 م' : '3 – 11 PM',
+      closing: ar ? '11 م+' : '11 PM+',
+    };
+
     leftInfo.innerHTML =
-      '🕒 ' + (ar ? 'الساعة ' : 'Clock ') + '<b>' + nowHM + '</b> · ' +
-      (ar ? 'الفترة الحالية: ' : 'Current Window: ') +
-      '<b style="color:var(--accent);">' + schedNames[scheduledType] + '</b>';
+      '<span class="shift-clock-chip">🕒 <b>' + nowHM + '</b></span>' +
+      '<span class="shift-status-chip">' +
+      '<span class="shift-live-pulse-dot"></span>' +
+      '<span>' + (ar ? 'شفت الآن: ' : 'Now: ') + '<b>' + schedShortNames[scheduledType] + '</b> <small style="opacity:0.85;">(' + schedWindows[scheduledType] + ')</small></span>' +
+      '</span>';
     head.append(leftInfo);
 
     if (manualSheetOverride && curType !== scheduledType) {
-      const autoBtn = el('button', 'ops-compact-toggle', ar ? '🔄 عودة للشيت التلقائي (' + nowHM + ')' : '🔄 Auto by Clock');
+      const autoBtn = el('button', 'shift-auto-btn', ar ? '🔄 عودة للتلقائي' : '🔄 Auto Reset');
       autoBtn.type = 'button';
       autoBtn.addEventListener('click', () => {
         manualSheetOverride = false;
@@ -20271,42 +20353,50 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     }
     bar.append(head);
 
+    // 2. High-Precision Segmented Control Grid
     const grid = el('nav', 'shift-nav-grid');
     grid.setAttribute('aria-label', 'Shift Sheets Navigation');
 
     const tabs = [
       {
         id: 'opening',
-        titleAr: '☀️ الافتتاح',
-        titleEn: '☀️ Opening',
-        windowAr: '12:00 ص – 3:00 م',
-        windowEn: '12:00 AM – 3:00 PM',
+        icon: '☀️',
+        titleAr: 'الافتتاح',
+        titleEn: 'Opening',
+        windowAr: '12 – 3 م',
+        windowEn: '12 – 3 PM',
       },
       {
         id: 'mid',
-        titleAr: '🌤️ منتصف الشفت',
-        titleEn: '🌤️ Mid-Shift',
-        windowAr: '3:00 م – 11:00 م',
-        windowEn: '3:00 PM – 11:00 PM',
+        icon: '🌤️',
+        titleAr: 'منتصف الشفت',
+        titleEn: 'Mid-Shift',
+        windowAr: '3 – 11 م',
+        windowEn: '3 – 11 PM',
       },
       {
         id: 'closing',
-        titleAr: '🌙 الإغلاق',
-        titleEn: '🌙 Closing',
-        windowAr: '11:00 م – الإغلاق',
-        windowEn: '11:00 PM – Close',
+        icon: '🌙',
+        titleAr: 'الإغلاق',
+        titleEn: 'Closing',
+        windowAr: '11 م – الإغلاق',
+        windowEn: '11 PM – Late',
       },
     ];
 
     tabs.forEach((tb) => {
       const isCur = curType === tb.id;
       const isNow = scheduledType === tb.id;
-      const btn = el('button', 'shift-nav-tab' + (isCur ? ' on' : ''));
+      const btn = el('button', 'shift-nav-tab' + (isCur ? ' on' : '') + (isNow ? ' is-now' : ''));
       btn.type = 'button';
       btn.innerHTML =
-        '<b>' + (ar ? tb.titleAr : tb.titleEn) + '</b>' +
-        '<small>' + (ar ? tb.windowAr : tb.windowEn) + '</small>' +
-        (isNow ? '<span class="shift-now-dot">● ' + (ar ? 'الآن' : 'Now') + '</span>' : '');
+        '<div class="shift-tab-top">' +
+        '<span class="shift-tab-ico">' + tb.icon + '</span>' +
+        '<b class="shift-tab-title">' + (ar ? tb.titleAr : tb.titleEn) + '</b>' +
+        (isNow ? '<span class="shift-now-dot-micro" title="' + (ar ? 'الشفت الفعلي الآن' : 'Current active shift') + '"></span>' : '') +
+        '</div>' +
+        '<div class="shift-tab-time-pill">' + (ar ? tb.windowAr : tb.windowEn) + '</div>';
+
       btn.addEventListener('click', () => {
         manualSheetOverride = tb.id !== scheduledType;
         if (FOH.erpPwa && FOH.erpPwa.switchSheetType) {
@@ -20318,8 +20408,6 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
     bar.append(grid);
   }
-
-
 
   FOH.threeShifts = {
     getActiveSheetType,

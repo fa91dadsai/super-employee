@@ -5,9 +5,7 @@
 
   const $ = (id) => document.getElementById(id);
   const S = FOH.state;
-  const { t } = FOH.i18n;
   const { el } = FOH.view;
-  const SESSION_KEY = 'foh-opening.erpSession.v1';
 
   function isAr() {
     return FOH.i18n.lang === 'ar';
@@ -15,10 +13,6 @@
 
   function loadOpsConfig() {
     return FOH.opsLifecycle ? FOH.opsLifecycle.loadOpsConfig() : {};
-  }
-
-  function toBizMinutes(hm) {
-    return FOH.opsLifecycle ? FOH.opsLifecycle.toBizMinutes(hm) : 0;
   }
 
   function getEffectiveNowHM() {
@@ -104,21 +98,42 @@
     const scheduledType = getScheduledSheetForNow();
     const nowHM = getEffectiveNowHM();
 
+    // 1. Sleek Modern Header (Live Clock Chip + Current Window Status Pill)
     const head = el('div', 'shift-nav-head');
-    const leftInfo = el('span', '');
-    const schedNames = {
-      opening: ar ? '☀️ شيت الافتتاح (12:00 ص – 3:00 م)' : '☀️ Opening (12:00 AM – 3:00 PM)',
-      mid: ar ? '🌤️ شيت منتصف الشفت (3:00 م – 11:00 م)' : '🌤️ Mid-Shift (3:00 PM – 11:00 PM)',
-      closing: ar ? '🌙 شيت الإغلاق (11:00 م – الإغلاق)' : '🌙 Closing (11:00 PM – Close)',
+    head.style.display = 'flex';
+    head.style.alignItems = 'center';
+    head.style.justifyContent = 'space-between';
+    head.style.gap = '8px';
+    head.style.flexWrap = 'wrap';
+    head.style.width = '100%';
+
+    const leftInfo = el('div', 'shift-nav-head-left');
+    leftInfo.style.display = 'flex';
+    leftInfo.style.alignItems = 'center';
+    leftInfo.style.gap = '8px';
+    leftInfo.style.flexWrap = 'wrap';
+
+    const schedShortNames = {
+      opening: ar ? '☀️ الافتتاح' : '☀️ Opening',
+      mid: ar ? '🌤️ منتصف الشفت' : '🌤️ Mid-Shift',
+      closing: ar ? '🌙 الإغلاق' : '🌙 Closing',
     };
+    const schedWindows = {
+      opening: ar ? '12 – 3 م' : '12 – 3 PM',
+      mid: ar ? '3 – 11 م' : '3 – 11 PM',
+      closing: ar ? '11 م+' : '11 PM+',
+    };
+
     leftInfo.innerHTML =
-      '🕒 ' + (ar ? 'الساعة ' : 'Clock ') + '<b>' + nowHM + '</b> · ' +
-      (ar ? 'الفترة الحالية: ' : 'Current Window: ') +
-      '<b style="color:var(--accent);">' + schedNames[scheduledType] + '</b>';
+      '<span class="shift-clock-chip">🕒 <b>' + nowHM + '</b></span>' +
+      '<span class="shift-status-chip">' +
+      '<span class="shift-live-pulse-dot"></span>' +
+      '<span>' + (ar ? 'شفت الآن: ' : 'Now: ') + '<b>' + schedShortNames[scheduledType] + '</b> <small style="opacity:0.85;">(' + schedWindows[scheduledType] + ')</small></span>' +
+      '</span>';
     head.append(leftInfo);
 
     if (manualSheetOverride && curType !== scheduledType) {
-      const autoBtn = el('button', 'ops-compact-toggle', ar ? '🔄 عودة للشيت التلقائي (' + nowHM + ')' : '🔄 Auto by Clock');
+      const autoBtn = el('button', 'shift-auto-btn', ar ? '🔄 عودة للتلقائي' : '🔄 Auto Reset');
       autoBtn.type = 'button';
       autoBtn.addEventListener('click', () => {
         manualSheetOverride = false;
@@ -130,42 +145,50 @@
     }
     bar.append(head);
 
+    // 2. High-Precision Segmented Control Grid
     const grid = el('nav', 'shift-nav-grid');
     grid.setAttribute('aria-label', 'Shift Sheets Navigation');
 
     const tabs = [
       {
         id: 'opening',
-        titleAr: '☀️ الافتتاح',
-        titleEn: '☀️ Opening',
-        windowAr: '12:00 ص – 3:00 م',
-        windowEn: '12:00 AM – 3:00 PM',
+        icon: '☀️',
+        titleAr: 'الافتتاح',
+        titleEn: 'Opening',
+        windowAr: '12 – 3 م',
+        windowEn: '12 – 3 PM',
       },
       {
         id: 'mid',
-        titleAr: '🌤️ منتصف الشفت',
-        titleEn: '🌤️ Mid-Shift',
-        windowAr: '3:00 م – 11:00 م',
-        windowEn: '3:00 PM – 11:00 PM',
+        icon: '🌤️',
+        titleAr: 'منتصف الشفت',
+        titleEn: 'Mid-Shift',
+        windowAr: '3 – 11 م',
+        windowEn: '3 – 11 PM',
       },
       {
         id: 'closing',
-        titleAr: '🌙 الإغلاق',
-        titleEn: '🌙 Closing',
-        windowAr: '11:00 م – الإغلاق',
-        windowEn: '11:00 PM – Close',
+        icon: '🌙',
+        titleAr: 'الإغلاق',
+        titleEn: 'Closing',
+        windowAr: '11 م – الإغلاق',
+        windowEn: '11 PM – Late',
       },
     ];
 
     tabs.forEach((tb) => {
       const isCur = curType === tb.id;
       const isNow = scheduledType === tb.id;
-      const btn = el('button', 'shift-nav-tab' + (isCur ? ' on' : ''));
+      const btn = el('button', 'shift-nav-tab' + (isCur ? ' on' : '') + (isNow ? ' is-now' : ''));
       btn.type = 'button';
       btn.innerHTML =
-        '<b>' + (ar ? tb.titleAr : tb.titleEn) + '</b>' +
-        '<small>' + (ar ? tb.windowAr : tb.windowEn) + '</small>' +
-        (isNow ? '<span class="shift-now-dot">● ' + (ar ? 'الآن' : 'Now') + '</span>' : '');
+        '<div class="shift-tab-top">' +
+        '<span class="shift-tab-ico">' + tb.icon + '</span>' +
+        '<b class="shift-tab-title">' + (ar ? tb.titleAr : tb.titleEn) + '</b>' +
+        (isNow ? '<span class="shift-now-dot-micro" title="' + (ar ? 'الشفت الفعلي الآن' : 'Current active shift') + '"></span>' : '') +
+        '</div>' +
+        '<div class="shift-tab-time-pill">' + (ar ? tb.windowAr : tb.windowEn) + '</div>';
+
       btn.addEventListener('click', () => {
         manualSheetOverride = tb.id !== scheduledType;
         if (FOH.erpPwa && FOH.erpPwa.switchSheetType) {
@@ -177,8 +200,6 @@
 
     bar.append(grid);
   }
-
-
 
   FOH.threeShifts = {
     getActiveSheetType,
