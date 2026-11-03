@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE = 'super-employee-v33-sidebar-clean';
+const CACHE = 'super-employee-v34-profile-tabs';
 const PRECACHE = [
   './',
   './index.html',

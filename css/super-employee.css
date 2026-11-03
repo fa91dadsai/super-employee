@@ -2220,3 +2220,317 @@ body.dark .ord-meta-pill {
   border-color: rgba(255, 255, 255, 0.09);
   color: #e2e8e4;
 }
+
+/* =========================================================================
+   EMPLOYEE PROFILE 3-TAB SYSTEM & BENTO CARDS
+   (My Shift, Tips & Share, Settings & Account)
+   ========================================================================= */
+
+.prof-tab-bar {
+  display: flex;
+  gap: 6px;
+  background: var(--bg, #f7faf7);
+  padding: 5px;
+  border-radius: 14px;
+  border: 1px solid var(--line, #e2e8e2);
+  margin: 0 0 14px;
+  box-sizing: border-box;
+}
+
+body.dark .prof-tab-bar {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.prof-tab-btn {
+  flex: 1;
+  min-height: 42px;
+  border: none;
+  background: transparent;
+  border-radius: 10px;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: var(--ink2, #607267);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 4px 6px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.prof-tab-btn:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--ink, #142019);
+}
+
+body.dark .prof-tab-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+
+.prof-tab-btn.active {
+  background: var(--card, #ffffff);
+  color: var(--accent, #2f6b5e);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  font-weight: 800;
+  border: 1.5px solid rgba(47, 107, 94, 0.3);
+}
+
+body.dark .prof-tab-btn.active {
+  background: #1c2720;
+  color: #4ade80;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  border-color: rgba(74, 222, 128, 0.35);
+}
+
+.prof-tab-pane {
+  animation: profPaneFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes profPaneFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Bento Tip Cards */
+.prof-bento-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.prof-bento-card {
+  background: var(--card, #ffffff);
+  border: 1px solid var(--line, #e2e8e2);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+body.dark .prof-bento-card {
+  background: var(--card, #17211b);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.prof-bento-card.highlight {
+  border-color: var(--accent, #2f6b5e);
+  background: var(--accent-soft, rgba(47, 107, 94, 0.08));
+}
+
+body.dark .prof-bento-card.highlight {
+  border-color: rgba(74, 222, 128, 0.4);
+  background: rgba(74, 222, 128, 0.08);
+}
+
+.prof-bento-card small {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--ink2, #607267);
+}
+
+body.dark .prof-bento-card small {
+  color: #9cb1a4;
+}
+
+.prof-bento-card b {
+  font-size: 1.18rem;
+  font-weight: 800;
+  color: var(--accent, #2f6b5e);
+}
+
+body.dark .prof-bento-card b {
+  color: #4ade80;
+}
+
+/* Tip Explainer Banner */
+.prof-info-banner {
+  background: var(--accent-soft, rgba(47, 107, 94, 0.08));
+  border: 1px solid rgba(47, 107, 94, 0.22);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--ink, #142019);
+}
+
+body.dark .prof-info-banner {
+  background: rgba(74, 222, 128, 0.06);
+  border-color: rgba(74, 222, 128, 0.2);
+  color: #e2e8e4;
+}
+
+.prof-info-banner .pib-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  color: var(--accent, #2f6b5e);
+  font-weight: 800;
+}
+
+body.dark .prof-info-banner .pib-head {
+  color: #4ade80;
+}
+
+.prof-action-btn {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  min-height: 46px !important;
+  border-radius: 12px !important;
+  font-weight: 800 !important;
+  font-size: 0.88rem !important;
+  padding: 0 16px !important;
+}
+
+/* Health Cert Alert Banner */
+.prof-hc-banner {
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.prof-hc-banner.warning {
+  background: rgba(217, 119, 6, 0.1);
+  border: 1px solid rgba(217, 119, 6, 0.35);
+  color: #b45309;
+}
+
+body.dark .prof-hc-banner.warning {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #fbbf24;
+}
+
+.prof-hc-banner.critical {
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid rgba(220, 38, 38, 0.35);
+  color: #b91c1c;
+}
+
+body.dark .prof-hc-banner.critical {
+  background: rgba(239, 68, 68, 0.14);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #f87171;
+}
+
+.prof-hc-banner p {
+  margin: 4px 0 0;
+  font-size: 0.76rem;
+}
+
+/* Quick Shortcut Buttons */
+.prof-shortcuts-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.prof-shortcut-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--card, #ffffff);
+  border: 1px solid var(--line, #e2e8e2);
+  text-align: start;
+  cursor: pointer;
+  width: 100%;
+  box-sizing: border-box;
+  transition: all 0.18s ease;
+  font-family: inherit;
+}
+
+body.dark .prof-shortcut-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.prof-shortcut-btn:hover {
+  border-color: var(--accent, #2f6b5e);
+  background: var(--accent-soft, rgba(47, 107, 94, 0.06));
+}
+
+.prof-shortcut-btn .psb-icon {
+  font-size: 1.35rem;
+  flex: none;
+}
+
+.prof-shortcut-btn .psb-txt {
+  flex: 1;
+  min-width: 0;
+}
+
+.prof-shortcut-btn .psb-txt b {
+  display: block;
+  font-size: 0.84rem;
+  color: var(--ink, #142019);
+}
+
+body.dark .prof-shortcut-btn .psb-txt b {
+  color: #f0fdf4;
+}
+
+.prof-shortcut-btn .psb-txt small {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--ink2, #607267);
+  margin-top: 2px;
+}
+
+body.dark .prof-shortcut-btn .psb-txt small {
+  color: #9cb1a4;
+}
+
+.prof-shortcut-btn .psb-arr {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--accent, #2f6b5e);
+  flex: none;
+}
+
+body.dark .prof-shortcut-btn .psb-arr {
+  color: #4ade80;
+}
+
+.prof-badge.warning {
+  border-color: #f59e0b !important;
+  color: #d97706 !important;
+}
+
+.prof-badge.expired {
+  border-color: #ef4444 !important;
+  color: #dc2626 !important;
+}
+
+.prof-kv-cell {
+  background: var(--card, #ffffff);
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--line, #e2e8e2);
+}
+
+body.dark .prof-kv-cell {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.07);
+}
