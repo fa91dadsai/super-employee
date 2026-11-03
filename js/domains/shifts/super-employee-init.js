@@ -192,6 +192,9 @@
     if (FOH.sectionAssignment && FOH.sectionAssignment.init) {
       FOH.sectionAssignment.init();
     }
+    if (FOH.bottomBar && FOH.bottomBar.init) {
+      FOH.bottomBar.init();
+    }
     const ar = isAr();
     const gov = loadGov();
     const sess = getSession();
@@ -264,6 +267,9 @@
     if (FOH.sectionAssignment && FOH.sectionAssignment.injectSectionControls) {
       FOH.sectionAssignment.injectSectionControls();
     }
+    if (FOH.bottomBar && FOH.bottomBar.syncBottomBar) {
+      FOH.bottomBar.syncBottomBar();
+    }
 
     if (!S.editing) {
       if (S.view === 'academy' && $('academyView')) renderAcademyView($('academyView'));
@@ -281,6 +287,9 @@
     ensureStaffHealthAndPerms();
     if (FOH.sectionAssignment && FOH.sectionAssignment.init) {
       FOH.sectionAssignment.init();
+    }
+    if (FOH.bottomBar && FOH.bottomBar.init) {
+      FOH.bottomBar.init();
     }
 
     const prevRender = FOH.app.render;
