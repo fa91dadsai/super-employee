@@ -5342,6 +5342,7 @@ body.dark .ord-meta-pill {
       <div id="dashboardView" hidden></div>
       <div id="profilePageView" hidden></div>
       <div id="settingsView" hidden></div>
+      <div id="dayoffView" class="run-only" hidden></div>
       <div id="sched" hidden></div>
       <div id="rolesView" hidden></div>
       <div id="inv" hidden></div>
@@ -8585,11 +8586,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       root.append(up);
     }
 
-    // Always append Day-Off & Leave Card to My Tasks
-    if (FOH.dayOff && FOH.dayOff.buildDayOffSection) {
-      const sec = FOH.dayOff.buildDayOffSection(false);
-      if (sec && sec instanceof Node) root.append(sec);
-    }
+
   }
 
   // Edit mode, "Scheduled" tab: week grid + list of tasks.
@@ -8994,6 +8991,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       dashboardView: run && S.view === 'dashboard',
       profilePageView: run && S.view === 'profile',
       settingsView: run && S.view === 'settings',
+      dayoffView: run && S.view === 'dayoff',
       inv: run && S.view === 'inv',
       sched: S.editing && S.editTab === 'sched',
       rolesView: S.editing && S.editTab === 'roles',
@@ -22887,7 +22885,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     const ar = isAr();
     const map = {
       opening: { ico: '📋', title: ar ? 'شيتات الشفت (Opening · Mid · Closing)' : 'Shift Sheets (Opening · Mid · Closing)', sub: ar ? 'افتتاح (12–3) · منتصف الشفت (3–11) · إغلاق (11+)' : 'Time-scheduled: Opening · Mid-Shift · Closing' },
-      mine: { ico: '📋', title: ar ? 'مهامي وطلب الإجازة' : 'My Tasks & Day-Off', sub: ar ? 'مهامك اليومية وطلب عطلة' : 'Personal tasks & schedule leave' },
+      mine: { ico: '📋', title: ar ? 'مهامي اليومية' : 'My Tasks', sub: ar ? 'مهامك ومسؤوليات الشفت' : 'Personal daily shift tasks' },
+      dayoff: { ico: '🏖️', title: ar ? 'طلب عطلة / إجازة' : 'Day-Off & Leave', sub: ar ? 'طلب العطلة الأسبوعية والربط مع الجدول' : 'Weekly rest days & schedule leave' },
       orders: { ico: '🛒', title: ar ? 'طلبيات البار والصالة' : 'Bar & FOH Orders', sub: ar ? 'Step-by-step و Quick list' : 'Step-by-step & Quick list' },
       inv: { ico: '📦', title: ar ? 'الجرد وبلاغات التالف' : 'Inventory & Breakage', sub: ar ? 'الجرد الأعمى وإدارة الأصناف' : 'Blind counts & breakage reports' },
       academy: { ico: '🎓', title: ar ? 'أكاديمية المنيو والاختبارات' : 'Menu Academy & Quiz', sub: ar ? 'تعلّم الأطباق والمشروبات واكسب نقاطاً' : 'Learn dishes & drinks + 3-choice quiz' },
@@ -22955,6 +22954,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       const items = [
         ['opening', openLeft > 0 ? String(openLeft) : '✓'],
         ['mine', mineLeft > 0 ? String(mineLeft) : ''],
+        ['dayoff', '🏖️'],
         ['orders', ordCount > 0 ? String(ordCount) : ''],
         ['inv', ''],
         ['academy', '🎓 +XP'],
@@ -24664,9 +24664,10 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       injectSectionClaims();
       renderSignoffCard();
       updateOrderBadge();
-      if (!S.editing && S.view === 'mine' && $('mine') && !$('mine').querySelector('.dayoff-form')) {
+      if (!S.editing && S.view === 'dayoff' && $('dayoffView')) {
+        $('dayoffView').replaceChildren();
         const sec = buildDayOffSection(false);
-        if (sec) $('mine').append(sec);
+        if (sec) $('dayoffView').append(sec);
       }
       if (!S.editing && S.view === 'orders' && $('ordersView')) {
         renderOrdersView($('ordersView'));

@@ -191,9 +191,10 @@
       injectSectionClaims();
       renderSignoffCard();
       updateOrderBadge();
-      if (!S.editing && S.view === 'mine' && $('mine') && !$('mine').querySelector('.dayoff-form')) {
+      if (!S.editing && S.view === 'dayoff' && $('dayoffView')) {
+        $('dayoffView').replaceChildren();
         const sec = buildDayOffSection(false);
-        if (sec) $('mine').append(sec);
+        if (sec) $('dayoffView').append(sec);
       }
       if (!S.editing && S.view === 'orders' && $('ordersView')) {
         renderOrdersView($('ordersView'));

@@ -343,7 +343,8 @@
     const ar = isAr();
     const map = {
       opening: { ico: '📋', title: ar ? 'شيتات الشفت (Opening · Mid · Closing)' : 'Shift Sheets (Opening · Mid · Closing)', sub: ar ? 'افتتاح (12–3) · منتصف الشفت (3–11) · إغلاق (11+)' : 'Time-scheduled: Opening · Mid-Shift · Closing' },
-      mine: { ico: '📋', title: ar ? 'مهامي وطلب الإجازة' : 'My Tasks & Day-Off', sub: ar ? 'مهامك اليومية وطلب عطلة' : 'Personal tasks & schedule leave' },
+      mine: { ico: '📋', title: ar ? 'مهامي اليومية' : 'My Tasks', sub: ar ? 'مهامك ومسؤوليات الشفت' : 'Personal daily shift tasks' },
+      dayoff: { ico: '🏖️', title: ar ? 'طلب عطلة / إجازة' : 'Day-Off & Leave', sub: ar ? 'طلب العطلة الأسبوعية والربط مع الجدول' : 'Weekly rest days & schedule leave' },
       orders: { ico: '🛒', title: ar ? 'طلبيات البار والصالة' : 'Bar & FOH Orders', sub: ar ? 'Step-by-step و Quick list' : 'Step-by-step & Quick list' },
       inv: { ico: '📦', title: ar ? 'الجرد وبلاغات التالف' : 'Inventory & Breakage', sub: ar ? 'الجرد الأعمى وإدارة الأصناف' : 'Blind counts & breakage reports' },
       academy: { ico: '🎓', title: ar ? 'أكاديمية المنيو والاختبارات' : 'Menu Academy & Quiz', sub: ar ? 'تعلّم الأطباق والمشروبات واكسب نقاطاً' : 'Learn dishes & drinks + 3-choice quiz' },
@@ -411,6 +412,7 @@
       const items = [
         ['opening', openLeft > 0 ? String(openLeft) : '✓'],
         ['mine', mineLeft > 0 ? String(mineLeft) : ''],
+        ['dayoff', '🏖️'],
         ['orders', ordCount > 0 ? String(ordCount) : ''],
         ['inv', ''],
         ['academy', '🎓 +XP'],

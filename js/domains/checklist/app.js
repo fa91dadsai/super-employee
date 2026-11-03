@@ -179,6 +179,7 @@
       dashboardView: run && S.view === 'dashboard',
       profilePageView: run && S.view === 'profile',
       settingsView: run && S.view === 'settings',
+      dayoffView: run && S.view === 'dayoff',
       inv: run && S.view === 'inv',
       sched: S.editing && S.editTab === 'sched',
       rolesView: S.editing && S.editTab === 'roles',

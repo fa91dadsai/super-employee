@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE = 'super-employee-v31-orders-clean';
+const CACHE = 'super-employee-v32-dayoff-sep';
 const PRECACHE = [
   './',
   './index.html',

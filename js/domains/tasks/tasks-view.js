@@ -239,11 +239,7 @@
       root.append(up);
     }
 
-    // Always append Day-Off & Leave Card to My Tasks
-    if (FOH.dayOff && FOH.dayOff.buildDayOffSection) {
-      const sec = FOH.dayOff.buildDayOffSection(false);
-      if (sec && sec instanceof Node) root.append(sec);
-    }
+
   }
 
   // Edit mode, "Scheduled" tab: week grid + list of tasks.
