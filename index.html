@@ -8008,40 +8008,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     }
   }
 
-  /**
-   * Opens an interactive bottom sheet modal window with rich option cards
-   */
-  function open({ title, subtitle, icon, items = [], current = '', onSelect }) {
-    const ar = isAr();
-    const dlg = ensurePickerModal();
-    dlg.replaceChildren();
-
-    const box = el('div', 'modal-picker-box');
-
-    // 1. Grab Bar
-    const grab = el('div', 'grab');
-
-    // 2. Header
-    const headRow = el('div', 'modal-picker-head');
-    const titleBox = el('div', 'modal-picker-title-box');
-    const h3 = el('h3', 'modal-picker-title');
-    h3.innerHTML = (icon ? `<span class="picker-head-icon">${icon}</span> ` : '') + (title || (ar ? 'اختر من القائمة' : 'Select an Option'));
-    titleBox.append(h3);
-    if (subtitle) {
-      const sub = el('p', 'modal-picker-sub', subtitle);
-      titleBox.append(sub);
-    }
-
-    const closeBtn = el('button', 'modal-picker-close', '✕');
-    closeBtn.type = 'button';
-    closeBtn.setAttribute('aria-label', ar ? 'إغلاق' : 'Close');
-    closeBtn.addEventListener('click', () => close());
-
-    headRow.append(titleBox, closeBtn);
-    box.append(grab, headRow);
-
-    // 3. Normalize items
-    const normalizedItems = items.map((it) => {
+  function normalizePickerItems(rawItems) {
+    return (rawItems || []).map((it) => {
       if (Array.isArray(it)) {
         return { value: String(it[0]), label: String(it[1]), subtitle: '', icon: '' };
       }
@@ -8058,128 +8026,136 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       }
       return { ...it, value: String(it.value), label, icon };
     });
+  }
 
-    const listContainer = el('div', 'modal-picker-list');
+  function renderPickerHeader(opts) {
+    const { title, subtitle, icon, ar } = opts;
+    const headRow = el('div', 'modal-picker-head');
+    const titleBox = el('div', 'modal-picker-title-box');
+    const h3 = el('h3', 'modal-picker-title');
+    h3.innerHTML = (icon ? `<span class="picker-head-icon">${icon}</span> ` : '') + (title || (ar ? 'اختر من القائمة' : 'Select an Option'));
+    titleBox.append(h3);
+    if (subtitle) {
+      const sub = el('p', 'modal-picker-sub', subtitle);
+      titleBox.append(sub);
+    }
 
-    function renderList(listToRender) {
-      listContainer.replaceChildren();
-      if (!listToRender.length) {
-        const empty = el('div', 'modal-picker-empty', ar ? 'لا توجد خيارات مطابقة' : 'No matching options');
-        listContainer.append(empty);
-        return;
+    const closeBtn = el('button', 'modal-picker-close', '✕');
+    closeBtn.type = 'button';
+    closeBtn.setAttribute('aria-label', ar ? 'إغلاق' : 'Close');
+    closeBtn.addEventListener('click', () => close());
+
+    headRow.append(titleBox, closeBtn);
+    return headRow;
+  }
+
+  function renderPickerItemCard(opts) {
+    const { it, isSelected, onSelect } = opts;
+    const card = el('button', 'modal-picker-item' + (isSelected ? ' selected' : ''));
+    card.type = 'button';
+
+    const itemContent = el('div', 'modal-picker-item-content');
+    if (it.icon) {
+      itemContent.append(el('span', 'modal-picker-item-icon', it.icon));
+    }
+    const textWrapper = el('div', 'modal-picker-item-texts');
+    textWrapper.append(el('div', 'modal-picker-item-label', it.label));
+    if (it.subtitle) {
+      textWrapper.append(el('div', 'modal-picker-item-sub', it.subtitle));
+    }
+    itemContent.append(textWrapper);
+
+    const trailing = el('div', 'modal-picker-item-trailing');
+    if (it.badge) {
+      trailing.append(el('span', 'dayoff-badge ' + (it.badgeClass || 'approved'), it.badge));
+    }
+    if (isSelected) {
+      trailing.append(el('span', 'modal-picker-check', '✓'));
+    }
+
+    card.append(itemContent, trailing);
+    card.addEventListener('click', () => {
+      if (navigator.vibrate) {
+        try { navigator.vibrate(10); } catch (err) { /* Vibration not supported */ }
       }
+      close();
+      if (onSelect) onSelect(it.value, it);
+    });
+    return card;
+  }
 
-      listToRender.forEach((it) => {
-        const isSelected = String(it.value) === String(current);
-        const card = el('button', 'modal-picker-item' + (isSelected ? ' selected' : ''));
-        card.type = 'button';
-
-        const itemContent = el('div', 'modal-picker-item-content');
-        if (it.icon) {
-          const iconSpan = el('span', 'modal-picker-item-icon', it.icon);
-          itemContent.append(iconSpan);
-        }
-        const textWrapper = el('div', 'modal-picker-item-texts');
-        const mainLabel = el('div', 'modal-picker-item-label', it.label);
-        textWrapper.append(mainLabel);
-        if (it.subtitle) {
-          const subLabel = el('div', 'modal-picker-item-sub', it.subtitle);
-          textWrapper.append(subLabel);
-        }
-        itemContent.append(textWrapper);
-
-        const trailing = el('div', 'modal-picker-item-trailing');
-        if (it.badge) {
-          const b = el('span', 'dayoff-badge ' + (it.badgeClass || 'approved'), it.badge);
-          trailing.append(b);
-        }
-        if (isSelected) {
-          const check = el('span', 'modal-picker-check', '✓');
-          trailing.append(check);
-        }
-
-        card.append(itemContent, trailing);
-
-        card.addEventListener('click', () => {
-          if (navigator.vibrate) {
-            try { navigator.vibrate(10); } catch (err) { /* Vibration not supported */ }
-          }
-          close();
-          if (onSelect) onSelect(it.value, it);
-        });
-
-        listContainer.append(card);
-      });
+  function renderPickerList(opts) {
+    const { listContainer, listToRender, current, onSelect, ar } = opts;
+    listContainer.replaceChildren();
+    if (!listToRender.length) {
+      listContainer.append(el('div', 'modal-picker-empty', ar ? 'لا توجد خيارات مطابقة' : 'No matching options'));
+      return;
     }
+    listToRender.forEach((it) => {
+      const isSelected = String(it.value) === String(current);
+      listContainer.append(renderPickerItemCard({ it, isSelected, onSelect }));
+    });
+  }
 
-    // Search bar if list is long
-    if (normalizedItems.length > 7) {
-      const searchBox = el('div', 'modal-picker-search-box');
-      const searchIn = el('input', 'in modal-picker-search-input');
-      searchIn.type = 'search';
-      searchIn.placeholder = ar ? '🔍 ابحث في الخيارات...' : '🔍 Search options...';
-      searchIn.addEventListener('input', () => {
-        const q = searchIn.value.trim().toLowerCase();
-        if (!q) {
-          renderList(normalizedItems);
-        } else {
-          const filtered = normalizedItems.filter((it) =>
+  function renderPickerSearchBox(opts) {
+    const { normalizedItems, listContainer, current, onSelect, ar } = opts;
+    const searchBox = el('div', 'modal-picker-search-box');
+    const searchIn = el('input', 'in modal-picker-search-input');
+    searchIn.type = 'search';
+    searchIn.placeholder = ar ? '🔍 ابحث في الخيارات...' : '🔍 Search options...';
+    searchIn.addEventListener('input', () => {
+      const q = searchIn.value.trim().toLowerCase();
+      const filtered = q
+        ? normalizedItems.filter((it) =>
             (it.label || '').toLowerCase().includes(q) || (it.subtitle || '').toLowerCase().includes(q)
-          );
-          renderList(filtered);
-        }
-      });
-      searchBox.append(searchIn);
-      box.append(searchBox);
-    }
+          )
+        : normalizedItems;
+      renderPickerList({ listContainer, listToRender: filtered, current, onSelect, ar });
+    });
+    searchBox.append(searchIn);
+    return searchBox;
+  }
 
-    renderList(normalizedItems);
-    box.append(listContainer);
-
-    // Cancel Button
+  function renderPickerBottom(opts) {
+    const { ar } = opts;
     const bottomRow = el('div', 'modal-picker-bottom');
     const cancelBtn = el('button', 'btn modal-picker-cancel', ar ? 'إلغاء' : 'Cancel');
     cancelBtn.type = 'button';
     cancelBtn.addEventListener('click', () => close());
     bottomRow.append(cancelBtn);
-    box.append(bottomRow);
+    return bottomRow;
+  }
+
+  /**
+   * Opens an interactive bottom sheet modal window with rich option cards
+   */
+  function open(opts) {
+    const { title, subtitle, icon, items = [], current = '', onSelect } = opts;
+    const ar = isAr();
+    const dlg = ensurePickerModal();
+    dlg.replaceChildren();
+
+    const box = el('div', 'modal-picker-box');
+    box.append(el('div', 'grab'));
+    box.append(renderPickerHeader({ title, subtitle, icon, ar }));
+
+    const normalizedItems = normalizePickerItems(items);
+    const listContainer = el('div', 'modal-picker-list');
+
+    if (normalizedItems.length > 7) {
+      box.append(renderPickerSearchBox({ normalizedItems, listContainer, current, onSelect, ar }));
+    }
+
+    renderPickerList({ listContainer, listToRender: normalizedItems, current, onSelect, ar });
+    box.append(listContainer);
+    box.append(renderPickerBottom({ ar }));
 
     dlg.append(box);
     dlg.showModal();
   }
 
-  /**
-   * Enhances any standard <select> element so clicking it opens the Modal Window Picker!
-   */
-  function enhanceSelect(selectEl, customConfig = {}) {
-    if (!selectEl) return null;
-    if (selectEl.dataset.modalPickerEnhanced) {
-      const oldTrigger = selectEl.nextElementSibling;
-      if (oldTrigger && oldTrigger.classList.contains('modal-picker-trigger')) {
-        return oldTrigger;
-      }
-    }
-    selectEl.dataset.modalPickerEnhanced = '1';
-    selectEl.style.display = 'none';
-
-    const trigger = el('button', 'in modal-picker-trigger');
-    trigger.type = 'button';
-    trigger.setAttribute('aria-haspopup', 'dialog');
-
-    const updateTriggerText = () => {
-      const selOpt = selectEl.options[selectEl.selectedIndex];
-      const text = selOpt ? selOpt.textContent : (customConfig.placeholder || 'Select...');
-      trigger.replaceChildren();
-
-      const valWrapper = el('span', 'picker-trigger-val');
-      valWrapper.textContent = text;
-
-      const arrow = el('span', 'picker-trigger-arrow', '▾');
-      trigger.append(valWrapper, arrow);
-    };
-
-    updateTriggerText();
-
+  function bindSelectTriggerClick(opts) {
+    const { trigger, selectEl, customConfig, updateTriggerText } = opts;
     trigger.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -8216,15 +8192,9 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
         },
       });
     });
+  }
 
-    selectEl.addEventListener('change', updateTriggerText);
-    selectEl._updatePickerTrigger = updateTriggerText;
-
-    if (window.MutationObserver) {
-      const observer = new MutationObserver(() => updateTriggerText());
-      observer.observe(selectEl, { childList: true, subtree: true });
-    }
-
+  function insertTriggerElement(selectEl, trigger) {
     if (selectEl.parentNode) {
       selectEl.parentNode.insertBefore(trigger, selectEl.nextSibling);
     } else {
@@ -8234,7 +8204,47 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
         }
       }, 0);
     }
+  }
 
+  /**
+   * Enhances any standard <select> element so clicking it opens the Modal Window Picker!
+   */
+  function enhanceSelect(selectEl, customConfig = {}) {
+    if (!selectEl) return null;
+    if (selectEl.dataset.modalPickerEnhanced) {
+      const oldTrigger = selectEl.nextElementSibling;
+      if (oldTrigger && oldTrigger.classList.contains('modal-picker-trigger')) {
+        return oldTrigger;
+      }
+    }
+    selectEl.dataset.modalPickerEnhanced = '1';
+    selectEl.style.display = 'none';
+
+    const trigger = el('button', 'in modal-picker-trigger');
+    trigger.type = 'button';
+    trigger.setAttribute('aria-haspopup', 'dialog');
+
+    const updateTriggerText = () => {
+      const selOpt = selectEl.options[selectEl.selectedIndex];
+      const text = selOpt ? selOpt.textContent : (customConfig.placeholder || 'Select...');
+      trigger.replaceChildren();
+      const valWrapper = el('span', 'picker-trigger-val', text);
+      const arrow = el('span', 'picker-trigger-arrow', '▾');
+      trigger.append(valWrapper, arrow);
+    };
+
+    updateTriggerText();
+    bindSelectTriggerClick({ trigger, selectEl, customConfig, updateTriggerText });
+
+    selectEl.addEventListener('change', updateTriggerText);
+    selectEl._updatePickerTrigger = updateTriggerText;
+
+    if (window.MutationObserver) {
+      const observer = new MutationObserver(() => updateTriggerText());
+      observer.observe(selectEl, { childList: true, subtree: true });
+    }
+
+    insertTriggerElement(selectEl, trigger);
     return trigger;
   }
 
@@ -9157,7 +9167,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     return li;
   }
 
-  function card(cls, icon, title, count) {
+  function card(opts) {
+    const { cls = '', icon = '', title = '', count = undefined } = opts;
     const c = el('section', 'card ' + cls);
     const h = el('div', 'head');
     const nm = el('span', 'nm');
@@ -9183,7 +9194,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     const bar = el('div', 'me-row');
     bar.append(el('span', '', fmtDay(S().date)), iAmButton());
     const done = states.filter((s) => s.status === 'done').length;
-    const c = card('sched', '🗓', t('todayTasks'), done + ' / ' + states.length);
+    const c = card({ cls: 'sched', icon: '🗓', title: t('todayTasks'), count: done + ' / ' + states.length });
     const list = el('ol', 'items');
     states.forEach((st) => list.append(stateRow(st, isLeader)));
     c.append(list);
@@ -9202,19 +9213,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     return out;
   }
 
-  // The "My tasks" tab.
-  function mine(root) {
-    root.replaceChildren();
-    const bar = el('div', 'me-row');
-    bar.append(el('span', '', fmtDay(S().date)), iAmButton());
-    root.append(bar);
-    if (!S().me.role && !S().me.staffId) return root.append(el('p', 'empty', t('pickRoleFirst')));
-    const nums = M.numbering(S().tpl);
-    const states = todayStates().filter((s) => isMine(s.task));
-    const items = myOpeningItems();
-    const c = card('sched', '👤', t('today'));
+  function renderMineOpeningItems(items, nums) {
     const list = el('ol', 'items');
-    states.forEach((st) => list.append(stateRow(st, false)));
     items.forEach((it) => {
       const stamp = S().run.checked[it.id];
       const li = el('li', 'item' + (stamp ? ' done' : ''));
@@ -9234,36 +9234,59 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       li.append(row);
       list.append(li);
     });
-    if (list.children.length) { c.append(list); root.append(c); }
-    else if (!FOH.invCount.myCounts().length) {
-      c.append(el('p', 'empty', t('nothingMine')));
-      if (S().previewEmployee) c.append(btn('btn demo-count-cta', t('countDemoButton'), 'demo-count', {}));
-      root.append(c);
-    }
-    FOH.invCount.mineCard(root); // assigned inventory counts only
-    const today = FOH.time.todayISO();
+    return list;
+  }
+
+  function renderMineUpcomingTasks(today) {
     const next = [];
     S().tpl.tasks.filter(isMine).forEach((tk) =>
       SC.upcoming(tk, S().log, S().date, today, 7, 7).forEach((d) => next.push({ d, tk }))
     );
-    if (next.length) {
-      next.sort((a, b) => a.d.localeCompare(b.d) || a.tk.time.localeCompare(b.tk.time));
-      const up = card('', '📅', t('comingUp'));
-      const ul = el('ol', 'items');
-      next.forEach(({ d, tk }) => {
-        const li = el('li', 'item up');
-        const day = el('span', 'd', dayNames()[SC.weekday(d)]);
-        day.append(el('b', '', String(Number(d.slice(8)))));
-        const tags = el('span', 'tags');
-        tags.append(el('span', 'tag time', tk.time));
-        li.append(day, el('span', 'up-t', tk.icon + ' ' + taskName(tk)), tags);
-        ul.append(li);
-      });
-      up.append(ul, el('p', 'note', t('movesNote')));
-      root.append(up);
+    if (!next.length) return null;
+    next.sort((a, b) => a.d.localeCompare(b.d) || a.tk.time.localeCompare(b.tk.time));
+    const up = card({ cls: '', icon: '📅', title: t('comingUp') });
+    const ul = el('ol', 'items');
+    next.forEach(({ d, tk }) => {
+      const li = el('li', 'item up');
+      const day = el('span', 'd', dayNames()[SC.weekday(d)]);
+      day.append(el('b', '', String(Number(d.slice(8)))));
+      const tags = el('span', 'tags');
+      tags.append(el('span', 'tag time', tk.time));
+      li.append(day, el('span', 'up-t', tk.icon + ' ' + taskName(tk)), tags);
+      ul.append(li);
+    });
+    up.append(ul, el('p', 'note', t('movesNote')));
+    return up;
+  }
+
+  // The "My tasks" tab.
+  function mine(root) {
+    root.replaceChildren();
+    const bar = el('div', 'me-row');
+    bar.append(el('span', '', fmtDay(S().date)), iAmButton());
+    root.append(bar);
+    if (!S().me.role && !S().me.staffId) return root.append(el('p', 'empty', t('pickRoleFirst')));
+
+    const nums = M.numbering(S().tpl);
+    const states = todayStates().filter((s) => isMine(s.task));
+    const items = myOpeningItems();
+    const c = card({ cls: 'sched', icon: '👤', title: t('today') });
+
+    const list = renderMineOpeningItems(items, nums);
+    states.forEach((st) => list.prepend(stateRow(st, false)));
+
+    if (list.children.length) {
+      c.append(list);
+      root.append(c);
+    } else if (!FOH.invCount.myCounts().length) {
+      c.append(el('p', 'empty', t('nothingMine')));
+      if (S().previewEmployee) c.append(btn('btn demo-count-cta', t('countDemoButton'), 'demo-count', {}));
+      root.append(c);
     }
 
-
+    FOH.invCount.mineCard(root);
+    const up = renderMineUpcomingTasks(FOH.time.todayISO());
+    if (up) root.append(up);
   }
 
   // Edit mode, "Scheduled" tab: week grid + list of tasks.
@@ -9272,7 +9295,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     const st = S();
     const today = FOH.time.todayISO();
     const first = SC.addDays(SC.weekStart(st.date, st.tpl.settings.weekStart), 7 * st.weekOffset);
-    const wk = card('sched', '🗓', st.weekOffset ? t('weekOf', { from: fmtDay(first), to: fmtDay(SC.addDays(first, 6)) }) : t('thisWeek'));
+    const wk = card({ cls: 'sched', icon: '🗓', title: st.weekOffset ? t('weekOf', { from: fmtDay(first), to: fmtDay(SC.addDays(first, 6)) }) : t('thisWeek') });
     wk.querySelector('.head').append(btn('link', t('addTask'), 'task-add', {}));
     wk.append(weekBar());
     SC.week(st.tpl.tasks, st.log, first, today, FOH.time.nowHM()).forEach((day) => {
@@ -9289,7 +9312,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       row.append(dn, cells);
       wk.append(row);
     });
-    const lc = card('', '📋', t('tabScheduled'), String(st.tpl.tasks.length));
+    const lc = card({ cls: '', icon: '📋', title: t('tabScheduled'), count: String(st.tpl.tasks.length) });
     const ul = el('ol', 'items');
     st.tpl.tasks.forEach((tk) => {
       const li = el('li', 'item');
@@ -9348,7 +9371,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   // Edit mode, "Roles" tab.
   function roles(root) {
     root.replaceChildren();
-    const c = card('', '👥', t('roles'));
+    const c = card({ cls: '', icon: '👥', title: t('roles') });
     c.querySelector('.head').append(btn('link', t('addRole'), 'role-add', {}));
     const ul = el('ol', 'items');
     S().tpl.roles.forEach((r) => {
