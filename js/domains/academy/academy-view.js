@@ -173,21 +173,21 @@
     try {
       const raw = FOH.safeJsonParse(localStorage.getItem(ACAD_KEY), 'null');
       if (Array.isArray(raw) && raw.length) return raw;
-    } catch {}
+    } catch (err) { /* Storage read/write fallback */ }
     return DEFAULT_ACADEMY_ITEMS;
   }
 
   function saveAcademyCatalog(list) {
     try {
       localStorage.setItem(ACAD_KEY, JSON.stringify(list));
-    } catch {}
+    } catch (err) { /* Storage read/write fallback */ }
   }
 
   function loadAcadProgress() {
     try {
       const raw = FOH.safeJsonParse(localStorage.getItem(ACAD_PROG_KEY), 'null');
       if (raw && typeof raw === 'object') return raw;
-    } catch {}
+    } catch (err) { /* Storage read/write fallback */ }
     return {
       fadi: { xp: 140, masteredIds: ['dish_wagyu', 'dish_burrata', 'drink_ceen_mule'], studiedIds: ['dish_wagyu', 'dish_burrata', 'drink_ceen_mule'], quizAnswered: 14, quizCorrect: 13 },
       ali: { xp: 100, masteredIds: ['dish_wagyu', 'dish_burrata'], studiedIds: ['dish_wagyu', 'dish_burrata'], quizAnswered: 10, quizCorrect: 9 },
@@ -199,7 +199,7 @@
   function saveAcadProgress(prog) {
     try {
       localStorage.setItem(ACAD_PROG_KEY, JSON.stringify(prog));
-    } catch {}
+    } catch (err) { /* Storage read/write fallback */ }
   }
 
   function getMyAcadRecord() {
@@ -230,25 +230,18 @@
 
   let acadCatFilter = 'all';
 
-  function renderAcademyView(root) {
-    if (!root) return;
-    root.replaceChildren();
-    const ar = isAr();
-    const sess = getSession();
-    const isMgr = !sess || !!sess.isManager;
-    const catalog = loadAcademyCatalog();
-    const { uname, rec, all } = getMyAcadRecord();
-    const masteredCount = catalog.filter((it) => rec.masteredIds.includes(it.id)).length;
-    const masteryPct = catalog.length ? Math.round((masteredCount * 100) / catalog.length) : 0;
-    const bonusPts = syncAcademyBonusToTips(uname, rec.xp);
+  // ============================================================================
+  // Academy Sub-Renderers (< 80 lines each)
+  // ============================================================================
 
-    // Hero Card
+  function renderAcademyHero(opts) {
+    const { uname, rec, masteredCount, catalogLength, masteryPct, bonusPts, isMgr, ar, onPopQuiz, onAddItem } = opts;
     const hero = el('div', 'acad-hero');
     hero.innerHTML =
       '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">' +
       '<div>' +
       '<h2>🎓 ' + (ar ? 'أكاديمية الأطباق والمشروبات والاختبار الذكي' : 'Menu & Beverage Academy + Quiz Arena') + '</h2>' +
-      '<p>' + (ar ? 'ادرس تفاصيل ومكونات وحساسية كل صنف، ثم اجتز اختبار التحقق (٣ خيارات) لكسب نقاط XP ونقاط تبس إضافية!' : 'Study dishes & cocktails, pass the 3-choice verification quiz, and earn XP + Bonus Tip Points!') + '</p>' +
+      '<p>' + (ar ? 'ادرس تفاصيل ومكونات وحساسية كل صنف، ثم اجتز اختبار التحقق لكسب نقاط XP ونقاط تبس إضافية!' : 'Study dishes & cocktails, pass the 3-choice verification quiz, and earn XP + Bonus Tip Points!') + '</p>' +
       '</div>' +
       '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
       '<span class="dayoff-badge approved" style="font-size:0.82rem;padding:6px 12px;">⭐ ' + rec.xp + ' XP</span>' +
@@ -257,7 +250,7 @@
       '</div>' +
       '<div style="display:flex;justify-content:space-between;font-size:0.78rem;margin-top:12px;font-weight:700;">' +
       '<span>' + (ar ? 'مرحلة اكتمال التعليم وإتقان المنيو:' : 'Menu Mastery Progress:') + '</span>' +
-      '<span>' + masteredCount + ' / ' + catalog.length + ' (' + masteryPct + '%)</span>' +
+      '<span>' + masteredCount + ' / ' + catalogLength + ' (' + masteryPct + '%)</span>' +
       '</div>' +
       '<div class="acad-progress-bar"><div style="width:' + masteryPct + '%"></div></div>';
 
@@ -272,38 +265,135 @@
     popQuizBtn.style.minHeight = '38px';
     popQuizBtn.style.padding = '0 14px';
     popQuizBtn.style.fontSize = '0.82rem';
-    popQuizBtn.addEventListener('click', () => openQuizModal(null));
+    popQuizBtn.addEventListener('click', onPopQuiz);
     heroBtns.append(popQuizBtn);
 
     if (isMgr) {
       const addDishBtn = el('button', 'snooze-btn', ar ? '➕ إضافة طبق أو مشروب جديد للأكاديمية' : '➕ Add New Dish / Drink');
       addDishBtn.type = 'button';
       addDishBtn.style.minHeight = '38px';
-      addDishBtn.addEventListener('click', () => openAddAcademyItemModal());
+      addDishBtn.addEventListener('click', onAddItem);
       heroBtns.append(addDishBtn);
     }
     hero.append(heroBtns);
-    root.append(hero);
+    return hero;
+  }
 
-    // Filter Bar (All / Food / Drinks / Unfinished)
+  function renderAcademyFilterBar(opts) {
+    const { catalogLength, masteredCount, onFilterChange, ar } = opts;
     const fBar = el('div', 'ord-view-switch');
     [
-      ['all', ar ? 'الكل (' + catalog.length + ')' : 'All (' + catalog.length + ')'],
+      ['all', ar ? 'الكل (' + catalogLength + ')' : 'All (' + catalogLength + ')'],
       ['food', ar ? '🍽 المأكولات والأطباق' : '🍽 Food Dishes'],
       ['drink', ar ? '🍸 المشروبات والبار' : '🍸 Drinks & Bar'],
-      ['todo', ar ? '📖 غير مكتمل (' + (catalog.length - masteredCount) + ')' : '📖 To Master (' + (catalog.length - masteredCount) + ')'],
+      ['todo', ar ? '📖 غير مكتمل (' + (catalogLength - masteredCount) + ')' : '📖 To Master (' + (catalogLength - masteredCount) + ')'],
     ].forEach(([k, lbl]) => {
       const b = el('button', acadCatFilter === k ? 'on' : '', lbl);
       b.type = 'button';
       b.addEventListener('click', () => {
         acadCatFilter = k;
-        renderAcademyView(root);
+        onFilterChange();
       });
       fBar.append(b);
     });
+    return fBar;
+  }
+
+  function renderAcademyCard(opts) {
+    const { item, rec, all, onVerify, ar } = opts;
+    const isMastered = rec.masteredIds.includes(item.id);
+    const isStudied = rec.studiedIds.includes(item.id);
+    const card = el('article', 'acad-item-card' + (isMastered ? ' mastered' : ''));
+
+    const topRow = el('div', '');
+    topRow.style.display = 'flex';
+    topRow.style.justifyContent = 'space-between';
+    topRow.style.alignItems = 'flex-start';
+    topRow.style.gap = '8px';
+
+    const statusBadge = isMastered
+      ? '<span class="dayoff-badge approved">🎓 ' + (ar ? 'متقن ومعتمد ✓' : 'Mastered ✓') + '</span>'
+      : isStudied
+      ? '<span class="dayoff-badge pending">🎯 ' + (ar ? 'بانتظار اجتياز الاختبار' : 'Ready for Quiz') + '</span>'
+      : '<span class="dayoff-badge">' + (ar ? '📖 قيد التعلم' : '📖 To Study') + '</span>';
+
+    topRow.innerHTML =
+      '<div><small style="color:var(--accent);font-weight:800;">' + (ar ? item.catLabelAr : item.catLabelEn) + '</small>' +
+      '<h3 style="margin:2px 0;font-size:1.02rem;">' + (ar ? item.nameAr : item.nameEn) + '</h3></div>' +
+      statusBadge;
+
+    const desc = el('p', '');
+    desc.style.margin = '2px 0';
+    desc.style.fontSize = '0.84rem';
+    desc.style.lineHeight = '1.5';
+    desc.textContent = ar ? item.descAr : item.descEn;
+
+    const meta = el('div', 'acad-meta-box');
+    meta.innerHTML =
+      '<div><b>🧾 ' + (ar ? 'المكونات والتحضير:' : 'Ingredients & Prep:') + '</b> ' + item.ingredientsAr + '</div>' +
+      '<div style="margin-top:4px;"><b>' + item.allergensAr + '</b></div>' +
+      '<div style="margin-top:4px;color:var(--accent);"><b>' + item.pairingAr + '</b></div>';
+
+    const actRow = el('div', 'gov-actions');
+    actRow.style.marginTop = 'auto';
+    actRow.style.paddingTop = '6px';
+
+    const verifyBtn = el(
+      'button',
+      'btn ' + (isMastered ? '' : 'primary'),
+      isMastered
+        ? (ar ? '🔄 إعادة اختبار الصنف (+XP)' : '🔄 Retake Item Quiz (+XP)')
+        : (ar ? '✓ أتممت تعلّم هذا الصنف — اختبرني الآن!' : '✓ Mark Studied & Take Verification Quiz!')
+    );
+    verifyBtn.type = 'button';
+    verifyBtn.style.width = '100%';
+    verifyBtn.addEventListener('click', () => {
+      if (!rec.studiedIds.includes(item.id)) {
+        rec.studiedIds.push(item.id);
+        saveAcadProgress(all);
+      }
+      onVerify(item);
+    });
+    actRow.append(verifyBtn);
+
+    card.append(topRow, desc, meta, actRow);
+    return card;
+  }
+
+  function renderAcademyView(root) {
+    if (!root) return;
+    root.replaceChildren();
+    const ar = isAr();
+    const sess = getSession();
+    const isMgr = !sess || !!sess.isManager;
+    const catalog = loadAcademyCatalog();
+    const { uname, rec, all } = getMyAcadRecord();
+    const masteredCount = catalog.filter((it) => rec.masteredIds.includes(it.id)).length;
+    const masteryPct = catalog.length ? Math.round((masteredCount * 100) / catalog.length) : 0;
+    const bonusPts = syncAcademyBonusToTips(uname, rec.xp);
+
+    const onPopQuiz = () => openQuizModal(null);
+    const onAddItem = () => openAddAcademyItemModal();
+    const onFilterChange = () => renderAcademyView(root);
+    const onVerify = (item) => openQuizModal(item);
+
+    const hero = renderAcademyHero({
+      uname,
+      rec,
+      masteredCount,
+      catalogLength: catalog.length,
+      masteryPct,
+      bonusPts,
+      isMgr,
+      ar,
+      onPopQuiz,
+      onAddItem,
+    });
+    root.append(hero);
+
+    const fBar = renderAcademyFilterBar({ catalogLength: catalog.length, masteredCount, onFilterChange, ar });
     root.append(fBar);
 
-    // Dishes & Drinks Grid
     const grid = el('div', 'acad-grid');
     const filtered = catalog.filter((it) => {
       if (acadCatFilter === 'food') return it.cat === 'food';
@@ -313,84 +403,129 @@
     });
 
     filtered.forEach((item) => {
-      const isMastered = rec.masteredIds.includes(item.id);
-      const isStudied = rec.studiedIds.includes(item.id);
-      const card = el('article', 'acad-item-card' + (isMastered ? ' mastered' : ''));
-
-      const topRow = el('div', '');
-      topRow.style.display = 'flex';
-      topRow.style.justifyContent = 'space-between';
-      topRow.style.alignItems = 'flex-start';
-      topRow.style.gap = '8px';
-
-      const statusBadge = isMastered
-        ? '<span class="dayoff-badge approved">🎓 ' + (ar ? 'متقن ومعتمد ✓' : 'Mastered ✓') + '</span>'
-        : isStudied
-        ? '<span class="dayoff-badge pending">🎯 ' + (ar ? 'بانتظار اجتياز الاختبار' : 'Ready for Quiz') + '</span>'
-        : '<span class="dayoff-badge">' + (ar ? '📖 قيد التعلم' : '📖 To Study') + '</span>';
-
-      topRow.innerHTML =
-        '<div><small style="color:var(--accent);font-weight:800;">' + (ar ? item.catLabelAr : item.catLabelEn) + '</small>' +
-        '<h3 style="margin:2px 0;font-size:1.02rem;">' + (ar ? item.nameAr : item.nameEn) + '</h3></div>' +
-        statusBadge;
-
-      const desc = el('p', '');
-      desc.style.margin = '2px 0';
-      desc.style.fontSize = '0.84rem';
-      desc.style.lineHeight = '1.5';
-      desc.textContent = ar ? item.descAr : item.descEn;
-
-      const meta = el('div', 'acad-meta-box');
-      meta.innerHTML =
-        '<div><b>🧾 ' + (ar ? 'المكونات والتحضير:' : 'Ingredients & Prep:') + '</b> ' + item.ingredientsAr + '</div>' +
-        '<div style="margin-top:4px;"><b>' + item.allergensAr + '</b></div>' +
-        '<div style="margin-top:4px;color:var(--accent);"><b>' + item.pairingAr + '</b></div>';
-
-      const actRow = el('div', 'gov-actions');
-      actRow.style.marginTop = 'auto';
-      actRow.style.paddingTop = '6px';
-
-      const verifyBtn = el(
-        'button',
-        'btn ' + (isMastered ? '' : 'primary'),
-        isMastered
-          ? (ar ? '🔄 إعادة اختبار الصنف (+XP)' : '🔄 Retake Item Quiz (+XP)')
-          : (ar ? '✓ أتممت تعلّم هذا الصنف — اختبرني الآن!' : '✓ Mark Studied & Take Verification Quiz!')
-      );
-      verifyBtn.type = 'button';
-      verifyBtn.style.width = '100%';
-      verifyBtn.addEventListener('click', () => {
-        if (!rec.studiedIds.includes(item.id)) {
-          rec.studiedIds.push(item.id);
-          saveAcadProgress(all);
-        }
-        openQuizModal(item);
-      });
-      actRow.append(verifyBtn);
-
-      card.append(topRow, desc, meta, actRow);
-      grid.append(card);
+      grid.append(renderAcademyCard({ item, rec, all, onVerify, ar }));
     });
     root.append(grid);
   }
 
-  // Interactive 3-Option Quiz Modal (either for a specific item or general random challenge)
+  // ============================================================================
+  // Interactive 3-Option Quiz Sub-Renderers (< 80 lines each)
+  // ============================================================================
+
+  function buildQuizPool(targetItem, catalog, ar) {
+    if (targetItem && Array.isArray(targetItem.questions) && targetItem.questions.length) {
+      return targetItem.questions.map((q) => ({
+        ...q,
+        itemId: targetItem.id,
+        itemName: ar ? targetItem.nameAr : targetItem.nameEn,
+      }));
+    }
+    const pool = [];
+    catalog.forEach((it) => {
+      (it.questions || []).forEach((q) => {
+        pool.push({
+          ...q,
+          itemId: it.id,
+          itemName: ar ? it.nameAr : it.nameEn,
+        });
+      });
+    });
+    return pool;
+  }
+
+  function renderQuizResultScreen(opts) {
+    const { box, result, onDone, ar } = opts;
+    const { passedAll, earnedXP, correctCount, poolLength, targetItem, rec, bonusPts } = result;
+    box.innerHTML =
+      '<div style="text-align:center;padding:12px 0;">' +
+      '<div style="font-size:2.6rem;">' + (passedAll ? '🏆' : '💡') + '</div>' +
+      '<h2 style="margin:8px 0;">' +
+      (passedAll
+        ? (ar ? 'أحسنت! اجتزت الاختبار بنجاح 100%' : 'Excellent! You passed 100%!')
+        : (ar ? 'نتيجة الاختبار: ' + correctCount + ' من ' + poolLength : 'Score: ' + correctCount + ' / ' + poolLength)) +
+      '</h2>' +
+      '<p style="color:var(--ink2);font-size:0.88rem;">' +
+      (targetItem && passedAll
+        ? (ar ? 'تم اعتماد إتقانك لصنف (' + (ar ? targetItem.nameAr : targetItem.nameEn) + ') وإضافة +' + earnedXP + ' XP لرصيدك!' : 'Item marked as Mastered and +' + earnedXP + ' XP added!')
+        : (ar ? 'حصلت على +' + earnedXP + ' XP (إجمالي رصيدك: ' + rec.xp + ' XP · مكافأة التبس: +' + bonusPts + ' نقطة)' : 'Earned +' + earnedXP + ' XP (Total: ' + rec.xp + ' XP · Bonus Tip Pts: +' + bonusPts + ')')) +
+      '</p>' +
+      '</div>';
+
+    const doneB = el('button', 'btn primary', ar ? '✓ العودة للأكاديمية وتحديث الرصيد' : '✓ Back to Academy');
+    doneB.type = 'button';
+    doneB.style.width = '100%';
+    doneB.addEventListener('click', onDone);
+    box.append(doneB);
+  }
+
+  function renderQuizQuestionScreen(opts) {
+    const { box, qData, onNext, onCancel, ar } = opts;
+    const { cur, idx, total, onAnswerSelect } = qData;
+    box.innerHTML =
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
+      '<span class="dayoff-badge pending">🎯 ' + (ar ? 'سؤال ' + (idx + 1) + ' من ' + total : 'Question ' + (idx + 1) + ' of ' + total) + '</span>' +
+      '<small style="color:var(--ink2);font-weight:700;">' + cur.itemName + '</small>' +
+      '</div>' +
+      '<h3 style="margin:6px 0 12px;font-size:1.02rem;line-height:1.45;">' + (ar ? cur.qAr : cur.qEn || cur.qAr) + '</h3>';
+
+    const optsWrap = el('div', '');
+    const feedback = el('p', '');
+    feedback.style.fontWeight = '700';
+    feedback.style.fontSize = '0.84rem';
+    feedback.style.marginTop = '10px';
+    feedback.hidden = true;
+
+    const nextBtn = el(
+      'button',
+      'btn primary',
+      idx + 1 < total ? (ar ? 'السؤال التالي ←' : 'Next Question →') : (ar ? 'عرض النتيجة واعتماد النقاط 🏆' : 'See Result & Claim XP 🏆')
+    );
+    nextBtn.type = 'button';
+    nextBtn.style.width = '100%';
+    nextBtn.style.marginTop = '12px';
+    nextBtn.hidden = true;
+    nextBtn.addEventListener('click', onNext);
+
+    let answered = false;
+    (cur.options || []).slice(0, 3).forEach((optText, optIndex) => {
+      const b = el('button', 'quiz-opt-btn', (optIndex + 1) + '. ' + optText);
+      b.type = 'button';
+      b.addEventListener('click', () => {
+        if (answered) return;
+        answered = true;
+        const isRight = optIndex === cur.correct;
+        onAnswerSelect(isRight);
+        if (isRight) {
+          b.classList.add('correct');
+          feedback.style.color = 'var(--accent)';
+          feedback.textContent = ar ? '✅ إجابة صحيحة! (+15 XP)' : '✅ Correct answer! (+15 XP)';
+        } else {
+          b.classList.add('wrong');
+          const allBtns = optsWrap.querySelectorAll('.quiz-opt-btn');
+          if (allBtns[cur.correct]) allBtns[cur.correct].classList.add('correct');
+          feedback.style.color = 'var(--danger)';
+          feedback.textContent = ar ? '❌ إجابة غير دقيقة — راجع الخيار الصحيح باللون الأخضر.' : '❌ Not quite — check the highlighted correct option.';
+        }
+        feedback.hidden = false;
+        nextBtn.hidden = false;
+      });
+      optsWrap.append(b);
+    });
+
+    const cancelB = el('button', 'btn', ar ? 'إلغاء' : 'Close');
+    cancelB.type = 'button';
+    cancelB.style.width = '100%';
+    cancelB.style.marginTop = '8px';
+    cancelB.addEventListener('click', onCancel);
+
+    box.append(optsWrap, feedback, nextBtn, cancelB);
+  }
+
   function openQuizModal(targetItem) {
     const ar = isAr();
     const catalog = loadAcademyCatalog();
     const { uname, rec, all } = getMyAcadRecord();
-
-    // Gather questions (3 choices each)
-    let pool = [];
-    if (targetItem && Array.isArray(targetItem.questions) && targetItem.questions.length) {
-      pool = targetItem.questions.map((q) => ({ ...q, itemId: targetItem.id, itemName: ar ? targetItem.nameAr : targetItem.nameEn }));
-    } else {
-      catalog.forEach((it) => {
-        (it.questions || []).forEach((q) => {
-          pool.push({ ...q, itemId: it.id, itemName: ar ? it.nameAr : it.nameEn });
-        });
-      });
-    }
+    const pool = buildQuizPool(targetItem, catalog, ar);
     if (!pool.length) return;
 
     let idx = 0;
@@ -420,91 +555,28 @@
         saveAcadProgress(all);
         const bonusPts = syncAcademyBonusToTips(uname, rec.xp);
 
-        box.innerHTML =
-          '<div style="text-align:center;padding:12px 0;">' +
-          '<div style="font-size:2.6rem;">' + (passedAll ? '🏆' : '💡') + '</div>' +
-          '<h2 style="margin:8px 0;">' +
-          (passedAll
-            ? (ar ? 'أحسنت! اجتزت الاختبار بنجاح 100%' : 'Excellent! You passed 100%!')
-            : (ar ? 'نتيجة الاختبار: ' + correctCount + ' من ' + pool.length : 'Score: ' + correctCount + ' / ' + pool.length)) +
-          '</h2>' +
-          '<p style="color:var(--ink2);font-size:0.88rem;">' +
-          (targetItem && passedAll
-            ? (ar ? 'تم اعتماد إتقانك لصنف (' + (ar ? targetItem.nameAr : targetItem.nameEn) + ') وإضافة +' + earnedXP + ' XP لرصيدك!' : 'Item marked as Mastered and +' + earnedXP + ' XP added!')
-            : (ar ? 'حصلت على +' + earnedXP + ' XP (إجمالي رصيدك: ' + rec.xp + ' XP · مكافأة التبس: +' + bonusPts + ' نقطة)' : 'Earned +' + earnedXP + ' XP (Total: ' + rec.xp + ' XP · Bonus Tip Pts: +' + bonusPts + ')')) +
-          '</p>' +
-          '</div>';
-
-        const doneB = el('button', 'btn primary', ar ? '✓ العودة للأكاديمية وتحديث الرصيد' : '✓ Back to Academy');
-        doneB.type = 'button';
-        doneB.style.width = '100%';
-        doneB.addEventListener('click', () => {
-          dlg.close();
-          FOH.app.render();
+        renderQuizResultScreen({
+          box,
+          result: { passedAll, earnedXP, correctCount, poolLength: pool.length, targetItem, rec, bonusPts },
+          onDone: () => { dlg.close(); FOH.app.render(); },
+          ar,
         });
-        box.append(doneB);
         dlg.append(box);
         return;
       }
 
-      const cur = pool[idx];
-      box.innerHTML =
-        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
-        '<span class="dayoff-badge pending">🎯 ' + (ar ? 'سؤال ' + (idx + 1) + ' من ' + pool.length : 'Question ' + (idx + 1) + ' of ' + pool.length) + '</span>' +
-        '<small style="color:var(--ink2);font-weight:700;">' + cur.itemName + '</small>' +
-        '</div>' +
-        '<h3 style="margin:6px 0 12px;font-size:1.02rem;line-height:1.45;">' + (ar ? cur.qAr : cur.qEn || cur.qAr) + '</h3>';
-
-      const optsWrap = el('div', '');
-      const feedback = el('p', '');
-      feedback.style.fontWeight = '700';
-      feedback.style.fontSize = '0.84rem';
-      feedback.style.marginTop = '10px';
-      feedback.hidden = true;
-
-      let answered = false;
-      (cur.options || []).slice(0, 3).forEach((optText, optIndex) => {
-        const b = el('button', 'quiz-opt-btn', (optIndex + 1) + '. ' + optText);
-        b.type = 'button';
-        b.addEventListener('click', () => {
-          if (answered) return;
-          answered = true;
-          const isRight = optIndex === cur.correct;
-          if (isRight) {
-            correctCount++;
-            b.classList.add('correct');
-            feedback.style.color = 'var(--accent)';
-            feedback.textContent = ar ? '✅ إجابة صحيحة! (+15 XP)' : '✅ Correct answer! (+15 XP)';
-          } else {
-            b.classList.add('wrong');
-            const allBtns = optsWrap.querySelectorAll('.quiz-opt-btn');
-            if (allBtns[cur.correct]) allBtns[cur.correct].classList.add('correct');
-            feedback.style.color = 'var(--danger)';
-            feedback.textContent = ar ? '❌ إجابة غير دقيقة — راجع الخيار الصحيح باللون الأخضر.' : '❌ Not quite — check the highlighted correct option.';
-          }
-          feedback.hidden = false;
-          nextBtn.hidden = false;
-        });
-        optsWrap.append(b);
+      renderQuizQuestionScreen({
+        box,
+        qData: {
+          cur: pool[idx],
+          idx,
+          total: pool.length,
+          onAnswerSelect: (isRight) => { if (isRight) correctCount++; },
+        },
+        onNext: () => { idx++; drawQuestion(); },
+        onCancel: () => dlg.close(),
+        ar,
       });
-
-      const nextBtn = el('button', 'btn primary', idx + 1 < pool.length ? (ar ? 'السؤال التالي ←' : 'Next Question →') : (ar ? 'عرض النتيجة واعتماد النقاط 🏆' : 'See Result & Claim XP 🏆'));
-      nextBtn.type = 'button';
-      nextBtn.style.width = '100%';
-      nextBtn.style.marginTop = '12px';
-      nextBtn.hidden = true;
-      nextBtn.addEventListener('click', () => {
-        idx++;
-        drawQuestion();
-      });
-
-      const cancelB = el('button', 'btn', ar ? 'إغلاق' : 'Close');
-      cancelB.type = 'button';
-      cancelB.style.width = '100%';
-      cancelB.style.marginTop = '8px';
-      cancelB.addEventListener('click', () => dlg.close());
-
-      box.append(optsWrap, feedback, nextBtn, cancelB);
       dlg.append(box);
       if (typeof injectNewTasksInboxIntoNotifCenter === "function") injectNewTasksInboxIntoNotifCenter();
     }
@@ -513,21 +585,11 @@
     dlg.showModal();
   }
 
-  function openAddAcademyItemModal() {
-    const ar = isAr();
-    let dlg = $('addAcadDialog');
-    if (!dlg) {
-      dlg = el('dialog', 'sheet');
-      dlg.id = 'addAcadDialog';
-      document.body.append(dlg);
-    }
-    dlg.replaceChildren();
-    const form = el('form', '');
-    form.method = 'dialog';
-    form.innerHTML =
-      '<div class="grab"></div>' +
-      '<h2>➕ ' + (ar ? 'إضافة طبق أو مشروب جديد للأكاديمية مع سؤال الاختبار' : 'Add Dish / Drink & Verification Question') + '</h2>';
+  // ============================================================================
+  // Add Academy Dish / Cocktail Sub-Renderers (< 80 lines each)
+  // ============================================================================
 
+  function buildAddAcademyFormFields(ar) {
     const catSel = el('select', 'in');
     catSel.innerHTML =
       '<option value="food">🍽 ' + (ar ? 'طبق طعام (Food)' : 'Food Dish') + '</option>' +
@@ -553,6 +615,57 @@
     const opt3 = el('input', 'in');
     opt3.placeholder = ar ? 'الخيار ٣ (خاطئ)' : 'Option 3 (Wrong)';
 
+    return { catSel, nameIn, descIn, ingIn, qIn, opt1, opt2, opt3 };
+  }
+
+  function saveNewAcademyItem(fields, ar) {
+    const { catSel, nameIn, descIn, ingIn, qIn, opt1, opt2, opt3 } = fields;
+    const list = loadAcademyCatalog();
+    const isFood = catSel.value === 'food';
+    list.unshift({
+      id: 'acad_' + Date.now(),
+      cat: catSel.value,
+      catLabelAr: isFood ? '🍽 أطباق المنيو' : '🍸 مشروبات البار',
+      catLabelEn: isFood ? '🍽 Menu Dishes' : '🍸 Bar Drinks',
+      nameAr: nameIn.value.trim(),
+      nameEn: nameIn.value.trim(),
+      descAr: descIn.value.trim() || nameIn.value.trim(),
+      descEn: descIn.value.trim() || nameIn.value.trim(),
+      ingredientsAr: ingIn.value.trim() || 'حسب الوصفة المعتمدة',
+      allergensAr: '⚠️ راجع دليل الحساسية مع الشيف / الكابتن',
+      pairingAr: '💡 يُقدّم حسب معايير الخدمة المعتمدة في المطعم',
+      questions: [
+        {
+          qAr: qIn.value.trim(),
+          qEn: qIn.value.trim(),
+          options: [opt1.value.trim(), opt2.value.trim() || 'خيار بديل ١', opt3.value.trim() || 'خيار بديل ٢'],
+          correct: 0,
+        },
+      ],
+    });
+    saveAcademyCatalog(list);
+    FOH.edit.toast(ar ? 'تمت إضافة الصنف وسؤال الاختبار إلى الأكاديمية ✓' : 'Item added to Academy ✓');
+    FOH.app.render();
+  }
+
+  function openAddAcademyItemModal() {
+    const ar = isAr();
+    let dlg = $('addAcadDialog');
+    if (!dlg) {
+      dlg = el('dialog', 'sheet');
+      dlg.id = 'addAcadDialog';
+      document.body.append(dlg);
+    }
+    dlg.replaceChildren();
+
+    const form = el('form', '');
+    form.method = 'dialog';
+    form.innerHTML =
+      '<div class="grab"></div>' +
+      '<h2>➕ ' + (ar ? 'إضافة طبق أو مشروب جديد للأكاديمية مع سؤال الاختبار' : 'Add Dish / Drink & Verification Question') + '</h2>';
+
+    const f = buildAddAcademyFormFields(ar);
+
     const actions = el('div', 'sheet-actions');
     const cancelB = el('button', 'btn', ar ? 'إلغاء' : 'Cancel');
     cancelB.type = 'button';
@@ -561,43 +674,16 @@
     const saveB = el('button', 'btn primary', ar ? '💾 حفظ الصنف وسؤال الاختبار' : '💾 Save Item & Quiz');
     saveB.type = 'button';
     saveB.addEventListener('click', () => {
-      if (!nameIn.value.trim() || !qIn.value.trim() || !opt1.value.trim()) return nameIn.focus();
-      const list = loadAcademyCatalog();
-      const isFood = catSel.value === 'food';
-      list.unshift({
-        id: 'acad_' + Date.now(),
-        cat: catSel.value,
-        catLabelAr: isFood ? '🍽 أطباق المنيو' : '🍸 مشروبات البار',
-        catLabelEn: isFood ? '🍽 Menu Dishes' : '🍸 Bar Drinks',
-        nameAr: nameIn.value.trim(),
-        nameEn: nameIn.value.trim(),
-        descAr: descIn.value.trim() || nameIn.value.trim(),
-        descEn: descIn.value.trim() || nameIn.value.trim(),
-        ingredientsAr: ingIn.value.trim() || 'حسب الوصفة المعتمدة',
-        allergensAr: '⚠️ راجع دليل الحساسية مع الشيف / الكابتن',
-        pairingAr: '💡 يُقدّم حسب معايير الخدمة المعتمدة في المطعم',
-        questions: [
-          {
-            qAr: qIn.value.trim(),
-            qEn: qIn.value.trim(),
-            options: [opt1.value.trim(), opt2.value.trim() || 'خيار بديل ١', opt3.value.trim() || 'خيار بديل ٢'],
-            correct: 0,
-          },
-        ],
-      });
-      saveAcademyCatalog(list);
+      if (!f.nameIn.value.trim() || !f.qIn.value.trim() || !f.opt1.value.trim()) return f.nameIn.focus();
+      saveNewAcademyItem(f, ar);
       dlg.close();
-      FOH.edit.toast(ar ? 'تمت إضافة الصنف وسؤال الاختبار إلى الأكاديمية ✓' : 'Item added to Academy ✓');
-      FOH.app.render();
     });
 
     actions.append(cancelB, saveB);
-    form.append(catSel, nameIn, descIn, ingIn, qIn, opt1, opt2, opt3, actions);
+    form.append(f.catSel, f.nameIn, f.descIn, f.ingIn, f.qIn, f.opt1, f.opt2, f.opt3, actions);
     dlg.append(form);
     dlg.showModal();
   }
-
-
 
   FOH.academyView = {
     loadAcademyCatalog,

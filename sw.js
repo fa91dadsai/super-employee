@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE = 'super-employee-v40-lifecycle-tips-clean';
+const CACHE = 'super-employee-v41-academy-clean';
 const PRECACHE = [
   './',
   './index.html',
