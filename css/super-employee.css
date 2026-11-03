@@ -116,14 +116,11 @@ header.top .profile-btn-name {
   display: none !important;
 }
 
-/* Move #chips look & feel cleanly inside <main> */
-body:not(.editing):not(.focused-non-opening) main#appMain > nav#chips {
-  display: flex !important;
-  gap: 6px;
-  overflow-x: auto;
-  padding: 2px 0 10px;
-  margin: 0 0 6px;
-  scrollbar-width: none;
+/* #chips replaced completely by .dept-bento-grid */
+main#appMain > nav#chips,
+nav#chips,
+#chips {
+  display: none !important;
 }
 main#appMain > nav#chips::-webkit-scrollbar {
   display: none;
@@ -2534,3 +2531,279 @@ body.dark .prof-kv-cell {
   background: rgba(255, 255, 255, 0.03);
   border-color: rgba(255, 255, 255, 0.07);
 }
+
+/* =========================================================================
+   DEPARTMENTS BENTO HUB & ISOLATED CHECKLIST FILTER
+   ========================================================================= */
+
+.dept-bento-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 8px;
+}
+
+@media (max-width: 480px) {
+  .dept-bento-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+}
+
+.dept-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 10px 10px;
+  border-radius: 14px;
+  background: var(--card, #ffffff);
+  border: 1.5px solid var(--line, #e2e8e2);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: start;
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+body.dark .dept-tile {
+  background: var(--card, #17211b);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.dept-tile:hover {
+  border-color: var(--accent, #2f6b5e);
+  background: var(--accent-soft, rgba(47, 107, 94, 0.05));
+  transform: translateY(-1px);
+}
+
+body.dark .dept-tile:hover {
+  border-color: rgba(74, 222, 128, 0.4);
+  background: rgba(74, 222, 128, 0.06);
+}
+
+.dept-tile.active,
+.dept-tile.on {
+  background: var(--accent-soft, rgba(47, 107, 94, 0.1)) !important;
+  border-color: var(--accent, #2f6b5e) !important;
+  box-shadow: 0 4px 14px rgba(47, 107, 94, 0.18) !important;
+}
+
+body.dark .dept-tile.active,
+body.dark .dept-tile.on {
+  background: rgba(74, 222, 128, 0.12) !important;
+  border-color: #4ade80 !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* ALL Tile spans full width at the top */
+.dept-tile-all {
+  grid-column: 1 / -1;
+  padding: 12px 16px;
+  background: var(--bg, #f7faf7);
+}
+
+body.dark .dept-tile-all {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.dept-tile-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+
+.dept-tile-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.dept-tile-ico {
+  font-size: 1.4rem;
+  line-height: 1;
+  flex: none;
+}
+
+.dept-tile-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.dept-tile-title {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--ink, #142019);
+  line-height: 1.25;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+body.dark .dept-tile-title {
+  color: #f0fdf4;
+}
+
+.dept-tile-sub {
+  font-size: 0.72rem;
+  color: var(--ink2, #607267);
+  margin-top: 2px;
+}
+
+body.dark .dept-tile-sub {
+  color: #9cb1a4;
+}
+
+/* Gear ⚙️ Settings Button on each tile */
+.dept-tile-gear {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  border: 1px solid var(--line, #e2e8e2);
+  background: var(--bg, #f7faf7);
+  display: grid;
+  place-items: center;
+  font-size: 0.95rem;
+  cursor: pointer;
+  flex: none;
+  color: var(--ink2, #607267);
+  transition: all 0.18s ease;
+  padding: 0;
+}
+
+body.dark .dept-tile-gear {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+}
+
+.dept-tile-gear:hover {
+  background: var(--accent, #2f6b5e);
+  color: #ffffff;
+  border-color: var(--accent, #2f6b5e);
+  transform: scale(1.1);
+}
+
+body.dark .dept-tile-gear:hover {
+  background: #4ade80;
+  color: #0f1712;
+  border-color: #4ade80;
+}
+
+.dept-tile-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+  gap: 6px;
+  width: 100%;
+}
+
+.dept-tile-assignee {
+  font-size: 0.7rem;
+  color: var(--ink2, #607267);
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
+body.dark .dept-tile-assignee {
+  color: #9cb1a4;
+}
+
+.dept-tile-progress {
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  background: var(--bg, #f7faf7);
+  color: var(--accent, #2f6b5e);
+  border: 1px solid var(--line, #e2e8e2);
+  flex: none;
+}
+
+body.dark .dept-tile-progress {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #4ade80;
+}
+
+.dept-tile-progress.complete {
+  background: var(--accent, #2f6b5e) !important;
+  color: #ffffff !important;
+  border-color: var(--accent, #2f6b5e) !important;
+}
+
+body.dark .dept-tile-progress.complete {
+  background: #4ade80 !important;
+  color: #0f1712 !important;
+  border-color: #4ade80 !important;
+}
+
+/* Isolated Checklist Focused Banner */
+.dept-isolated-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  border-radius: 14px;
+  background: var(--accent-soft, rgba(47, 107, 94, 0.1));
+  border: 1.5px solid var(--accent, #2f6b5e);
+  animation: dibFadeIn 0.25s ease;
+}
+
+body.dark .dept-isolated-banner {
+  background: rgba(74, 222, 128, 0.08);
+  border-color: rgba(74, 222, 128, 0.4);
+}
+
+.dept-isolated-banner .dib-txt {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dept-isolated-banner .dib-txt b {
+  font-size: 0.88rem;
+  color: var(--accent, #2f6b5e);
+}
+
+body.dark .dept-isolated-banner .dib-txt b {
+  color: #4ade80;
+}
+
+.dept-isolated-banner .dib-txt small {
+  font-size: 0.72rem;
+  color: var(--ink2, #607267);
+}
+
+body.dark .dept-isolated-banner .dib-txt small {
+  color: #9cb1a4;
+}
+
+@keyframes dibFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+#chips { display: none !important; }

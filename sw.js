@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE = 'super-employee-v34-profile-tabs';
+const CACHE = 'super-employee-v36-dept-bento-ready';
 const PRECACHE = [
   './',
   './index.html',

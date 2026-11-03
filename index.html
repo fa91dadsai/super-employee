@@ -3074,14 +3074,11 @@ header.top .profile-btn-name {
   display: none !important;
 }
 
-/* Move #chips look & feel cleanly inside <main> */
-body:not(.editing):not(.focused-non-opening) main#appMain > nav#chips {
-  display: flex !important;
-  gap: 6px;
-  overflow-x: auto;
-  padding: 2px 0 10px;
-  margin: 0 0 6px;
-  scrollbar-width: none;
+/* #chips replaced completely by .dept-bento-grid */
+main#appMain > nav#chips,
+nav#chips,
+#chips {
+  display: none !important;
 }
 main#appMain > nav#chips::-webkit-scrollbar {
   display: none;
@@ -5492,6 +5489,282 @@ body.dark .prof-kv-cell {
   background: rgba(255, 255, 255, 0.03);
   border-color: rgba(255, 255, 255, 0.07);
 }
+
+/* =========================================================================
+   DEPARTMENTS BENTO HUB & ISOLATED CHECKLIST FILTER
+   ========================================================================= */
+
+.dept-bento-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 8px;
+}
+
+@media (max-width: 480px) {
+  .dept-bento-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+}
+
+.dept-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 10px 10px;
+  border-radius: 14px;
+  background: var(--card, #ffffff);
+  border: 1.5px solid var(--line, #e2e8e2);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: start;
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+body.dark .dept-tile {
+  background: var(--card, #17211b);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.dept-tile:hover {
+  border-color: var(--accent, #2f6b5e);
+  background: var(--accent-soft, rgba(47, 107, 94, 0.05));
+  transform: translateY(-1px);
+}
+
+body.dark .dept-tile:hover {
+  border-color: rgba(74, 222, 128, 0.4);
+  background: rgba(74, 222, 128, 0.06);
+}
+
+.dept-tile.active,
+.dept-tile.on {
+  background: var(--accent-soft, rgba(47, 107, 94, 0.1)) !important;
+  border-color: var(--accent, #2f6b5e) !important;
+  box-shadow: 0 4px 14px rgba(47, 107, 94, 0.18) !important;
+}
+
+body.dark .dept-tile.active,
+body.dark .dept-tile.on {
+  background: rgba(74, 222, 128, 0.12) !important;
+  border-color: #4ade80 !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* ALL Tile spans full width at the top */
+.dept-tile-all {
+  grid-column: 1 / -1;
+  padding: 12px 16px;
+  background: var(--bg, #f7faf7);
+}
+
+body.dark .dept-tile-all {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.dept-tile-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+
+.dept-tile-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.dept-tile-ico {
+  font-size: 1.4rem;
+  line-height: 1;
+  flex: none;
+}
+
+.dept-tile-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.dept-tile-title {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--ink, #142019);
+  line-height: 1.25;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+body.dark .dept-tile-title {
+  color: #f0fdf4;
+}
+
+.dept-tile-sub {
+  font-size: 0.72rem;
+  color: var(--ink2, #607267);
+  margin-top: 2px;
+}
+
+body.dark .dept-tile-sub {
+  color: #9cb1a4;
+}
+
+/* Gear ⚙️ Settings Button on each tile */
+.dept-tile-gear {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  border: 1px solid var(--line, #e2e8e2);
+  background: var(--bg, #f7faf7);
+  display: grid;
+  place-items: center;
+  font-size: 0.95rem;
+  cursor: pointer;
+  flex: none;
+  color: var(--ink2, #607267);
+  transition: all 0.18s ease;
+  padding: 0;
+}
+
+body.dark .dept-tile-gear {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+}
+
+.dept-tile-gear:hover {
+  background: var(--accent, #2f6b5e);
+  color: #ffffff;
+  border-color: var(--accent, #2f6b5e);
+  transform: scale(1.1);
+}
+
+body.dark .dept-tile-gear:hover {
+  background: #4ade80;
+  color: #0f1712;
+  border-color: #4ade80;
+}
+
+.dept-tile-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+  gap: 6px;
+  width: 100%;
+}
+
+.dept-tile-assignee {
+  font-size: 0.7rem;
+  color: var(--ink2, #607267);
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
+body.dark .dept-tile-assignee {
+  color: #9cb1a4;
+}
+
+.dept-tile-progress {
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  background: var(--bg, #f7faf7);
+  color: var(--accent, #2f6b5e);
+  border: 1px solid var(--line, #e2e8e2);
+  flex: none;
+}
+
+body.dark .dept-tile-progress {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #4ade80;
+}
+
+.dept-tile-progress.complete {
+  background: var(--accent, #2f6b5e) !important;
+  color: #ffffff !important;
+  border-color: var(--accent, #2f6b5e) !important;
+}
+
+body.dark .dept-tile-progress.complete {
+  background: #4ade80 !important;
+  color: #0f1712 !important;
+  border-color: #4ade80 !important;
+}
+
+/* Isolated Checklist Focused Banner */
+.dept-isolated-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  border-radius: 14px;
+  background: var(--accent-soft, rgba(47, 107, 94, 0.1));
+  border: 1.5px solid var(--accent, #2f6b5e);
+  animation: dibFadeIn 0.25s ease;
+}
+
+body.dark .dept-isolated-banner {
+  background: rgba(74, 222, 128, 0.08);
+  border-color: rgba(74, 222, 128, 0.4);
+}
+
+.dept-isolated-banner .dib-txt {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dept-isolated-banner .dib-txt b {
+  font-size: 0.88rem;
+  color: var(--accent, #2f6b5e);
+}
+
+body.dark .dept-isolated-banner .dib-txt b {
+  color: #4ade80;
+}
+
+.dept-isolated-banner .dib-txt small {
+  font-size: 0.72rem;
+  color: var(--ink2, #607267);
+}
+
+body.dark .dept-isolated-banner .dib-txt small {
+  color: #9cb1a4;
+}
+
+@keyframes dibFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+#chips { display: none !important; }
 
 </style>
   </head>
@@ -18752,7 +19025,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       titleAr: '👑 Super Manager · سوبر مانجر',
       subEn: 'Full Restaurant & Bar Management Workspace',
       subAr: 'منصة الإدارة الشاملة للمطعم والبار والتحليلات',
-      allowedViews: ['opening', 'closing_sheet', 'mine', 'orders', 'inv', 'academy', 'tips', 'dashboard', 'profile', 'settings'],
+      allowedViews: ['opening', 'closing_sheet', 'mine', 'dayoff', 'orders', 'inv', 'academy', 'tips', 'dashboard', 'profile', 'settings'],
       openingKeywords: null, // all sections
       closingDept: 'all',
     },
@@ -18761,7 +19034,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       titleAr: '🎖️ Super Captain · سوبر كابتن',
       subEn: 'Floor Leadership, Last Order & Closing Sign-off',
       subAr: 'قيادة الصالة، إعلان الـ Last Order واعتماد الإغلاق',
-      allowedViews: ['opening', 'closing_sheet', 'mine', 'orders', 'inv', 'academy', 'tips', 'profile'],
+      allowedViews: ['opening', 'closing_sheet', 'mine', 'dayoff', 'orders', 'inv', 'academy', 'tips', 'profile'],
       openingKeywords: null, // all floor & station sections
       closingDept: 'all',
     },
@@ -18770,7 +19043,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       titleAr: '🍸 Super Bartender · سوبر بارتندر',
       subEn: 'Bar Prep, Cocktails, Beverage Orders & Bar Closing',
       subAr: 'واجهة ومهام البار المخصصة · المشروبات، الطلبيات وإغلاق البار',
-      allowedViews: ['opening', 'closing_sheet', 'mine', 'orders', 'inv', 'academy', 'tips', 'profile'],
+      allowedViews: ['opening', 'closing_sheet', 'mine', 'dayoff', 'orders', 'inv', 'academy', 'tips', 'profile'],
       openingKeywords: ['bar', 'station', 'clean', 'staff', 'music', 'بار', 'محطات', 'نظافة', 'موظف'],
       closingDept: 'bar',
     },
@@ -18779,7 +19052,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       titleAr: '⭐ Super Waiter · سوبر ويتر',
       subEn: 'Floor Tables, Terrace, Waiter Stations & Menu Academy',
       subAr: 'واجهة ومهام الويتر المخصصة · تجهيز الطاولات، الصالة والأكاديمية',
-      allowedViews: ['opening', 'closing_sheet', 'mine', 'orders', 'academy', 'tips', 'profile'],
+      allowedViews: ['opening', 'closing_sheet', 'mine', 'dayoff', 'orders', 'academy', 'tips', 'profile'],
       openingKeywords: ['table', 'floor', 'terrace', 'clean', 'staff', 'music', 'station', 'طاولات', 'صالة', 'تراس', 'نظافة', 'محطات'],
       closingDept: 'floor',
     },
@@ -18788,7 +19061,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       titleAr: '⭐ Super Waiter · سوبر ويتر',
       subEn: 'Assigned Shift Tasks, Tables & Menu Academy',
       subAr: 'مهام الشفت الموكلة لك، الصالة والأكاديمية',
-      allowedViews: ['opening', 'closing_sheet', 'mine', 'academy', 'tips', 'profile'],
+      allowedViews: ['opening', 'closing_sheet', 'mine', 'dayoff', 'academy', 'tips', 'profile'],
       openingKeywords: ['table', 'floor', 'terrace', 'clean', 'staff', 'طاولات', 'صالة', 'نظافة'],
       closingDept: 'floor',
     },
@@ -23788,7 +24061,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 // --- js/domains/navigation/mode-dept-panels.js ---
 // foh-opening/js/domains/navigation/mode-dept-panels.js
 // 1. Mode Switcher (Checklist vs Tasks) Segmented Control
-// 2. Department Switcher (Bar, Floor, Back Area, Host, Cashier, All) Segmented Rail
+// 2. Department Bento Hub (All + Sections with Gear ⚙️ for RBAC & Customization)
+// 3. Isolated Checklist Filter (Shows only the selected department)
 (function (FOH) {
   'use strict';
 
@@ -23797,16 +24071,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   const isAr = () => (FOH.i18n ? FOH.i18n.lang === 'ar' : false);
   const { el } = FOH.view;
 
-  let activeDept = 'all'; // 'all' | 'bar' | 'floor' | 'back' | 'host' | 'cash' | customId
-
-  const DEPT_MAP = [
-    { key: 'all', icon: '✨', labelAr: 'الكل', labelEn: 'All' },
-    { key: 'bar', icon: '🍸', labelAr: 'البار', labelEn: 'Bar' },
-    { key: 'floor', icon: '🍽️', labelAr: 'الصالة', labelEn: 'Floor' },
-    { key: 'back', icon: '🚪', labelAr: 'الخلفية', labelEn: 'Back Area' },
-    { key: 'host', icon: '🛎️', labelAr: 'الهوست', labelEn: 'Host' },
-    { key: 'cash', icon: '💳', labelAr: 'الكاشير', labelEn: 'Cashier' },
-  ];
+  let activeDept = 'all'; // 'all' | 'sec-bar' | 'sec-floor' | sectionId
 
   function getChecklistRemaining() {
     try {
@@ -23837,7 +24102,6 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     if (!panel) {
       panel = el('div', 'ops-mode-panel run-only');
       panel.id = 'opsModeSwitcher';
-      // Insert at the very top of #appMain
       mainEl.prepend(panel);
     }
 
@@ -23870,7 +24134,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       '</div>';
     panel.append(head);
 
-    // Segmented Grid (2 items matching the screenshot style)
+    // Segmented Grid (2 items)
     const grid = el('nav', 'shift-nav-grid ops-mode-grid');
     grid.setAttribute('aria-label', 'Switch Mode: Checklist vs Tasks');
 
@@ -23924,7 +24188,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     panel.append(grid);
   }
 
-  // 2. Render Department Switcher (Bar, Floor, Back, Host, Cashier, All)
+  // 2. Render Department Bento Hub (#deptSegmentPanel)
   function renderDeptSegmentPanel() {
     const mainEl = $('appMain');
     const sectionsEl = $('sections');
@@ -23934,7 +24198,6 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     if (!panel) {
       panel = el('div', 'dept-segment-panel run-only');
       panel.id = 'deptSegmentPanel';
-      // Insert right before #sections
       mainEl.insertBefore(panel, sectionsEl);
     }
 
@@ -23942,103 +24205,224 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     panel.hidden = !isChecklistView;
     if (panel.hidden) return;
 
+    // Hide old duplicate #chips to prevent visual clutter
+    const chipsEl = $('chips');
+    if (chipsEl) chipsEl.style.display = 'none';
+
     panel.replaceChildren();
 
     const ar = isAr();
     const secs = (S().tpl && Array.isArray(S().tpl.sections)) ? S().tpl.sections : [];
+    const sess = FOH.sessionAuth ? FOH.sessionAuth.getSession() : null;
+    const isMgr = !!(sess && (sess.isManager || sess.roleId === 'manager'));
+
+    // Determine active department title & progress
+    let activeTitle = ar ? 'الكل' : 'All';
+    let activeStatsText = '';
+    if (activeDept !== 'all') {
+      const targetSec = secs.find((s) => s.id === activeDept || s.dept === activeDept || ('sec-' + s.dept) === activeDept);
+      if (targetSec) {
+        activeTitle = ar ? (targetSec.titleAr || targetSec.title) : (targetSec.title || targetSec.titleAr);
+        const leaves = FOH.model && FOH.model.sectionLeaves ? FOH.model.sectionLeaves(targetSec) : (targetSec.items || []);
+        const p = FOH.model && FOH.model.progress ? FOH.model.progress(leaves, S().run.checked) : { total: (targetSec.items || []).length, done: 0 };
+        activeStatsText = ' (' + p.done + '/' + p.total + ')';
+      }
+    }
 
     // Header Meta Row
-    const activeDeptObj = DEPT_MAP.find((d) => d.key === activeDept) || DEPT_MAP[0];
     const head = el('div', 'shift-nav-head');
-    head.innerHTML =
-      '<div class="shift-nav-head-left">' +
+    const headLeft = el('div', 'shift-nav-head-left');
+    headLeft.innerHTML =
       '<span class="shift-clock-chip">📁 <b>' + (ar ? 'أقسام المطعم' : 'Departments') + '</b></span>' +
       '<span class="shift-status-chip">' +
       '<span class="shift-live-pulse-dot"></span>' +
-      '<span>' + (ar ? 'عرض: ' : 'Viewing: ') + '<b>' + (ar ? activeDeptObj.labelAr : activeDeptObj.labelEn) + '</b></span>' +
-      '</span>' +
-      '</div>';
+      '<span>' + (ar ? 'عرض: ' : 'Viewing: ') + '<b>' + activeTitle + '</b>' + activeStatsText + '</span>' +
+      '</span>';
+    head.append(headLeft);
+
+    // Optional: "+ New Dept" button for Manager
+    if (isMgr) {
+      const addDeptBtn = el('button', 'btn sm', ar ? '+ قسم جديد' : '+ New Dept');
+      addDeptBtn.type = 'button';
+      addDeptBtn.style.padding = '3px 10px';
+      addDeptBtn.style.fontSize = '0.74rem';
+      addDeptBtn.style.fontWeight = '700';
+      addDeptBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (FOH.sectionAssignment && FOH.sectionAssignment.openSectionModal) {
+          FOH.sectionAssignment.openSectionModal(null, true);
+        }
+      });
+      head.append(addDeptBtn);
+    }
     panel.append(head);
 
-    // Segmented Grid / Rail (Horizontal scrollable or grid matching the screenshot)
-    const grid = el('nav', 'shift-nav-grid dept-nav-rail');
-    grid.setAttribute('aria-label', 'Filter Checklist by Department');
+    // Bento Grid for Departments
+    const grid = el('div', 'dept-bento-grid');
 
-    // Build tabs dynamically from available sections
-    DEPT_MAP.forEach((d) => {
-      let totalItems = 0;
-      let doneItems = 0;
+    // 1. "ALL" Tile (Full Width at Top)
+    const ckStats = getChecklistRemaining();
+    const isAllActive = activeDept === 'all';
+    const allTile = el('button', 'dept-tile dept-tile-all' + (isAllActive ? ' active on' : ''));
+    allTile.type = 'button';
+    allTile.innerHTML =
+      '<div class="dept-tile-top">' +
+      '<div class="dept-tile-left">' +
+      '<span class="dept-tile-ico">✨</span>' +
+      '<div class="dept-tile-info">' +
+      '<b class="dept-tile-title">' + (ar ? '✨ كافة أقسام الشيك ليست' : '✨ All Checklist Sections') + '</b>' +
+      '<small class="dept-tile-sub">' + (ar ? 'عرض شيت العمليات الشامل' : 'Display complete shift checklist') + '</small>' +
+      '</div>' +
+      '</div>' +
+      '<span class="dept-tile-progress' + (ckStats.done === ckStats.total && ckStats.total > 0 ? ' complete' : '') + '">' +
+      (ckStats.done + '/' + ckStats.total) +
+      '</span>' +
+      '</div>';
+    allTile.addEventListener('click', () => {
+      if (navigator.vibrate) navigator.vibrate(8);
+      setActiveDept('all');
+    });
+    grid.append(allTile);
 
-      if (d.key === 'all') {
-        const stats = getChecklistRemaining();
-        totalItems = stats.total;
-        doneItems = stats.done;
+    // 2. Section Department Tiles
+    secs.forEach((sec) => {
+      const isSecActive = (activeDept === sec.id) || (activeDept === sec.dept) || (('sec-' + activeDept) === sec.id);
+      const sTitle = ar ? (sec.titleAr || sec.title) : (sec.title || sec.titleAr);
+      const sIcon = sec.icon || '🍽️';
+
+      // Calculate leaves & progress
+      const leaves = FOH.model && FOH.model.sectionLeaves ? FOH.model.sectionLeaves(sec) : (sec.items || []);
+      const p = FOH.model && FOH.model.progress ? FOH.model.progress(leaves, S().run.checked) : { total: (sec.items || []).length, done: 0 };
+      const isComplete = p.total > 0 && p.done === p.total;
+
+      // Assignee text
+      let assigneeTxt = '';
+      if (sec.assignedUsername) {
+        assigneeTxt = '👤 ' + sec.assignedUsername;
+      } else if (sec.assignedRoleLabel || sec.assignedRoleKey) {
+        assigneeTxt = sec.assignedRoleLabel || sec.assignedRoleKey;
       } else {
-        const matched = secs.filter((s) => (s.dept || '').toLowerCase() === d.key.toLowerCase());
-        matched.forEach((sec) => {
-          (sec.items || []).forEach((it) => {
-            totalItems++;
-            if (S().run && S().run.checked && S().run.checked[it.id]) doneItems++;
-          });
-        });
-        // If this department doesn't exist on this sheet, skip it
-        if (totalItems === 0 && matched.length === 0) return;
+        assigneeTxt = ar ? '👥 مشترك' : '👥 Shared';
       }
 
-      const isCur = activeDept === d.key;
-      const btn = el('button', 'shift-nav-tab dept-nav-tab' + (isCur ? ' on' : ''));
-      btn.type = 'button';
-      btn.dataset.dept = d.key;
+      const tile = el('div', 'dept-tile' + (isSecActive ? ' active on' : ''));
+      tile.setAttribute('role', 'button');
+      tile.tabIndex = 0;
 
-      btn.innerHTML =
-        '<div class="shift-tab-top">' +
-        '<span class="shift-tab-ico">' + d.icon + '</span>' +
-        '<b class="shift-tab-title">' + (ar ? d.labelAr : d.labelEn) + '</b>' +
-        (isCur ? '<span class="shift-now-dot-micro"></span>' : '') +
-        '</div>' +
-        '<div class="shift-tab-time-pill">' + (doneItems + '/' + totalItems) + '</div>';
+      // Top Row (Icon + Title + Settings Gear ⚙️)
+      const topRow = el('div', 'dept-tile-top');
+      const leftBox = el('div', 'dept-tile-left');
+      leftBox.append(
+        el('span', 'dept-tile-ico', sIcon),
+        Object.assign(el('div', 'dept-tile-info'), {
+          innerHTML: '<b class="dept-tile-title">' + FOH.escapeHtml(sTitle) + '</b>',
+        })
+      );
 
-      btn.addEventListener('click', () => {
-        if (navigator.vibrate) navigator.vibrate(8);
-        setActiveDept(d.key);
+      // Gear button for Section Customization & Permissions
+      const gearBtn = el('button', 'dept-tile-gear');
+      gearBtn.type = 'button';
+      gearBtn.title = ar ? 'تخصيص وإسناد الصلاحيات للقسم' : 'Customize & Assign Section Permissions';
+      gearBtn.setAttribute('aria-label', ar ? 'إعدادات القسم' : 'Section Settings');
+      gearBtn.innerHTML = '⚙️';
+      gearBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        if (FOH.sectionAssignment && FOH.sectionAssignment.openSectionModal) {
+          FOH.sectionAssignment.openSectionModal(sec, false);
+        }
       });
 
-      grid.append(btn);
+      topRow.append(leftBox, gearBtn);
+
+      // Bottom Row (Assignee badge + Progress pill)
+      const botRow = el('div', 'dept-tile-bottom');
+      const assigneeSpan = el('span', 'dept-tile-assignee', assigneeTxt);
+      const progSpan = el('span', 'dept-tile-progress' + (isComplete ? ' complete' : ''), isComplete ? '✓ ' + p.done + '/' + p.total : p.done + '/' + p.total);
+      botRow.append(assigneeSpan, progSpan);
+
+      tile.append(topRow, botRow);
+
+      // Click on tile to isolate checklist
+      tile.addEventListener('click', () => {
+        if (navigator.vibrate) navigator.vibrate(8);
+        setActiveDept(sec.id);
+      });
+
+      grid.append(tile);
     });
 
     panel.append(grid);
   }
 
-  // 3. Apply Department Filter to Section Cards
+  // 3. Apply Department Filter to Section Cards (Isolates only the selected department)
   function applyDeptFilter() {
     const secEl = $('sections');
     if (!secEl || S().view !== 'opening' || S().editing) return;
 
+    // Ensure duplicate outside chips remain hidden
+    const chipsEl = $('chips');
+    if (chipsEl) chipsEl.style.display = 'none';
+
     const cards = document.querySelectorAll('#sections > section.card');
     cards.forEach((card) => {
       const sid = (card.id || '').replace(/^sec-/, '');
-      const secObj = (S().tpl.sections || []).find((x) => x.id === sid);
-      const sDept = (secObj && secObj.dept ? secObj.dept : 'floor').toLowerCase();
+      const secObj = (S().tpl && S().tpl.sections ? S().tpl.sections : []).find((x) => x.id === card.id || x.id === ('sec-' + sid) || x.id === sid);
+      const sDept = (secObj && secObj.dept ? secObj.dept : sid).toLowerCase();
 
       if (activeDept === 'all') {
         card.style.display = '';
       } else {
-        const matches = sDept === activeDept.toLowerCase() || sid.toLowerCase().includes(activeDept.toLowerCase());
+        const targetClean = activeDept.replace(/^sec-/, '').toLowerCase();
+        const matches = (card.id === activeDept) ||
+                        (card.id === ('sec-' + activeDept)) ||
+                        (sid.toLowerCase() === targetClean) ||
+                        (sDept === targetClean);
         card.style.display = matches ? '' : 'none';
       }
     });
 
-    // Also sync old chips if present
-    document.querySelectorAll('#chips .chip').forEach((chip) => {
-      const card = $('sec-' + chip.dataset.sid);
-      if (card) chip.style.display = card.style.display;
-    });
+    // Check if an isolated banner should be displayed at top of sections
+    let banner = $('deptIsolatedBanner');
+    if (activeDept !== 'all') {
+      const secs = (S().tpl && Array.isArray(S().tpl.sections)) ? S().tpl.sections : [];
+      const curSec = secs.find((s) => s.id === activeDept || s.dept === activeDept || ('sec-' + s.dept) === activeDept);
+      const ar = isAr();
+      const sTitle = curSec ? (ar ? (curSec.titleAr || curSec.title) : (curSec.title || curSec.titleAr)) : activeDept;
+      const sIco = curSec ? (curSec.icon || '📌') : '📌';
+
+      if (!banner) {
+        banner = el('div', 'dept-isolated-banner');
+        banner.id = 'deptIsolatedBanner';
+        secEl.prepend(banner);
+      }
+      banner.style.display = 'flex';
+      banner.innerHTML =
+        '<div class="dib-txt">' +
+        '<span>' + sIco + ' <b>' + (ar ? 'عرض شيك ليست: ' : 'Focused Checklist: ') + FOH.escapeHtml(sTitle) + '</b></span>' +
+        '<small>' + (ar ? 'يتم الآن عرض بنود هذا القسم فقط دون بقية الأقسام' : 'Showing items for this station only') + '</small>' +
+        '</div>';
+
+      const resetBtn = el('button', 'btn sm', ar ? '✨ عرض جميع الأقسام' : '✨ Show All');
+      resetBtn.type = 'button';
+      resetBtn.addEventListener('click', () => setActiveDept('all'));
+      banner.append(resetBtn);
+    } else if (banner) {
+      banner.style.display = 'none';
+    }
   }
 
   function setActiveDept(deptKey) {
     activeDept = deptKey;
     renderDeptSegmentPanel();
     applyDeptFilter();
+    // Smooth scroll down to checklist if a specific department was selected
+    if (deptKey !== 'all') {
+      const secEl = $('sections');
+      if (secEl) {
+        secEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
   }
 
   function syncPanels() {
