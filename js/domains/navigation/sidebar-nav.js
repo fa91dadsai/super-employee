@@ -411,14 +411,10 @@
 
       const items = [
         ['opening', openLeft > 0 ? String(openLeft) : '✓'],
-        ['mine', mineLeft > 0 ? String(mineLeft) : ''],
-        ['dayoff', '🏖️'],
         ['orders', ordCount > 0 ? String(ordCount) : ''],
-        ['inv', ''],
-        ['academy', '🎓 +XP'],
-        ['tips', 'JOD'],
-        ['dashboard', '📊'],
+        ['dayoff', '🏖️'],
         ['profile', '🏥'],
+        ['dashboard', '📊'],
       ];
       if (isMgr) items.push(['settings', '⚙️']);
 
