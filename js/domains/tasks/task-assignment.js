@@ -62,33 +62,11 @@
   }
 
   // ---- Add & Assign Task to Specific Employee or Role Modal ----
-  function openAssignTaskToStaffOrRoleModal(defaultTargetSheet) {
-    const ar = isAr();
-    if (!canCurrentUserAssignTasks()) {
-      if (FOH.edit && FOH.edit.toast) {
-        FOH.edit.toast(ar ? '⚠️ صلاحية تعيين المهام مخصصة للمدير والمشرفين فقط أو لمن تم تفويضه بالإعدادات' : '⚠️ Task assignment is restricted to managers & authorized staff');
-      }
-      return;
-    }
-    let dlg = $('assignTaskDialog');
-    if (!dlg) {
-      dlg = el('dialog', 'sheet');
-      dlg.id = 'assignTaskDialog';
-      dlg.addEventListener('click', (e) => e.target === dlg && dlg.close());
-      document.body.append(dlg);
-    }
-    dlg.replaceChildren();
+  // ============================================================================
+  // Task Assignment Sub-Renderers & Modals (< 80 lines per function)
+  // ============================================================================
 
-    const curSheet = defaultTargetSheet || getActiveSheetType();
-    const today = (FOH.time && FOH.time.todayISO) ? FOH.time.todayISO() : (S.date || new Date().toISOString().slice(0, 10));
-    const nowHM = (FOH.time && FOH.time.nowHM) ? FOH.time.nowHM() : '12:00';
-
-    const box = el('div', 'task-asg-modal-box');
-    box.style.padding = '14px 18px 24px';
-    box.style.maxHeight = '88dvh';
-    box.style.overflowY = 'auto';
-
-    // Header
+  function createAssignModalHeader(dlg, ar) {
     const grab = el('div', 'grab');
     const headerRow = el('div', '');
     headerRow.style.display = 'flex';
@@ -127,9 +105,10 @@
       ? 'عيّن مهمة لمنصب أو موظف محدد، وحدد ما إذا كانت لمرة واحدة بتاريخ معين أو متكررة دورياً، مع إشعار فوري للموظف:'
       : 'Assign a task to a role or staff, choose single-date or recurring schedule, and notify instantly:';
 
-    box.append(grab, headerRow, descP);
+    return { grab, headerRow, descP };
+  }
 
-    // 1. Task Description Input
+  function createTaskTitleInput(ar) {
     const titleGroup = el('div', 'task-asg-group');
     titleGroup.style.marginBottom = '12px';
     const titleLbl = el('label', '');
@@ -150,58 +129,10 @@
     titleIn.style.padding = '8px 12px';
     titleIn.style.borderRadius = '12px';
     titleGroup.append(titleLbl, titleIn);
-    box.append(titleGroup);
+    return { titleGroup, titleIn };
+  }
 
-    // 2. Recurrence & Scheduling Card (Core Requested Feature)
-    const recurCard = el('div', 'task-asg-card');
-    recurCard.style.background = 'var(--bg2, rgba(0,0,0,0.03))';
-    recurCard.style.border = '1px solid var(--line)';
-    recurCard.style.borderRadius = '16px';
-    recurCard.style.padding = '12px 14px';
-    recurCard.style.marginBottom = '12px';
-
-    const recurTitleRow = el('div', '');
-    recurTitleRow.style.display = 'flex';
-    recurTitleRow.style.justifyContent = 'space-between';
-    recurTitleRow.style.alignItems = 'center';
-    recurTitleRow.style.marginBottom = '8px';
-    recurTitleRow.innerHTML =
-      '<span style="font-weight:700;font-size:0.82rem;display:flex;align-items:center;gap:6px;"><span>🗓️</span><span>' +
-      (ar ? 'طبيعة التكرار والجدولة:' : 'Recurrence & Schedule:') +
-      '</span></span>';
-    recurCard.append(recurTitleRow);
-
-    // Segmented Buttons: Once vs Recurring
-    let recurType = 'once'; // 'once' | 'recurring'
-    const recurSeg = el('div', 'seg wide');
-    recurSeg.style.display = 'flex';
-    recurSeg.style.borderRadius = '12px';
-    recurSeg.style.overflow = 'hidden';
-    recurSeg.style.border = '1px solid var(--line)';
-    recurSeg.style.marginBottom = '12px';
-
-    const btnOnce = el('button', 'seg-btn on', ar ? '📌 مهمة لمرة واحدة (One-Time)' : '📌 One-Time Task');
-    btnOnce.type = 'button';
-    btnOnce.style.flex = '1';
-    btnOnce.style.minHeight = '42px';
-    btnOnce.style.fontWeight = '700';
-    btnOnce.style.fontSize = '0.84rem';
-    btnOnce.style.border = 'none';
-    btnOnce.style.cursor = 'pointer';
-
-    const btnRecur = el('button', 'seg-btn', ar ? '🔄 مهمة متكررة دورياً (Recurring)' : '🔄 Recurring Task');
-    btnRecur.type = 'button';
-    btnRecur.style.flex = '1';
-    btnRecur.style.minHeight = '42px';
-    btnRecur.style.fontWeight = '700';
-    btnRecur.style.fontSize = '0.84rem';
-    btnRecur.style.border = 'none';
-    btnRecur.style.cursor = 'pointer';
-
-    recurSeg.append(btnOnce, btnRecur);
-    recurCard.append(recurSeg);
-
-    // Panel A: Once Panel
+  function createOncePanel(ar, today, nowHM) {
     const panelOnce = el('div', 'asg-once-panel');
     const quickDateRow = el('div', '');
     quickDateRow.style.display = 'flex';
@@ -246,7 +177,7 @@
         if (dc.offset === 'custom') {
           onceDateIn.focus();
           if (onceDateIn.showPicker) {
-            try { onceDateIn.showPicker(); } catch (err) {}
+            try { onceDateIn.showPicker(); } catch (err) { /* showPicker unsupported */ }
           }
         } else {
           onceDateIn.value = dc.date;
@@ -266,36 +197,11 @@
     });
 
     panelOnce.append(quickDateRow, onceRowInputs);
-    recurCard.append(panelOnce);
+    return { panelOnce, onceDateIn, dueTimeIn };
+  }
 
-    // Panel B: Recurring Panel
-    const panelRecurring = el('div', 'asg-recurring-panel');
-    panelRecurring.style.display = 'none';
-
-    const recurFreqLbl = el('label', '');
-    recurFreqLbl.style.display = 'block';
-    recurFreqLbl.style.marginBottom = '6px';
-    recurFreqLbl.innerHTML = '<span style="font-size:0.76rem;font-weight:600;color:var(--muted);">' + (ar ? '🔁 تتكرر هذه المهمة كل كم يوم؟' : '🔁 Repeat Every How Many Days?') + '</span>';
-
-    let currentEvery = 3;
-    const intervalChipsRow = el('div', '');
-    intervalChipsRow.style.display = 'flex';
-    intervalChipsRow.style.gap = '6px';
-    intervalChipsRow.style.flexWrap = 'wrap';
-    intervalChipsRow.style.marginBottom = '10px';
-
-    const intervalPresets = [
-      { days: 1, label: ar ? 'يومياً (كل يوم)' : 'Daily (1d)' },
-      { days: 2, label: ar ? 'كل يومين' : 'Every 2d' },
-      { days: 3, label: ar ? 'كل 3 أيام' : 'Every 3d' },
-      { days: 7, label: ar ? 'أسبوعياً (كل 7 أيام)' : 'Weekly (7d)' },
-      { days: 30, label: ar ? 'شهرياً (كل 30 يوم)' : 'Monthly (30d)' },
-    ];
-
-    const stepperRow = el('div', 'two');
-    stepperRow.style.alignItems = 'flex-end';
-    stepperRow.style.marginBottom = '12px';
-
+  function createRecurringIntervalStepper(initialEvery, intervalPresets, ar) {
+    let currentEvery = initialEvery;
     const stepperBox = el('div', '');
     stepperBox.innerHTML = '<span style="font-size:0.76rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">' + (ar ? 'تحديد التكرار بالأيام:' : 'Interval Days:') + '</span>';
 
@@ -345,38 +251,26 @@
     stepper.append(prefixSpan, minusBtn, everyNumEl, plusBtn, suffixSpan);
     stepperBox.append(stepper);
 
-    const recurTimeLbl = el('label', '');
-    recurTimeLbl.style.flex = '1';
-    recurTimeLbl.innerHTML = '<span style="font-size:0.76rem;font-weight:600;color:var(--muted);">' + (ar ? '⏰ وقت التنفيذ في يوم التكرار:' : '⏰ Recur Time:') + '</span>';
-    const recurTimeIn = el('input', 'in');
-    recurTimeIn.type = 'time';
-    recurTimeIn.value = nowHM;
-    recurTimeIn.style.minHeight = '42px';
-    recurTimeIn.style.fontWeight = '600';
-    recurTimeLbl.append(recurTimeIn);
-
-    stepperRow.append(stepperBox, recurTimeLbl);
-
+    let onUpdateCallback = null;
     function updateEvery(val) {
       currentEvery = Math.max(1, Math.min(365, val));
       everyNumEl.textContent = String(currentEvery);
       suffixSpan.textContent = ar ? (currentEvery === 1 ? 'يوم' : 'أيام') : (currentEvery === 1 ? 'day' : 'days');
-      intervalChipsRow.querySelectorAll('.interval-chip').forEach((c, idx) => {
-        c.classList.toggle('on', intervalPresets[idx].days === currentEvery);
-      });
+      if (onUpdateCallback) onUpdateCallback(currentEvery);
     }
 
     minusBtn.addEventListener('click', () => updateEvery(currentEvery - 1));
     plusBtn.addEventListener('click', () => updateEvery(currentEvery + 1));
 
-    intervalPresets.forEach((ip) => {
-      const chip = el('button', 'interval-chip' + (ip.days === currentEvery ? ' on' : ''), ip.label);
-      chip.type = 'button';
-      chip.addEventListener('click', () => updateEvery(ip.days));
-      intervalChipsRow.append(chip);
-    });
+    return {
+      stepperBox,
+      getEvery: () => currentEvery,
+      setEvery: (v) => updateEvery(v),
+      onUpdate: (cb) => { onUpdateCallback = cb; },
+    };
+  }
 
-    // Date Range: Start Date & End Date / Open-ended
+  function createRecurringDateRangeBox(ar, today) {
     const rangeBox = el('div', '');
     rangeBox.style.background = 'var(--card)';
     rangeBox.style.border = '1px solid var(--line)';
@@ -437,37 +331,160 @@
       if (!isIndefinite) {
         endDateIn.focus();
         if (endDateIn.showPicker) {
-          try { endDateIn.showPicker(); } catch (err) {}
+          try { endDateIn.showPicker(); } catch (err) { /* showPicker unsupported */ }
         }
       }
     });
 
     openEndedTog.append(openEndedTitle, openEndedCheck);
     rangeBox.append(rangeInputsRow, openEndedTog);
+    return { rangeBox, startDateIn, endDateIn, openEndedCheck };
+  }
 
-    panelRecurring.append(recurFreqLbl, intervalChipsRow, stepperRow, rangeBox);
-    recurCard.append(panelRecurring);
+  function createRecurringPanel(ar, today, nowHM) {
+    const panelRecurring = el('div', 'asg-recurring-panel');
+    panelRecurring.style.display = 'none';
 
-    // Switch between Once and Recurring
+    const recurFreqLbl = el('label', '');
+    recurFreqLbl.style.display = 'block';
+    recurFreqLbl.style.marginBottom = '6px';
+    recurFreqLbl.innerHTML = '<span style="font-size:0.76rem;font-weight:600;color:var(--muted);">' + (ar ? '🔁 تتكرر هذه المهمة كل كم يوم؟' : '🔁 Repeat Every How Many Days?') + '</span>';
+
+    const intervalChipsRow = el('div', '');
+    intervalChipsRow.style.display = 'flex';
+    intervalChipsRow.style.gap = '6px';
+    intervalChipsRow.style.flexWrap = 'wrap';
+    intervalChipsRow.style.marginBottom = '10px';
+
+    const intervalPresets = [
+      { days: 1, label: ar ? 'يومياً (كل يوم)' : 'Daily (1d)' },
+      { days: 2, label: ar ? 'كل يومين' : 'Every 2d' },
+      { days: 3, label: ar ? 'كل 3 أيام' : 'Every 3d' },
+      { days: 7, label: ar ? 'أسبوعياً (كل 7 أيام)' : 'Weekly (7d)' },
+      { days: 30, label: ar ? 'شهرياً (كل 30 يوم)' : 'Monthly (30d)' },
+    ];
+
+    const stepper = createRecurringIntervalStepper(3, intervalPresets, ar);
+
+    const stepperRow = el('div', 'two');
+    stepperRow.style.alignItems = 'flex-end';
+    stepperRow.style.marginBottom = '12px';
+
+    const recurTimeLbl = el('label', '');
+    recurTimeLbl.style.flex = '1';
+    recurTimeLbl.innerHTML = '<span style="font-size:0.76rem;font-weight:600;color:var(--muted);">' + (ar ? '⏰ وقت التنفيذ في يوم التكرار:' : '⏰ Recur Time:') + '</span>';
+    const recurTimeIn = el('input', 'in');
+    recurTimeIn.type = 'time';
+    recurTimeIn.value = nowHM;
+    recurTimeIn.style.minHeight = '42px';
+    recurTimeIn.style.fontWeight = '600';
+    recurTimeLbl.append(recurTimeIn);
+
+    stepperRow.append(stepper.stepperBox, recurTimeLbl);
+
+    intervalPresets.forEach((ip) => {
+      const chip = el('button', 'interval-chip' + (ip.days === stepper.getEvery() ? ' on' : ''), ip.label);
+      chip.type = 'button';
+      chip.addEventListener('click', () => stepper.setEvery(ip.days));
+      intervalChipsRow.append(chip);
+    });
+
+    stepper.onUpdate((cur) => {
+      intervalChipsRow.querySelectorAll('.interval-chip').forEach((c, idx) => {
+        c.classList.toggle('on', intervalPresets[idx].days === cur);
+      });
+    });
+
+    const range = createRecurringDateRangeBox(ar, today);
+    panelRecurring.append(recurFreqLbl, intervalChipsRow, stepperRow, range.rangeBox);
+    return { panelRecurring, stepper, recurTimeIn, startDateIn: range.startDateIn, endDateIn: range.endDateIn, openEndedCheck: range.openEndedCheck };
+  }
+
+  function createRecurrenceCard(ar, today, nowHM) {
+    const recurCard = el('div', 'task-asg-card');
+    recurCard.style.background = 'var(--bg2, rgba(0,0,0,0.03))';
+    recurCard.style.border = '1px solid var(--line)';
+    recurCard.style.borderRadius = '16px';
+    recurCard.style.padding = '12px 14px';
+    recurCard.style.marginBottom = '12px';
+
+    const recurTitleRow = el('div', '');
+    recurTitleRow.style.display = 'flex';
+    recurTitleRow.style.justifyContent = 'space-between';
+    recurTitleRow.style.alignItems = 'center';
+    recurTitleRow.style.marginBottom = '8px';
+    recurTitleRow.innerHTML =
+      '<span style="font-weight:700;font-size:0.82rem;display:flex;align-items:center;gap:6px;"><span>🗓️</span><span>' +
+      (ar ? 'طبيعة التكرار والجدولة:' : 'Recurrence & Schedule:') +
+      '</span></span>';
+    recurCard.append(recurTitleRow);
+
+    let recurType = 'once';
+    const recurSeg = el('div', 'seg wide');
+    recurSeg.style.display = 'flex';
+    recurSeg.style.borderRadius = '12px';
+    recurSeg.style.overflow = 'hidden';
+    recurSeg.style.border = '1px solid var(--line)';
+    recurSeg.style.marginBottom = '12px';
+
+    const btnOnce = el('button', 'seg-btn on', ar ? '📌 مهمة لمرة واحدة (One-Time)' : '📌 One-Time Task');
+    btnOnce.type = 'button';
+    btnOnce.style.flex = '1';
+    btnOnce.style.minHeight = '42px';
+    btnOnce.style.fontWeight = '700';
+    btnOnce.style.fontSize = '0.84rem';
+    btnOnce.style.border = 'none';
+    btnOnce.style.cursor = 'pointer';
+
+    const btnRecur = el('button', 'seg-btn', ar ? '🔄 مهمة متكررة دورياً (Recurring)' : '🔄 Recurring Task');
+    btnRecur.type = 'button';
+    btnRecur.style.flex = '1';
+    btnRecur.style.minHeight = '42px';
+    btnRecur.style.fontWeight = '700';
+    btnRecur.style.fontSize = '0.84rem';
+    btnRecur.style.border = 'none';
+    btnRecur.style.cursor = 'pointer';
+
+    recurSeg.append(btnOnce, btnRecur);
+    recurCard.append(recurSeg);
+
+    const once = createOncePanel(ar, today, nowHM);
+    const recur = createRecurringPanel(ar, today, nowHM);
+
     btnOnce.addEventListener('click', () => {
       recurType = 'once';
       btnOnce.classList.add('on');
       btnRecur.classList.remove('on');
-      panelOnce.style.display = 'block';
-      panelRecurring.style.display = 'none';
+      once.panelOnce.style.display = 'block';
+      recur.panelRecurring.style.display = 'none';
     });
 
     btnRecur.addEventListener('click', () => {
       recurType = 'recurring';
       btnRecur.classList.add('on');
       btnOnce.classList.remove('on');
-      panelOnce.style.display = 'none';
-      panelRecurring.style.display = 'block';
+      once.panelOnce.style.display = 'none';
+      recur.panelRecurring.style.display = 'block';
     });
 
-    box.append(recurCard);
+    recurCard.append(once.panelOnce, recur.panelRecurring);
 
-    // 3. Target Sheet & Section (Responsive, non-truncating)
+    return {
+      recurCard,
+      getRecurData: () => ({
+        recurType,
+        currentEvery: recur.stepper.getEvery(),
+        recurTimeHM: recur.recurTimeIn.value || '12:00',
+        startDate: recur.startDateIn.value || S.date || today,
+        endDate: recur.endDateIn.value || null,
+        isOpenEnded: recur.openEndedCheck.checked,
+        onceDate: once.onceDateIn.value || S.date || today,
+        dueHM: once.dueTimeIn.value || '12:00',
+      }),
+    };
+  }
+
+  function createSheetAndSectionCard(ar, curSheet) {
     const rowSheet = el('div', 'two');
     rowSheet.style.marginBottom = '12px';
 
@@ -507,7 +524,7 @@
     secSel.style.width = '100%';
     secLbl.append(secSel);
 
-    function populateSectionsForSheet(sType) {
+    function populateSections(sType) {
       secSel.replaceChildren();
       let list = S.tpl.sections || [];
       if (sType !== getActiveSheetType()) {
@@ -523,16 +540,18 @@
         secSel.append(o);
       });
     }
-    populateSectionsForSheet(sheetSel.value);
+
+    populateSections(sheetSel.value);
     sheetSel.addEventListener('change', () => {
-      populateSectionsForSheet(sheetSel.value);
+      populateSections(sheetSel.value);
       secSel.dispatchEvent(new Event('change', { bubbles: true }));
     });
 
     rowSheet.append(sheetLbl, secLbl);
-    box.append(rowSheet);
+    return { rowSheet, sheetSel, secSel };
+  }
 
-    // 4. Assign to Position & Specific Employee (Responsive, non-truncating)
+  function createAssigneeCard(ar) {
     const rowAssign = el('div', 'two');
     rowAssign.style.marginBottom = '14px';
 
@@ -572,7 +591,6 @@
     empSel.style.fontSize = '0.84rem';
     empSel.style.width = '100%';
 
-    // Populate employees dynamically from S.tpl.staff
     const anyOpt = el('option', '', ar ? '— كل موظفي هذا المنصب —' : '— Any staff in role —');
     anyOpt.value = '';
     empSel.append(anyOpt);
@@ -609,16 +627,196 @@
     empLbl.append(empSel);
 
     rowAssign.append(roleLbl, empLbl);
-    box.append(rowAssign);
+    return { rowAssign, roleSel, empSel };
+  }
 
-    if (FOH.modalPicker && FOH.modalPicker.enhanceSelect) {
-      FOH.modalPicker.enhanceSelect(sheetSel, { title: ar ? 'الشيت المستهدف' : 'Target Shift Sheet', icon: '📋' });
-      FOH.modalPicker.enhanceSelect(secSel, { title: ar ? 'القسم الفرعي' : 'Target Section', icon: '📂' });
-      FOH.modalPicker.enhanceSelect(roleSel, { title: ar ? 'المنصب التشغيلي (Position)' : 'Position (Role)', icon: '🪪' });
-      FOH.modalPicker.enhanceSelect(empSel, { title: ar ? 'الموظف المسؤول' : 'Assignee Staff', icon: '👤' });
+  function buildTaskRuleAndBadge(recurData, rKey, empUser, ar) {
+    const roleBadgeMap = {
+      super_waiter: '⭐ Super Waiter',
+      super_bartender: '🍸 Super Bartender',
+      super_captain: '🎖️ Super Captain',
+      super_manager: '👑 Super Manager',
+      all: ar ? '👥 الجميع' : '👥 All',
+    };
+    const empNameMap = {
+      sara: ar ? 'سارة (Sara)' : 'Sara',
+      maher: ar ? 'ماهر (Maher)' : 'Maher',
+      ali: ar ? 'علي (Ali)' : 'Ali',
+      fadi: ar ? 'فادي (Fadi)' : 'Fadi',
+    };
+    (S.tpl.staff || []).forEach((st) => {
+      const k = (st.name || '').toLowerCase().split(' ')[0];
+      if (k && !empNameMap[k]) empNameMap[k] = st.name;
+    });
+
+    const assignedRoleLabel = (empUser ? ('👤 ' + (empNameMap[empUser] || empUser) + ' · ') : '') + (roleBadgeMap[rKey] || '');
+
+    let taskRule, taskStart, taskEndDate, isOpenEnded, dueHM, scheduleDate;
+    if (recurData.recurType === 'recurring') {
+      dueHM = recurData.recurTimeHM;
+      taskStart = recurData.startDate;
+      isOpenEnded = recurData.isOpenEnded;
+      taskEndDate = isOpenEnded ? null : recurData.endDate;
+      taskRule = { type: 'interval', every: recurData.currentEvery };
+      scheduleDate = null;
+    } else {
+      dueHM = recurData.dueHM;
+      scheduleDate = recurData.onceDate;
+      taskStart = scheduleDate;
+      taskEndDate = null;
+      isOpenEnded = false;
+      taskRule = { type: 'once', date: scheduleDate };
     }
 
-    // 5. Actions
+    const recurDesc = recurData.recurType === 'recurring'
+      ? (recurData.currentEvery === 1
+          ? (ar ? '🔄 يومياً' : '🔄 Daily')
+          : recurData.currentEvery === 7
+          ? (ar ? '🔄 أسبوعياً' : '🔄 Weekly')
+          : (ar ? '🔄 كل ' + recurData.currentEvery + ' أيام' : '🔄 Every ' + recurData.currentEvery + 'd')) +
+        (isOpenEnded ? '' : (ar ? ' (حتى ' + taskEndDate + ')' : ' (until ' + taskEndDate + ')'))
+      : (scheduleDate ? '📅 ' + scheduleDate : '');
+
+    const fullBadgeLabel = assignedRoleLabel + (recurDesc ? ' · ' + recurDesc : '');
+
+    return {
+      assignedRoleLabel,
+      fullBadgeLabel,
+      taskRule,
+      taskStart,
+      taskEndDate,
+      isOpenEnded,
+      dueHM,
+      scheduleDate,
+      empName: empUser ? (empNameMap[empUser] || empUser) : (roleBadgeMap[rKey] || 'Staff'),
+    };
+  }
+
+  function saveAndNotifyTask(params) {
+    const { textVal, targetSheet, targetSecId, rKey, empUser, recurData, ar, dlg } = params;
+    const sess = getSession();
+    const meta = buildTaskRuleAndBadge(recurData, rKey, empUser, ar);
+
+    const newItem = {
+      id: 'asg_' + Date.now(),
+      text: textVal,
+      textAr: textVal,
+      due: meta.dueHM,
+      role: '',
+      assignedRoleKey: rKey,
+      assignedUsername: empUser,
+      assignedRoleLabel: meta.fullBadgeLabel,
+      isRecurring: recurData.recurType === 'recurring',
+      scheduleDate: recurData.recurType === 'once' ? meta.scheduleDate : null,
+      recurrence: recurData.recurType === 'recurring' ? {
+        type: 'interval',
+        every: recurData.currentEvery,
+        start: meta.taskStart,
+        endDate: meta.taskEndDate,
+        isOpenEnded: meta.isOpenEnded,
+      } : null,
+      children: [],
+    };
+
+    if (targetSheet !== getActiveSheetType() && FOH.erpPwa && FOH.erpPwa.switchSheetType) {
+      manualSheetOverride = targetSheet !== getScheduledSheetForNow();
+      FOH.erpPwa.switchSheetType(targetSheet);
+    }
+
+    const secObj = (S.tpl.sections || []).find((s) => s.id === targetSecId) || S.tpl.sections[0];
+    if (secObj) secObj.items.unshift(newItem);
+    if (FOH.erpPwa && FOH.erpPwa.persistCurrentSheetState) FOH.erpPwa.persistCurrentSheetState();
+
+    S.tpl.tasks.unshift({
+      id: newItem.id,
+      text: textVal,
+      textAr: textVal,
+      icon: targetSheet === 'opening' ? '☀️' : targetSheet === 'mid' ? '🌤️' : '🌙',
+      rule: meta.taskRule,
+      start: meta.taskStart,
+      endDate: meta.taskEndDate,
+      isOpenEnded: meta.isOpenEnded,
+      time: meta.dueHM || '14:00',
+      lateAfter: 60,
+      role: '',
+      person: meta.empName,
+      assignedRoleKey: rKey,
+      assignedUsername: empUser,
+      assignedSheet: targetSheet,
+      carry: true,
+      paused: false,
+    });
+    FOH.store.saveTemplate(S.tpl);
+    dlg.close();
+
+    notifyMobileOnNewTaskAdded({
+      titleEn: textVal,
+      titleAr: textVal,
+      dueHM: meta.dueHM,
+      sectionLabel: (secObj ? (ar ? secObj.titleAr || secObj.title : secObj.title) : targetSheet),
+      roleLabel: meta.fullBadgeLabel,
+      remindBefore: 0,
+    });
+
+    if (FOH.cloudRealtime && FOH.cloudRealtime.broadcast) {
+      FOH.cloudRealtime.broadcast('TASK_ASSIGNED', {
+        senderName: (sess && sess.displayName) || 'Manager',
+        targetSheet,
+        dueHM: meta.dueHM,
+        item: newItem,
+        schedule: {
+          recurType: recurData.recurType,
+          every: recurData.currentEvery,
+          start: meta.taskStart,
+          endDate: meta.taskEndDate,
+          scheduleDate: meta.scheduleDate,
+        },
+      });
+    }
+
+    FOH.edit.toast(ar ? '✅ تم حفظ المهمة وتعيينها لـ (' + meta.assignedRoleLabel + ')!' : '✅ Task assigned to ' + meta.assignedRoleLabel + ' & saved!');
+    FOH.app.render();
+  }
+
+  function openAssignTaskToStaffOrRoleModal(defaultTargetSheet) {
+    const ar = isAr();
+    if (!canCurrentUserAssignTasks()) {
+      if (FOH.edit && FOH.edit.toast) {
+        FOH.edit.toast(ar ? '⚠️ صلاحية تعيين المهام مخصصة للمدير والمشرفين فقط أو لمن تم تفويضه بالإعدادات' : '⚠️ Task assignment is restricted to managers & authorized staff');
+      }
+      return;
+    }
+    let dlg = $('assignTaskDialog');
+    if (!dlg) {
+      dlg = el('dialog', 'sheet');
+      dlg.id = 'assignTaskDialog';
+      dlg.addEventListener('click', (e) => e.target === dlg && dlg.close());
+      document.body.append(dlg);
+    }
+    dlg.replaceChildren();
+
+    const curSheet = defaultTargetSheet || getActiveSheetType();
+    const today = (FOH.time && FOH.time.todayISO) ? FOH.time.todayISO() : (S.date || new Date().toISOString().slice(0, 10));
+    const nowHM = (FOH.time && FOH.time.nowHM) ? FOH.time.nowHM() : '12:00';
+
+    const box = el('div', 'task-asg-modal-box');
+    box.style.padding = '14px 18px 24px';
+    box.style.maxHeight = '88dvh';
+    box.style.overflowY = 'auto';
+
+    const header = createAssignModalHeader(dlg, ar);
+    const title = createTaskTitleInput(ar);
+    const recur = createRecurrenceCard(ar, today, nowHM);
+    const sheetSec = createSheetAndSectionCard(ar, curSheet);
+    const assignee = createAssigneeCard(ar);
+
+    if (FOH.modalPicker && FOH.modalPicker.enhanceSelect) {
+      FOH.modalPicker.enhanceSelect(sheetSec.sheetSel, { title: ar ? 'الشيت المستهدف' : 'Target Shift Sheet', icon: '📋' });
+      FOH.modalPicker.enhanceSelect(sheetSec.secSel, { title: ar ? 'القسم الفرعي' : 'Target Section', icon: '📂' });
+      FOH.modalPicker.enhanceSelect(assignee.roleSel, { title: ar ? 'المنصب التشغيلي (Position)' : 'Position (Role)', icon: '🪪' });
+      FOH.modalPicker.enhanceSelect(assignee.empSel, { title: ar ? 'الموظف المسؤول' : 'Assignee Staff', icon: '👤' });
+    }
+
     const acts = el('div', 'sheet-actions');
     acts.style.marginTop = '16px';
     acts.style.display = 'flex';
@@ -647,200 +845,53 @@
     saveB.innerHTML = '<span>✅</span><span>' + (ar ? 'حفظ المهمة وإرسال إشعار' : 'Save & Notify Staff') + '</span>';
 
     saveB.addEventListener('click', () => {
-      const sess = getSession();
-      const textVal = titleIn.value.trim();
-      if (!textVal) return titleIn.focus();
-
-      const targetSheet = sheetSel.value;
-      const targetSecId = secSel.value;
-      const rKey = roleSel.value;
-      const empUser = empSel.value;
-
-      const roleBadgeMap = {
-        super_waiter: '⭐ Super Waiter',
-        super_bartender: '🍸 Super Bartender',
-        super_captain: '🎖️ Super Captain',
-        super_manager: '👑 Super Manager',
-        all: ar ? '👥 الجميع' : '👥 All',
-      };
-      const empNameMap = {
-        sara: ar ? 'سارة (Sara)' : 'Sara',
-        maher: ar ? 'ماهر (Maher)' : 'Maher',
-        ali: ar ? 'علي (Ali)' : 'Ali',
-        fadi: ar ? 'فادي (Fadi)' : 'Fadi',
-      };
-      (S.tpl.staff || []).forEach((st) => {
-        const k = (st.name || '').toLowerCase().split(' ')[0];
-        if (k && !empNameMap[k]) empNameMap[k] = st.name;
+      const textVal = title.titleIn.value.trim();
+      if (!textVal) return title.titleIn.focus();
+      saveAndNotifyTask({
+        textVal,
+        targetSheet: sheetSec.sheetSel.value,
+        targetSecId: sheetSec.secSel.value,
+        rKey: assignee.roleSel.value,
+        empUser: assignee.empSel.value,
+        recurData: recur.getRecurData(),
+        ar,
+        dlg,
       });
-
-      const assignedRoleLabel = (empUser ? ('👤 ' + (empNameMap[empUser] || empUser) + ' · ') : '') + (roleBadgeMap[rKey] || '');
-
-      let taskRule, taskStart, taskEndDate, isOpenEnded, dueHM, scheduleDate;
-
-      if (recurType === 'recurring') {
-        const ev = currentEvery || 3;
-        dueHM = recurTimeIn.value || '12:00';
-        taskStart = startDateIn.value || S.date || today;
-        isOpenEnded = openEndedCheck.checked;
-        taskEndDate = isOpenEnded ? null : (endDateIn.value || null);
-        taskRule = { type: 'interval', every: ev };
-        scheduleDate = null;
-      } else {
-        dueHM = dueTimeIn.value || '12:00';
-        scheduleDate = onceDateIn.value || S.date || today;
-        taskStart = scheduleDate;
-        taskEndDate = null;
-        isOpenEnded = false;
-        taskRule = { type: 'once', date: scheduleDate };
-      }
-
-      const recurDesc = recurType === 'recurring'
-        ? (currentEvery === 1
-            ? (ar ? '🔄 يومياً' : '🔄 Daily')
-            : currentEvery === 7
-            ? (ar ? '🔄 أسبوعياً' : '🔄 Weekly')
-            : (ar ? '🔄 كل ' + currentEvery + ' أيام' : '🔄 Every ' + currentEvery + 'd')) +
-          (isOpenEnded ? '' : (ar ? ' (حتى ' + taskEndDate + ')' : ' (until ' + taskEndDate + ')'))
-        : (scheduleDate ? (ar ? '📅 ' + scheduleDate : '📅 ' + scheduleDate) : '');
-
-      const fullBadgeLabel = assignedRoleLabel + (recurDesc ? ' · ' + recurDesc : '');
-
-      const newItem = {
-        id: 'asg_' + Date.now(),
-        text: textVal,
-        textAr: textVal,
-        due: dueHM,
-        role: '',
-        assignedRoleKey: rKey,
-        assignedUsername: empUser,
-        assignedRoleLabel: fullBadgeLabel,
-        isRecurring: recurType === 'recurring',
-        scheduleDate: recurType === 'once' ? scheduleDate : null,
-        recurrence: recurType === 'recurring' ? {
-          type: 'interval',
-          every: currentEvery,
-          start: taskStart,
-          endDate: taskEndDate,
-          isOpenEnded: isOpenEnded,
-        } : null,
-        children: [],
-      };
-
-      if (targetSheet !== getActiveSheetType() && FOH.erpPwa && FOH.erpPwa.switchSheetType) {
-        manualSheetOverride = targetSheet !== getScheduledSheetForNow();
-        FOH.erpPwa.switchSheetType(targetSheet);
-      }
-
-      const secObj = (S.tpl.sections || []).find((s) => s.id === targetSecId) || S.tpl.sections[0];
-      if (secObj) {
-        secObj.items.unshift(newItem);
-      }
-      if (FOH.erpPwa && FOH.erpPwa.persistCurrentSheetState) {
-        FOH.erpPwa.persistCurrentSheetState();
-      }
-
-      // Also add to Scheduled Tasks (S.tpl.tasks) so it shows in "📋 My Tasks" (#mine) too
-      S.tpl.tasks.unshift({
-        id: newItem.id,
-        text: textVal,
-        textAr: textVal,
-        icon: targetSheet === 'opening' ? '☀️' : targetSheet === 'mid' ? '🌤️' : '🌙',
-        rule: taskRule,
-        start: taskStart,
-        endDate: taskEndDate,
-        isOpenEnded: isOpenEnded,
-        time: dueHM || '14:00',
-        lateAfter: 60,
-        role: '',
-        person: empUser ? (empNameMap[empUser] || empUser) : (roleBadgeMap[rKey] || 'Staff'),
-        assignedRoleKey: rKey,
-        assignedUsername: empUser,
-        assignedSheet: targetSheet,
-        carry: true,
-        paused: false,
-      });
-      FOH.store.saveTemplate(S.tpl);
-
-      dlg.close();
-
-      notifyMobileOnNewTaskAdded({
-        titleEn: textVal,
-        titleAr: textVal,
-        dueHM,
-        sectionLabel: (secObj ? (ar ? secObj.titleAr || secObj.title : secObj.title) : targetSheet),
-        roleLabel: fullBadgeLabel,
-        remindBefore: 0,
-      });
-
-      if (FOH.cloudRealtime && FOH.cloudRealtime.broadcast) {
-        FOH.cloudRealtime.broadcast('TASK_ASSIGNED', {
-          senderName: (sess && sess.displayName) || 'Manager',
-          targetSheet,
-          dueHM,
-          item: newItem,
-          schedule: {
-            recurType,
-            every: currentEvery,
-            start: taskStart,
-            endDate: taskEndDate,
-            scheduleDate,
-          },
-        });
-      }
-
-      FOH.edit.toast(ar ? '✅ تم حفظ المهمة وتعيينها لـ (' + assignedRoleLabel + ')!' : '✅ Task assigned to ' + assignedRoleLabel + ' & saved!');
-      FOH.app.render();
     });
 
     acts.append(cancelB, saveB);
-    box.append(acts);
+    box.append(header.grab, header.headerRow, header.descP, title.titleGroup, recur.recurCard, sheetSec.rowSheet, assignee.rowAssign, acts);
     dlg.append(box);
     dlg.showModal();
-    titleIn.focus();
+    title.titleIn.focus();
   }
 
-  // Render Assignment Badges on Checklist Items & Filter Sections/Items by Assigned Employee/Role
-  function renderAssignedTaskBadgesAndFilter() {
-    const secEl = $('sections');
-    if (!secEl || secEl.hidden || S.view !== 'opening' || S.editing) return;
-    if (S.editing || S.view !== 'opening') return;
-    const sess = getSession();
-    const curUser = (sess && sess.username ? sess.username.toLowerCase() : 'fadi');
-    const curRole = getCurrentSuperRoleKey();
-    const isLeader = curRole === 'super_manager' || curRole === 'super_captain';
+  // ============================================================================
+  // Assignment Badges & Filter Sub-Renderers (< 80 lines each)
+  // ============================================================================
 
-    // 1. Section-level department filtering for Mid-Shift & Opening when roleScopeOnly is active
-    if (roleScopeOnly && !isLeader) {
-      document.querySelectorAll('#sections > section.card').forEach((card) => {
-        const sid = (card.id || '').replace(/^sec-/, '');
-        const secObj = (S.tpl.sections || []).find((x) => x.id === sid);
-        const dept = secObj && secObj.dept;
-        if (dept) {
-          if (curRole === 'super_waiter' && (dept === 'bar' || dept === 'cash')) {
-            card.style.display = 'none';
-          } else if (curRole === 'super_bartender' && (dept === 'floor' || dept === 'cash')) {
-            card.style.display = 'none';
-          } else {
-            card.style.display = '';
-          }
+  function applyRoleScopeCardFilter(curRole) {
+    document.querySelectorAll('#sections > section.card').forEach((card) => {
+      const sid = (card.id || '').replace(/^sec-/, '');
+      const secObj = (S.tpl.sections || []).find((x) => x.id === sid);
+      const dept = secObj && secObj.dept;
+      if (dept) {
+        if (curRole === 'super_waiter' && (dept === 'bar' || dept === 'cash')) {
+          card.style.display = 'none';
+        } else if (curRole === 'super_bartender' && (dept === 'floor' || dept === 'cash')) {
+          card.style.display = 'none';
+        } else {
+          card.style.display = '';
         }
-      });
-      document.querySelectorAll('#chips .chip').forEach((chip) => {
-        const card = $('sec-' + chip.dataset.sid);
-        if (card) chip.style.display = card.style.display;
-      });
-    }
-
-    // 2. Item-level badges & filtering
-    const flatItems = new Map();
-    (S.tpl.sections || []).forEach((s) => {
-      (s.items || []).forEach((it) => {
-        flatItems.set(it.id, it);
-        (it.children || []).forEach((ch) => flatItems.set(ch.id, ch));
-      });
+      }
     });
+    document.querySelectorAll('#chips .chip').forEach((chip) => {
+      const card = $('sec-' + chip.dataset.sid);
+      if (card) chip.style.display = card.style.display;
+    });
+  }
 
+  function applyItemBadgesAndScope(flatItems, curUser, curRole, isLeader, sess) {
     document.querySelectorAll('#sections li.item, #sections li.kid').forEach((li) => {
       const cb = li.querySelector('input.ck[data-id]');
       if (!cb) return;
@@ -869,21 +920,50 @@
         li.style.display = '';
       }
     });
+  }
 
+  function hideEmptyRoleScopeCards() {
+    document.querySelectorAll('#sections > section.card').forEach((card) => {
+      const items = card.querySelectorAll('li.item, li.kid');
+      if (items.length > 0) {
+        const hasVisible = Array.from(items).some((li) => li.style.display !== 'none');
+        if (!hasVisible) card.style.display = 'none';
+      }
+    });
+    document.querySelectorAll('#chips .chip').forEach((chip) => {
+      const card = $('sec-' + chip.dataset.sid);
+      if (card) chip.style.display = card.style.display;
+    });
+  }
+
+  // Render Assignment Badges on Checklist Items & Filter Sections/Items by Assigned Employee/Role
+  function renderAssignedTaskBadgesAndFilter() {
+    const secEl = $('sections');
+    if (!secEl || secEl.hidden || S.view !== 'opening' || S.editing) return;
+    const sess = getSession();
+    const curUser = (sess && sess.username ? sess.username.toLowerCase() : 'fadi');
+    const curRole = getCurrentSuperRoleKey();
+    const isLeader = curRole === 'super_manager' || curRole === 'super_captain';
+
+    // 1. Department-level filtering
     if (roleScopeOnly && !isLeader) {
-      document.querySelectorAll('#sections > section.card').forEach((card) => {
-        const items = card.querySelectorAll('li.item, li.kid');
-        if (items.length > 0) {
-          const hasVisible = Array.from(items).some((li) => li.style.display !== 'none');
-          if (!hasVisible) {
-            card.style.display = 'none';
-          }
-        }
+      applyRoleScopeCardFilter(curRole);
+    }
+
+    // 2. Build flat items map & apply badges/filtering
+    const flatItems = new Map();
+    (S.tpl.sections || []).forEach((s) => {
+      (s.items || []).forEach((it) => {
+        flatItems.set(it.id, it);
+        (it.children || []).forEach((ch) => flatItems.set(ch.id, ch));
       });
-      document.querySelectorAll('#chips .chip').forEach((chip) => {
-        const card = $('sec-' + chip.dataset.sid);
-        if (card) chip.style.display = card.style.display;
-      });
+    });
+
+    applyItemBadgesAndScope(flatItems, curUser, curRole, isLeader, sess);
+
+    // 3. Hide empty cards
+    if (roleScopeOnly && !isLeader) {
+      hideEmptyRoleScopeCards();
     }
   }
 

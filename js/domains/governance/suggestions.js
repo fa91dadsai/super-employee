@@ -178,13 +178,28 @@
     bar.append(topWrap);
 
     if (sugs.length > 0 && isMgr) {
-      const qBox = el('div', 'sug-card');
+      const qBox = el('details', 'sug-card sug-accordion');
       qBox.style.width = '100%';
       qBox.style.marginTop = '8px';
       qBox.style.marginBottom = '0';
-      qBox.append(
-        el('b', '', ar ? '📥 اقتراحات وملاحظات الموظفين لتعديل الشيك ليست (' + sugs.length + ')' : '📥 Pending Staff Checklist Suggestions (' + sugs.length + ')')
-      );
+      const summary = el('summary', 'sug-summary');
+      summary.style.display = 'flex';
+      summary.style.alignItems = 'center';
+      summary.style.justifyContent = 'space-between';
+      summary.style.cursor = 'pointer';
+      summary.style.padding = '4px 0';
+      summary.style.fontWeight = '700';
+      summary.style.fontSize = '0.84rem';
+      summary.innerHTML =
+        '<span style="display:inline-flex;align-items:center;gap:6px;">' +
+        '<span>💡</span>' +
+        '<b>' + (ar ? 'اقتراحات وملاحظات الموظفين المعلقة (' + sugs.length + ')' : 'Pending Staff Suggestions (' + sugs.length + ')') + '</b>' +
+        '</span>' +
+        '<span style="font-size:0.75rem;padding:2px 8px;border-radius:12px;background:var(--accent);color:#fff;">' + (ar ? 'مراجعة ▾' : 'Review ▾') + '</span>';
+      qBox.append(summary);
+
+      const itemsWrap = el('div', 'sug-items-wrap');
+      itemsWrap.style.marginTop = '8px';
       sugs.forEach((sg) => {
         const row = el('div', 'sug-item');
         const info = el('div', '');
@@ -230,8 +245,9 @@
         });
         btns.append(appBtn, rejBtn);
         row.append(info, btns);
-        qBox.append(row);
+        itemsWrap.append(row);
       });
+      qBox.append(itemsWrap);
       bar.append(qBox);
     }
   }

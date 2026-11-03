@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE = 'super-employee-v36-dept-bento-ready';
+const CACHE = 'super-employee-v39-vertical-flow';
 const PRECACHE = [
   './',
   './index.html',
@@ -54,6 +54,9 @@ const PRECACHE = [
   './js/domains/tasks/day-off.js',
   './js/domains/tasks/task-inbox-notif.js',
   './js/domains/tasks/task-assignment.js',
+  './js/domains/orders/orders-catalog-data.js',
+  './js/domains/orders/orders-store.js',
+  './js/domains/orders/orders-dispatch.js',
   './js/domains/orders/orders-view.js',
   // JS Domain Modules: Governance & Identity
   './js/domains/governance/restaurant-gov.js',

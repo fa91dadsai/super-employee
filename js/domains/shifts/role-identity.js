@@ -211,7 +211,9 @@
     try {
       localStorage.setItem(SESSION_KEY, JSON.stringify(nextSess));
       sessionStorage.removeItem(SESSION_KEY);
-    } catch {}
+    } catch (err) {
+      /* Storage quota exceeded or disabled in private browsing */
+    }
 
     // Bind S.me to the matching staff & role in S.tpl
     const targetRoleName = username === 'fadi' ? 'Supervisor' : username === 'ali' ? 'Captain' : username === 'maher' ? 'Bartender' : 'Waiter';
@@ -254,7 +256,9 @@
       set(v) { roleScopeOnly = v; },
       configurable: true,
     });
-  } catch {}
+  } catch (err) {
+    /* Window property already defined or non-configurable in strict mode */
+  }
 
   FOH.getCurrentSuperRoleKey = getCurrentSuperRoleKey;
   FOH.canCurrentUserAccessOrders = canCurrentUserAccessOrders;

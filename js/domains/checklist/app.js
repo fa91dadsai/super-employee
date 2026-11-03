@@ -171,7 +171,7 @@
     const run = !S.editing;
     const show = {
       sections: run ? S.view === 'opening' : S.editTab === 'list',
-      today: run && S.view === 'opening',
+      today: false, // Scheduled tasks are accessed via 'mine' tab & Next Urgent Task hero widget
       mine: run && S.view === 'mine',
       ordersView: run && S.view === 'orders',
       academyView: run && S.view === 'academy',

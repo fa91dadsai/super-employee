@@ -223,7 +223,9 @@
   function saveOpsConfig(cfg) {
     try {
       localStorage.setItem(OPS_CFG_KEY, JSON.stringify(cfg));
-    } catch {}
+    } catch (err) {
+      /* Storage quota fallback */
+    }
   }
 
 
@@ -258,7 +260,9 @@
     try {
       const raw = FOH.safeJsonParse(localStorage.getItem(key), 'null');
       if (raw && typeof raw === 'object') return raw;
-    } catch {}
+    } catch (err) {
+      /* Storage quota or JSON parse fallback */
+    }
     return {
       kitchenLastOrderAt: '',
       kitchenLastOrderBy: '',
@@ -277,7 +281,9 @@
     const key = OPS_DAY_PREFIX + (dateStr || S.date);
     try {
       localStorage.setItem(key, JSON.stringify(st));
-    } catch {}
+    } catch (err) {
+      /* Storage quota fallback */
+    }
   }
 
   // ---- Department-Specific Closing Sheet Sections ----
@@ -344,17 +350,20 @@
       if (!hasBarSec) {
         localStorage.setItem(CLOSING_KEY, JSON.stringify(DEPT_CLOSING_SECTIONS));
       }
-    } catch {}
+    } catch (err) {
+      /* Storage quota fallback */
+    }
   }
 
   function isClosingSheetActive() {
-    const bar = $('sheetTypeBar');
-    if (!bar) return false;
-    const btns = bar.querySelectorAll('.seg button');
-    if (btns.length >= 2 && btns[1].classList.contains('on')) return true;
-    return (S.tpl.sections || []).some((s) => s.id && s.id.startsWith('cls-'));
+    if (FOH.threeShifts && FOH.threeShifts.getActiveSheetType) {
+      return FOH.threeShifts.getActiveSheetType() === 'closing';
+    }
+    if (FOH.erpPwa && FOH.erpPwa.getSheetType) {
+      return FOH.erpPwa.getSheetType() === 'closing';
+    }
+    return false;
   }
-
   function activateClosingSheet(targetDept) {
     ensureUpgradedClosingSections();
     if (targetDept) activeClosingDeptFilter = targetDept;
@@ -372,26 +381,14 @@
   }
 
   function renderClosingDeptFilterBar() {
-    let deptBar = $('closingDeptBar');
-    const sheetBar = $('sheetTypeBar');
-    if (!sheetBar) return;
-    if (!deptBar) {
-      deptBar = el('div', 'closing-dept-bar run-only');
-      deptBar.id = 'closingDeptBar';
-      sheetBar.insertAdjacentElement('afterend', deptBar);
+    // Hide duplicate filter bar; Bento Hub (#deptSegmentPanel) handles all department filtering
+    const deptBar = $('closingDeptBar');
+    if (deptBar) {
+      deptBar.hidden = true;
+      deptBar.style.display = 'none';
     }
 
-    const inClosing = !S.editing && S.view === 'opening' && isClosingSheetActive();
-    deptBar.hidden = !inClosing;
-    if (!inClosing) {
-      // Make sure all sections are visible in opening mode
-      document.querySelectorAll('#sections > section.card').forEach((c) => {
-        c.style.display = '';
-      });
-      return;
-    }
-
-    // Ensure S.tpl.sections has dept tags
+    // Ensure S.tpl.sections has dept tags for Bento Hub
     (S.tpl.sections || []).forEach((s) => {
       if (!s.dept) {
         if (s.id === 'cls-bar') s.dept = 'bar';
@@ -400,52 +397,15 @@
       }
     });
 
-    deptBar.replaceChildren();
+    const inClosing = !S.editing && S.view === 'opening' && isClosingSheetActive();
+    if (!inClosing) return;
+
     const ar = isAr();
-    const roleKey = getCurrentSuperRoleKey();
-    const roleMeta = SUPER_ROLES_META[roleKey] || SUPER_ROLES_META.staff;
-
-    const label = el('span', '');
-    label.style.fontSize = '0.78rem';
-    label.style.fontWeight = '800';
-    label.style.color = 'var(--ink2)';
-    label.style.marginInlineEnd = '4px';
-    label.textContent = ar ? '🌙 فلترة شيت الإغلاق حسب القسم:' : '🌙 Closing Sheet by Dept:';
-    deptBar.append(label);
-
-    const depts = [
-      ['all', ar ? '📋 كل الأقسام (٤)' : '📋 All Depts (4)'],
-      ['bar', ar ? '🍸 قسم البار (Bar Closing)' : '🍸 Bar Closing'],
-      ['floor', ar ? '🍽️ الصالة والتراس (Floor & Stations)' : '🍽️ Floor & Terrace'],
-      ['cash', ar ? '💳 الكاشير والأمان (Cash & Lockup)' : '💳 Cash & Lockup'],
-    ];
-
-    depts.forEach(([k, txt]) => {
-      const chip = el('button', 'closing-dept-chip' + (activeClosingDeptFilter === k ? ' on' : ''), txt);
-      chip.type = 'button';
-      chip.addEventListener('click', () => {
-        activeClosingDeptFilter = k;
-        renderClosingDeptFilterBar();
-      });
-      deptBar.append(chip);
-    });
-
-    const myDeptBtn = el('button', 'gov-btn', ar ? '🎯 قسمي (' + roleMeta.badge + ')' : '🎯 My Dept (' + roleMeta.badge + ')');
-    myDeptBtn.type = 'button';
-    myDeptBtn.style.marginInlineStart = 'auto';
-    myDeptBtn.addEventListener('click', () => {
-      activeClosingDeptFilter = roleMeta.dept || 'all';
-      renderClosingDeptFilterBar();
-    });
-    deptBar.append(myDeptBtn);
-
-    // Filter visible section cards in DOM and inject department badge
+    // Inject closing department badge into section card headers for floor clarity
     document.querySelectorAll('#sections > section.card').forEach((card) => {
       const sid = (card.id || '').replace(/^sec-/, '');
       const secObj = (S.tpl.sections || []).find((x) => x.id === sid);
       const secDept = (secObj && secObj.dept) || (sid === 'cls-bar' ? 'bar' : sid === 'cls-lockup' ? 'cash' : 'floor');
-      const show = activeClosingDeptFilter === 'all' || activeClosingDeptFilter === secDept;
-      card.style.display = show ? '' : 'none';
 
       const head = card.querySelector('.head');
       if (head && !head.querySelector('.dept-closing-tag')) {
