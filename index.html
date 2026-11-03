@@ -7884,7 +7884,12 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   }
 
   // Projected due dates after `date` (up to `count`, within `days` days).
-  function upcoming(task, log, date, today, days, count) {
+  function upcoming(task, log, opts = {}) {
+    const isLegacy = typeof opts !== 'object' || opts === null || !('date' in opts);
+    const date = isLegacy ? arguments[2] : opts.date;
+    const today = isLegacy ? arguments[3] : opts.today;
+    const days = isLegacy ? arguments[4] : opts.days;
+    const count = isLegacy ? arguments[5] : opts.count;
     if (task.paused) return [];
     if (task.endDate && date > task.endDate) return [];
     const out = [];
@@ -24298,6 +24303,23 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     if ($('activeSectionBadge')) $('activeSectionBadge').style.display = 'none';
   }
 
+  function computeOpsStatusText(opts) {
+    const { ar, h, daySt, nowBiz, openBiz, kLastBiz, minCloseBiz } = opts;
+    if (daySt.closedAt) {
+      return '🔒 ' + (ar ? 'مغلق (' + formatTime12Ar(daySt.closedAt) + ')' : 'Closed (' + formatTime12Ar(daySt.closedAt) + ')');
+    }
+    if (nowBiz < openBiz) {
+      return '☀️ ' + (ar ? 'دوام التحضير ' + formatTime12Ar(h.prepStart) + ' · يفتح ' + formatTime12Ar(h.doorsOpen) : 'Prep ' + formatTime12Ar(h.prepStart) + ' · Opens ' + formatTime12Ar(h.doorsOpen));
+    }
+    if (nowBiz < kLastBiz - 15) {
+      return '🟢 ' + (ar ? 'مفتوح (' + formatTime12Ar(h.doorsOpen) + '–' + formatTime12Ar(h.minCloseTime) + '+)' : 'Open (' + formatTime12Ar(h.doorsOpen) + '–' + formatTime12Ar(h.minCloseTime) + '+)');
+    }
+    if (nowBiz < minCloseBiz) {
+      return '🔔 ' + (ar ? 'مرحلة Last Order (' + formatTime12Ar(h.kitchenLastOrder) + ' / ' + formatTime12Ar(h.barLastOrder) + ')' : 'Last Order (' + formatTime12Ar(h.kitchenLastOrder) + ' / ' + formatTime12Ar(h.barLastOrder) + ')');
+    }
+    return '⏳ ' + (ar ? 'بعد ' + formatTime12Ar(h.minCloseTime) + ' · يغلق مع آخر زبون' : 'Past ' + formatTime12Ar(h.minCloseTime) + ' · Last Guest Mode');
+  }
+
   function collapseOpsLifecycleBarToOneLine() {
     const bar = $('opsLifecycleBar');
     if (!bar) return;
@@ -24317,25 +24339,12 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     const kLastBiz = toBizMinutes(h.kitchenLastOrder);
     const minCloseBiz = toBizMinutes(h.minCloseTime);
 
-    let statusText = '';
-    if (daySt.closedAt) {
-      statusText = '🔒 ' + (ar ? 'مغلق (' + formatTime12Ar(daySt.closedAt) + ')' : 'Closed (' + formatTime12Ar(daySt.closedAt) + ')');
-    } else if (nowBiz < openBiz) {
-      statusText = '☀️ ' + (ar ? 'دوام التحضير ' + formatTime12Ar(h.prepStart) + ' · يفتح ' + formatTime12Ar(h.doorsOpen) : 'Prep ' + formatTime12Ar(h.prepStart) + ' · Opens ' + formatTime12Ar(h.doorsOpen));
-    } else if (nowBiz < kLastBiz - 15) {
-      statusText = '🟢 ' + (ar ? 'مفتوح (' + formatTime12Ar(h.doorsOpen) + '–' + formatTime12Ar(h.minCloseTime) + '+)' : 'Open (' + formatTime12Ar(h.doorsOpen) + '–' + formatTime12Ar(h.minCloseTime) + '+)');
-    } else if (nowBiz < minCloseBiz) {
-      statusText = '🔔 ' + (ar ? 'مرحلة Last Order (' + formatTime12Ar(h.kitchenLastOrder) + ' / ' + formatTime12Ar(h.barLastOrder) + ')' : 'Last Order (' + formatTime12Ar(h.kitchenLastOrder) + ' / ' + formatTime12Ar(h.barLastOrder) + ')');
-    } else {
-      statusText = '⏳ ' + (ar ? 'بعد ' + formatTime12Ar(h.minCloseTime) + ' · يغلق مع آخر زبون' : 'Past ' + formatTime12Ar(h.minCloseTime) + ' · Last Guest Mode');
-    }
-
+    const statusText = computeOpsStatusText({ ar, h, daySt, nowBiz, openBiz, kLastBiz, minCloseBiz });
     const existingChildren = Array.from(bar.children);
     bar.replaceChildren();
 
     const summaryRow = el('div', 'ops-compact-summary');
-    const left = el('div', 'ops-compact-left');
-    left.textContent = statusText;
+    const left = el('div', 'ops-compact-left', statusText);
 
     const right = el('div', '');
     right.style.display = 'flex';
@@ -24365,6 +24374,90 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     }
   }
 
+  function renderGovProgressAndDate(opts) {
+    const { pct, all, dateLabel, names } = opts;
+    const items = [];
+    items.push(el('span', 'u-pill accent', '📊 ' + pct + '% (' + all.done + '/' + all.total + ')'));
+
+    const metaBtn = el('button', 'u-pill', '📅 ' + dateLabel + (names.length ? ' · ' + names[0] : '') + ' ▾');
+    metaBtn.type = 'button';
+    metaBtn.addEventListener('click', () => {
+      if ($('metaPanel')) $('metaPanel').hidden = !$('metaPanel').hidden;
+    });
+    items.push(metaBtn);
+    return items;
+  }
+
+  function renderGovScopeAndLock(opts) {
+    const { ar, ident, gov, isMgr, sess } = opts;
+    const items = [];
+    if (ident.openingKeywords && !isClosingSheetActive()) {
+      const curScope = (FOH.roleIdentity && FOH.roleIdentity.isRoleScopeOnly) ? FOH.roleIdentity.isRoleScopeOnly() : window.roleScopeOnly;
+      const scopeBtn = el(
+        'button',
+        'u-pill' + (curScope ? ' accent' : ''),
+        curScope ? (ar ? '🎯 مهام قسمي ✓' : '🎯 My Dept ✓') : (ar ? '👁 كل الأقسام' : '👁 All Depts')
+      );
+      scopeBtn.type = 'button';
+      scopeBtn.addEventListener('click', () => {
+        if (FOH.roleIdentity && FOH.roleIdentity.setRoleScopeOnly) {
+          FOH.roleIdentity.setRoleScopeOnly(!curScope);
+        } else {
+          window.roleScopeOnly = !curScope;
+        }
+        FOH.app.render();
+      });
+      items.push(scopeBtn);
+    }
+
+    if (isMgr || hasSuperPerm('canLockChecklist')) {
+      const lockB = el(
+        'button',
+        'u-pill' + (gov.checklistLocked ? ' warn' : ''),
+        gov.checklistLocked ? (ar ? '🔒 مقفلة' : '🔒 Locked') : (ar ? '🔓 مفتوحة' : '🔓 Unlocked')
+      );
+      lockB.type = 'button';
+      lockB.addEventListener('click', () => {
+        gov.checklistLocked = !gov.checklistLocked;
+        gov.lockedBy = (sess && sess.displayName) || 'Supervisor';
+        if (gov.checklistLocked) S.editing = false;
+        saveGov(gov);
+        FOH.app.render();
+      });
+      items.push(lockB);
+    } else if (gov.checklistLocked) {
+      items.push(el('span', 'u-pill warn', ar ? '🔒 مقفلة' : '🔒 Locked'));
+    }
+    return items;
+  }
+
+  function renderGovEditAndDamage(opts) {
+    const { ar, canEdit, gov } = opts;
+    const items = [];
+    if (canEdit && !gov.checklistLocked) {
+      const editB = el('button', 'u-pill', ar ? '✎ تعديل' : '✎ Edit');
+      editB.type = 'button';
+      editB.addEventListener('click', () => {
+        S.editing = true;
+        FOH.app.render();
+      });
+      items.push(editB);
+    } else {
+      const sugB = el('button', 'u-pill', ar ? '💡 اقتراح' : '💡 Suggest');
+      sugB.type = 'button';
+      sugB.addEventListener('click', () => openSuggestionModal());
+      items.push(sugB);
+    }
+
+    const dmgB = el('button', 'u-pill', ar ? '🔧 كسر/صيانة' : '🔧 Damage');
+    dmgB.type = 'button';
+    dmgB.addEventListener('click', () => {
+      if (FOH.invBreak && FOH.invBreak.open) FOH.invBreak.open();
+    });
+    items.push(dmgB);
+    return items;
+  }
+
   function renderUnifiedSingleRowChecklistBar() {
     const govBar = $('checklistGovBar');
     if (!govBar || S.editing || S.view !== 'opening') return;
@@ -24384,85 +24477,13 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       ? S.date
       : day.toLocaleDateString(FOH.i18n.locale, { weekday: 'short', day: 'numeric', month: 'short' });
 
-    // Preserve pending suggestions box if any
     const sugBox = govBar.querySelector('.sug-card');
     govBar.replaceChildren();
 
     const row = el('div', 'unified-sec-toolbar');
-
-    // 1. Progress Pill
-    row.append(el('span', 'u-pill accent', '📊 ' + pct + '% (' + all.done + '/' + all.total + ')'));
-
-    // 2. Date & Shift Leaders Toggle
-    const metaBtn = el(
-      'button',
-      'u-pill',
-      '📅 ' + dateLabel + (names.length ? ' · ' + names[0] : '') + ' ▾'
-    );
-    metaBtn.type = 'button';
-    metaBtn.addEventListener('click', () => {
-      if ($('metaPanel')) $('metaPanel').hidden = !$('metaPanel').hidden;
-    });
-    row.append(metaBtn);
-
-    // 3. Role Scope Toggle (for Waiter / Bartender)
-    if (ident.openingKeywords && !isClosingSheetActive()) {
-      const scopeBtn = el(
-        'button',
-        'u-pill' + (roleScopeOnly ? ' accent' : ''),
-        roleScopeOnly ? (ar ? '🎯 مهام قسمي ✓' : '🎯 My Dept ✓') : (ar ? '👁 كل الأقسام' : '👁 All Depts')
-      );
-      scopeBtn.type = 'button';
-      scopeBtn.addEventListener('click', () => {
-        roleScopeOnly = !roleScopeOnly;
-        FOH.app.render();
-      });
-      row.append(scopeBtn);
-    }
-
-    // 4. Lock / Unlock Button (for Manager / Captain) or Lock Status
-    if (isMgr || hasSuperPerm('canLockChecklist')) {
-      const lockB = el(
-        'button',
-        'u-pill' + (gov.checklistLocked ? ' warn' : ''),
-        gov.checklistLocked ? (ar ? '🔒 مقفلة' : '🔒 Locked') : (ar ? '🔓 مفتوحة' : '🔓 Unlocked')
-      );
-      lockB.type = 'button';
-      lockB.addEventListener('click', () => {
-        gov.checklistLocked = !gov.checklistLocked;
-        gov.lockedBy = (sess && sess.displayName) || 'Supervisor';
-        if (gov.checklistLocked) S.editing = false;
-        saveGov(gov);
-        FOH.app.render();
-      });
-      row.append(lockB);
-    } else if (gov.checklistLocked) {
-      row.append(el('span', 'u-pill warn', ar ? '🔒 مقفلة' : '🔒 Locked'));
-    }
-
-    // 5. Edit Checklist Button (or Suggest Edit for staff)
-    if (canEdit && !gov.checklistLocked) {
-      const editB = el('button', 'u-pill', ar ? '✎ تعديل' : '✎ Edit');
-      editB.type = 'button';
-      editB.addEventListener('click', () => {
-        S.editing = true;
-        FOH.app.render();
-      });
-      row.append(editB);
-    } else {
-      const sugB = el('button', 'u-pill', ar ? '💡 اقتراح' : '💡 Suggest');
-      sugB.type = 'button';
-      sugB.addEventListener('click', () => openSuggestionModal());
-      row.append(sugB);
-    }
-
-    // 6. Report Damage / Repair Button
-    const dmgB = el('button', 'u-pill', ar ? '🔧 كسر/صيانة' : '🔧 Damage');
-    dmgB.type = 'button';
-    dmgB.addEventListener('click', () => {
-      if (FOH.invBreak && FOH.invBreak.open) FOH.invBreak.open();
-    });
-    row.append(dmgB);
+    row.append(...renderGovProgressAndDate({ pct, all, dateLabel, names }));
+    row.append(...renderGovScopeAndLock({ ar, ident, gov, isMgr, sess }));
+    row.append(...renderGovEditAndDamage({ ar, canEdit, gov }));
 
     govBar.append(row);
     if (sugBox) govBar.append(sugBox);
