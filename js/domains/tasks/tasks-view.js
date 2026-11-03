@@ -241,7 +241,8 @@
 
     // Always append Day-Off & Leave Card to My Tasks
     if (FOH.dayOff && FOH.dayOff.buildDayOffSection) {
-      root.append(FOH.dayOff.buildDayOffSection(false));
+      const sec = FOH.dayOff.buildDayOffSection(false);
+      if (sec && sec instanceof Node) root.append(sec);
     }
   }
 

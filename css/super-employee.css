@@ -1448,3 +1448,130 @@ body.dark .sec-claim-btn.claimed {
 body.dark .filter .seg button.on {
   color: #041612 !important;
 }
+
+/* ============================================================================
+   15. CHECKLIST SECTION CUSTOMIZATION & ROLE/STAFF ASSIGNMENT
+   ============================================================================ */
+.sec-asg-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  padding: 3px 9px !important;
+  border-radius: 99px !important;
+  background: rgba(47, 107, 94, 0.12) !important;
+  border: 1px solid rgba(47, 107, 94, 0.28) !important;
+  color: var(--accent) !important;
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+}
+body.dark .sec-asg-pill {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border-color: rgba(16, 185, 129, 0.35) !important;
+  color: #34d399 !important;
+}
+.sec-asg-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  padding: 3px 8px !important;
+  border-radius: 99px !important;
+  background: var(--bg2, rgba(0, 0, 0, 0.05)) !important;
+  border: 1px solid var(--line) !important;
+  color: var(--ink2) !important;
+  font-size: 0.70rem !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  white-space: nowrap !important;
+}
+.sec-asg-btn:hover {
+  background: rgba(47, 107, 94, 0.1) !important;
+  border-color: var(--accent) !important;
+  color: var(--accent) !important;
+}
+body.dark .sec-asg-btn:hover {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border-color: #34d399 !important;
+  color: #34d399 !important;
+}
+.sec-add-pill {
+  background: rgba(47, 107, 94, 0.14) !important;
+  color: var(--accent) !important;
+  border: 1px solid rgba(47, 107, 94, 0.35) !important;
+  font-weight: 700 !important;
+}
+body.dark .sec-add-pill {
+  background: rgba(16, 185, 129, 0.18) !important;
+  color: #6ee7b7 !important;
+  border-color: rgba(16, 185, 129, 0.45) !important;
+}
+#sectionAssignModal, .section-assign-dialog {
+  border: 1px solid var(--line) !important;
+  border-radius: 20px 20px 0 0 !important;
+  background: var(--surface, #ffffff) !important;
+  color: var(--ink) !important;
+  padding: 0 !important;
+  max-width: 540px !important;
+  width: 100% !important;
+  margin-inline: auto !important;
+  margin-block-end: 0 !important;
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.18) !important;
+  overflow: hidden !important;
+}
+@media (min-width: 600px) {
+  #sectionAssignModal, .section-assign-dialog {
+    border-radius: 20px !important;
+    margin-block: auto !important;
+    max-height: 90vh !important;
+  }
+}
+body.dark #sectionAssignModal, body.dark .section-assign-dialog {
+  background: #111a16 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 -8px 36px rgba(0, 0, 0, 0.5) !important;
+}
+.sec-icon-chip {
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 10px !important;
+  border: 1.5px solid var(--line) !important;
+  background: var(--card) !important;
+  font-size: 1.15rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+.sec-icon-chip.on {
+  border-color: var(--accent) !important;
+  background: rgba(47, 107, 94, 0.15) !important;
+  transform: scale(1.08) !important;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25) !important;
+}
+body.dark .sec-icon-chip.on {
+  border-color: #34d399 !important;
+  background: rgba(16, 185, 129, 0.22) !important;
+}
+.dow-quick-pills {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 5px !important;
+  width: 100% !important;
+}
+.dow-quick-pills .date-chip {
+  flex: 1 1 calc(25% - 6px) !important;
+  min-width: 60px !important;
+  min-height: 32px !important;
+  padding: 4px 6px !important;
+  font-size: 0.72rem !important;
+  text-align: center !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 3px !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
+}

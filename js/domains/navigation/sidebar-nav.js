@@ -472,6 +472,9 @@
     collapseOpsLifecycleBarToOneLine();
     renderUnifiedSingleRowChecklistBar();
     injectRoleSwitcherInSidebar();
+    if (FOH.sectionAssignment && FOH.sectionAssignment.injectSectionControls) {
+      FOH.sectionAssignment.injectSectionControls();
+    }
     }
   }
 

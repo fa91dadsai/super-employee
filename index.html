@@ -4407,6 +4407,133 @@ body.dark .filter .seg button.on {
   color: #041612 !important;
 }
 
+/* ============================================================================
+   15. CHECKLIST SECTION CUSTOMIZATION & ROLE/STAFF ASSIGNMENT
+   ============================================================================ */
+.sec-asg-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  padding: 3px 9px !important;
+  border-radius: 99px !important;
+  background: rgba(47, 107, 94, 0.12) !important;
+  border: 1px solid rgba(47, 107, 94, 0.28) !important;
+  color: var(--accent) !important;
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+}
+body.dark .sec-asg-pill {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border-color: rgba(16, 185, 129, 0.35) !important;
+  color: #34d399 !important;
+}
+.sec-asg-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  padding: 3px 8px !important;
+  border-radius: 99px !important;
+  background: var(--bg2, rgba(0, 0, 0, 0.05)) !important;
+  border: 1px solid var(--line) !important;
+  color: var(--ink2) !important;
+  font-size: 0.70rem !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  white-space: nowrap !important;
+}
+.sec-asg-btn:hover {
+  background: rgba(47, 107, 94, 0.1) !important;
+  border-color: var(--accent) !important;
+  color: var(--accent) !important;
+}
+body.dark .sec-asg-btn:hover {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border-color: #34d399 !important;
+  color: #34d399 !important;
+}
+.sec-add-pill {
+  background: rgba(47, 107, 94, 0.14) !important;
+  color: var(--accent) !important;
+  border: 1px solid rgba(47, 107, 94, 0.35) !important;
+  font-weight: 700 !important;
+}
+body.dark .sec-add-pill {
+  background: rgba(16, 185, 129, 0.18) !important;
+  color: #6ee7b7 !important;
+  border-color: rgba(16, 185, 129, 0.45) !important;
+}
+#sectionAssignModal, .section-assign-dialog {
+  border: 1px solid var(--line) !important;
+  border-radius: 20px 20px 0 0 !important;
+  background: var(--surface, #ffffff) !important;
+  color: var(--ink) !important;
+  padding: 0 !important;
+  max-width: 540px !important;
+  width: 100% !important;
+  margin-inline: auto !important;
+  margin-block-end: 0 !important;
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.18) !important;
+  overflow: hidden !important;
+}
+@media (min-width: 600px) {
+  #sectionAssignModal, .section-assign-dialog {
+    border-radius: 20px !important;
+    margin-block: auto !important;
+    max-height: 90vh !important;
+  }
+}
+body.dark #sectionAssignModal, body.dark .section-assign-dialog {
+  background: #111a16 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 -8px 36px rgba(0, 0, 0, 0.5) !important;
+}
+.sec-icon-chip {
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 10px !important;
+  border: 1.5px solid var(--line) !important;
+  background: var(--card) !important;
+  font-size: 1.15rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+.sec-icon-chip.on {
+  border-color: var(--accent) !important;
+  background: rgba(47, 107, 94, 0.15) !important;
+  transform: scale(1.08) !important;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25) !important;
+}
+body.dark .sec-icon-chip.on {
+  border-color: #34d399 !important;
+  background: rgba(16, 185, 129, 0.22) !important;
+}
+.dow-quick-pills {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 5px !important;
+  width: 100% !important;
+}
+.dow-quick-pills .date-chip {
+  flex: 1 1 calc(25% - 6px) !important;
+  min-width: 60px !important;
+  min-height: 32px !important;
+  padding: 4px 6px !important;
+  font-size: 0.72rem !important;
+  text-align: center !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 3px !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
+}
+
 </style>
   </head>
   <body>
@@ -5627,125 +5754,104 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
   FOH.DEFAULT_SECTIONS = [
     {
-      title: 'Tables Setup',
-      icon: '🍽',
-      ar: 'تجهيز الطاولات',
-      items: [
-        { text: 'Clean the table tops (Indoor & Outdoor)', ar: 'تنظيف أسطح الطاولات (داخلي وخارجي)' }, // 1
-        {
-          text: 'Set the table',
-          ar: 'تجهيز الطاولة',
-          was: 'Set the table (service plate, cutlery, chopsticks, water glass, ashtray, table lamp, centerpiece)',
-          wasAr: [
-            'تجهيز الطاولة (صحن الخدمة، أدوات المائدة، العيدان، كأس الماء، منفضة السجائر، مصباح الطاولة، الـ Centerpiece)',
-            'تجهيز الطاولة (صحن الخدمة، أدوات المائدة، العيدان، كأس الماء، منفضة السجائر، مصباح الطاولة، القطعة الوسطى)',
-          ],
-          children: [
-            { text: 'Place the service plate on the table', ar: 'وضع صحن الخدمة على الطاولة' }, // 3
-            {
-              text: 'Arrange the cutlery (fork and knife in the napkin, right of the plate)',
-              ar: 'ترتيب أدوات المائدة (الشوكة والسكين داخل المنديل يمين الصحن)',
-            }, // 4
-            { text: 'Position the chopsticks to the right of the cutlery', ar: 'وضع العيدان على يمين أدوات المائدة' }, // 5
-            { text: 'Set the water glass above the cutlery', ar: 'وضع كأس الماء فوق أدوات المائدة' }, // 6
-            {
-              text: 'Place the centerpiece and table lamp in the middle of the table',
-              ar: 'وضع الـ Centerpiece ومصباح الطاولة في منتصف الطاولة',
-              wasAr: 'وضع القطعة الوسطى ومصباح الطاولة في منتصف الطاولة',
-            }, // 7
-            {
-              text: 'Place the ashtray in the middle of single tables (1 ashtray per 2 guests)',
-              ar: 'وضع منفضة السجائر في منتصف الطاولات المفردة (منفضة لكل شخصين)',
-            }, // 8
-          ],
-        }, // 2 (sub-items = sheet items 3-8)
-        {
-          text: 'Double-check every table is positioned and aligned according to the floor plan',
-          ar: 'التأكد من أن كل طاولة في مكانها ومحاذاتها حسب مخطط الصالة',
-        }, // 9
-        { text: 'Check there is enough clearance for the chairs', ar: 'التأكد من وجود مسافة كافية للكراسي' }, // 10
-        {
-          text: 'Ensure the side tables and ice buckets are correctly positioned',
-          ar: 'التأكد من أن الطاولات الجانبية ودلاء الثلج في مكانها الصحيح',
-        }, // 11
-      ],
-    },
-    {
-      title: 'Cleaning',
-      icon: '🧽',
-      ar: 'التنظيف',
-      items: [
-        {
-          text: 'Clean the menus (food, drinks, wine, cocktails)',
-          ar: 'تنظيف قوائم الطعام (الطعام، المشروبات، النبيذ، الكوكتيلات)',
-        }, // 12
-        { text: 'Clean the tissue boxes and refill them', ar: 'تنظيف علب المناديل وتعبئتها' }, // 13
-        { text: 'Wipe and clean the table bases (Indoor & Outdoor)', ar: 'مسح وتنظيف قواعد الطاولات (داخلي وخارجي)' }, // 14
-        { text: 'Wipe and clean the chairs (Indoor & Outdoor)', ar: 'مسح وتنظيف الكراسي (داخلي وخارجي)' }, // 15
-        { text: 'Clean the ice buckets', ar: 'تنظيف دلاء الثلج' }, // 16
-        { text: 'Clean the side tables', ar: 'تنظيف الطاولات الجانبية' }, // 17
-        { text: 'Clean the stations', ar: 'تنظيف المحطات' }, // 18
-        { text: 'Clean the back area', ar: 'تنظيف المنطقة الخلفية' }, // 19
-        { text: 'Clean the soy sauce bottles, then refill them', ar: 'تنظيف زجاجات صلصة الصويا ثم تعبئتها' }, // 20
-        { text: 'Clean the salt & pepper, then refill them', ar: 'تنظيف الملح والفلفل ثم تعبئتها' }, // 21
-        { text: 'Clean the bill folders', ar: 'تنظيف ملفات الفواتير' }, // 22
-        { text: 'Clean all the trays', ar: 'تنظيف جميع الصواني' }, // 25
-        { text: 'Make sure the terrace is clean', ar: 'التأكد من نظافة الـ Terrace', wasAr: 'التأكد من نظافة التراس' }, // 26
-        { text: 'Make sure the W.C. is clean', ar: 'التأكد من نظافة دورات المياه' }, // 27
-        { text: 'Make sure the window glass is clean', ar: 'التأكد من نظافة زجاج النوافذ' }, // 35
-      ],
-    },
-    {
-      title: 'Stations & Bar',
+      id: 'sec-bar',
+      dept: 'bar',
       icon: '🍸',
-      ar: 'المحطات والبار',
+      title: 'Bar & Beverage Station',
+      titleAr: 'قسم البار والمشروبات',
+      assignedRoleKey: 'super_bartender',
+      assignedRoleLabel: '🍸 Super Bartender',
+      assignedUsername: 'maher',
       items: [
-        {
-          text: 'Clean and prepare the expeditor station',
-          ar: 'تنظيف وتجهيز محطة الـ Expeditor',
-          wasAr: 'تنظيف وتجهيز محطة التنسيق (Expeditor)',
-        }, // 23
-        { text: 'Make sure the bar is clean and ready', ar: 'التأكد من نظافة البار وجاهزيته' }, // 36
+        { text: 'Make sure the bar is clean, polished and service-ready', ar: 'التأكد من نظافة البار ومحطات التحضير وجاهزيتها للخدمة' },
+        { text: 'Top up ice wells, draft lines & beverage coolers', ar: 'تعبئة أحواض الثلج وتبريد زجاجات المشروبات والنبيذ' },
+        { text: 'Check espresso machine, steam wands & grinder hopper', ar: 'فحص ماكينة الإسبريسو ومطحنة القهوة والتأكد من نقاء البن' },
+        { text: 'Cut fresh garnishes (lemon/lime/mint) & prep house syrups', ar: 'تقطيع وتجهيز الغارنيش الطازج والنعناع وفحص العصائر والـ Syrups' },
+        { text: 'Wash, polish and inspect all cocktail and wine glasses', ar: 'تلميع وفحص كؤوس الكوكتيل والنبيذ وكاسات التقديم' },
       ],
     },
     {
-      title: 'Tech & Cash',
+      id: 'sec-floor',
+      dept: 'floor',
+      icon: '🍽️',
+      title: 'Floor & Dining Tables',
+      titleAr: 'قسم الصالة والطاولات',
+      assignedRoleKey: 'super_waiter',
+      assignedRoleLabel: '⭐ Super Waiter',
+      assignedUsername: 'sara',
+      items: [
+        { text: 'Clean the table tops (Indoor & Outdoor)', ar: 'تنظيف أسطح الطاولات (داخلي وخارجي)' },
+        {
+          text: 'Set the table (service plate, cutlery, chopsticks, water glass, ashtray, table lamp, centerpiece)',
+          ar: 'تجهيز الطاولة (صحن الخدمة، أدوات المائدة، العيدان، كأس الماء، منفضة السجائر، مصباح الطاولة، الـ Centerpiece)',
+          children: [
+            { text: 'Place the service plate on the table', ar: 'وضع صحن الخدمة على الطاولة' },
+            { text: 'Arrange the cutlery (fork and knife in napkin, right of plate)', ar: 'ترتيب أدوات المائدة (الشوكة والسكين داخل المنديل يمين الصحن)' },
+            { text: 'Position chopsticks to the right of cutlery', ar: 'وضع العيدان على يمين أدوات المائدة' },
+            { text: 'Set the water glass above the cutlery', ar: 'وضع كأس الماء فوق أدوات المائدة' },
+            { text: 'Place the centerpiece and table lamp in middle of table', ar: 'وضع الـ Centerpiece ومصباح الطاولة في منتصف الطاولة' },
+            { text: 'Place the ashtray in the middle of single tables (1 per 2 guests)', ar: 'وضع منفضة السجائر في منتصف الطاولات المفردة (منفضة لكل شخصين)' },
+          ],
+        },
+        { text: 'Double-check every table is positioned and aligned according to floor plan', ar: 'التأكد من أن كل طاولة في مكانها ومحاذاتها حسب مخطط الصالة' },
+        { text: 'Check there is enough clearance for chairs & clean chair seats', ar: 'التأكد من وجود مسافة كافية للكراسي وتنظيف المقاعد' },
+        { text: 'Ensure side tables and ice buckets are cleaned & positioned', ar: 'التأكد من أن الطاولات الجانبية ودلاء الثلج في مكانها الصحيح' },
+        { text: 'Wipe and clean table bases (Indoor & Outdoor)', ar: 'مسح وتنظيف قواعد الطاولات (داخلي وخارجي)' },
+        { text: 'Make sure the terrace is clean & outdoor cushions set', ar: 'التأكد من نظافة التراس وتجهيز الوسائد الخارجية' },
+      ],
+    },
+    {
+      id: 'sec-back',
+      dept: 'back',
+      icon: '🚪',
+      title: 'Back Area & Service Station',
+      titleAr: 'قسم المنطقة الخلفية والمحطات',
+      assignedRoleKey: 'super_waiter',
+      assignedRoleLabel: '⭐ Super Waiter / Runner',
+      assignedUsername: '',
+      items: [
+        { text: 'Clean and prepare the expeditor station', ar: 'تنظيف وتجهيز محطة التنسيق (Expeditor)' },
+        { text: 'Clean the back area and service corridors', ar: 'تنظيف وترتيب المنطقة الخلفية وممر الخدمة' },
+        { text: 'Clean the stations & wipe condiment trays', ar: 'تنظيف المحطات ومسح صواني الإضافات' },
+        { text: 'Clean soy sauce bottles, salt & pepper, then refill them', ar: 'تنظيف زجاجات الصويا صوص والملاحات ثم تعبئتها' },
+        { text: 'Clean all service trays and bill folders', ar: 'تنظيف جميع صواني الخدمة وحافظات الفواتير' },
+        { text: 'Clean tissue boxes and refill them', ar: 'تنظيف علب المناديل وتعبئتها' },
+        { text: 'Make sure the W.C. restrooms are clean & stocked', ar: 'التأكد من نظافة دورات المياه وتعبئة الصابون والمحارم' },
+        { text: 'Make sure window glass is clean', ar: 'التأكد من نظافة زجاج النوافذ' },
+        { text: 'Bring the order from warehouse (ensure enough stock for 2 days)', ar: 'إحضار الطلبية من المستودع (التأكد من أن كل شيء يكفي ليومين)' },
+      ],
+    },
+    {
+      id: 'sec-host',
+      dept: 'host',
+      icon: '🛎️',
+      title: 'Host & Reception Desk',
+      titleAr: 'قسم الاستقبال والهوست',
+      assignedRoleKey: 'super_captain',
+      assignedRoleLabel: '🎖️ Super Captain / Host',
+      assignedUsername: 'ali',
+      items: [
+        { text: 'Inspect and clean the Host Stand & welcome entrance', ar: 'فحص وتنظيف كاونتر الاستقبال (Host Stand) ومدخل الصالة' },
+        { text: 'Review evening reservations, VIP notes & table plan with Floor Captain', ar: 'مراجعة حجوزات المساء وطلبات الـ VIP وتوزيع الطاولات مع الكابتن' },
+        { text: 'Clean and sanitize all food, wine & cocktail menus', ar: 'تنظيف وتعقيم كافة قوائم الطعام والمشروبات والنبيذ' },
+        { text: 'Turn on music playlist & adjust ambient lighting', ar: 'تشغيل الموسيقى وضبط الإضاءة الترحيبية والتكييف', due: '15:50' },
+        { text: 'Wear uniform, inspect grooming & be ready for service', ar: 'ارتداء الزي الرسمي والجاهزية التامة لاستقبال الضيوف', due: '15:50' },
+      ],
+    },
+    {
+      id: 'sec-cash',
+      dept: 'cash',
       icon: '💳',
-      ar: 'الأجهزة والنقد',
+      title: 'Cashier, POS & Tech',
+      titleAr: 'قسم الكاشير والأجهزة',
+      assignedRoleKey: 'super_manager',
+      assignedRoleLabel: '👑 Super Manager',
+      assignedUsername: 'fadi',
       items: [
-        {
-          text: 'Make sure all Visa machines and the tablet are charged',
-          ar: 'التأكد من شحن جميع أجهزة الفيزا والتابلت',
-        }, // 28
-        { text: 'Change the cash float', ar: 'تبديل الـ Cash Float', wasAr: 'تبديل نقد الفكّة (Float)' }, // 29
-        { text: 'Make sure the POS is on and working', ar: 'التأكد من أن نظام نقاط البيع (POS) يعمل' }, // 33
-        { text: 'Check the vault', ar: 'التحقق من الخزنة' }, // 34
-      ],
-    },
-    {
-      title: 'Staff & Music',
-      icon: '👥',
-      ar: 'الطاقم والموسيقى',
-      items: [
-        { text: 'Turn on the music', ar: 'تشغيل الموسيقى', due: '15:50' }, // 24
-        { text: 'Wear the uniform and be ready', ar: 'ارتداء الزي الرسمي والجاهزية', due: '15:50' }, // 31
-        {
-          text: 'Put out the tip sheet and write the date and day',
-          ar: 'وضع ورقة الإكراميات وكتابة التاريخ واليوم',
-        }, // 32
-      ],
-    },
-    {
-      title: 'Store',
-      icon: '📦',
-      ar: 'المستودع',
-      items: [
-        {
-          text: 'Bring the order from the warehouse (make sure everything is enough for two days)',
-          ar: 'إحضار الطلبية من المستودع (التأكد من أن كل شيء يكفي ليومين)',
-          // Earlier prototype wording; lets lists saved before the fix pick up the Arabic text.
-          was: 'Bring the order from the store (make sure everything is enough for two days)',
-        }, // 30
+        { text: 'Make sure all Visa machines and ordering tablets are charged', ar: 'التأكد من شحن جميع أجهزة الفيزا والتابلت' },
+        { text: 'Verify and change the cash float in till drawer', ar: 'استلام وتبديل نقد الفكة (Cash Float) في درج الكاشير' },
+        { text: 'Ensure POS terminals are online and printers ready', ar: 'التأكد من تشغيل نظام نقاط البيع (POS) وجاهزية الطابعات' },
+        { text: 'Check the safe vault and set out the daily tip sheet', ar: 'التحقق من الخزنة ووضع ورقة التبس مع تاريخ اليوم' },
       ],
     },
   ];
@@ -6018,6 +6124,12 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
         remindBefore: cleanReminder(it.remindBefore),
       };
       if (typeof it.role === 'string' && roleIds.has(it.role)) out.role = it.role;
+      if (typeof it.assignedRoleKey === 'string') out.assignedRoleKey = cleanText(it.assignedRoleKey, 50);
+      if (typeof it.assignedRoleLabel === 'string') out.assignedRoleLabel = cleanText(it.assignedRoleLabel, 100);
+      if (typeof it.assignedUsername === 'string') out.assignedUsername = cleanText(it.assignedUsername, 50);
+      if (typeof it.isRecurring === 'boolean') out.isRecurring = it.isRecurring;
+      if (it.scheduleDate) out.scheduleDate = it.scheduleDate;
+      if (it.recurrence && typeof it.recurrence === 'object') out.recurrence = it.recurrence;
       if (depth === 0) out.children = list(it.children).filter(hasText).map((c) => item(c, 1));
       return out;
     };
@@ -6026,13 +6138,18 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       .map((s) => {
         const title = cleanText(s.title);
         const titleAr = cleanText(s.titleAr);
-        return {
+        const secOut = {
           id: freshId(s.id),
           title: title || (titleAr ? '' : 'Untitled section'),
           titleAr,
           icon: cleanText(s.icon, 8) || DEFAULT_ICON,
           items: list(s.items).filter(hasText).map((it) => item(it, 0)),
         };
+        if (typeof s.dept === 'string') secOut.dept = cleanText(s.dept, 40);
+        if (typeof s.assignedRoleKey === 'string') secOut.assignedRoleKey = cleanText(s.assignedRoleKey, 50);
+        if (typeof s.assignedRoleLabel === 'string') secOut.assignedRoleLabel = cleanText(s.assignedRoleLabel, 100);
+        if (typeof s.assignedUsername === 'string') secOut.assignedUsername = cleanText(s.assignedUsername, 50);
+        return secOut;
       });
     const tasks = list(input.tasks).filter(hasText).map((tk) => task(tk, freshId, roleIds));
     // Staff: people by name, with a position; inv = takes part in inventory counts.
@@ -7825,7 +7942,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
     // Always append Day-Off & Leave Card to My Tasks
     if (FOH.dayOff && FOH.dayOff.buildDayOffSection) {
-      root.append(FOH.dayOff.buildDayOffSection(false));
+      const sec = FOH.dayOff.buildDayOffSection(false);
+      if (sec && sec instanceof Node) root.append(sec);
     }
   }
 
@@ -12295,12 +12413,13 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       dept: 'floor',
       icon: '🍽️',
       title: 'Floor & Tables Mid-Shift Reset (03:00 PM – Evening Prep)',
-      titleAr: 'تجهيز الصالة والطاولات لمنتصف الشفت (بعد الساعة 3:00 عصراً)',
+      titleAr: 'تجهيز قسم الصالة والطاولات لمنتصف الشفت (بعد 3:00 عصراً)',
+      assignedRoleKey: 'super_waiter',
+      assignedRoleLabel: '⭐ Super Waiter',
       items: [
         { id: 'mf1', text: 'Reset & sanitize all lunch tables, replace soiled placemats & napkins', textAr: 'إعادة ترتيب وتعقيم طاولات فترة الغداء وتبديل المفارش والمناديل', due: '15:15', role: '', assignedRoleKey: 'super_waiter', assignedRoleLabel: '⭐ Super Waiter', children: [] },
         { id: 'mf2', text: 'Refill table salt/pepper grinders, soy sauce bottles, toothpicks & sugar caddies', textAr: 'إعادة تعبئة الملاحات وزجاجات الصويا صوص والمناديل على الطاولات', due: '15:30', role: '', assignedRoleKey: 'super_waiter', assignedRoleLabel: '⭐ Super Waiter', children: [] },
         { id: 'mf3', text: 'Inspect & refresh guest restrooms (soap, paper towels, air freshener & floor)', textAr: 'فحص وتجهيز حمامات الزبائن (الصابون، المحارم، المعطر ونظافة الأرضية)', due: '15:45', role: '', assignedRoleKey: 'super_waiter', assignedRoleLabel: '⭐ Super Waiter', children: [] },
-        { id: 'mf4', text: 'Review evening table reservations & VIP requests with Floor Captain', textAr: 'مراجعة حجوزات المساء وطلبات الـ VIP وتوزيع الطاولات مع الكابتن', due: '16:15', role: '', assignedRoleKey: 'super_captain', assignedRoleLabel: '🎖️ Super Captain', children: [] },
       ],
     },
     {
@@ -12308,7 +12427,9 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       dept: 'bar',
       icon: '🍸',
       title: 'Bar Mid-Shift Restock & Handover (03:00 PM – Evening Rush)',
-      titleAr: 'تدعيم البار وتجهيز منتصف الشفت لذروة المساء (3:00 عصراً)',
+      titleAr: 'تدعيم قسم البار والمشروبات لذروة المساء (3:00 عصراً)',
+      assignedRoleKey: 'super_bartender',
+      assignedRoleLabel: '🍸 Super Bartender',
       items: [
         { id: 'mb1', text: 'Top up all ice wells, chillers, draft lines & speed-rail spirits for evening rush', textAr: 'تعبئة أحواض الثلج وثلاجات البيرة والنبيذ وزجاجات الـ Speed Rail لذروة المساء', due: '15:20', role: '', assignedRoleKey: 'super_bartender', assignedRoleLabel: '🍸 Super Bartender', children: [] },
         { id: 'mb2', text: 'Cut fresh evening garnishes (lemon/lime/orange/mint) & check house syrups', textAr: 'تقطيع دفعة طازجة من الغارنيش والنعناع وفحص الـ Syrups والعصائر للمساء', due: '15:45', role: '', assignedRoleKey: 'super_bartender', assignedRoleLabel: '🍸 Super Bartender', children: [] },
@@ -12318,14 +12439,28 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     },
     {
       id: 'mid-stations',
-      dept: 'floor',
-      icon: '☕',
-      title: 'Waiter Stations, Cutlery Polish & Ambiance Transition',
-      titleAr: 'تدعيم محطات الويتر وتلميع الفضيات وضبط الأجواء المسائية',
+      dept: 'back',
+      icon: '🚪',
+      title: 'Back Area, Waiter Stations & Cutlery Polish',
+      titleAr: 'قسم المنطقة الخلفية وتدعيم محطات الويتر وتلميع الفضيات',
+      assignedRoleKey: 'super_waiter',
+      assignedRoleLabel: '⭐ Super Waiter / Runner',
       items: [
         { id: 'ms1', text: 'Polish & restock forks, knives, spoons, side plates & water glasses in stations', textAr: 'تلميع وتدعيم الشوك والسكاكين والصحون الجانبية وكاسات الماء في المحطات', due: '15:40', role: '', assignedRoleKey: 'super_waiter', assignedRoleLabel: '⭐ Super Waiter', children: [] },
         { id: 'ms2', text: 'Empty mid-day station trash bins and replace bags before dinner service', textAr: 'تفريغ سلات المهملات في المحطات وتبديل الأكياس قبل خدمة العشاء', due: '16:00', role: '', assignedRoleKey: 'super_waiter', assignedRoleLabel: '⭐ Super Waiter', children: [] },
-        { id: 'ms3', text: 'Transition music playlist & dimmer lighting to afternoon/evening mood', textAr: 'تحويل قائمة الموسيقى وتعديل الإضاءة والتكييف لأجواء المساء', due: '16:30', role: '', assignedRoleKey: 'super_captain', assignedRoleLabel: '🎖️ Super Captain', children: [] },
+      ],
+    },
+    {
+      id: 'mid-host',
+      dept: 'host',
+      icon: '🛎️',
+      title: 'Host & Evening Reservations Prep',
+      titleAr: 'قسم الاستقبال والهوست ومراجعة حجوزات المساء',
+      assignedRoleKey: 'super_captain',
+      assignedRoleLabel: '🎖️ Super Captain / Host',
+      items: [
+        { id: 'mh1', text: 'Review evening table reservations & VIP requests with Floor Captain', textAr: 'مراجعة حجوزات المساء وطلبات الـ VIP وتوزيع الطاولات مع الكابتن', due: '16:15', role: '', assignedRoleKey: 'super_captain', assignedRoleLabel: '🎖️ Super Captain', children: [] },
+        { id: 'mh2', text: 'Transition music playlist & dimmer lighting to afternoon/evening mood', textAr: 'تحويل قائمة الموسيقى وتعديل الإضاءة والتكييف لأجواء المساء الترحيبية', due: '16:30', role: '', assignedRoleKey: 'super_captain', assignedRoleLabel: '🎖️ Super Captain', children: [] },
       ],
     },
   ];
@@ -12336,12 +12471,14 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       dept: 'bar',
       icon: '🍸',
       title: 'Bar Department Closing (After 01:00 AM Last Order)',
-      titleAr: 'إغلاق قسم البار (بعد Last Order البار 1:00 ص)',
+      titleAr: 'إغلاق قسم البار والمشروبات (بعد Last Order البار 1:00 ص)',
+      assignedRoleKey: 'super_bartender',
+      assignedRoleLabel: '🍸 Super Bartender',
       items: [
-        { id: 'cb1', text: 'Backflush espresso machine, clean steam wands & empty grinder hopper', textAr: 'تنظيف ماكينة الإسبريسو وعمل Backflush وتفريغ مطحنة القهوة', due: '01:05', role: '', children: [] },
-        { id: 'cb2', text: 'Wrap & date-label all garnishes, fresh juices, syrups & purées in chiller', textAr: 'تغطية وتغليف الفواكه والغارنيش والعصائر والـ Syrups مع ملصق التاريخ', due: '01:15', role: '', children: [] },
-        { id: 'cb3', text: 'Wipe speed rail bottles, lock premium bottle vault & bar fridges', textAr: 'مسح زجاجات الـ Speed Rail وإقفال ثلاجات البار وخزنة الزجاجات الفاخرة', due: '01:25', role: '', children: [] },
-        { id: 'cb4', text: 'Burn/melt ice wells, sanitize bar counter, mats & floor drains', textAr: 'تذويب وتفريغ أحواض الثلج وتعقيم كاونتر البار والأرضيات والمصافي', due: '01:40', role: '', children: [] },
+        { id: 'cb1', text: 'Backflush espresso machine, clean steam wands & empty grinder hopper', textAr: 'تنظيف ماكينة الإسبريسو وعمل Backflush وتفريغ مطحنة القهوة', due: '01:05', role: '', assignedRoleKey: 'super_bartender', assignedRoleLabel: '🍸 Super Bartender', children: [] },
+        { id: 'cb2', text: 'Wrap & date-label all garnishes, fresh juices, syrups & purées in chiller', textAr: 'تغطية وتغليف الفواكه والغارنيش والعصائر والـ Syrups مع ملصق التاريخ', due: '01:15', role: '', assignedRoleKey: 'super_bartender', assignedRoleLabel: '🍸 Super Bartender', children: [] },
+        { id: 'cb3', text: 'Wipe speed rail bottles, lock premium bottle vault & bar fridges', textAr: 'مسح زجاجات الـ Speed Rail وإقفال ثلاجات البار وخزنة الزجاجات الفاخرة', due: '01:25', role: '', assignedRoleKey: 'super_bartender', assignedRoleLabel: '🍸 Super Bartender', children: [] },
+        { id: 'cb4', text: 'Burn/melt ice wells, sanitize bar counter, mats & floor drains', textAr: 'تذويب وتفريغ أحواض الثلج وتعقيم كاونتر البار والأرضيات والمصافي', due: '01:40', role: '', assignedRoleKey: 'super_bartender', assignedRoleLabel: '🍸 Super Bartender', children: [] },
       ],
     },
     {
@@ -12350,22 +12487,39 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       icon: '🍽️',
       title: 'Floor & Terrace Closing (After 00:00 Kitchen Last Order)',
       titleAr: 'إغلاق قسم الصالة والتراس (بعد Last Order المطبخ 12:00 ص)',
+      assignedRoleKey: 'super_waiter',
+      assignedRoleLabel: '⭐ Super Waiter',
       items: [
-        { id: 'c1', text: 'Clear and sanitize all indoor & terrace tables after guests depart', textAr: 'تنظيف وتعقيم جميع طاولات الصالة والتراس بعد مغادرة الزبائن', due: '01:00', role: '', children: [] },
-        { id: 'c2', text: 'Collect menus, bill folders & table candles to station', textAr: 'جمع المنيو وحافظات الفواتير والشموع وإعادتها للمحطة', due: '01:15', role: '', children: [] },
-        { id: 'c3', text: 'Close terrace umbrellas and secure outdoor cushions', textAr: 'إغلاق مظلات التراس وفصل دفايات الغاز وتأمين الوسائد الخارجية', due: '01:30', role: '', children: [] },
+        { id: 'c1', text: 'Clear and sanitize all indoor & terrace tables after guests depart', textAr: 'تنظيف وتعقيم جميع طاولات الصالة والتراس بعد مغادرة الزبائن', due: '01:00', role: '', assignedRoleKey: 'super_waiter', assignedRoleLabel: '⭐ Super Waiter', children: [] },
+        { id: 'c2', text: 'Collect menus, bill folders & table candles to station', textAr: 'جمع المنيو وحافظات الفواتير والشموع وإعادتها للمحطة', due: '01:15', role: '', assignedRoleKey: 'super_waiter', assignedRoleLabel: '⭐ Super Waiter', children: [] },
+        { id: 'c3', text: 'Close terrace umbrellas and secure outdoor cushions', textAr: 'إغلاق مظلات التراس وفصل دفايات الغاز وتأمين الوسائد الخارجية', due: '01:30', role: '', assignedRoleKey: 'super_waiter', assignedRoleLabel: '⭐ Super Waiter', children: [] },
       ],
     },
     {
       id: 'cls-stations',
-      dept: 'floor',
-      icon: '☕',
-      title: 'Waiter Stations & Linen Handover (Floor Dept)',
-      titleAr: 'إغلاق محطات الويتر والبياضات (قسم الصالة)',
+      dept: 'back',
+      icon: '🚪',
+      title: 'Back Area & Waiter Stations Closing',
+      titleAr: 'إغلاق قسم المنطقة الخلفية ومحطات الويتر وغسيل الصحون',
+      assignedRoleKey: 'super_waiter',
+      assignedRoleLabel: '⭐ Super Waiter / Runner',
       items: [
-        { id: 'c4', text: 'Send all remaining glassware & cutlery to dishwasher', textAr: 'إرسال جميع الكؤوس والشوك والسكاكين المتبقية للغسيل', due: '01:30', role: '', children: [] },
-        { id: 'c5', text: 'Empty ice bins, wipe condiment trays & seal perishables', textAr: 'تفريغ أحواض الثلج وتنظيف صواني الإضافات وإغلاق المواد', due: '01:40', role: '', children: [] },
-        { id: 'c6', text: 'Send dirty linen/napkins to laundry & restock clean base', textAr: 'إرسال المفارش والمناديل للغسيل وتجهيز أساس الصباح', due: '01:50', role: '', children: [] },
+        { id: 'c4', text: 'Send all remaining glassware & cutlery to dishwasher', textAr: 'إرسال جميع الكؤوس والشوك والسكاكين المتبقية للغسيل', due: '01:30', role: '', assignedRoleKey: 'super_waiter', assignedRoleLabel: '⭐ Super Waiter', children: [] },
+        { id: 'c5', text: 'Empty ice bins, wipe condiment trays & seal perishables', textAr: 'تفريغ أحواض الثلج وتنظيف صواني الإضافات وإغلاق المواد', due: '01:40', role: '', assignedRoleKey: 'super_waiter', assignedRoleLabel: '⭐ Super Waiter', children: [] },
+        { id: 'c6', text: 'Send dirty linen/napkins to laundry & restock clean base', textAr: 'إرسال المفارش والمناديل للغسيل وتجهيز أساس الصباح', due: '01:50', role: '', assignedRoleKey: 'super_waiter', assignedRoleLabel: '⭐ Super Waiter', children: [] },
+      ],
+    },
+    {
+      id: 'cls-host',
+      dept: 'host',
+      icon: '🛎️',
+      title: 'Host Stand & Front Door Closing',
+      titleAr: 'إغلاق كاونتر الاستقبال وباب المدخل الرئيسي',
+      assignedRoleKey: 'super_captain',
+      assignedRoleLabel: '🎖️ Super Captain / Host',
+      items: [
+        { id: 'ch1', text: 'File away today reservations book, store guest comments & wipe host stand', textAr: 'أرشفة دفتر حجوزات اليوم وحفظ ملاحظات الضيوف ومسح كاونتر الاستقبال', due: '01:45', role: '', assignedRoleKey: 'super_captain', assignedRoleLabel: '🎖️ Super Captain', children: [] },
+        { id: 'ch2', text: 'Lock front main entrance doors & set external night signboard', textAr: 'إقفال أبواب المدخل الرئيسي وتشغيل اللوحة الترحيبية الليلية', due: '02:00', role: '', assignedRoleKey: 'super_captain', assignedRoleLabel: '🎖️ Super Captain', children: [] },
       ],
     },
     {
@@ -12373,11 +12527,13 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       dept: 'cash',
       icon: '💳',
       title: 'Cashier, Tip Box & Final Safety Lockup (At 02:00+ Last Guest)',
-      titleAr: 'إغلاق الكاشير وصندوق التبس والأمان النهائي (مع آخر زبون 2:00+ ص)',
+      titleAr: 'إغلاق قسم الكاشير وصندوق التبس والأمان النهائي (2:00+ ص)',
+      assignedRoleKey: 'super_manager',
+      assignedRoleLabel: '👑 Super Manager',
       items: [
-        { id: 'c7', text: 'Close POS terminals (Z-Report) & reconcile Visa slips and cash float', textAr: 'إغلاق أجهزة الكاشير (Z-Report) ومطابقة إيصالات الفيزا والكاش', due: '02:00', role: '', children: [] },
-        { id: 'c8', text: 'Verify POS terminals closed & tips handed to Tip Manager', textAr: 'توثيق وتسليم حصيلة التبس اليومي في صندوق Tip Manager وإقفال الخزنة', due: '02:05', role: '', children: [] },
-        { id: 'c9', text: 'Lock terrace doors, check restrooms & set night lighting after last guest', textAr: 'إطفاء التكييف والصوت وإقفال الأبواب بعد مغادرة آخر زبون', due: '02:15', role: '', children: [] },
+        { id: 'c7', text: 'Close POS terminals (Z-Report) & reconcile Visa slips and cash float', textAr: 'إغلاق أجهزة الكاشير (Z-Report) ومطابقة إيصالات الفيزا والكاش', due: '02:00', role: '', assignedRoleKey: 'super_manager', assignedRoleLabel: '👑 Super Manager', children: [] },
+        { id: 'c8', text: 'Verify POS terminals closed & tips handed to Tip Manager', textAr: 'توثيق وتسليم حصيلة التبس اليومي في صندوق Tip Manager وإقفال الخزنة', due: '02:05', role: '', assignedRoleKey: 'super_manager', assignedRoleLabel: '👑 Super Manager', children: [] },
+        { id: 'c9', text: 'Lock terrace doors, check restrooms & set night lighting after last guest', textAr: 'إطفاء التكييف والصوت وإقفال الأبواب بعد مغادرة آخر زبون', due: '02:15', role: '', assignedRoleKey: 'super_manager', assignedRoleLabel: '👑 Super Manager', children: [] },
       ],
     },
   ];
@@ -12630,6 +12786,626 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     injectSectionClaims,
     loadSignoffs,
     saveSignoffs,
+  };
+})(window.FOH = window.FOH || {});
+
+</script>
+
+<script>
+// --- js/domains/checklist/section-assignment.js ---
+// foh-opening/js/domains/checklist/section-assignment.js
+// Section Division, Role & Staff Assignment, and Custom Department Management
+(function (FOH) {
+  'use strict';
+
+  const $ = (id) => document.getElementById(id);
+  const S = () => FOH.state;
+  const { t, pick } = FOH.i18n;
+  const { el } = FOH.view;
+  const isAr = () => (FOH.i18n ? FOH.i18n.lang === 'ar' : false);
+
+  const ICONS = ['🍸', '🍽️', '🚪', '🛎️', '💳', '📦', '☕', '🧹', '🧽', '👥', '✨'];
+
+  const ROLE_OPTIONS = [
+    { key: 'all', labelEn: '👥 All Positions (Shared)', labelAr: '👥 متاح للجميع (مشترك)' },
+    { key: 'super_bartender', labelEn: '🍸 Super Bartender', labelAr: '🍸 سوبر بارتندر (Super Bartender)' },
+    { key: 'super_waiter', labelEn: '⭐ Super Waiter', labelAr: '⭐ سوبر ويتر (Super Waiter)' },
+    { key: 'super_captain', labelEn: '🎖️ Super Captain', labelAr: '🎖️ سوبر كابتن (Super Captain)' },
+    { key: 'super_manager', labelEn: '👑 Super Manager', labelAr: '👑 سوبر مانجر (Super Manager)' },
+    { key: 'host', labelEn: '🛎️ Host & Reception', labelAr: '🛎️ هوست واستقبال (Host)' },
+    { key: 'runner', labelEn: '🏃 Runner / Support', labelAr: '🏃 رانر ومساعد (Runner)' },
+  ];
+
+  const DEPT_OPTIONS = [
+    { key: 'bar', labelEn: '🍸 Bar Department', labelAr: '🍸 قسم البار والمشروبات' },
+    { key: 'floor', labelEn: '🍽️ Floor & Dining Area', labelAr: '🍽️ قسم الصالة والطاولات' },
+    { key: 'back', labelEn: '🚪 Back Area & Stations', labelAr: '🚪 قسم المنطقة الخلفية والمحطات' },
+    { key: 'host', labelEn: '🛎️ Host & Reception Area', labelAr: '🛎️ قسم الاستقبال والهوست' },
+    { key: 'cash', labelEn: '💳 Cashier, POS & Tech', labelAr: '💳 قسم الكاشير والأجهزة' },
+    { key: 'general', labelEn: '🏢 General Operations', labelAr: '🏢 تشغيل عام' },
+  ];
+
+  function getStaffList() {
+    const ar = isAr();
+    const list = [
+      { uname: '', label: ar ? '— أي موظف في هذا المنصب —' : '— Any staff in this role —' },
+      { uname: 'sara', label: ar ? '👤 سارة خوري (سوبر ويتر)' : '👤 Sara Khoury (Super Waiter)' },
+      { uname: 'maher', label: ar ? '👤 ماهر زيد (سوبر بارتندر)' : '👤 Maher Zaid (Super Bartender)' },
+      { uname: 'ali', label: ar ? '👤 علي حسن (سوبر كابتن)' : '👤 Ali Hassan (Super Captain)' },
+      { uname: 'fadi', label: ar ? '👑 فادي المصري (سوبر مانجر)' : '👑 Fadi Al-Masri (Super Manager)' },
+    ];
+    const seen = new Set(list.map((s) => s.uname));
+    const st = S();
+    ((st && st.tpl && st.tpl.staff) || []).forEach((p) => {
+      const u = (p.username || (p.name || '').split(' ')[0] || p.id || '').toLowerCase().trim();
+      if (u && !seen.has(u)) {
+        seen.add(u);
+        list.push({ uname: u, label: '👤 ' + p.name });
+      }
+    });
+    return list;
+  }
+
+  function canCurrentUserAssign() {
+    if (FOH.roleIdentity && FOH.roleIdentity.canCurrentUserAssignTasks) {
+      return FOH.roleIdentity.canCurrentUserAssignTasks();
+    }
+    const sess = FOH.sessionAuth ? FOH.sessionAuth.getSession() : null;
+    return !!(sess && (sess.isManager || sess.isCaptain));
+  }
+
+  function getActiveSheetType() {
+    return (FOH.threeShifts && FOH.threeShifts.getActiveSheetType)
+      ? FOH.threeShifts.getActiveSheetType()
+      : ((FOH.opsLifecycle && FOH.opsLifecycle.isClosingSheetActive && FOH.opsLifecycle.isClosingSheetActive()) ? 'closing' : 'opening');
+  }
+
+  function persistCurrentSheet() {
+    if (FOH.erpPwa && FOH.erpPwa.persistCurrentSheetState) {
+      FOH.erpPwa.persistCurrentSheetState();
+    } else {
+      FOH.store.saveTemplate(S().tpl);
+    }
+  }
+
+  // Open Section Assignment & Customization Modal
+  function openSectionModal(targetSec, isNew = false) {
+    const ar = isAr();
+    let dlg = $('sectionAssignModal');
+    if (!dlg) {
+      dlg = el('dialog', 'sheet section-assign-dialog');
+      dlg.id = 'sectionAssignModal';
+      dlg.addEventListener('click', (e) => e.target === dlg && dlg.close());
+      document.body.append(dlg);
+    }
+    dlg.replaceChildren();
+
+    const sec = targetSec || {
+      id: 'sec_' + Date.now(),
+      title: '',
+      titleAr: '',
+      icon: '🍽️',
+      dept: 'floor',
+      assignedRoleKey: 'all',
+      assignedRoleLabel: '👥 ' + (ar ? 'متاح للجميع' : 'All Staff'),
+      assignedUsername: '',
+      items: [],
+    };
+
+    let selectedIcon = sec.icon || '🍽️';
+
+    const box = el('div', 'task-asg-modal-box');
+    box.style.padding = '14px 18px 24px';
+    box.style.maxHeight = '88dvh';
+    box.style.overflowY = 'auto';
+
+    // Header
+    const grab = el('div', 'grab');
+    const headerRow = el('div', '');
+    headerRow.style.display = 'flex';
+    headerRow.style.justifyContent = 'space-between';
+    headerRow.style.alignItems = 'center';
+    headerRow.style.marginBottom = '6px';
+
+    const hTitle = el('h2', '');
+    hTitle.style.margin = '0';
+    hTitle.style.fontSize = '1.14rem';
+    hTitle.style.fontWeight = '800';
+    hTitle.style.display = 'flex';
+    hTitle.style.alignItems = 'center';
+    hTitle.style.gap = '8px';
+    hTitle.innerHTML = '<span>⚙️</span><span>' +
+      (isNew
+        ? (ar ? 'إضافة قسم تشغيلي جديد للـ Checklist' : 'Add New Checklist Section')
+        : (ar ? 'تخصيص وإسناد القسم التشغيلي' : 'Customize & Assign Section')) +
+      '</span>';
+
+    const closeBtn = el('button', '');
+    closeBtn.type = 'button';
+    closeBtn.textContent = '✕';
+    closeBtn.style.background = 'none';
+    closeBtn.style.border = 'none';
+    closeBtn.style.fontSize = '1.25rem';
+    closeBtn.style.cursor = 'pointer';
+    closeBtn.style.color = 'var(--muted)';
+    closeBtn.style.padding = '4px 8px';
+    closeBtn.addEventListener('click', () => dlg.close());
+
+    headerRow.append(hTitle, closeBtn);
+
+    const descP = el('p', '');
+    descP.style.margin = '0 0 14px';
+    descP.style.fontSize = '0.78rem';
+    descP.style.color = 'var(--ink2)';
+    descP.style.lineHeight = '1.45';
+    descP.textContent = ar
+      ? 'تحكّم باسم القسم، أيقونته، والمنصب أو الموظف المكلّف به (مثل البار للبارتندر، الصالة للويتر، أو الهوست للكابتن):'
+      : 'Configure section title, icon, and assigned position or staff member (e.g. Bar, Floor, Back Area, Host):';
+
+    box.append(grab, headerRow, descP);
+
+    // 1. Icon Selection Chips
+    const iconGroup = el('div', 'task-asg-group');
+    iconGroup.style.marginBottom = '12px';
+    const iconLbl = el('label', '');
+    iconLbl.style.fontWeight = '700';
+    iconLbl.style.fontSize = '0.82rem';
+    iconLbl.style.display = 'block';
+    iconLbl.style.marginBottom = '6px';
+    iconLbl.textContent = ar ? 'أيقونة القسم:' : 'Section Icon:';
+    iconGroup.append(iconLbl);
+
+    const iconRow = el('div', 'icon-picker-row');
+    iconRow.style.display = 'flex';
+    iconRow.style.gap = '6px';
+    iconRow.style.flexWrap = 'wrap';
+
+    ICONS.forEach((ico) => {
+      const b = el('button', 'icon-chip-btn' + (ico === selectedIcon ? ' active' : ''), ico);
+      b.type = 'button';
+      b.style.fontSize = '1.18rem';
+      b.style.padding = '5px 9px';
+      b.style.borderRadius = '8px';
+      b.style.border = '1.5px solid ' + (ico === selectedIcon ? 'var(--accent)' : 'var(--line)');
+      b.style.background = ico === selectedIcon ? 'rgba(47, 107, 94, 0.12)' : 'var(--card)';
+      b.style.cursor = 'pointer';
+      b.addEventListener('click', () => {
+        selectedIcon = ico;
+        iconRow.querySelectorAll('.icon-chip-btn').forEach((btnEl) => {
+          btnEl.style.borderColor = 'var(--line)';
+          btnEl.style.background = 'var(--card)';
+        });
+        b.style.borderColor = 'var(--accent)';
+        b.style.background = 'rgba(47, 107, 94, 0.12)';
+      });
+      iconRow.append(b);
+    });
+    iconGroup.append(iconRow);
+    box.append(iconGroup);
+
+    // 2. Titles (Arabic & English)
+    const titleArGroup = el('div', 'task-asg-group');
+    titleArGroup.style.marginBottom = '10px';
+    const titleArLbl = el('label', '');
+    titleArLbl.style.fontWeight = '700';
+    titleArLbl.style.fontSize = '0.82rem';
+    titleArLbl.style.display = 'block';
+    titleArLbl.style.marginBottom = '4px';
+    titleArLbl.textContent = ar ? 'اسم القسم (عربي):' : 'Section Name (Arabic):';
+    const titleArIn = el('input', 'in');
+    titleArIn.type = 'text';
+    titleArIn.dir = 'rtl';
+    titleArIn.value = sec.titleAr || sec.title || '';
+    titleArIn.placeholder = ar ? 'مثال: قسم البار والمشروبات' : 'e.g. Bar & Beverage';
+    titleArIn.style.width = '100%';
+    titleArGroup.append(titleArLbl, titleArIn);
+
+    const titleEnGroup = el('div', 'task-asg-group');
+    titleEnGroup.style.marginBottom = '12px';
+    const titleEnLbl = el('label', '');
+    titleEnLbl.style.fontWeight = '700';
+    titleEnLbl.style.fontSize = '0.82rem';
+    titleEnLbl.style.display = 'block';
+    titleEnLbl.style.marginBottom = '4px';
+    titleEnLbl.textContent = ar ? 'اسم القسم (إنجليزي):' : 'Section Name (English):';
+    const titleEnIn = el('input', 'in');
+    titleEnIn.type = 'text';
+    titleEnIn.dir = 'ltr';
+    titleEnIn.value = sec.title || '';
+    titleEnIn.placeholder = 'e.g. Bar & Beverage Station';
+    titleEnIn.style.width = '100%';
+    titleEnGroup.append(titleEnLbl, titleEnIn);
+
+    box.append(titleArGroup, titleEnGroup);
+
+    // 3. Department Category & Assigned Role (2-column layout)
+    const gridRow = el('div', 'asg-grid-2col');
+    gridRow.style.display = 'grid';
+    gridRow.style.gridTemplateColumns = 'repeat(auto-fit, minmax(200px, 1fr))';
+    gridRow.style.gap = '10px';
+    gridRow.style.marginBottom = '12px';
+
+    // Department Category
+    const deptBox = el('div', 'task-asg-group');
+    const deptLbl = el('label', '');
+    deptLbl.style.fontWeight = '700';
+    deptLbl.style.fontSize = '0.82rem';
+    deptLbl.style.display = 'block';
+    deptLbl.style.marginBottom = '4px';
+    deptLbl.textContent = ar ? '📁 نوع القسم التشغيلي:' : '📁 Department Type:';
+    const deptSel = el('select', 'in');
+    deptSel.style.width = '100%';
+    DEPT_OPTIONS.forEach((d) => {
+      const opt = el('option', '', ar ? d.labelAr : d.labelEn);
+      opt.value = d.key;
+      opt.selected = (sec.dept || 'floor') === d.key;
+      deptSel.append(opt);
+    });
+    deptBox.append(deptLbl, deptSel);
+
+    // Assigned Role
+    const roleBox = el('div', 'task-asg-group');
+    const roleLbl = el('label', '');
+    roleLbl.style.fontWeight = '700';
+    roleLbl.style.fontSize = '0.82rem';
+    roleLbl.style.display = 'block';
+    roleLbl.style.marginBottom = '4px';
+    roleLbl.textContent = ar ? '🎯 إسناد القسم لمنصب:' : '🎯 Assigned Role:';
+    const roleSel = el('select', 'in');
+    roleSel.style.width = '100%';
+    ROLE_OPTIONS.forEach((r) => {
+      const opt = el('option', '', ar ? r.labelAr : r.labelEn);
+      opt.value = r.key;
+      opt.selected = (sec.assignedRoleKey || 'all') === r.key;
+      roleSel.append(opt);
+    });
+    roleBox.append(roleLbl, roleSel);
+
+    gridRow.append(deptBox, roleBox);
+    box.append(gridRow);
+
+    // 4. Assigned Specific Staff (Optional)
+    const staffGroup = el('div', 'task-asg-group');
+    staffGroup.style.marginBottom = '14px';
+    const staffLbl = el('label', '');
+    staffLbl.style.fontWeight = '700';
+    staffLbl.style.fontSize = '0.82rem';
+    staffLbl.style.display = 'block';
+    staffLbl.style.marginBottom = '4px';
+    staffLbl.textContent = ar ? '👤 تعيين موظف محدد بالاسم (اختياري):' : '👤 Specific Employee (Optional):';
+    const staffSel = el('select', 'in');
+    staffSel.style.width = '100%';
+    getStaffList().forEach((st) => {
+      const opt = el('option', '', st.label);
+      opt.value = st.uname;
+      opt.selected = (sec.assignedUsername || '').toLowerCase() === st.uname.toLowerCase();
+      staffSel.append(opt);
+    });
+    staffGroup.append(staffLbl, staffSel);
+    box.append(staffGroup);
+
+    // 5. Cascade to Items Checkbox
+    const cascadeBox = el('label', 'tog');
+    cascadeBox.style.display = 'flex';
+    cascadeBox.style.alignItems = 'center';
+    cascadeBox.style.gap = '8px';
+    cascadeBox.style.padding = '8px 10px';
+    cascadeBox.style.borderRadius = '8px';
+    cascadeBox.style.background = 'rgba(47, 107, 94, 0.06)';
+    cascadeBox.style.marginBottom = '18px';
+    cascadeBox.style.cursor = 'pointer';
+
+    const cascadeCheck = el('input', 'sw');
+    cascadeCheck.type = 'checkbox';
+    cascadeCheck.checked = true; // default true so all items match section
+    cascadeBox.innerHTML =
+      '<div><b>' + (ar ? '🔄 توريث التعيين لكافة بنود القسم' : '🔄 Apply to all items in this section') + '</b>' +
+      '<small style="display:block;color:var(--ink2);font-size:0.72rem;">' +
+      (ar ? 'تحديث كافة بنود هذا القسم تلقائياً لتتبع نفس المنصب والموظف المختار فوراً' : 'Automatically sync all items inside to match this assigned role & employee') +
+      '</small></div>';
+    cascadeBox.prepend(cascadeCheck);
+    box.append(cascadeBox);
+
+    // Enhance selects with modal picker
+    if (FOH.modalPicker && FOH.modalPicker.enhanceSelect) {
+      FOH.modalPicker.enhanceSelect(deptSel, {
+        title: ar ? 'نوع القسم التشغيلي' : 'Department Type',
+        icon: '📁',
+      });
+      FOH.modalPicker.enhanceSelect(roleSel, {
+        title: ar ? 'إسناد القسم لمنصب' : 'Assign to Role',
+        icon: '🎯',
+      });
+      FOH.modalPicker.enhanceSelect(staffSel, {
+        title: ar ? 'تعيين موظف محدد بالاسم' : 'Assign to Staff',
+        icon: '👤',
+      });
+    }
+
+    // 6. Action Buttons
+    const acts = el('div', 'task-asg-actions');
+    acts.style.display = 'flex';
+    acts.style.justifyContent = 'space-between';
+    acts.style.alignItems = 'center';
+    acts.style.gap = '8px';
+    acts.style.marginTop = '16px';
+
+    const leftActs = el('div', '');
+    leftActs.style.display = 'flex';
+    leftActs.style.gap = '8px';
+
+    const cancelB = el('button', 'btn', ar ? 'إلغاء' : 'Cancel');
+    cancelB.type = 'button';
+    cancelB.addEventListener('click', () => dlg.close());
+
+    if (!isNew) {
+      const delB = el('button', 'btn danger', ar ? '🗑️ حذف القسم' : '🗑️ Delete Section');
+      delB.type = 'button';
+      delB.style.fontSize = '0.78rem';
+      delB.addEventListener('click', () => {
+        const titleStr = pick(sec.title, sec.titleAr) || 'Section';
+        if (!confirm(ar ? `هل أنت متأكد من حذف قسم "${titleStr}" بالكامل مع بنوده؟` : `Delete section "${titleStr}" and all its items?`)) {
+          return;
+        }
+        const st = S();
+        st.tpl.sections = (st.tpl.sections || []).filter((s) => s.id !== sec.id);
+        persistCurrentSheet();
+        dlg.close();
+        FOH.app.render();
+        FOH.edit.toast(ar ? '🗑️ تم حذف القسم بنجاح' : '🗑️ Section deleted');
+      });
+      leftActs.append(delB);
+    }
+    leftActs.append(cancelB);
+
+    const saveB = el('button', 'btn primary', ar ? '💾 حفظ وتطبيق التعيين' : '💾 Save & Assign Section');
+    saveB.type = 'button';
+    saveB.addEventListener('click', () => {
+      const tAr = titleArIn.value.trim();
+      const tEn = titleEnIn.value.trim();
+      if (!tAr && !tEn) {
+        titleArIn.focus();
+        FOH.edit.toast(ar ? '⚠️ الرجاء كتابة اسم للقسم' : '⚠️ Please enter a section name');
+        return;
+      }
+
+      const roleKey = roleSel.value;
+      const roleMeta = ROLE_OPTIONS.find((r) => r.key === roleKey) || ROLE_OPTIONS[0];
+      const roleLabel = ar ? roleMeta.labelAr : roleMeta.labelEn;
+      const empUser = staffSel.value || null;
+      const empLabel = empUser ? (getStaffList().find((s) => s.uname === empUser)?.label || empUser) : null;
+
+      sec.title = tEn || tAr;
+      sec.titleAr = tAr || tEn;
+      sec.icon = selectedIcon;
+      sec.dept = deptSel.value || 'floor';
+      sec.assignedRoleKey = roleKey;
+      sec.assignedRoleLabel = roleLabel;
+      sec.assignedUsername = empUser;
+
+      // Cascade to all items in section if requested
+      if (cascadeCheck.checked && Array.isArray(sec.items)) {
+        sec.items.forEach((it) => {
+          it.assignedRoleKey = roleKey;
+          it.assignedRoleLabel = roleLabel;
+          it.assignedUsername = empUser;
+          if (Array.isArray(it.children)) {
+            it.children.forEach((ch) => {
+              ch.assignedRoleKey = roleKey;
+              ch.assignedRoleLabel = roleLabel;
+              ch.assignedUsername = empUser;
+            });
+          }
+        });
+      }
+
+      const st = S();
+      if (isNew) {
+        if (!Array.isArray(st.tpl.sections)) st.tpl.sections = [];
+        st.tpl.sections.push(sec);
+      }
+
+      persistCurrentSheet();
+      dlg.close();
+      FOH.app.render();
+      FOH.edit.toast(ar ? '✅ تم حفظ وتخصيص القسم بنجاح!' : '✅ Section customized & saved!');
+    });
+
+    acts.append(leftActs, saveB);
+    box.append(acts);
+    dlg.append(box);
+    dlg.showModal();
+    (ar ? titleArIn : titleEnIn).focus();
+  }
+
+  // Inject Role Badges & Customization Button into each Section Card Header
+  function injectSectionControls() {
+    const secContainer = $('sections');
+    if (!secContainer || secContainer.hidden || S().view !== 'opening') return;
+
+    const ar = isAr();
+    const canAssign = canCurrentUserAssign();
+    const staffList = getStaffList();
+    const staffNameMap = {};
+    staffList.forEach((s) => { if (s.uname) staffNameMap[s.uname] = s.label.replace('👤 ', '').replace('👑 ', ''); });
+
+    // 1. Inject "📑 إضافة قسم جديد" into Checklist Toolbar if authorized
+    const toolbar = document.querySelector('#checklistGovBar .unified-sec-toolbar');
+    if (toolbar) {
+      let addSecBtn = toolbar.querySelector('#toolbarAddSectionBtn');
+      if (!canAssign) {
+        if (addSecBtn) addSecBtn.remove();
+      } else if (!addSecBtn) {
+        addSecBtn = el('button', 'u-pill sec-add-pill', ar ? '📑 إضافة قسم جديد' : '📑 + Add Section');
+        addSecBtn.id = 'toolbarAddSectionBtn';
+        addSecBtn.type = 'button';
+        addSecBtn.addEventListener('click', () => openSectionModal(null, true));
+        toolbar.append(addSecBtn);
+      }
+    }
+
+    // 2. Decorate each section card header
+    (S().tpl.sections || []).forEach((sec) => {
+      const card = $('sec-' + sec.id);
+      if (!card) return;
+      const head = card.querySelector('.head');
+      if (!head) return;
+
+      const metaRow = head.querySelector('.head-meta-row');
+      if (!metaRow) return;
+
+      // Avoid duplicate pills
+      let pill = metaRow.querySelector('.sec-asg-pill');
+      if (!pill) {
+        pill = el('span', 'sec-asg-pill');
+        metaRow.prepend(pill);
+      }
+
+      const roleKey = sec.assignedRoleKey || 'all';
+      const roleMeta = ROLE_OPTIONS.find((r) => r.key === roleKey);
+      const roleLabel = roleMeta ? (ar ? roleMeta.labelAr.split('(')[0].trim() : roleMeta.labelEn.split('(')[0].trim()) : (ar ? 'مشترك' : 'All');
+      const assignedPerson = sec.assignedUsername ? (staffNameMap[sec.assignedUsername] || sec.assignedUsername) : '';
+
+      pill.innerHTML = '<span>🎯</span> <b>' + roleLabel + '</b>' +
+        (assignedPerson ? '<span style="opacity:0.85;margin-inline-start:4px;">· 👤 ' + assignedPerson + '</span>' : '');
+
+      // Assign / Customize button for leaders
+      let editBtn = metaRow.querySelector('.sec-asg-btn');
+      if (!canAssign) {
+        if (editBtn) editBtn.remove();
+      } else {
+        if (!editBtn) {
+          editBtn = el('button', 'sec-asg-btn', ar ? '⚙️ تخصيص وإسناد' : '⚙️ Assign Section');
+          editBtn.type = 'button';
+          editBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openSectionModal(sec, false);
+          });
+          metaRow.append(editBtn);
+        }
+      }
+    });
+  }
+
+  // Smart Migration: Upgrade legacy unorganized sections into the 5 core restaurant departments
+  function upgradeLegacySectionsOnce() {
+    const st = S();
+    if (!st || !st.tpl || !Array.isArray(st.tpl.sections)) return;
+
+    // Check if sections already have modern dept IDs
+    const hasModernDepts = st.tpl.sections.some((s) => ['sec-bar', 'sec-floor', 'sec-back', 'sec-host', 'sec-cash'].includes(s.id));
+    if (hasModernDepts) return;
+
+    // Build the 5 structured departments
+    const barSec = {
+      id: 'sec-bar',
+      dept: 'bar',
+      icon: '🍸',
+      title: 'Bar & Beverage Station',
+      titleAr: 'قسم البار والمشروبات',
+      assignedRoleKey: 'super_bartender',
+      assignedRoleLabel: '🍸 Super Bartender',
+      assignedUsername: 'maher',
+      items: [
+        { id: 'sb1', text: 'Make sure the bar is clean, polished and service-ready', textAr: 'التأكد من نظافة البار ومحطات التحضير وجاهزيتها للخدمة', due: '15:30', role: '', assignedRoleKey: 'super_bartender', assignedRoleLabel: '🍸 Super Bartender', children: [] },
+        { id: 'sb2', text: 'Top up ice wells, draft lines & beverage coolers', textAr: 'تعبئة أحواض الثلج وتبريد زجاجات المشروبات والنبيذ', due: '15:40', role: '', assignedRoleKey: 'super_bartender', assignedRoleLabel: '🍸 Super Bartender', children: [] },
+        { id: 'sb3', text: 'Check espresso machine, steam wands & grinder hopper', textAr: 'فحص ماكينة الإسبريسو ومطحنة القهوة والتأكد من نقاء البن', due: '15:45', role: '', assignedRoleKey: 'super_bartender', assignedRoleLabel: '🍸 Super Bartender', children: [] },
+        { id: 'sb4', text: 'Cut fresh garnishes (lemon/lime/mint) & prep house syrups', textAr: 'تقطيع وتجهيز الغارنيش الطازج والنعناع وفحص العصائر والـ Syrups', due: '15:50', role: '', assignedRoleKey: 'super_bartender', assignedRoleLabel: '🍸 Super Bartender', children: [] },
+        { id: 'sb5', text: 'Wash, polish and inspect all cocktail and wine glasses', textAr: 'تلميع وفحص كؤوس الكوكتيل والنبيذ وكاسات التقديم', due: '15:55', role: '', assignedRoleKey: 'super_bartender', assignedRoleLabel: '🍸 Super Bartender', children: [] },
+      ],
+    };
+
+    const floorSec = {
+      id: 'sec-floor',
+      dept: 'floor',
+      icon: '🍽️',
+      title: 'Floor & Dining Tables',
+      titleAr: 'قسم الصالة والطاولات',
+      assignedRoleKey: 'super_waiter',
+      assignedRoleLabel: '⭐ Super Waiter',
+      assignedUsername: 'sara',
+      items: [],
+    };
+
+    const backSec = {
+      id: 'sec-back',
+      dept: 'back',
+      icon: '🚪',
+      title: 'Back Area & Service Station',
+      titleAr: 'قسم المنطقة الخلفية والمحطات',
+      assignedRoleKey: 'super_waiter',
+      assignedRoleLabel: '⭐ Super Waiter / Runner',
+      assignedUsername: '',
+      items: [],
+    };
+
+    const hostSec = {
+      id: 'sec-host',
+      dept: 'host',
+      icon: '🛎️',
+      title: 'Host & Reception Desk',
+      titleAr: 'قسم الاستقبال والهوست',
+      assignedRoleKey: 'super_captain',
+      assignedRoleLabel: '🎖️ Super Captain / Host',
+      assignedUsername: 'ali',
+      items: [
+        { id: 'sh1', text: 'Inspect and clean the Host Stand & welcome entrance', textAr: 'فحص وتنظيف كاونتر الاستقبال (Host Stand) ومدخل الصالة', due: '15:30', role: '', assignedRoleKey: 'super_captain', assignedRoleLabel: '🎖️ Super Captain', children: [] },
+        { id: 'sh2', text: 'Review evening reservations, VIP notes & table plan with Floor Captain', textAr: 'مراجعة حجوزات المساء وطلبات الـ VIP وتوزيع الطاولات مع الكابتن', due: '15:45', role: '', assignedRoleKey: 'super_captain', assignedRoleLabel: '🎖️ Super Captain', children: [] },
+        { id: 'sh3', text: 'Clean and sanitize all food, wine & cocktail menus', textAr: 'تنظيف وتعقيم كافة قوائم الطعام والمشروبات والنبيذ', due: '15:50', role: '', assignedRoleKey: 'super_captain', assignedRoleLabel: '🎖️ Super Captain', children: [] },
+        { id: 'sh4', text: 'Turn on music playlist & adjust ambient lighting', textAr: 'تشغيل الموسيقى وضبط الإضاءة الترحيبية والتكييف', due: '15:50', role: '', assignedRoleKey: 'super_captain', assignedRoleLabel: '🎖️ Super Captain', children: [] },
+      ],
+    };
+
+    const cashSec = {
+      id: 'sec-cash',
+      dept: 'cash',
+      icon: '💳',
+      title: 'Cashier, POS & Tech',
+      titleAr: 'قسم الكاشير والأجهزة',
+      assignedRoleKey: 'super_manager',
+      assignedRoleLabel: '👑 Super Manager',
+      assignedUsername: 'fadi',
+      items: [
+        { id: 'sc1', text: 'Make sure all Visa machines and ordering tablets are charged', textAr: 'التأكد من شحن جميع أجهزة الفيزا والتابلت', due: '15:30', role: '', assignedRoleKey: 'super_manager', assignedRoleLabel: '👑 Super Manager', children: [] },
+        { id: 'sc2', text: 'Verify and change the cash float in till drawer', textAr: 'استلام وتبديل نقد الفكة (Cash Float) في درج الكاشير', due: '15:40', role: '', assignedRoleKey: 'super_manager', assignedRoleLabel: '👑 Super Manager', children: [] },
+        { id: 'sc3', text: 'Ensure the POS system is online and tables synced', textAr: 'التأكد من تشغيل نظام نقاط البيع (POS) وجاهزية الطابعات', due: '15:45', role: '', assignedRoleKey: 'super_manager', assignedRoleLabel: '👑 Super Manager', children: [] },
+        { id: 'sc4', text: 'Check the safe vault and set out the daily tip sheet', textAr: 'التحقق من الخزنة ووضع ورقة التبس مع تاريخ اليوم', due: '15:50', role: '', assignedRoleKey: 'super_manager', assignedRoleLabel: '👑 Super Manager', children: [] },
+      ],
+    };
+
+    // Migrate existing items into Floor & Back Area
+    st.tpl.sections.forEach((oldSec) => {
+      (oldSec.items || []).forEach((it) => {
+        const tStr = (it.text + ' ' + (it.textAr || '')).toLowerCase();
+        if (tStr.includes('bar') || tStr.includes('بار')) {
+          barSec.items.push(it);
+        } else if (tStr.includes('back area') || tStr.includes('expeditor') || tStr.includes('w.c.') || tStr.includes('دورات') || tStr.includes('station') || tStr.includes('محط') || tStr.includes('منطقة خلفية') || tStr.includes('مستودع') || tStr.includes('store') || tStr.includes('order from') || tStr.includes('tray') || tStr.includes('صواني') || tStr.includes('soy sauce') || tStr.includes('salt & pepper')) {
+          backSec.items.push(it);
+        } else if (tStr.includes('menu') || tStr.includes('منيو') || tStr.includes('قوائم') || tStr.includes('music') || tStr.includes('موسيقى') || tStr.includes('uniform') || tStr.includes('زي')) {
+          hostSec.items.push(it);
+        } else if (tStr.includes('visa') || tStr.includes('pos') || tStr.includes('float') || tStr.includes('خزنة') || tStr.includes('vault') || tStr.includes('tip sheet')) {
+          cashSec.items.push(it);
+        } else {
+          floorSec.items.push(it);
+        }
+      });
+    });
+
+    st.tpl.sections = [barSec, floorSec, backSec, hostSec, cashSec];
+    persistCurrentSheet();
+  }
+
+  function init() {
+    upgradeLegacySectionsOnce();
+  }
+
+  FOH.sectionAssignment = {
+    init,
+    openSectionModal,
+    injectSectionControls,
+    upgradeLegacySectionsOnce,
+    ROLE_OPTIONS,
+    DEPT_OPTIONS,
   };
 })(window.FOH = window.FOH || {});
 
@@ -21569,6 +22345,9 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     collapseOpsLifecycleBarToOneLine();
     renderUnifiedSingleRowChecklistBar();
     injectRoleSwitcherInSidebar();
+    if (FOH.sectionAssignment && FOH.sectionAssignment.injectSectionControls) {
+      FOH.sectionAssignment.injectSectionControls();
+    }
     }
   }
 
@@ -23065,6 +23844,9 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
   function syncSuperEmployeeUI() {
     ensureStaffHealthAndPerms();
+    if (FOH.sectionAssignment && FOH.sectionAssignment.init) {
+      FOH.sectionAssignment.init();
+    }
     const ar = isAr();
     const gov = loadGov();
     const sess = getSession();
@@ -23134,6 +23916,9 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     renderAssignedTaskBadgesAndFilter();
     injectAssignTaskBtnIntoToolbarAndMine();
     injectRoleSwitcherInSidebar();
+    if (FOH.sectionAssignment && FOH.sectionAssignment.injectSectionControls) {
+      FOH.sectionAssignment.injectSectionControls();
+    }
 
     if (!S.editing) {
       if (S.view === 'academy' && $('academyView')) renderAcademyView($('academyView'));
@@ -23149,6 +23934,9 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
   function init() {
     ensureStaffHealthAndPerms();
+    if (FOH.sectionAssignment && FOH.sectionAssignment.init) {
+      FOH.sectionAssignment.init();
+    }
 
     const prevRender = FOH.app.render;
     FOH.app.render = function () {

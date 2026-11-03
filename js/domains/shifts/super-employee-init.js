@@ -189,6 +189,9 @@
 
   function syncSuperEmployeeUI() {
     ensureStaffHealthAndPerms();
+    if (FOH.sectionAssignment && FOH.sectionAssignment.init) {
+      FOH.sectionAssignment.init();
+    }
     const ar = isAr();
     const gov = loadGov();
     const sess = getSession();
@@ -258,6 +261,9 @@
     renderAssignedTaskBadgesAndFilter();
     injectAssignTaskBtnIntoToolbarAndMine();
     injectRoleSwitcherInSidebar();
+    if (FOH.sectionAssignment && FOH.sectionAssignment.injectSectionControls) {
+      FOH.sectionAssignment.injectSectionControls();
+    }
 
     if (!S.editing) {
       if (S.view === 'academy' && $('academyView')) renderAcademyView($('academyView'));
@@ -273,6 +279,9 @@
 
   function init() {
     ensureStaffHealthAndPerms();
+    if (FOH.sectionAssignment && FOH.sectionAssignment.init) {
+      FOH.sectionAssignment.init();
+    }
 
     const prevRender = FOH.app.render;
     FOH.app.render = function () {

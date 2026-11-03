@@ -8,125 +8,104 @@
 
   FOH.DEFAULT_SECTIONS = [
     {
-      title: 'Tables Setup',
-      icon: '🍽',
-      ar: 'تجهيز الطاولات',
-      items: [
-        { text: 'Clean the table tops (Indoor & Outdoor)', ar: 'تنظيف أسطح الطاولات (داخلي وخارجي)' }, // 1
-        {
-          text: 'Set the table',
-          ar: 'تجهيز الطاولة',
-          was: 'Set the table (service plate, cutlery, chopsticks, water glass, ashtray, table lamp, centerpiece)',
-          wasAr: [
-            'تجهيز الطاولة (صحن الخدمة، أدوات المائدة، العيدان، كأس الماء، منفضة السجائر، مصباح الطاولة، الـ Centerpiece)',
-            'تجهيز الطاولة (صحن الخدمة، أدوات المائدة، العيدان، كأس الماء، منفضة السجائر، مصباح الطاولة، القطعة الوسطى)',
-          ],
-          children: [
-            { text: 'Place the service plate on the table', ar: 'وضع صحن الخدمة على الطاولة' }, // 3
-            {
-              text: 'Arrange the cutlery (fork and knife in the napkin, right of the plate)',
-              ar: 'ترتيب أدوات المائدة (الشوكة والسكين داخل المنديل يمين الصحن)',
-            }, // 4
-            { text: 'Position the chopsticks to the right of the cutlery', ar: 'وضع العيدان على يمين أدوات المائدة' }, // 5
-            { text: 'Set the water glass above the cutlery', ar: 'وضع كأس الماء فوق أدوات المائدة' }, // 6
-            {
-              text: 'Place the centerpiece and table lamp in the middle of the table',
-              ar: 'وضع الـ Centerpiece ومصباح الطاولة في منتصف الطاولة',
-              wasAr: 'وضع القطعة الوسطى ومصباح الطاولة في منتصف الطاولة',
-            }, // 7
-            {
-              text: 'Place the ashtray in the middle of single tables (1 ashtray per 2 guests)',
-              ar: 'وضع منفضة السجائر في منتصف الطاولات المفردة (منفضة لكل شخصين)',
-            }, // 8
-          ],
-        }, // 2 (sub-items = sheet items 3-8)
-        {
-          text: 'Double-check every table is positioned and aligned according to the floor plan',
-          ar: 'التأكد من أن كل طاولة في مكانها ومحاذاتها حسب مخطط الصالة',
-        }, // 9
-        { text: 'Check there is enough clearance for the chairs', ar: 'التأكد من وجود مسافة كافية للكراسي' }, // 10
-        {
-          text: 'Ensure the side tables and ice buckets are correctly positioned',
-          ar: 'التأكد من أن الطاولات الجانبية ودلاء الثلج في مكانها الصحيح',
-        }, // 11
-      ],
-    },
-    {
-      title: 'Cleaning',
-      icon: '🧽',
-      ar: 'التنظيف',
-      items: [
-        {
-          text: 'Clean the menus (food, drinks, wine, cocktails)',
-          ar: 'تنظيف قوائم الطعام (الطعام، المشروبات، النبيذ، الكوكتيلات)',
-        }, // 12
-        { text: 'Clean the tissue boxes and refill them', ar: 'تنظيف علب المناديل وتعبئتها' }, // 13
-        { text: 'Wipe and clean the table bases (Indoor & Outdoor)', ar: 'مسح وتنظيف قواعد الطاولات (داخلي وخارجي)' }, // 14
-        { text: 'Wipe and clean the chairs (Indoor & Outdoor)', ar: 'مسح وتنظيف الكراسي (داخلي وخارجي)' }, // 15
-        { text: 'Clean the ice buckets', ar: 'تنظيف دلاء الثلج' }, // 16
-        { text: 'Clean the side tables', ar: 'تنظيف الطاولات الجانبية' }, // 17
-        { text: 'Clean the stations', ar: 'تنظيف المحطات' }, // 18
-        { text: 'Clean the back area', ar: 'تنظيف المنطقة الخلفية' }, // 19
-        { text: 'Clean the soy sauce bottles, then refill them', ar: 'تنظيف زجاجات صلصة الصويا ثم تعبئتها' }, // 20
-        { text: 'Clean the salt & pepper, then refill them', ar: 'تنظيف الملح والفلفل ثم تعبئتها' }, // 21
-        { text: 'Clean the bill folders', ar: 'تنظيف ملفات الفواتير' }, // 22
-        { text: 'Clean all the trays', ar: 'تنظيف جميع الصواني' }, // 25
-        { text: 'Make sure the terrace is clean', ar: 'التأكد من نظافة الـ Terrace', wasAr: 'التأكد من نظافة التراس' }, // 26
-        { text: 'Make sure the W.C. is clean', ar: 'التأكد من نظافة دورات المياه' }, // 27
-        { text: 'Make sure the window glass is clean', ar: 'التأكد من نظافة زجاج النوافذ' }, // 35
-      ],
-    },
-    {
-      title: 'Stations & Bar',
+      id: 'sec-bar',
+      dept: 'bar',
       icon: '🍸',
-      ar: 'المحطات والبار',
+      title: 'Bar & Beverage Station',
+      titleAr: 'قسم البار والمشروبات',
+      assignedRoleKey: 'super_bartender',
+      assignedRoleLabel: '🍸 Super Bartender',
+      assignedUsername: 'maher',
       items: [
-        {
-          text: 'Clean and prepare the expeditor station',
-          ar: 'تنظيف وتجهيز محطة الـ Expeditor',
-          wasAr: 'تنظيف وتجهيز محطة التنسيق (Expeditor)',
-        }, // 23
-        { text: 'Make sure the bar is clean and ready', ar: 'التأكد من نظافة البار وجاهزيته' }, // 36
+        { text: 'Make sure the bar is clean, polished and service-ready', ar: 'التأكد من نظافة البار ومحطات التحضير وجاهزيتها للخدمة' },
+        { text: 'Top up ice wells, draft lines & beverage coolers', ar: 'تعبئة أحواض الثلج وتبريد زجاجات المشروبات والنبيذ' },
+        { text: 'Check espresso machine, steam wands & grinder hopper', ar: 'فحص ماكينة الإسبريسو ومطحنة القهوة والتأكد من نقاء البن' },
+        { text: 'Cut fresh garnishes (lemon/lime/mint) & prep house syrups', ar: 'تقطيع وتجهيز الغارنيش الطازج والنعناع وفحص العصائر والـ Syrups' },
+        { text: 'Wash, polish and inspect all cocktail and wine glasses', ar: 'تلميع وفحص كؤوس الكوكتيل والنبيذ وكاسات التقديم' },
       ],
     },
     {
-      title: 'Tech & Cash',
+      id: 'sec-floor',
+      dept: 'floor',
+      icon: '🍽️',
+      title: 'Floor & Dining Tables',
+      titleAr: 'قسم الصالة والطاولات',
+      assignedRoleKey: 'super_waiter',
+      assignedRoleLabel: '⭐ Super Waiter',
+      assignedUsername: 'sara',
+      items: [
+        { text: 'Clean the table tops (Indoor & Outdoor)', ar: 'تنظيف أسطح الطاولات (داخلي وخارجي)' },
+        {
+          text: 'Set the table (service plate, cutlery, chopsticks, water glass, ashtray, table lamp, centerpiece)',
+          ar: 'تجهيز الطاولة (صحن الخدمة، أدوات المائدة، العيدان، كأس الماء، منفضة السجائر، مصباح الطاولة، الـ Centerpiece)',
+          children: [
+            { text: 'Place the service plate on the table', ar: 'وضع صحن الخدمة على الطاولة' },
+            { text: 'Arrange the cutlery (fork and knife in napkin, right of plate)', ar: 'ترتيب أدوات المائدة (الشوكة والسكين داخل المنديل يمين الصحن)' },
+            { text: 'Position chopsticks to the right of cutlery', ar: 'وضع العيدان على يمين أدوات المائدة' },
+            { text: 'Set the water glass above the cutlery', ar: 'وضع كأس الماء فوق أدوات المائدة' },
+            { text: 'Place the centerpiece and table lamp in middle of table', ar: 'وضع الـ Centerpiece ومصباح الطاولة في منتصف الطاولة' },
+            { text: 'Place the ashtray in the middle of single tables (1 per 2 guests)', ar: 'وضع منفضة السجائر في منتصف الطاولات المفردة (منفضة لكل شخصين)' },
+          ],
+        },
+        { text: 'Double-check every table is positioned and aligned according to floor plan', ar: 'التأكد من أن كل طاولة في مكانها ومحاذاتها حسب مخطط الصالة' },
+        { text: 'Check there is enough clearance for chairs & clean chair seats', ar: 'التأكد من وجود مسافة كافية للكراسي وتنظيف المقاعد' },
+        { text: 'Ensure side tables and ice buckets are cleaned & positioned', ar: 'التأكد من أن الطاولات الجانبية ودلاء الثلج في مكانها الصحيح' },
+        { text: 'Wipe and clean table bases (Indoor & Outdoor)', ar: 'مسح وتنظيف قواعد الطاولات (داخلي وخارجي)' },
+        { text: 'Make sure the terrace is clean & outdoor cushions set', ar: 'التأكد من نظافة التراس وتجهيز الوسائد الخارجية' },
+      ],
+    },
+    {
+      id: 'sec-back',
+      dept: 'back',
+      icon: '🚪',
+      title: 'Back Area & Service Station',
+      titleAr: 'قسم المنطقة الخلفية والمحطات',
+      assignedRoleKey: 'super_waiter',
+      assignedRoleLabel: '⭐ Super Waiter / Runner',
+      assignedUsername: '',
+      items: [
+        { text: 'Clean and prepare the expeditor station', ar: 'تنظيف وتجهيز محطة التنسيق (Expeditor)' },
+        { text: 'Clean the back area and service corridors', ar: 'تنظيف وترتيب المنطقة الخلفية وممر الخدمة' },
+        { text: 'Clean the stations & wipe condiment trays', ar: 'تنظيف المحطات ومسح صواني الإضافات' },
+        { text: 'Clean soy sauce bottles, salt & pepper, then refill them', ar: 'تنظيف زجاجات الصويا صوص والملاحات ثم تعبئتها' },
+        { text: 'Clean all service trays and bill folders', ar: 'تنظيف جميع صواني الخدمة وحافظات الفواتير' },
+        { text: 'Clean tissue boxes and refill them', ar: 'تنظيف علب المناديل وتعبئتها' },
+        { text: 'Make sure the W.C. restrooms are clean & stocked', ar: 'التأكد من نظافة دورات المياه وتعبئة الصابون والمحارم' },
+        { text: 'Make sure window glass is clean', ar: 'التأكد من نظافة زجاج النوافذ' },
+        { text: 'Bring the order from warehouse (ensure enough stock for 2 days)', ar: 'إحضار الطلبية من المستودع (التأكد من أن كل شيء يكفي ليومين)' },
+      ],
+    },
+    {
+      id: 'sec-host',
+      dept: 'host',
+      icon: '🛎️',
+      title: 'Host & Reception Desk',
+      titleAr: 'قسم الاستقبال والهوست',
+      assignedRoleKey: 'super_captain',
+      assignedRoleLabel: '🎖️ Super Captain / Host',
+      assignedUsername: 'ali',
+      items: [
+        { text: 'Inspect and clean the Host Stand & welcome entrance', ar: 'فحص وتنظيف كاونتر الاستقبال (Host Stand) ومدخل الصالة' },
+        { text: 'Review evening reservations, VIP notes & table plan with Floor Captain', ar: 'مراجعة حجوزات المساء وطلبات الـ VIP وتوزيع الطاولات مع الكابتن' },
+        { text: 'Clean and sanitize all food, wine & cocktail menus', ar: 'تنظيف وتعقيم كافة قوائم الطعام والمشروبات والنبيذ' },
+        { text: 'Turn on music playlist & adjust ambient lighting', ar: 'تشغيل الموسيقى وضبط الإضاءة الترحيبية والتكييف', due: '15:50' },
+        { text: 'Wear uniform, inspect grooming & be ready for service', ar: 'ارتداء الزي الرسمي والجاهزية التامة لاستقبال الضيوف', due: '15:50' },
+      ],
+    },
+    {
+      id: 'sec-cash',
+      dept: 'cash',
       icon: '💳',
-      ar: 'الأجهزة والنقد',
+      title: 'Cashier, POS & Tech',
+      titleAr: 'قسم الكاشير والأجهزة',
+      assignedRoleKey: 'super_manager',
+      assignedRoleLabel: '👑 Super Manager',
+      assignedUsername: 'fadi',
       items: [
-        {
-          text: 'Make sure all Visa machines and the tablet are charged',
-          ar: 'التأكد من شحن جميع أجهزة الفيزا والتابلت',
-        }, // 28
-        { text: 'Change the cash float', ar: 'تبديل الـ Cash Float', wasAr: 'تبديل نقد الفكّة (Float)' }, // 29
-        { text: 'Make sure the POS is on and working', ar: 'التأكد من أن نظام نقاط البيع (POS) يعمل' }, // 33
-        { text: 'Check the vault', ar: 'التحقق من الخزنة' }, // 34
-      ],
-    },
-    {
-      title: 'Staff & Music',
-      icon: '👥',
-      ar: 'الطاقم والموسيقى',
-      items: [
-        { text: 'Turn on the music', ar: 'تشغيل الموسيقى', due: '15:50' }, // 24
-        { text: 'Wear the uniform and be ready', ar: 'ارتداء الزي الرسمي والجاهزية', due: '15:50' }, // 31
-        {
-          text: 'Put out the tip sheet and write the date and day',
-          ar: 'وضع ورقة الإكراميات وكتابة التاريخ واليوم',
-        }, // 32
-      ],
-    },
-    {
-      title: 'Store',
-      icon: '📦',
-      ar: 'المستودع',
-      items: [
-        {
-          text: 'Bring the order from the warehouse (make sure everything is enough for two days)',
-          ar: 'إحضار الطلبية من المستودع (التأكد من أن كل شيء يكفي ليومين)',
-          // Earlier prototype wording; lets lists saved before the fix pick up the Arabic text.
-          was: 'Bring the order from the store (make sure everything is enough for two days)',
-        }, // 30
+        { text: 'Make sure all Visa machines and ordering tablets are charged', ar: 'التأكد من شحن جميع أجهزة الفيزا والتابلت' },
+        { text: 'Verify and change the cash float in till drawer', ar: 'استلام وتبديل نقد الفكة (Cash Float) في درج الكاشير' },
+        { text: 'Ensure POS terminals are online and printers ready', ar: 'التأكد من تشغيل نظام نقاط البيع (POS) وجاهزية الطابعات' },
+        { text: 'Check the safe vault and set out the daily tip sheet', ar: 'التحقق من الخزنة ووضع ورقة التبس مع تاريخ اليوم' },
       ],
     },
   ];
@@ -399,6 +378,12 @@
         remindBefore: cleanReminder(it.remindBefore),
       };
       if (typeof it.role === 'string' && roleIds.has(it.role)) out.role = it.role;
+      if (typeof it.assignedRoleKey === 'string') out.assignedRoleKey = cleanText(it.assignedRoleKey, 50);
+      if (typeof it.assignedRoleLabel === 'string') out.assignedRoleLabel = cleanText(it.assignedRoleLabel, 100);
+      if (typeof it.assignedUsername === 'string') out.assignedUsername = cleanText(it.assignedUsername, 50);
+      if (typeof it.isRecurring === 'boolean') out.isRecurring = it.isRecurring;
+      if (it.scheduleDate) out.scheduleDate = it.scheduleDate;
+      if (it.recurrence && typeof it.recurrence === 'object') out.recurrence = it.recurrence;
       if (depth === 0) out.children = list(it.children).filter(hasText).map((c) => item(c, 1));
       return out;
     };
@@ -407,13 +392,18 @@
       .map((s) => {
         const title = cleanText(s.title);
         const titleAr = cleanText(s.titleAr);
-        return {
+        const secOut = {
           id: freshId(s.id),
           title: title || (titleAr ? '' : 'Untitled section'),
           titleAr,
           icon: cleanText(s.icon, 8) || DEFAULT_ICON,
           items: list(s.items).filter(hasText).map((it) => item(it, 0)),
         };
+        if (typeof s.dept === 'string') secOut.dept = cleanText(s.dept, 40);
+        if (typeof s.assignedRoleKey === 'string') secOut.assignedRoleKey = cleanText(s.assignedRoleKey, 50);
+        if (typeof s.assignedRoleLabel === 'string') secOut.assignedRoleLabel = cleanText(s.assignedRoleLabel, 100);
+        if (typeof s.assignedUsername === 'string') secOut.assignedUsername = cleanText(s.assignedUsername, 50);
+        return secOut;
       });
     const tasks = list(input.tasks).filter(hasText).map((tk) => task(tk, freshId, roleIds));
     // Staff: people by name, with a position; inv = takes part in inventory counts.

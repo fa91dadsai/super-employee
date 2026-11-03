@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE = 'super-employee-v27';
+const CACHE = 'super-employee-v28-depts';
 const PRECACHE = [
   './',
   './index.html',
@@ -47,6 +47,7 @@ const PRECACHE = [
   // JS Domain Modules: Shifts & Cloud
   './js/domains/shifts/sheet-state.js',
   './js/domains/shifts/section-claims.js',
+  './js/domains/checklist/section-assignment.js',
   './js/domains/cloud/cloud-sync.js',
   './js/domains/cloud/realtime-broadcast.js',
   // JS Domain Modules: Tasks & Orders
@@ -112,8 +113,11 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(req.url);
 
-  // Network-first for dynamic API routes, navigation, and realtime channels
+  // Network-first for navigation (HTML), dynamic API routes, and realtime channels
   if (
+    req.mode === 'navigate' ||
+    url.pathname.endsWith('/index.html') ||
+    url.pathname.endsWith('/') ||
     url.pathname.includes('/rest/v1/') ||
     url.pathname.includes('/realtime/v1/') ||
     url.pathname.includes('/auth/v1/')
