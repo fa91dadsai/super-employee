@@ -17,9 +17,50 @@
 
   // Is this task or opening item for the person using this device?
   function isMine(x) {
-    const me = S().me;
-    if (!me.role || x.role !== me.role) return false;
-    return !x.person || !me.name || x.person.toLowerCase() === me.name.toLowerCase();
+    if (!x) return false;
+    const me = S().me || {};
+    const sess = (FOH.sessionAuth && FOH.sessionAuth.getSession) ? FOH.sessionAuth.getSession() : null;
+    const curUname = ((sess && sess.username) || (me.name ? me.name.split(' ')[0] : '')).toLowerCase().trim();
+    const curDispName = ((sess && (sess.displayName || sess.firstName)) || me.name || '').toLowerCase().trim();
+    const curSuperRole = (FOH.roleIdentity && FOH.roleIdentity.getCurrentSuperRoleKey) ? FOH.roleIdentity.getCurrentSuperRoleKey() : '';
+    const curRoleId = me.role || '';
+
+    // 1. Direct username match takes highest priority
+    if (x.assignedUsername) {
+      return x.assignedUsername.toLowerCase().trim() === curUname;
+    }
+
+    // 2. Person name match
+    if (x.person && x.person !== 'Staff' && x.person !== 'الكل' && x.person !== 'all') {
+      const p = x.person.toLowerCase().trim();
+      if (p === curUname || p === curDispName) return true;
+      if (curDispName && curDispName.includes(p)) return true;
+      if (p.includes(curUname)) return true;
+      return false;
+    }
+
+    // 3. Assigned super role match
+    if (x.assignedRoleKey) {
+      if (x.assignedRoleKey === 'all') return true;
+      if (curSuperRole && x.assignedRoleKey === curSuperRole) return true;
+      if (x.assignedRoleKey === 'super_waiter' && (curRoleId === 'waiter' || curSuperRole === 'super_waiter')) return true;
+      if (x.assignedRoleKey === 'super_bartender' && (curRoleId === 'bar' || curSuperRole === 'super_bartender')) return true;
+      if (x.assignedRoleKey === 'super_captain' && (curRoleId === 'captain' || curSuperRole === 'super_captain')) return true;
+      if (x.assignedRoleKey === 'super_manager' && (curRoleId === 'manager' || curSuperRole === 'super_manager')) return true;
+      return false;
+    }
+
+    // 4. Fallback for template items with legacy x.role
+    if (x.role) {
+      if (curRoleId && x.role === curRoleId) return true;
+      if (x.role === 'waiter' && curSuperRole === 'super_waiter') return true;
+      if (x.role === 'bar' && curSuperRole === 'super_bartender') return true;
+      if (x.role === 'captain' && curSuperRole === 'super_captain') return true;
+      if (x.role === 'manager' && curSuperRole === 'super_manager') return true;
+      return false;
+    }
+
+    return false;
   }
 
   function addMinutes(hm, add) {
@@ -111,14 +152,16 @@
   // "Today's tasks" card at the top of the opening page.
   function today(root) {
     root.replaceChildren();
-    const states = todayStates().filter((st) => !S().previewEmployee || isMine(st.task));
+    const curRole = (FOH.roleIdentity && FOH.roleIdentity.getCurrentSuperRoleKey) ? FOH.roleIdentity.getCurrentSuperRoleKey() : '';
+    const isLeader = curRole === 'super_manager' || curRole === 'super_captain';
+    const states = todayStates().filter((st) => (!isLeader || S().previewEmployee) ? isMine(st.task) : true);
     if (!states.length) return;
     const bar = el('div', 'me-row');
     bar.append(el('span', '', fmtDay(S().date)), iAmButton());
     const done = states.filter((s) => s.status === 'done').length;
     const c = card('sched', '🗓', t('todayTasks'), done + ' / ' + states.length);
     const list = el('ol', 'items');
-    states.forEach((st) => list.append(stateRow(st, true)));
+    states.forEach((st) => list.append(stateRow(st, isLeader)));
     c.append(list);
     root.append(bar, c);
   }
@@ -179,21 +222,27 @@
     S().tpl.tasks.filter(isMine).forEach((tk) =>
       SC.upcoming(tk, S().log, S().date, today, 7, 7).forEach((d) => next.push({ d, tk }))
     );
-    if (!next.length) return;
-    next.sort((a, b) => a.d.localeCompare(b.d) || a.tk.time.localeCompare(b.tk.time));
-    const up = card('', '📅', t('comingUp'));
-    const ul = el('ol', 'items');
-    next.forEach(({ d, tk }) => {
-      const li = el('li', 'item up');
-      const day = el('span', 'd', dayNames()[SC.weekday(d)]);
-      day.append(el('b', '', String(Number(d.slice(8)))));
-      const tags = el('span', 'tags');
-      tags.append(el('span', 'tag time', tk.time));
-      li.append(day, el('span', 'up-t', tk.icon + ' ' + taskName(tk)), tags);
-      ul.append(li);
-    });
-    up.append(ul, el('p', 'note', t('movesNote')));
-    root.append(up);
+    if (next.length) {
+      next.sort((a, b) => a.d.localeCompare(b.d) || a.tk.time.localeCompare(b.tk.time));
+      const up = card('', '📅', t('comingUp'));
+      const ul = el('ol', 'items');
+      next.forEach(({ d, tk }) => {
+        const li = el('li', 'item up');
+        const day = el('span', 'd', dayNames()[SC.weekday(d)]);
+        day.append(el('b', '', String(Number(d.slice(8)))));
+        const tags = el('span', 'tags');
+        tags.append(el('span', 'tag time', tk.time));
+        li.append(day, el('span', 'up-t', tk.icon + ' ' + taskName(tk)), tags);
+        ul.append(li);
+      });
+      up.append(ul, el('p', 'note', t('movesNote')));
+      root.append(up);
+    }
+
+    // Always append Day-Off & Leave Card to My Tasks
+    if (FOH.dayOff && FOH.dayOff.buildDayOffSection) {
+      root.append(FOH.dayOff.buildDayOffSection(false));
+    }
   }
 
   // Edit mode, "Scheduled" tab: week grid + list of tasks.

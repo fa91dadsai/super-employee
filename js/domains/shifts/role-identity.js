@@ -57,6 +57,19 @@
     return false;
   }
 
+  function canCurrentUserAssignTasks() {
+    const sess = getSession();
+    if (!sess) return true;
+    if (sess.isManager) return true;
+    const cfg = loadOpsConfig();
+    const del = cfg.taskAssignmentDelegation || { roles: ['super_manager', 'super_captain'], staffUsernames: ['ali'] };
+    const rKey = getCurrentSuperRoleKey();
+    if (Array.isArray(del.roles) && del.roles.includes(rKey)) return true;
+    const uname = (sess.username || '').toLowerCase().trim();
+    if (Array.isArray(del.staffUsernames) && del.staffUsernames.map((s) => (s || '').toLowerCase().trim()).includes(uname)) return true;
+    return false;
+  }
+
 
     // ============================================================================
   // 12. SUPER EMPLOYEE v10 UPGRADE:
@@ -228,6 +241,7 @@
     getCurrentSuperRoleKey,
     hasSuperPerm,
     canCurrentUserAccessOrders,
+    canCurrentUserAssignTasks,
     getAppRoleIdentity,
     quickSwitchEmployeeAccount,
     isRoleScopeOnly: () => roleScopeOnly,
@@ -244,4 +258,5 @@
 
   FOH.getCurrentSuperRoleKey = getCurrentSuperRoleKey;
   FOH.canCurrentUserAccessOrders = canCurrentUserAccessOrders;
+  FOH.canCurrentUserAssignTasks = canCurrentUserAssignTasks;
 })(window.FOH = window.FOH || {});

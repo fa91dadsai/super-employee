@@ -253,7 +253,15 @@
       observer.observe(selectEl, { childList: true, subtree: true });
     }
 
-    selectEl.parentNode.insertBefore(trigger, selectEl.nextSibling);
+    if (selectEl.parentNode) {
+      selectEl.parentNode.insertBefore(trigger, selectEl.nextSibling);
+    } else {
+      setTimeout(() => {
+        if (selectEl.parentNode && !trigger.parentNode) {
+          selectEl.parentNode.insertBefore(trigger, selectEl.nextSibling);
+        }
+      }, 0);
+    }
 
     return trigger;
   }

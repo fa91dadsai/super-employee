@@ -6785,7 +6785,15 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       observer.observe(selectEl, { childList: true, subtree: true });
     }
 
-    selectEl.parentNode.insertBefore(trigger, selectEl.nextSibling);
+    if (selectEl.parentNode) {
+      selectEl.parentNode.insertBefore(trigger, selectEl.nextSibling);
+    } else {
+      setTimeout(() => {
+        if (selectEl.parentNode && !trigger.parentNode) {
+          selectEl.parentNode.insertBefore(trigger, selectEl.nextSibling);
+        }
+      }, 0);
+    }
 
     return trigger;
   }
@@ -7593,9 +7601,50 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
   // Is this task or opening item for the person using this device?
   function isMine(x) {
-    const me = S().me;
-    if (!me.role || x.role !== me.role) return false;
-    return !x.person || !me.name || x.person.toLowerCase() === me.name.toLowerCase();
+    if (!x) return false;
+    const me = S().me || {};
+    const sess = (FOH.sessionAuth && FOH.sessionAuth.getSession) ? FOH.sessionAuth.getSession() : null;
+    const curUname = ((sess && sess.username) || (me.name ? me.name.split(' ')[0] : '')).toLowerCase().trim();
+    const curDispName = ((sess && (sess.displayName || sess.firstName)) || me.name || '').toLowerCase().trim();
+    const curSuperRole = (FOH.roleIdentity && FOH.roleIdentity.getCurrentSuperRoleKey) ? FOH.roleIdentity.getCurrentSuperRoleKey() : '';
+    const curRoleId = me.role || '';
+
+    // 1. Direct username match takes highest priority
+    if (x.assignedUsername) {
+      return x.assignedUsername.toLowerCase().trim() === curUname;
+    }
+
+    // 2. Person name match
+    if (x.person && x.person !== 'Staff' && x.person !== 'الكل' && x.person !== 'all') {
+      const p = x.person.toLowerCase().trim();
+      if (p === curUname || p === curDispName) return true;
+      if (curDispName && curDispName.includes(p)) return true;
+      if (p.includes(curUname)) return true;
+      return false;
+    }
+
+    // 3. Assigned super role match
+    if (x.assignedRoleKey) {
+      if (x.assignedRoleKey === 'all') return true;
+      if (curSuperRole && x.assignedRoleKey === curSuperRole) return true;
+      if (x.assignedRoleKey === 'super_waiter' && (curRoleId === 'waiter' || curSuperRole === 'super_waiter')) return true;
+      if (x.assignedRoleKey === 'super_bartender' && (curRoleId === 'bar' || curSuperRole === 'super_bartender')) return true;
+      if (x.assignedRoleKey === 'super_captain' && (curRoleId === 'captain' || curSuperRole === 'super_captain')) return true;
+      if (x.assignedRoleKey === 'super_manager' && (curRoleId === 'manager' || curSuperRole === 'super_manager')) return true;
+      return false;
+    }
+
+    // 4. Fallback for template items with legacy x.role
+    if (x.role) {
+      if (curRoleId && x.role === curRoleId) return true;
+      if (x.role === 'waiter' && curSuperRole === 'super_waiter') return true;
+      if (x.role === 'bar' && curSuperRole === 'super_bartender') return true;
+      if (x.role === 'captain' && curSuperRole === 'super_captain') return true;
+      if (x.role === 'manager' && curSuperRole === 'super_manager') return true;
+      return false;
+    }
+
+    return false;
   }
 
   function addMinutes(hm, add) {
@@ -7687,14 +7736,16 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   // "Today's tasks" card at the top of the opening page.
   function today(root) {
     root.replaceChildren();
-    const states = todayStates().filter((st) => !S().previewEmployee || isMine(st.task));
+    const curRole = (FOH.roleIdentity && FOH.roleIdentity.getCurrentSuperRoleKey) ? FOH.roleIdentity.getCurrentSuperRoleKey() : '';
+    const isLeader = curRole === 'super_manager' || curRole === 'super_captain';
+    const states = todayStates().filter((st) => (!isLeader || S().previewEmployee) ? isMine(st.task) : true);
     if (!states.length) return;
     const bar = el('div', 'me-row');
     bar.append(el('span', '', fmtDay(S().date)), iAmButton());
     const done = states.filter((s) => s.status === 'done').length;
     const c = card('sched', '🗓', t('todayTasks'), done + ' / ' + states.length);
     const list = el('ol', 'items');
-    states.forEach((st) => list.append(stateRow(st, true)));
+    states.forEach((st) => list.append(stateRow(st, isLeader)));
     c.append(list);
     root.append(bar, c);
   }
@@ -7755,21 +7806,27 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     S().tpl.tasks.filter(isMine).forEach((tk) =>
       SC.upcoming(tk, S().log, S().date, today, 7, 7).forEach((d) => next.push({ d, tk }))
     );
-    if (!next.length) return;
-    next.sort((a, b) => a.d.localeCompare(b.d) || a.tk.time.localeCompare(b.tk.time));
-    const up = card('', '📅', t('comingUp'));
-    const ul = el('ol', 'items');
-    next.forEach(({ d, tk }) => {
-      const li = el('li', 'item up');
-      const day = el('span', 'd', dayNames()[SC.weekday(d)]);
-      day.append(el('b', '', String(Number(d.slice(8)))));
-      const tags = el('span', 'tags');
-      tags.append(el('span', 'tag time', tk.time));
-      li.append(day, el('span', 'up-t', tk.icon + ' ' + taskName(tk)), tags);
-      ul.append(li);
-    });
-    up.append(ul, el('p', 'note', t('movesNote')));
-    root.append(up);
+    if (next.length) {
+      next.sort((a, b) => a.d.localeCompare(b.d) || a.tk.time.localeCompare(b.tk.time));
+      const up = card('', '📅', t('comingUp'));
+      const ul = el('ol', 'items');
+      next.forEach(({ d, tk }) => {
+        const li = el('li', 'item up');
+        const day = el('span', 'd', dayNames()[SC.weekday(d)]);
+        day.append(el('b', '', String(Number(d.slice(8)))));
+        const tags = el('span', 'tags');
+        tags.append(el('span', 'tag time', tk.time));
+        li.append(day, el('span', 'up-t', tk.icon + ' ' + taskName(tk)), tags);
+        ul.append(li);
+      });
+      up.append(ul, el('p', 'note', t('movesNote')));
+      root.append(up);
+    }
+
+    // Always append Day-Off & Leave Card to My Tasks
+    if (FOH.dayOff && FOH.dayOff.buildDayOffSection) {
+      root.append(FOH.dayOff.buildDayOffSection(false));
+    }
   }
 
   // Edit mode, "Scheduled" tab: week grid + list of tasks.
@@ -13624,6 +13681,13 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
   // ---- Add & Assign Task to Specific Employee or Role Modal ----
   // Helper for date math
+
+  function canCurrentUserAssignTasks() {
+    return (FOH.roleIdentity && FOH.roleIdentity.canCurrentUserAssignTasks)
+      ? FOH.roleIdentity.canCurrentUserAssignTasks()
+      : true;
+  }
+
   function addDaysIso(iso, n) {
     if (FOH.schedule && FOH.schedule.addDays) return FOH.schedule.addDays(iso, n);
     const d = new Date(iso + 'T00:00:00Z');
@@ -13634,6 +13698,12 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   // ---- Add & Assign Task to Specific Employee or Role Modal ----
   function openAssignTaskToStaffOrRoleModal(defaultTargetSheet) {
     const ar = isAr();
+    if (!canCurrentUserAssignTasks()) {
+      if (FOH.edit && FOH.edit.toast) {
+        FOH.edit.toast(ar ? '⚠️ صلاحية تعيين المهام مخصصة للمدير والمشرفين فقط أو لمن تم تفويضه بالإعدادات' : '⚠️ Task assignment is restricted to managers & authorized staff');
+      }
+      return;
+    }
     let dlg = $('assignTaskDialog');
     if (!dlg) {
       dlg = el('dialog', 'sheet');
@@ -14420,7 +14490,10 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
       if (roleScopeOnly && !isLeader) {
         let visible = true;
-        if (itemObj.assignedUsername && itemObj.assignedUsername !== curUser) {
+        const dispName = (sess && sess.displayName ? sess.displayName.toLowerCase() : '');
+        if (itemObj.assignedUsername && itemObj.assignedUsername.toLowerCase() !== curUser) {
+          visible = false;
+        } else if (itemObj.person && itemObj.person !== 'Staff' && itemObj.person !== 'الكل' && itemObj.person !== 'all' && itemObj.person.toLowerCase() !== curUser && itemObj.person.toLowerCase() !== dispName) {
           visible = false;
         } else if (itemObj.assignedRoleKey && itemObj.assignedRoleKey !== 'all' && itemObj.assignedRoleKey !== curRole) {
           visible = false;
@@ -14430,12 +14503,33 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
         li.style.display = '';
       }
     });
+
+    if (roleScopeOnly && !isLeader) {
+      document.querySelectorAll('#sections > section.card').forEach((card) => {
+        const items = card.querySelectorAll('li.item, li.kid');
+        if (items.length > 0) {
+          const hasVisible = Array.from(items).some((li) => li.style.display !== 'none');
+          if (!hasVisible) {
+            card.style.display = 'none';
+          }
+        }
+      });
+      document.querySelectorAll('#chips .chip').forEach((chip) => {
+        const card = $('sec-' + chip.dataset.sid);
+        if (card) chip.style.display = card.style.display;
+      });
+    }
   }
 
   function injectAssignTaskBtnIntoToolbarAndMine() {
+    const canAssign = canCurrentUserAssignTasks();
     const ar = isAr();
+
     const toolbar = document.querySelector('#checklistGovBar .unified-sec-toolbar');
-    if (toolbar && !toolbar.querySelector('#toolbarAssignTaskBtn')) {
+    const existingToolbarBtn = toolbar && toolbar.querySelector('#toolbarAssignTaskBtn');
+    if (!canAssign) {
+      if (existingToolbarBtn) existingToolbarBtn.remove();
+    } else if (toolbar && !existingToolbarBtn) {
       const btn = el('button', 'u-pill primary-assign', ar ? '➕ إضافة وتعيين مهمة' : '➕ Assign Task');
       btn.type = 'button';
       btn.id = 'toolbarAssignTaskBtn';
@@ -14444,7 +14538,10 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     }
 
     const mineRoot = $('mine');
-    if (mineRoot && !mineRoot.hidden && !mineRoot.querySelector('#mineAssignTaskBar')) {
+    const existingMineCard = mineRoot && mineRoot.querySelector('#mineAssignTaskBar');
+    if (!canAssign) {
+      if (existingMineCard) existingMineCard.remove();
+    } else if (mineRoot && !mineRoot.hidden && !existingMineCard) {
       const card = el('div', 'sec-context-bar');
       card.id = 'mineAssignTaskBar';
       card.style.border = '1.5px solid var(--accent)';
@@ -14469,6 +14566,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     openAssignTaskToStaffOrRoleModal,
     renderAssignedTaskBadgesAndFilter,
     injectAssignTaskBtnIntoToolbarAndMine,
+    canCurrentUserAssignTasks,
   };
 })(window.FOH = window.FOH || {});
 
@@ -16699,6 +16797,19 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     return false;
   }
 
+  function canCurrentUserAssignTasks() {
+    const sess = getSession();
+    if (!sess) return true;
+    if (sess.isManager) return true;
+    const cfg = loadOpsConfig();
+    const del = cfg.taskAssignmentDelegation || { roles: ['super_manager', 'super_captain'], staffUsernames: ['ali'] };
+    const rKey = getCurrentSuperRoleKey();
+    if (Array.isArray(del.roles) && del.roles.includes(rKey)) return true;
+    const uname = (sess.username || '').toLowerCase().trim();
+    if (Array.isArray(del.staffUsernames) && del.staffUsernames.map((s) => (s || '').toLowerCase().trim()).includes(uname)) return true;
+    return false;
+  }
+
 
     // ============================================================================
   // 12. SUPER EMPLOYEE v10 UPGRADE:
@@ -16870,6 +16981,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     getCurrentSuperRoleKey,
     hasSuperPerm,
     canCurrentUserAccessOrders,
+    canCurrentUserAssignTasks,
     getAppRoleIdentity,
     quickSwitchEmployeeAccount,
     isRoleScopeOnly: () => roleScopeOnly,
@@ -16886,6 +16998,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
   FOH.getCurrentSuperRoleKey = getCurrentSuperRoleKey;
   FOH.canCurrentUserAccessOrders = canCurrentUserAccessOrders;
+  FOH.canCurrentUserAssignTasks = canCurrentUserAssignTasks;
 })(window.FOH = window.FOH || {});
 
 </script>
@@ -17018,6 +17131,10 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
         roles: ['super_manager', 'super_bartender'],
         staffUsernames: ['sara'],
       },
+      taskAssignmentDelegation: {
+        roles: ['super_manager', 'super_captain'],
+        staffUsernames: ['ali'],
+      },
       rolePermissions: {
         super_manager: {
           canCloseRestaurant: true,
@@ -17094,6 +17211,14 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
           staffUsernames: (raw.orderingDelegation && Array.isArray(raw.orderingDelegation.staffUsernames))
             ? raw.orderingDelegation.staffUsernames
             : d.orderingDelegation.staffUsernames,
+        },
+        taskAssignmentDelegation: {
+          roles: (raw.taskAssignmentDelegation && Array.isArray(raw.taskAssignmentDelegation.roles))
+            ? raw.taskAssignmentDelegation.roles
+            : (d.taskAssignmentDelegation ? d.taskAssignmentDelegation.roles : ['super_manager', 'super_captain']),
+          staffUsernames: (raw.taskAssignmentDelegation && Array.isArray(raw.taskAssignmentDelegation.staffUsernames))
+            ? raw.taskAssignmentDelegation.staffUsernames
+            : (d.taskAssignmentDelegation ? d.taskAssignmentDelegation.staffUsernames : ['ali']),
         },
         rolePermissions: mergedPerms,
       };
@@ -18034,6 +18159,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
         FOH.app.render();
       });
 
+      row.append(el('b', '', '👤 ' + fullLabel), sel);
       if (FOH.modalPicker && FOH.modalPicker.enhanceSelect) {
         FOH.modalPicker.enhanceSelect(sel, {
           title: ar ? 'تغيير منصب الموظف' : 'Change Staff Role',
@@ -18041,7 +18167,6 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
           icon: '👑',
         });
       }
-      row.append(el('b', '', '👤 ' + fullLabel), sel);
       assignBox.append(row);
     });
     rolesCard.append(assignBox);
@@ -18213,14 +18338,134 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     });
     ordCard.append(staffBox);
 
+    // Card 4: Task Assignment Delegation (#taskDelegationSettingsCard)
+    const taskAsgCard = el('section', 'card');
+    taskAsgCard.id = 'taskDelegationSettingsCard';
+    taskAsgCard.style.padding = '16px';
+    taskAsgCard.style.border = '1.5px solid var(--accent)';
+    taskAsgCard.innerHTML =
+      '<h3>🎯 ' +
+      (ar
+        ? 'تفويض وإدارة صلاحيات تعيين المهام (Task Assignment Delegation)'
+        : 'Task Assignment Authority & Delegation') +
+      '</h3>' +
+      '<p class="setting-note">' +
+      (ar
+        ? 'تحكّم بدقة بمن يحق له تعيين مهام تشغيلية جديدة وتوجيهها للموظفين أو الأدوار. افتراضياً: الصلاحية ممنوحة للمدير والمشرف (الكابتن). يمكنك تفويض أي دور أو موظف بالاسم للتعيين منعاً للعشوائية:'
+        : 'Control who can assign operational tasks to employees or roles. By default: Managers & Supervisors (Captains). You can delegate to any role or specific staff member:') +
+      '</p>';
+
+    // Section A: By Role
+    const asgRoleBox = el('div', 'super-role-card');
+    asgRoleBox.style.marginBottom = '12px';
+    asgRoleBox.innerHTML =
+      '<div class="super-role-card-head">' +
+      '<b>🏷️ ' + (ar ? '1. التوجيه حسب المنصب القيادي (Role / Position)' : '1. Authorize Entire Role / Position') + '</b>' +
+      '</div>' +
+      '<p style="font-size:0.75rem;color:var(--ink2);margin:4px 0 10px;">' +
+      (ar ? 'أي موظف يحمل المنصب المفعّل سيتمكن تلقائياً من تعيين المهام وتوجيهها للموظفين.' : 'Any employee in an active role can create and assign tasks.') +
+      '</p>';
+
+    const delAsgRoles = (cfg.taskAssignmentDelegation && Array.isArray(cfg.taskAssignmentDelegation.roles))
+      ? cfg.taskAssignmentDelegation.roles
+      : ['super_manager', 'super_captain'];
+
+    [
+      ['super_captain', ar ? '🎖️ سوبر كابتن (Super Captain)' : '🎖️ Super Captain', ar ? 'تمكين المشرفين والكباتن من تعيين المهام للويترية والبار (موصى به)' : 'Allow supervisors and captains to assign tasks (Recommended)'],
+      ['super_bartender', ar ? '🍸 سوبر بارتندر (Super Bartender)' : '🍸 Super Bartender', ar ? 'تمكين البارتندرية من تعيين مهام للبار' : 'Allow bartenders to assign tasks'],
+      ['super_waiter', ar ? '⭐ سوبر ويتر (Super Waiter)' : '⭐ Super Waiter', ar ? 'تمكين كافة الويترية من تعيين مهام (غير موصى به لكافة الفريق)' : 'Allow all waiters to assign tasks (Not recommended for whole team)'],
+    ].forEach(([rk, rkLabel, rkSub]) => {
+      const row = el('label', 'tog');
+      row.style.display = 'flex';
+      row.style.justifyContent = 'space-between';
+      row.style.alignItems = 'center';
+      row.style.padding = '8px 0';
+      row.style.borderBottom = '1px dashed var(--line)';
+      row.style.cursor = 'pointer';
+
+      row.innerHTML = '<div><b>' + rkLabel + '</b><small style="display:block;color:var(--ink2);font-size:0.72rem;">' + rkSub + '</small></div>';
+      const cb = el('input', 'sw');
+      cb.type = 'checkbox';
+      cb.checked = delAsgRoles.includes(rk);
+      cb.addEventListener('change', () => {
+        if (!cfg.taskAssignmentDelegation) cfg.taskAssignmentDelegation = { roles: ['super_manager', 'super_captain'], staffUsernames: ['ali'] };
+        if (!Array.isArray(cfg.taskAssignmentDelegation.roles)) cfg.taskAssignmentDelegation.roles = ['super_manager', 'super_captain'];
+        if (cb.checked) {
+          if (!cfg.taskAssignmentDelegation.roles.includes(rk)) cfg.taskAssignmentDelegation.roles.push(rk);
+        } else {
+          cfg.taskAssignmentDelegation.roles = cfg.taskAssignmentDelegation.roles.filter((r) => r !== rk);
+        }
+        if (!cfg.taskAssignmentDelegation.roles.includes('super_manager')) cfg.taskAssignmentDelegation.roles.push('super_manager');
+        saveOpsConfig(cfg);
+        FOH.edit.toast(ar ? 'تم تحديث صلاحية تعيين المهام لمنصب ' + rkLabel + ' ✓' : 'Updated task assignment authority for ' + rkLabel + ' ✓');
+        FOH.app.render();
+      });
+      row.append(cb);
+      asgRoleBox.append(row);
+    });
+    taskAsgCard.append(asgRoleBox);
+
+    // Section B: By Specific Staff Member by Name
+    const asgStaffBox = el('div', 'super-role-card');
+    asgStaffBox.innerHTML =
+      '<div class="super-role-card-head">' +
+      '<b>👤 ' + (ar ? '2. التخصيص بالاسم لموظف محدد (Specific Staff Delegation)' : '2. Specific Staff Member Delegation') + '</b>' +
+      '</div>' +
+      '<p style="font-size:0.75rem;color:var(--ink2);margin:4px 0 10px;">' +
+      (ar ? 'إذا أردت السماح لموظف محدد (مثل سارة) بتعيين المهام، يمكنك تفعيل الصلاحية لها بالاسم دون فتحها لبقية الويترية:' : 'Designate a specific staff member (e.g. Sara) to assign tasks without allowing other waiters:') +
+      '</p>';
+
+    const delAsgStaff = (cfg.taskAssignmentDelegation && Array.isArray(cfg.taskAssignmentDelegation.staffUsernames))
+      ? cfg.taskAssignmentDelegation.staffUsernames
+      : ['ali'];
+
+    staffList.forEach(([uname, fullName, roleTag]) => {
+      const row = el('label', 'tog');
+      row.style.display = 'flex';
+      row.style.justifyContent = 'space-between';
+      row.style.alignItems = 'center';
+      row.style.padding = '8px 0';
+      row.style.borderBottom = '1px dashed var(--line)';
+      row.style.cursor = uname === 'fadi' ? 'default' : 'pointer';
+
+      row.innerHTML = '<div><b>👤 ' + fullName + '</b><small style="display:block;color:var(--ink2);font-size:0.72rem;">' + (uname === 'fadi' ? (ar ? '👑 المدير العام (مفعل دائماً)' : '👑 General Manager (Always Active)') : (ar ? 'صلاحية تعيين وتوجيه المهام' : 'Task assignment mission')) + '</small></div>';
+
+      if (uname === 'fadi') {
+        const badge = el('span', 'tag mine', ar ? 'مفعل دائماً' : 'Always Active');
+        badge.style.fontSize = '0.72rem';
+        row.append(badge);
+      } else {
+        const cb = el('input', 'sw');
+        cb.type = 'checkbox';
+        cb.checked = delAsgStaff.map((s) => s.toLowerCase()).includes(uname);
+        cb.addEventListener('change', () => {
+          if (!cfg.taskAssignmentDelegation) cfg.taskAssignmentDelegation = { roles: ['super_manager', 'super_captain'], staffUsernames: ['ali'] };
+          if (!Array.isArray(cfg.taskAssignmentDelegation.staffUsernames)) cfg.taskAssignmentDelegation.staffUsernames = ['ali'];
+          if (cb.checked) {
+            if (!cfg.taskAssignmentDelegation.staffUsernames.includes(uname)) cfg.taskAssignmentDelegation.staffUsernames.push(uname);
+          } else {
+            cfg.taskAssignmentDelegation.staffUsernames = cfg.taskAssignmentDelegation.staffUsernames.filter((u) => u !== uname);
+          }
+          saveOpsConfig(cfg);
+          FOH.edit.toast(ar ? 'تم تحديث صلاحية تعيين المهام للموظف ' + fullName + ' ✓' : 'Updated task assignment authority for ' + fullName + ' ✓');
+          FOH.app.render();
+        });
+        row.append(cb);
+      }
+      asgStaffBox.append(row);
+    });
+    taskAsgCard.append(asgStaffBox);
+
+
     // Insert at the top of #settingsView right after the Brand card
     const firstCard = root.querySelector('section.card');
     if (firstCard && firstCard.nextSibling) {
       root.insertBefore(hoursCard, firstCard.nextSibling);
       root.insertBefore(rolesCard, hoursCard.nextSibling);
       root.insertBefore(ordCard, rolesCard.nextSibling);
+      root.insertBefore(taskAsgCard, ordCard.nextSibling);
     } else {
-      root.append(hoursCard, rolesCard, ordCard);
+      root.append(hoursCard, rolesCard, ordCard, taskAsgCard);
     }
   }
 
@@ -21954,6 +22199,10 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     return FOH.roleIdentity ? FOH.roleIdentity.canCurrentUserAccessOrders() : true;
   }
 
+  function canCurrentUserAssignTasks() {
+    return FOH.roleIdentity ? FOH.roleIdentity.canCurrentUserAssignTasks() : true;
+  }
+
   function switchView(v) {
     if (FOH.navigation) FOH.navigation.switchView(v);
   }
@@ -22074,6 +22323,12 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       bDmg.type = 'button';
       bDmg.addEventListener('click', () => FOH.invBreak && FOH.invBreak.open && FOH.invBreak.open());
 
+      if (canCurrentUserAssignTasks()) {
+        const bAsg = el('button', 'rlh-btn primary', ar ? '➕ تعيين مهمة' : '➕ Assign Task');
+        bAsg.type = 'button';
+        bAsg.addEventListener('click', () => openAssignTaskToStaffOrRoleModal());
+        actions.append(bAsg);
+      }
       actions.append(bAcad, bDmg);
     } else if (rKey === 'super_bartender') {
       if (canCurrentUserAccessOrders()) {
@@ -22101,11 +22356,20 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       bInv.type = 'button';
       bInv.addEventListener('click', () => switchView('inv'));
 
+      if (canCurrentUserAssignTasks()) {
+        const bAsg = el('button', 'rlh-btn primary', ar ? '➕ تعيين مهمة' : '➕ Assign Task');
+        bAsg.type = 'button';
+        bAsg.addEventListener('click', () => openAssignTaskToStaffOrRoleModal());
+        actions.append(bAsg);
+      }
       actions.append(bMine, bDayOff, bInv);
     } else if (rKey === 'super_captain') {
-      const bAsg = el('button', 'rlh-btn primary', ar ? '➕ تعيين مهمة لويتر / بارتندر' : '➕ Assign Task to Staff');
-      bAsg.type = 'button';
-      bAsg.addEventListener('click', () => openAssignTaskToStaffOrRoleModal());
+      if (canCurrentUserAssignTasks()) {
+        const bAsg = el('button', 'rlh-btn primary', ar ? '➕ تعيين مهمة لويتر / بارتندر' : '➕ Assign Task to Staff');
+        bAsg.type = 'button';
+        bAsg.addEventListener('click', () => openAssignTaskToStaffOrRoleModal());
+        actions.append(bAsg);
+      }
 
       const bMine = el('button', 'rlh-btn', ar ? '📋 مهامي الخاصة' : '📋 My Tasks');
       bMine.type = 'button';
@@ -22128,11 +22392,14 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
         }, 120);
       });
 
-      actions.append(bAsg, bMine, bDayOff);
+      actions.append(bMine, bDayOff);
     } else {
-      const bAsg = el('button', 'rlh-btn primary', ar ? '➕ إضافة وتعيين مهمة' : '➕ Assign Task to Staff');
-      bAsg.type = 'button';
-      bAsg.addEventListener('click', () => openAssignTaskToStaffOrRoleModal());
+      if (canCurrentUserAssignTasks()) {
+        const bAsg = el('button', 'rlh-btn primary', ar ? '➕ إضافة وتعيين مهمة' : '➕ Assign Task to Staff');
+        bAsg.type = 'button';
+        bAsg.addEventListener('click', () => openAssignTaskToStaffOrRoleModal());
+        actions.append(bAsg);
+      }
 
       const bDash = el('button', 'rlh-btn', ar ? '📊 لوحة التحليلات والتقارير' : '📊 Analytics Dashboard');
       bDash.type = 'button';
@@ -22142,7 +22409,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       bSet.type = 'button';
       bSet.addEventListener('click', () => switchView('settings'));
 
-      actions.append(bAsg, bDash, bSet);
+      actions.append(bDash, bSet);
     }
 
     hero.append(headerRow, progressTrack, actions);

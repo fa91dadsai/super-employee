@@ -25,6 +25,10 @@
     return FOH.roleIdentity ? FOH.roleIdentity.canCurrentUserAccessOrders() : true;
   }
 
+  function canCurrentUserAssignTasks() {
+    return FOH.roleIdentity ? FOH.roleIdentity.canCurrentUserAssignTasks() : true;
+  }
+
   function switchView(v) {
     if (FOH.navigation) FOH.navigation.switchView(v);
   }
@@ -145,6 +149,12 @@
       bDmg.type = 'button';
       bDmg.addEventListener('click', () => FOH.invBreak && FOH.invBreak.open && FOH.invBreak.open());
 
+      if (canCurrentUserAssignTasks()) {
+        const bAsg = el('button', 'rlh-btn primary', ar ? '➕ تعيين مهمة' : '➕ Assign Task');
+        bAsg.type = 'button';
+        bAsg.addEventListener('click', () => openAssignTaskToStaffOrRoleModal());
+        actions.append(bAsg);
+      }
       actions.append(bAcad, bDmg);
     } else if (rKey === 'super_bartender') {
       if (canCurrentUserAccessOrders()) {
@@ -172,11 +182,20 @@
       bInv.type = 'button';
       bInv.addEventListener('click', () => switchView('inv'));
 
+      if (canCurrentUserAssignTasks()) {
+        const bAsg = el('button', 'rlh-btn primary', ar ? '➕ تعيين مهمة' : '➕ Assign Task');
+        bAsg.type = 'button';
+        bAsg.addEventListener('click', () => openAssignTaskToStaffOrRoleModal());
+        actions.append(bAsg);
+      }
       actions.append(bMine, bDayOff, bInv);
     } else if (rKey === 'super_captain') {
-      const bAsg = el('button', 'rlh-btn primary', ar ? '➕ تعيين مهمة لويتر / بارتندر' : '➕ Assign Task to Staff');
-      bAsg.type = 'button';
-      bAsg.addEventListener('click', () => openAssignTaskToStaffOrRoleModal());
+      if (canCurrentUserAssignTasks()) {
+        const bAsg = el('button', 'rlh-btn primary', ar ? '➕ تعيين مهمة لويتر / بارتندر' : '➕ Assign Task to Staff');
+        bAsg.type = 'button';
+        bAsg.addEventListener('click', () => openAssignTaskToStaffOrRoleModal());
+        actions.append(bAsg);
+      }
 
       const bMine = el('button', 'rlh-btn', ar ? '📋 مهامي الخاصة' : '📋 My Tasks');
       bMine.type = 'button';
@@ -199,11 +218,14 @@
         }, 120);
       });
 
-      actions.append(bAsg, bMine, bDayOff);
+      actions.append(bMine, bDayOff);
     } else {
-      const bAsg = el('button', 'rlh-btn primary', ar ? '➕ إضافة وتعيين مهمة' : '➕ Assign Task to Staff');
-      bAsg.type = 'button';
-      bAsg.addEventListener('click', () => openAssignTaskToStaffOrRoleModal());
+      if (canCurrentUserAssignTasks()) {
+        const bAsg = el('button', 'rlh-btn primary', ar ? '➕ إضافة وتعيين مهمة' : '➕ Assign Task to Staff');
+        bAsg.type = 'button';
+        bAsg.addEventListener('click', () => openAssignTaskToStaffOrRoleModal());
+        actions.append(bAsg);
+      }
 
       const bDash = el('button', 'rlh-btn', ar ? '📊 لوحة التحليلات والتقارير' : '📊 Analytics Dashboard');
       bDash.type = 'button';
@@ -213,7 +235,7 @@
       bSet.type = 'button';
       bSet.addEventListener('click', () => switchView('settings'));
 
-      actions.append(bAsg, bDash, bSet);
+      actions.append(bDash, bSet);
     }
 
     hero.append(headerRow, progressTrack, actions);

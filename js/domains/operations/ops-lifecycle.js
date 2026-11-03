@@ -124,6 +124,10 @@
         roles: ['super_manager', 'super_bartender'],
         staffUsernames: ['sara'],
       },
+      taskAssignmentDelegation: {
+        roles: ['super_manager', 'super_captain'],
+        staffUsernames: ['ali'],
+      },
       rolePermissions: {
         super_manager: {
           canCloseRestaurant: true,
@@ -200,6 +204,14 @@
           staffUsernames: (raw.orderingDelegation && Array.isArray(raw.orderingDelegation.staffUsernames))
             ? raw.orderingDelegation.staffUsernames
             : d.orderingDelegation.staffUsernames,
+        },
+        taskAssignmentDelegation: {
+          roles: (raw.taskAssignmentDelegation && Array.isArray(raw.taskAssignmentDelegation.roles))
+            ? raw.taskAssignmentDelegation.roles
+            : (d.taskAssignmentDelegation ? d.taskAssignmentDelegation.roles : ['super_manager', 'super_captain']),
+          staffUsernames: (raw.taskAssignmentDelegation && Array.isArray(raw.taskAssignmentDelegation.staffUsernames))
+            ? raw.taskAssignmentDelegation.staffUsernames
+            : (d.taskAssignmentDelegation ? d.taskAssignmentDelegation.staffUsernames : ['ali']),
         },
         rolePermissions: mergedPerms,
       };

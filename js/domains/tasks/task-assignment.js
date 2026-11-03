@@ -47,6 +47,13 @@
 
   // ---- Add & Assign Task to Specific Employee or Role Modal ----
   // Helper for date math
+
+  function canCurrentUserAssignTasks() {
+    return (FOH.roleIdentity && FOH.roleIdentity.canCurrentUserAssignTasks)
+      ? FOH.roleIdentity.canCurrentUserAssignTasks()
+      : true;
+  }
+
   function addDaysIso(iso, n) {
     if (FOH.schedule && FOH.schedule.addDays) return FOH.schedule.addDays(iso, n);
     const d = new Date(iso + 'T00:00:00Z');
@@ -57,6 +64,12 @@
   // ---- Add & Assign Task to Specific Employee or Role Modal ----
   function openAssignTaskToStaffOrRoleModal(defaultTargetSheet) {
     const ar = isAr();
+    if (!canCurrentUserAssignTasks()) {
+      if (FOH.edit && FOH.edit.toast) {
+        FOH.edit.toast(ar ? '⚠️ صلاحية تعيين المهام مخصصة للمدير والمشرفين فقط أو لمن تم تفويضه بالإعدادات' : '⚠️ Task assignment is restricted to managers & authorized staff');
+      }
+      return;
+    }
     let dlg = $('assignTaskDialog');
     if (!dlg) {
       dlg = el('dialog', 'sheet');
@@ -843,7 +856,10 @@
 
       if (roleScopeOnly && !isLeader) {
         let visible = true;
-        if (itemObj.assignedUsername && itemObj.assignedUsername !== curUser) {
+        const dispName = (sess && sess.displayName ? sess.displayName.toLowerCase() : '');
+        if (itemObj.assignedUsername && itemObj.assignedUsername.toLowerCase() !== curUser) {
+          visible = false;
+        } else if (itemObj.person && itemObj.person !== 'Staff' && itemObj.person !== 'الكل' && itemObj.person !== 'all' && itemObj.person.toLowerCase() !== curUser && itemObj.person.toLowerCase() !== dispName) {
           visible = false;
         } else if (itemObj.assignedRoleKey && itemObj.assignedRoleKey !== 'all' && itemObj.assignedRoleKey !== curRole) {
           visible = false;
@@ -853,12 +869,33 @@
         li.style.display = '';
       }
     });
+
+    if (roleScopeOnly && !isLeader) {
+      document.querySelectorAll('#sections > section.card').forEach((card) => {
+        const items = card.querySelectorAll('li.item, li.kid');
+        if (items.length > 0) {
+          const hasVisible = Array.from(items).some((li) => li.style.display !== 'none');
+          if (!hasVisible) {
+            card.style.display = 'none';
+          }
+        }
+      });
+      document.querySelectorAll('#chips .chip').forEach((chip) => {
+        const card = $('sec-' + chip.dataset.sid);
+        if (card) chip.style.display = card.style.display;
+      });
+    }
   }
 
   function injectAssignTaskBtnIntoToolbarAndMine() {
+    const canAssign = canCurrentUserAssignTasks();
     const ar = isAr();
+
     const toolbar = document.querySelector('#checklistGovBar .unified-sec-toolbar');
-    if (toolbar && !toolbar.querySelector('#toolbarAssignTaskBtn')) {
+    const existingToolbarBtn = toolbar && toolbar.querySelector('#toolbarAssignTaskBtn');
+    if (!canAssign) {
+      if (existingToolbarBtn) existingToolbarBtn.remove();
+    } else if (toolbar && !existingToolbarBtn) {
       const btn = el('button', 'u-pill primary-assign', ar ? '➕ إضافة وتعيين مهمة' : '➕ Assign Task');
       btn.type = 'button';
       btn.id = 'toolbarAssignTaskBtn';
@@ -867,7 +904,10 @@
     }
 
     const mineRoot = $('mine');
-    if (mineRoot && !mineRoot.hidden && !mineRoot.querySelector('#mineAssignTaskBar')) {
+    const existingMineCard = mineRoot && mineRoot.querySelector('#mineAssignTaskBar');
+    if (!canAssign) {
+      if (existingMineCard) existingMineCard.remove();
+    } else if (mineRoot && !mineRoot.hidden && !existingMineCard) {
       const card = el('div', 'sec-context-bar');
       card.id = 'mineAssignTaskBar';
       card.style.border = '1.5px solid var(--accent)';
@@ -892,5 +932,6 @@
     openAssignTaskToStaffOrRoleModal,
     renderAssignedTaskBadgesAndFilter,
     injectAssignTaskBtnIntoToolbarAndMine,
+    canCurrentUserAssignTasks,
   };
 })(window.FOH = window.FOH || {});

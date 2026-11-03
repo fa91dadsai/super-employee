@@ -174,6 +174,7 @@
         FOH.app.render();
       });
 
+      row.append(el('b', '', '👤 ' + fullLabel), sel);
       if (FOH.modalPicker && FOH.modalPicker.enhanceSelect) {
         FOH.modalPicker.enhanceSelect(sel, {
           title: ar ? 'تغيير منصب الموظف' : 'Change Staff Role',
@@ -181,7 +182,6 @@
           icon: '👑',
         });
       }
-      row.append(el('b', '', '👤 ' + fullLabel), sel);
       assignBox.append(row);
     });
     rolesCard.append(assignBox);
@@ -353,14 +353,134 @@
     });
     ordCard.append(staffBox);
 
+    // Card 4: Task Assignment Delegation (#taskDelegationSettingsCard)
+    const taskAsgCard = el('section', 'card');
+    taskAsgCard.id = 'taskDelegationSettingsCard';
+    taskAsgCard.style.padding = '16px';
+    taskAsgCard.style.border = '1.5px solid var(--accent)';
+    taskAsgCard.innerHTML =
+      '<h3>🎯 ' +
+      (ar
+        ? 'تفويض وإدارة صلاحيات تعيين المهام (Task Assignment Delegation)'
+        : 'Task Assignment Authority & Delegation') +
+      '</h3>' +
+      '<p class="setting-note">' +
+      (ar
+        ? 'تحكّم بدقة بمن يحق له تعيين مهام تشغيلية جديدة وتوجيهها للموظفين أو الأدوار. افتراضياً: الصلاحية ممنوحة للمدير والمشرف (الكابتن). يمكنك تفويض أي دور أو موظف بالاسم للتعيين منعاً للعشوائية:'
+        : 'Control who can assign operational tasks to employees or roles. By default: Managers & Supervisors (Captains). You can delegate to any role or specific staff member:') +
+      '</p>';
+
+    // Section A: By Role
+    const asgRoleBox = el('div', 'super-role-card');
+    asgRoleBox.style.marginBottom = '12px';
+    asgRoleBox.innerHTML =
+      '<div class="super-role-card-head">' +
+      '<b>🏷️ ' + (ar ? '1. التوجيه حسب المنصب القيادي (Role / Position)' : '1. Authorize Entire Role / Position') + '</b>' +
+      '</div>' +
+      '<p style="font-size:0.75rem;color:var(--ink2);margin:4px 0 10px;">' +
+      (ar ? 'أي موظف يحمل المنصب المفعّل سيتمكن تلقائياً من تعيين المهام وتوجيهها للموظفين.' : 'Any employee in an active role can create and assign tasks.') +
+      '</p>';
+
+    const delAsgRoles = (cfg.taskAssignmentDelegation && Array.isArray(cfg.taskAssignmentDelegation.roles))
+      ? cfg.taskAssignmentDelegation.roles
+      : ['super_manager', 'super_captain'];
+
+    [
+      ['super_captain', ar ? '🎖️ سوبر كابتن (Super Captain)' : '🎖️ Super Captain', ar ? 'تمكين المشرفين والكباتن من تعيين المهام للويترية والبار (موصى به)' : 'Allow supervisors and captains to assign tasks (Recommended)'],
+      ['super_bartender', ar ? '🍸 سوبر بارتندر (Super Bartender)' : '🍸 Super Bartender', ar ? 'تمكين البارتندرية من تعيين مهام للبار' : 'Allow bartenders to assign tasks'],
+      ['super_waiter', ar ? '⭐ سوبر ويتر (Super Waiter)' : '⭐ Super Waiter', ar ? 'تمكين كافة الويترية من تعيين مهام (غير موصى به لكافة الفريق)' : 'Allow all waiters to assign tasks (Not recommended for whole team)'],
+    ].forEach(([rk, rkLabel, rkSub]) => {
+      const row = el('label', 'tog');
+      row.style.display = 'flex';
+      row.style.justifyContent = 'space-between';
+      row.style.alignItems = 'center';
+      row.style.padding = '8px 0';
+      row.style.borderBottom = '1px dashed var(--line)';
+      row.style.cursor = 'pointer';
+
+      row.innerHTML = '<div><b>' + rkLabel + '</b><small style="display:block;color:var(--ink2);font-size:0.72rem;">' + rkSub + '</small></div>';
+      const cb = el('input', 'sw');
+      cb.type = 'checkbox';
+      cb.checked = delAsgRoles.includes(rk);
+      cb.addEventListener('change', () => {
+        if (!cfg.taskAssignmentDelegation) cfg.taskAssignmentDelegation = { roles: ['super_manager', 'super_captain'], staffUsernames: ['ali'] };
+        if (!Array.isArray(cfg.taskAssignmentDelegation.roles)) cfg.taskAssignmentDelegation.roles = ['super_manager', 'super_captain'];
+        if (cb.checked) {
+          if (!cfg.taskAssignmentDelegation.roles.includes(rk)) cfg.taskAssignmentDelegation.roles.push(rk);
+        } else {
+          cfg.taskAssignmentDelegation.roles = cfg.taskAssignmentDelegation.roles.filter((r) => r !== rk);
+        }
+        if (!cfg.taskAssignmentDelegation.roles.includes('super_manager')) cfg.taskAssignmentDelegation.roles.push('super_manager');
+        saveOpsConfig(cfg);
+        FOH.edit.toast(ar ? 'تم تحديث صلاحية تعيين المهام لمنصب ' + rkLabel + ' ✓' : 'Updated task assignment authority for ' + rkLabel + ' ✓');
+        FOH.app.render();
+      });
+      row.append(cb);
+      asgRoleBox.append(row);
+    });
+    taskAsgCard.append(asgRoleBox);
+
+    // Section B: By Specific Staff Member by Name
+    const asgStaffBox = el('div', 'super-role-card');
+    asgStaffBox.innerHTML =
+      '<div class="super-role-card-head">' +
+      '<b>👤 ' + (ar ? '2. التخصيص بالاسم لموظف محدد (Specific Staff Delegation)' : '2. Specific Staff Member Delegation') + '</b>' +
+      '</div>' +
+      '<p style="font-size:0.75rem;color:var(--ink2);margin:4px 0 10px;">' +
+      (ar ? 'إذا أردت السماح لموظف محدد (مثل سارة) بتعيين المهام، يمكنك تفعيل الصلاحية لها بالاسم دون فتحها لبقية الويترية:' : 'Designate a specific staff member (e.g. Sara) to assign tasks without allowing other waiters:') +
+      '</p>';
+
+    const delAsgStaff = (cfg.taskAssignmentDelegation && Array.isArray(cfg.taskAssignmentDelegation.staffUsernames))
+      ? cfg.taskAssignmentDelegation.staffUsernames
+      : ['ali'];
+
+    staffList.forEach(([uname, fullName, roleTag]) => {
+      const row = el('label', 'tog');
+      row.style.display = 'flex';
+      row.style.justifyContent = 'space-between';
+      row.style.alignItems = 'center';
+      row.style.padding = '8px 0';
+      row.style.borderBottom = '1px dashed var(--line)';
+      row.style.cursor = uname === 'fadi' ? 'default' : 'pointer';
+
+      row.innerHTML = '<div><b>👤 ' + fullName + '</b><small style="display:block;color:var(--ink2);font-size:0.72rem;">' + (uname === 'fadi' ? (ar ? '👑 المدير العام (مفعل دائماً)' : '👑 General Manager (Always Active)') : (ar ? 'صلاحية تعيين وتوجيه المهام' : 'Task assignment mission')) + '</small></div>';
+
+      if (uname === 'fadi') {
+        const badge = el('span', 'tag mine', ar ? 'مفعل دائماً' : 'Always Active');
+        badge.style.fontSize = '0.72rem';
+        row.append(badge);
+      } else {
+        const cb = el('input', 'sw');
+        cb.type = 'checkbox';
+        cb.checked = delAsgStaff.map((s) => s.toLowerCase()).includes(uname);
+        cb.addEventListener('change', () => {
+          if (!cfg.taskAssignmentDelegation) cfg.taskAssignmentDelegation = { roles: ['super_manager', 'super_captain'], staffUsernames: ['ali'] };
+          if (!Array.isArray(cfg.taskAssignmentDelegation.staffUsernames)) cfg.taskAssignmentDelegation.staffUsernames = ['ali'];
+          if (cb.checked) {
+            if (!cfg.taskAssignmentDelegation.staffUsernames.includes(uname)) cfg.taskAssignmentDelegation.staffUsernames.push(uname);
+          } else {
+            cfg.taskAssignmentDelegation.staffUsernames = cfg.taskAssignmentDelegation.staffUsernames.filter((u) => u !== uname);
+          }
+          saveOpsConfig(cfg);
+          FOH.edit.toast(ar ? 'تم تحديث صلاحية تعيين المهام للموظف ' + fullName + ' ✓' : 'Updated task assignment authority for ' + fullName + ' ✓');
+          FOH.app.render();
+        });
+        row.append(cb);
+      }
+      asgStaffBox.append(row);
+    });
+    taskAsgCard.append(asgStaffBox);
+
+
     // Insert at the top of #settingsView right after the Brand card
     const firstCard = root.querySelector('section.card');
     if (firstCard && firstCard.nextSibling) {
       root.insertBefore(hoursCard, firstCard.nextSibling);
       root.insertBefore(rolesCard, hoursCard.nextSibling);
       root.insertBefore(ordCard, rolesCard.nextSibling);
+      root.insertBefore(taskAsgCard, ordCard.nextSibling);
     } else {
-      root.append(hoursCard, rolesCard, ordCard);
+      root.append(hoursCard, rolesCard, ordCard, taskAsgCard);
     }
   }
 
