@@ -443,6 +443,49 @@ body.dark .shift-nav-tab.on .shift-tab-title {
 body.dark .shift-nav-tab.on .shift-tab-time-pill {
   color: #a7f3d0 !important;
 }
+
+/* ============================================================================
+   13B. MODE SWITCHER (CHECKLIST VS TASKS) & DEPARTMENT SEGMENT PANELS
+   ============================================================================ */
+.ops-mode-panel,
+.dept-segment-panel {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  gap: 10px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 12px 14px !important;
+  margin: 0 0 12px !important;
+  border-radius: 16px !important;
+  background: var(--card) !important;
+  border: 1.5px solid var(--line) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04) !important;
+}
+
+.ops-mode-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.dept-nav-rail {
+  display: flex !important;
+  grid-template-columns: none !important;
+  overflow-x: auto !important;
+  gap: 5px !important;
+  padding: 4px !important;
+  scrollbar-width: none !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.dept-nav-rail::-webkit-scrollbar {
+  display: none !important;
+}
+
+.dept-nav-tab {
+  flex: 1 0 auto !important;
+  min-width: 80px !important;
+}
 .assigned-task-pill {
   display: inline-flex;
   align-items: center;

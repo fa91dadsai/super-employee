@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE = 'super-employee-v29-bottombar';
+const CACHE = 'super-employee-v30-modedept';
 const PRECACHE = [
   './',
   './index.html',
@@ -73,6 +73,7 @@ const PRECACHE = [
   './js/domains/notifications/notif-center.js',
   './js/domains/navigation/sidebar-nav.js',
   './js/domains/navigation/bottom-bar.js',
+  './js/domains/navigation/mode-dept-panels.js',
   // JS Domain Modules: UI Header, Navigation, Hero & Orchestration
   './js/domains/shifts/header-subbars.js',
   './js/domains/shifts/three-shifts-nav.js',

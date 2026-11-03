@@ -195,6 +195,9 @@
     if (FOH.bottomBar && FOH.bottomBar.init) {
       FOH.bottomBar.init();
     }
+    if (FOH.modeDeptPanels && FOH.modeDeptPanels.init) {
+      FOH.modeDeptPanels.init();
+    }
     const ar = isAr();
     const gov = loadGov();
     const sess = getSession();
@@ -270,6 +273,9 @@
     if (FOH.bottomBar && FOH.bottomBar.syncBottomBar) {
       FOH.bottomBar.syncBottomBar();
     }
+    if (FOH.modeDeptPanels && FOH.modeDeptPanels.syncPanels) {
+      FOH.modeDeptPanels.syncPanels();
+    }
 
     if (!S.editing) {
       if (S.view === 'academy' && $('academyView')) renderAcademyView($('academyView'));
@@ -290,6 +296,9 @@
     }
     if (FOH.bottomBar && FOH.bottomBar.init) {
       FOH.bottomBar.init();
+    }
+    if (FOH.modeDeptPanels && FOH.modeDeptPanels.init) {
+      FOH.modeDeptPanels.init();
     }
 
     const prevRender = FOH.app.render;
