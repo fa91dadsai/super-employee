@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE = 'super-employee-v30-modedept';
+const CACHE = 'super-employee-v31-orders-clean';
 const PRECACHE = [
   './',
   './index.html',

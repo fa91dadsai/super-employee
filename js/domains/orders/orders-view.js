@@ -325,18 +325,64 @@
     return sw;
   }
 
+  function promptStartNewOrder(onComplete) {
+    const ar = isAr();
+    const currentCount = ordSelectedItems().length;
+
+    const doReset = () => {
+      const priorMeta = ordDB.order && ordDB.order.meta ? { ...ordDB.order.meta } : null;
+      if (currentCount > 0) {
+        ordDB.orderHistory = ordDB.orderHistory || [];
+        ordDB.orderHistory.unshift({
+          token: (ordDB.order && ordDB.order.orderToken) || ('ord-' + Date.now().toString(36)),
+          date: (priorMeta && priorMeta.orderDate) || FOH.time.todayISO(),
+          itemsCount: currentCount,
+          lines: JSON.parse(JSON.stringify((ordDB.order && ordDB.order.lines) || {})),
+          meta: priorMeta,
+          archivedAt: new Date().toISOString(),
+        });
+        if (ordDB.orderHistory.length > 20) ordDB.orderHistory.length = 20;
+      }
+
+      ordDB.order = emptyOrderState();
+      saveOrdersDB();
+      if (FOH.edit && FOH.edit.toast) {
+        FOH.edit.toast(ar ? '✨ تم تصفير الطلبية وبدء طلبية جديدة بنجاح' : '✨ New order started. Quantities reset.');
+      }
+      if (typeof onComplete === 'function') {
+        onComplete();
+      } else {
+        const root = $('ordersView') || $('tab-orders') || document.querySelector('.orders-view-root');
+        if (root) renderOrdersView(root);
+      }
+    };
+
+    if (currentCount > 0) {
+      const confirmed = window.confirm(
+        ar
+          ? `✨ بدء طلبية جديدة (New Order)\n\nهل أنت متأكد من تصفير كميات الطلبية الحالية (${currentCount} صنف مطلوب) للبدء بطلبية جديدة فارغة؟\n(الكتالوج والمخزون سيبقيان كما هما دون تغيير).`
+          : `✨ Start New Order\n\nReset current order (${currentCount} requested items) to 0 and start a fresh order?\n(Catalog and stock will remain unchanged).`
+      );
+      if (confirmed) {
+        doReset();
+      }
+    } else {
+      doReset();
+    }
+  }
+
   function buildOrdWhatsAppText(includeStock) {
+    const session = getSession();
     const m = ordDB.order.meta;
-    const requester = m.requester || (session && session.displayName) || S.me.name || 'Staff';
-    const orderDate = m.orderDate || S.date;
+    const requester = (session && session.displayName) || S.me.name || m.requester || 'Staff';
+    const orderDate = S.date || FOH.time.todayISO();
     const list = ordSelectedItems();
     const lines = [
       '*CEEN & OASIS | WAREHOUSE & BAR ORDER*',
       '',
       `Date: ${orderDate}`,
       `Prepared by: ${requester}`,
-      `To: ${m.destination || 'Store'} | Shift: ${m.shift || 'Morning'}`,
-      `Priority: ${m.priority || 'Normal'}`,
+      `Destination: Store Warehouse`,
       `Requested items: ${list.length}`,
     ];
 
@@ -390,6 +436,7 @@
     root.replaceChildren();
     updateOrderBadge();
 
+    const session = getSession();
     const ar = FOH.i18n.lang === 'ar';
     const selectedList = ordSelectedItems();
 
@@ -421,6 +468,18 @@
       actions.append(toggleAll);
     }
 
+    const newOrderHeroBtn = el('button', 'ord-new-order-hero-btn');
+    newOrderHeroBtn.type = 'button';
+    newOrderHeroBtn.title = ar ? 'بدء طلبية جديدة وتصفير الكميات' : 'Start new order & reset quantities';
+    newOrderHeroBtn.append(
+      el('span', '', '✨'),
+      el('span', 'ord-new-order-lbl', ar ? 'طلبية جديدة' : 'New Order')
+    );
+    newOrderHeroBtn.addEventListener('click', () => {
+      promptStartNewOrder(() => renderOrdersView(root));
+    });
+    actions.append(newOrderHeroBtn);
+
     const basketBtn = el('button', 'ord-basket-btn');
     basketBtn.type = 'button';
     basketBtn.append(
@@ -441,6 +500,7 @@
       buildFn(inner);
       bar.append(inner);
       root.append(bar);
+      root.style.paddingBottom = 'calc(146px + env(safe-area-inset-bottom, 16px))';
     };
 
     const appendGeneralBottomBar = () => {
@@ -474,6 +534,20 @@
             : 'Choose a section, then a category. Check items one at a time (Step-by-step) or use Quick list.'
         )
       );
+
+      const newOrderCard = el('div', 'ord-new-order-banner');
+      const bTxt = el('div', 'ord-new-order-banner-txt');
+      bTxt.append(
+        el('b', '', ar ? '✨ بدء دورة طلبية جديدة' : '✨ Start Fresh Order Cycle'),
+        el('p', '', ar ? 'تصفير كميات الطلبية السابقة بضغطة واحدة دون الحاجة لمسح كل صنف يدويًا.' : 'Reset all previous quantities with one click instead of erasing items one-by-one.')
+      );
+      const bBtn = el('button', 'btn primary ord-banner-act-btn', ar ? '+ طلبية جديدة' : '+ New Order');
+      bBtn.type = 'button';
+      bBtn.addEventListener('click', () => {
+        promptStartNewOrder(() => renderOrdersView(root));
+      });
+      newOrderCard.append(bTxt, bBtn);
+      root.append(newOrderCard);
 
       if (ordDB.order.lastItem && ordById(ordDB.order.lastItem)) {
         const lastIt = ordById(ordDB.order.lastItem);
@@ -693,7 +767,7 @@
 
       // ---- QUICK LIST MODE (viewMode === 'list') ----
       const toolbar = el('div', 'ord-toolbar');
-      const qSearch = el('input', 'in');
+      const qSearch = el('input', 'in ord-search-in');
       qSearch.type = 'search';
       qSearch.placeholder = ar ? 'ابحث في القائمة السريعة...' : 'Search quick list…';
       qSearch.value = ordQuickSearch;
@@ -710,14 +784,28 @@
       const reqToggle = el(
         'button',
         'btn' + (ordQuickOnlyRequested ? ' primary' : ''),
-        ar ? 'المطلوب فقط' : 'Requested only'
+        ar
+          ? `المطلوب فقط (${allCatItems.filter((i) => ordLine(i.id).qty > 0).length})`
+          : `Requested (${allCatItems.filter((i) => ordLine(i.id).qty > 0).length})`
       );
       reqToggle.type = 'button';
       reqToggle.addEventListener('click', () => {
         ordQuickOnlyRequested = !ordQuickOnlyRequested;
         renderOrdersView(root);
       });
-      toolbar.append(qSearch, reqToggle);
+
+      const newOrderBtn = el(
+        'button',
+        'ord-new-order-btn',
+        ar ? '✨ طلبية جديدة' : '✨ New order'
+      );
+      newOrderBtn.type = 'button';
+      newOrderBtn.title = ar ? 'تصفير كميات الطلبية والبدء بطلبية جديدة فارغة' : 'Reset quantities & start fresh order';
+      newOrderBtn.addEventListener('click', () => {
+        promptStartNewOrder(() => renderOrdersView(root));
+      });
+
+      toolbar.append(qSearch, reqToggle, newOrderBtn);
       root.append(toolbar);
 
       const q = ordQuickSearch.trim().toLowerCase();
@@ -734,125 +822,111 @@
       );
       root.append(statsLine);
 
-      visible.forEach((i) => {
-        const l = ordLine(i.id);
-        const qCard = el('article', 'ord-quick-card' + (l.qty > 0 ? ' has-order' : ''));
+      if (!visible.length) {
+        const emp = el('div', 'ord-empty-state', ar ? 'لا توجد أصناف مطابقة.' : 'No matching items.');
+        root.append(emp);
+      } else {
+        const listContainer = el('div', 'ord-quick-list-container');
+        visible.forEach((i) => {
+          const l = ordLine(i.id);
+          const row = el('div', 'ord-quick-item-row' + (l.qty > 0 ? ' has-qty' : ''));
+          row.dataset.itemId = i.id;
 
-        const top = el('div', 'ord-quick-top');
-        const titleBox = el('div', '');
-        titleBox.append(
-          el('b', '', ar && i.ar ? `${i.ar} · ${i.name}` : i.name),
-          el('small', '', (i.packSize || c.name) + (i.ambiguous ? ' · ' + i.id : ''))
-        );
-        const stateText =
-          l.qty > 0
-            ? ar
-              ? 'مطلوب'
-              : 'Requested'
-            : ordDB.order.skipped[i.id]
-            ? ar
-              ? 'مُتخطى'
-              : 'Skipped'
-            : ordDB.order.visited[i.id]
-            ? ar
-              ? 'تم فحصه'
-              : 'Checked'
-            : ar
-            ? 'غير مفحوص'
-            : 'Not checked';
-        const statePill = el('span', 'ord-state-pill', stateText);
-        top.append(titleBox, statePill);
-        qCard.append(top);
+          // 1. Edit squircle button (Left)
+          const editBtn = el('button', 'ord-quick-edit-btn');
+          editBtn.type = 'button';
+          editBtn.setAttribute('aria-label', ar ? `تعديل صنف ${i.name}` : `Edit ${i.name}`);
+          editBtn.innerHTML = `
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+            </svg>
+          `;
+          editBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            ordGo('item/' + i.id);
+          });
 
-        const ctrlRow = el('div', 'ord-qty-row');
-        const stepper = el('div', 'ord-stepper-lg');
-        const minus = el('button', '', '−');
-        minus.type = 'button';
-        const qtyIn = el('input', '');
-        qtyIn.type = 'number';
-        qtyIn.min = '0';
-        qtyIn.max = '9999';
-        qtyIn.step = ['kg', 'liter'].includes(l.unit || i.unit) ? '0.25' : '1';
-        qtyIn.value = String(l.qty);
+          // 2. Middle item info (Name + Subtitle: 0 / 8* · bottles)
+          const info = el('div', 'ord-quick-item-info');
+          info.addEventListener('click', () => ordGo('item/' + i.id));
 
-        const denom = el('span', 'ord-denom');
-        denom.append('/ ', el('b', '', ordStockDenominator(i)));
+          const nameEl = el('div', 'ord-quick-item-title', i.name);
+          if (ar && i.ar && i.ar !== i.name) {
+            nameEl.title = i.ar;
+          }
 
-        const plus = el('button', '', '+');
-        plus.type = 'button';
-        stepper.append(minus, qtyIn, denom, plus);
+          const subEl = el('div', 'ord-quick-qty-sub');
+          const unitPlural = ORD_PLURALS[l.unit || i.unit] || (l.unit || i.unit || 'bottles');
+          const denom = ordStockDenominator(i);
 
-        const unitSel = el('select', 'in ord-unit-sel');
-        Object.entries(ORD_UNITS).forEach(([uk, uLabel]) => {
-          const opt = el('option', '', uLabel);
-          opt.value = uk;
-          opt.selected = uk === (l.unit || i.unit || 'bottle');
-          unitSel.append(opt);
-        });
+          const qtyB = el('b', 'ord-quick-qty-num', String(l.qty));
+          const restSpan = el('span', '', ` / ${denom} · ${unitPlural}`);
+          subEl.append(qtyB, restSpan);
+          info.append(nameEl, subEl);
 
-        const updateQuickLine = (nextQty, nextUnit, nextNote) => {
-          const cleanQ = Math.max(0, Math.min(9999, Math.round((Number(nextQty) || 0) * 100) / 100));
-          ordDB.order.lines[i.id] = {
-            qty: cleanQ,
-            unit: nextUnit || l.unit || i.unit || 'bottle',
-            note: nextNote !== undefined ? nextNote : l.note || '',
-            stock: l.stock || '',
+          // 3. Right stepper (- and +)
+          const stepper = el('div', 'ord-quick-stepper');
+          const minus = el('button', 'ord-stepper-btn ord-btn-minus', '−');
+          minus.type = 'button';
+          minus.setAttribute('aria-label', ar ? `إنقاص ${i.name}` : `Decrease ${i.name}`);
+
+          const plus = el('button', 'ord-stepper-btn ord-btn-plus', '+');
+          plus.type = 'button';
+          plus.setAttribute('aria-label', ar ? `زيادة ${i.name}` : `Increase ${i.name}`);
+
+          const step = ['kg', 'liter'].includes(l.unit || i.unit) ? 0.25 : 1;
+
+          const applyQuickQty = (nextQty) => {
+            const cleanQ = Math.max(0, Math.min(9999, Math.round((Number(nextQty) || 0) * 100) / 100));
+            ordDB.order.lines[i.id] = {
+              qty: cleanQ,
+              unit: l.unit || i.unit || 'bottle',
+              note: l.note || '',
+              stock: l.stock || '',
+            };
+            if (cleanQ > 0) {
+              ordDB.order.visited[i.id] = true;
+              delete ordDB.order.skipped[i.id];
+            }
+            saveOrdersDB();
+
+            // Direct DOM update
+            l.qty = cleanQ;
+            qtyB.textContent = String(cleanQ);
+            if (cleanQ > 0) {
+              row.classList.add('has-qty');
+            } else {
+              row.classList.remove('has-qty');
+              if (ordQuickOnlyRequested) {
+                row.remove();
+              }
+            }
+            updateOrderBadge();
+            if (FOH.haptics && FOH.haptics.impact) {
+              FOH.haptics.impact('light');
+            }
           };
-          ordDB.order.visited[i.id] = true;
-          delete ordDB.order.skipped[i.id];
-          saveOrdersDB();
-        };
 
-        minus.addEventListener('click', () => {
-          const step = ['kg', 'liter'].includes(unitSel.value) ? 0.25 : 1;
-          updateQuickLine((Number(qtyIn.value) || 0) - step, unitSel.value);
-          renderOrdersView(root);
+          minus.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const current = Number(l.qty) || 0;
+            if (current > 0) {
+              applyQuickQty(current - step);
+            }
+          });
+
+          plus.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const current = Number(l.qty) || 0;
+            applyQuickQty(current + step);
+          });
+
+          stepper.append(minus, plus);
+          row.append(editBtn, info, stepper);
+          listContainer.append(row);
         });
-        plus.addEventListener('click', () => {
-          const step = ['kg', 'liter'].includes(unitSel.value) ? 0.25 : 1;
-          updateQuickLine((Number(qtyIn.value) || 0) + step, unitSel.value);
-          renderOrdersView(root);
-        });
-        qtyIn.addEventListener('change', () => {
-          updateQuickLine(qtyIn.value, unitSel.value);
-          renderOrdersView(root);
-        });
-        unitSel.addEventListener('change', () => {
-          updateQuickLine(qtyIn.value, unitSel.value);
-          renderOrdersView(root);
-        });
-
-        ctrlRow.append(stepper, unitSel);
-        qCard.append(ctrlRow);
-
-        const subActions = el('div', '');
-        subActions.style.display = 'flex';
-        subActions.style.justifyContent = 'space-between';
-        subActions.style.alignItems = 'center';
-        subActions.style.marginTop = '8px';
-        subActions.style.fontSize = '0.75rem';
-
-        const stockBtn = el('button', '', `📦 ${ar ? 'تعديل المخزون' : 'Edit stock'} (${ordStockLabel(i)})`);
-        stockBtn.type = 'button';
-        stockBtn.style.border = '0';
-        stockBtn.style.background = 'transparent';
-        stockBtn.style.color = 'var(--accent)';
-        stockBtn.style.fontWeight = '700';
-        stockBtn.style.cursor = 'pointer';
-        stockBtn.addEventListener('click', () => promptEditStock(i));
-
-        const openItemBtn = el('button', '', ar ? 'فتح بطاقة الصنف ↗' : 'Open item card ↗');
-        openItemBtn.type = 'button';
-        openItemBtn.style.border = '0';
-        openItemBtn.style.background = 'transparent';
-        openItemBtn.style.color = 'var(--ink2)';
-        openItemBtn.style.cursor = 'pointer';
-        openItemBtn.addEventListener('click', () => ordGo('item/' + i.id));
-
-        subActions.append(stockBtn, openItemBtn);
-        qCard.append(subActions);
-        root.append(qCard);
-      });
+        root.append(listContainer);
+      }
 
       appendBottomBar((inner) => {
         const revBtn = el('button', 'btn', ar ? 'مراجعة الطلبية' : 'Review order');
@@ -1228,77 +1302,26 @@
 
     const metaCard = el('section', 'card');
     metaCard.style.padding = '14px';
-    metaCard.append(el('h4', '', ar ? '📋 تفاصيل الطلبية (Order Details)' : '📋 Order details'));
+    metaCard.append(el('h4', '', ar ? '📋 تفاصيل الطلبية' : '📋 Order details'));
     const m = ordDB.order.meta;
-    if (!m.requester) m.requester = (session && session.displayName) || S.me.name || '';
-    if (!m.orderDate) m.orderDate = S.date;
+    const requester = (session && session.displayName) || S.me.name || m.requester || 'Staff';
+    const orderDate = S.date || FOH.time.todayISO();
+    m.requester = requester;
+    m.orderDate = orderDate;
+    m.destination = 'Store';
+    m.priority = 'Normal';
 
-    const row1 = el('div', 'two');
-    const reqLbl = el('label', '', ar ? 'اسم المُعدّ (Prepared by)' : 'Prepared by');
-    const reqIn = el('input', 'in');
-    reqIn.value = m.requester;
-    reqIn.addEventListener('input', () => {
-      m.requester = reqIn.value;
-      saveOrdersDB();
-    });
-    reqLbl.append(reqIn);
+    // Automatic details banner (Requester, Date, Warehouse are 100% automated)
+    const autoBanner = el('div', 'ord-meta-auto-banner');
+    autoBanner.append(
+      el('div', 'ord-meta-pill', `👤 ${requester}`),
+      el('div', 'ord-meta-pill', `📅 ${orderDate}`),
+      el('div', 'ord-meta-pill', `📦 ${ar ? 'المستودع الرئيسي' : 'Store Warehouse'}`)
+    );
 
-    const dtLbl = el('label', '', ar ? 'تاريخ الطلبية' : 'Order date');
-    const dtIn = el('input', 'in');
-    dtIn.type = 'date';
-    dtIn.value = m.orderDate;
-    dtIn.addEventListener('change', () => {
-      m.orderDate = dtIn.value;
-      saveOrdersDB();
-    });
-    dtLbl.append(dtIn);
-    row1.append(reqLbl, dtLbl);
-
-    const row2 = el('div', 'two');
-    row2.style.marginTop = '8px';
-    const destLbl = el('label', '', ar ? 'إرسال إلى (Send to)' : 'Send to');
-    const destSel = el('select', 'in');
-    [
-      { value: 'Store', label: ar ? '📦 المستودع (Store)' : '📦 Store Warehouse' },
-      { value: 'Purchasing', label: ar ? '🛒 المشتريات (Purchasing)' : '🛒 Purchasing' },
-      { value: 'Manager', label: ar ? '👑 الإدارة (Manager)' : '👑 Manager' },
-    ].forEach((it) => {
-      const o = el('option', '', it.label);
-      o.value = it.value;
-      o.selected = m.destination === it.value;
-      destSel.append(o);
-    });
-    destSel.addEventListener('change', () => {
-      m.destination = destSel.value;
-      saveOrdersDB();
-    });
-    destLbl.append(destSel);
-
-    const prioLbl = el('label', '', ar ? 'الأولوية (Priority)' : 'Priority');
-    const prioSel = el('select', 'in');
-    [
-      { value: 'Normal', label: ar ? '🟢 عادي (Normal)' : '🟢 Normal' },
-      { value: 'Urgent', label: ar ? '🔴 عاجل (Urgent)' : '🔴 Urgent' },
-    ].forEach((it) => {
-      const o = el('option', '', it.label);
-      o.value = it.value;
-      o.selected = m.priority === it.value;
-      prioSel.append(o);
-    });
-    if (FOH.modalPicker && FOH.modalPicker.enhanceSelect) {
-      FOH.modalPicker.enhanceSelect(destSel, { title: ar ? 'وجهة الطلبية' : 'Order Destination', icon: '📦' });
-      FOH.modalPicker.enhanceSelect(prioSel, { title: ar ? 'أولوية الطلبية' : 'Order Priority', icon: '⚡' });
-    }
-    prioSel.addEventListener('change', () => {
-      m.priority = prioSel.value;
-      saveOrdersDB();
-    });
-    prioLbl.append(prioSel);
-    row2.append(destLbl, prioLbl);
-
-    const noteLbl = el('label', '', ar ? 'ملاحظة عامة على الطلبية' : 'General order note');
+    const noteLbl = el('label', '', ar ? 'ملاحظة عامة على الطلبية (اختياري)' : 'General order note (optional)');
     noteLbl.style.display = 'block';
-    noteLbl.style.marginTop = '8px';
+    noteLbl.style.marginTop = '10px';
     const noteIn = el('input', 'in');
     noteIn.value = m.orderNote || '';
     noteIn.placeholder = ar ? 'مثال: يرجى التجهيز قبل الساعة 5 مساءً...' : 'e.g. Please prepare before 5 pm';
@@ -1307,7 +1330,7 @@
       saveOrdersDB();
     });
     noteLbl.append(noteIn);
-    metaCard.append(row1, row2, noteLbl);
+    metaCard.append(autoBanner, noteLbl);
     root.append(metaCard);
 
     if (!selectedList.length) {
@@ -1473,6 +1496,8 @@
     updateOrderBadge,
     renderOrdersView,
     buildOrdWhatsAppText,
+    promptStartNewOrder,
+    go: ordGo,
     ORD_SEED,
   };
 
