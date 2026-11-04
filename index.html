@@ -6796,6 +6796,7 @@ body.dark .item-title-row .t {
       const parsed = JSON.parse(raw);
       return parsed !== undefined && parsed !== null ? parsed : resolveFallback();
     } catch {
+      /* Safe JSON parse fallback */
       return resolveFallback();
     }
   }
@@ -6830,16 +6831,36 @@ body.dark .item-title-row .t {
     return '#';
   }
 
+
+  /**
+   * Debounces a function call by delay ms to eliminate storage churn & layout thrashing.
+   * @param {Function} fn
+   * @param {number} delay
+   * @returns {Function}
+   */
+  function debounce(fn, delay = 150) {
+    let timer = null;
+    return function (...args) {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        timer = null;
+        fn.apply(this, args);
+      }, delay);
+    };
+  }
+
   FOH.security = {
     escapeHtml,
     safeJsonParse,
     sanitizeText,
     sanitizeUrl,
+    debounce,
   };
 
   // Expose directly on FOH for fast zero-overhead access
   FOH.escapeHtml = escapeHtml;
   FOH.safeJsonParse = safeJsonParse;
+  FOH.debounce = debounce;
 })(window.FOH = window.FOH || {});
 
 </script>
@@ -7022,6 +7043,7 @@ body.dark .item-title-row .t {
   try {
     if (localStorage.getItem(LANG_KEY) === 'ar') lang = 'ar';
   } catch (err) {
+    /* Storage access restricted; default to en */
     lang = 'en';
   }
 
@@ -7858,6 +7880,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       const raw = localStorage.getItem(key);
       return raw ? JSON.parse(raw) : null;
     } catch (err) {
+      /* Corrupt JSON or storage unavailable; return null */
       return null;
     }
   }
@@ -7867,6 +7890,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       localStorage.setItem(key, JSON.stringify(value));
       return true;
     } catch (err) {
+      /* Storage quota exceeded or disabled; return false */
       return false;
     }
   }
@@ -8510,7 +8534,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     const headRow = el('div', 'modal-picker-head');
     const titleBox = el('div', 'modal-picker-title-box');
     const h3 = el('h3', 'modal-picker-title');
-    h3.innerHTML = (icon ? `<span class="picker-head-icon">${icon}</span> ` : '') + (title || (ar ? 'اختر من القائمة' : 'Select an Option'));
+    h3.innerHTML = (icon ? `<span class="picker-head-icon">${FOH.escapeHtml(icon)}</span> ` : '') + FOH.escapeHtml(title || (ar ? 'اختر من القائمة' : 'Select an Option'));
     titleBox.append(h3);
     if (subtitle) {
       const sub = el('p', 'modal-picker-sub', subtitle);
@@ -8876,6 +8900,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     try {
       raw = JSON.parse(localStorage.getItem(KEY) || 'null');
     } catch (err) {
+      /* Corrupt inventory state fallback */
       raw = null;
     }
     return normalize(raw, tpl);
@@ -8887,6 +8912,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       localStorage.setItem(KEY, JSON.stringify(inv));
       return true;
     } catch (err) {
+      /* Storage quota exceeded fallback */
       return false;
     }
   }
@@ -13029,6 +13055,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
         const parsed = JSON.parse(raw);
         tpl = FOH.store.upgrade(parsed.template || parsed);
       } catch (err) {
+        /* Corrupt template JSON fallback */
         tpl = null;
       }
       if (!tpl) return alert(t('badFile'));
@@ -15792,7 +15819,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       const assignedPerson = sec.assignedUsername ? (staffNameMap[sec.assignedUsername] || sec.assignedUsername) : '';
       const cleanPerson = assignedPerson.replace(/\s*\([^)]*\)/g, '').trim();
 
-      pill.innerHTML = '<span>🎯</span> <b>' + roleLabel + '</b>' +
+      pill.innerHTML = '<span>🎯</span> <b>' + FOH.escapeHtml(roleLabel) + '</b>' +
         (cleanPerson ? '<span style="opacity:0.85;margin-inline-start:4px;">· 👤 ' + cleanPerson + '</span>' : '');
     }
 
@@ -19581,914 +19608,917 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
 <script>
 // --- js/domains/orders/orders-view.js ---
-// foh-opening/js/domains/orders/orders-view.js
-// Warehouse & Bar Ordering Workflow (Item Selection, Stock Tally & WhatsApp Dispatch)
-(function (FOH) {
-  'use strict';
-
-  const $ = (id) => document.getElementById(id);
-  const S = () => FOH.state;
-  const store = () => FOH.ordersStore;
-  const dispatch = () => FOH.ordersDispatch;
-  const { el } = FOH.view;
-
-  let ordRoute = 'home'; // 'home' | 'types/<group>' | 'products/<cat>' | 'item/<id>' | 'complete/<cat>' | 'review'
-  let ordForceAllGroups = false;
-  let ordProductSearch = '';
-  let ordQuickSearch = '';
-  let ordQuickOnlyRequested = false;
-  let ordReturnToReview = false;
-  let ordIncludeStockInMsg = false;
-
-  const isAr = () => (FOH.i18n ? FOH.i18n.lang === 'ar' : false);
-  const getSession = () => ((FOH.auth && FOH.auth.getSession) ? FOH.auth.getSession() : (FOH.sessionAuth ? FOH.sessionAuth.getSession() : null));
-
-  function updateOrderBadge() {
-    const count = store().ordSelectedItems().length;
-    const badge = $('badgeOrders');
-    if (badge) {
-      badge.textContent = String(count);
-      badge.hidden = count === 0;
-    }
-    const lbl = $('ordersTabLbl');
-    if (lbl && FOH.i18n && FOH.i18n.t) lbl.textContent = FOH.i18n.t('ordersTab');
-  }
-
-  function ordGo(nextRoute) {
-    ordRoute = nextRoute || 'home';
-    const root = $('ordersView');
-    if (root) {
-      renderOrdersView(root);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  }
-
-  function buildOrdBreadcrumbs(groupKey, catId, tailLabel) {
-    const ar = isAr();
-    const nav = el('nav', 'ord-crumbs');
-    const homeBtn = el('button', '', ar ? 'الأقسام (Sections)' : 'Sections');
-    homeBtn.type = 'button';
-    homeBtn.addEventListener('click', () => ordGo('home'));
-    nav.append(homeBtn);
-
-    const db = store().getDB();
-    if (groupKey && db.catalog.groups[groupKey]) {
-      nav.append(el('span', '', '›'));
-      const g = db.catalog.groups[groupKey];
-      const gBtn = el('button', '', ar ? g.nameAr || g.name : g.name);
-      gBtn.type = 'button';
-      gBtn.addEventListener('click', () => ordGo('types/' + groupKey));
-      nav.append(gBtn);
-    }
-    if (catId && store().ordCat(catId)) {
-      nav.append(el('span', '', '›'));
-      const c = store().ordCat(catId);
-      const cBtn = el('button', '', ar ? c.nameAr || c.name : c.name);
-      cBtn.type = 'button';
-      cBtn.addEventListener('click', () => ordGo('products/' + catId));
-      nav.append(cBtn);
-    }
-    if (tailLabel) {
-      nav.append(el('span', '', '›'), el('span', '', tailLabel));
-    }
-    return nav;
-  }
-
-  function buildOrdViewSwitch(catId, activeMode) {
-    const sw = el('div', 'ord-view-switch');
-    const stepBtn = el('button', activeMode === 'step' ? 'on' : '', isAr() ? '▣ صنفًا بصنف (Step-by-step)' : '▣ Step-by-step');
-    stepBtn.type = 'button';
-    stepBtn.addEventListener('click', () => {
-      const db = store().getDB();
-      db.preferences.viewMode = 'step';
-      store().saveOrdersDB();
-      const pending = store().ordPendingItem(catId) || store().ordCatItems(catId)[0];
-      ordGo(pending ? 'item/' + pending.id : 'products/' + catId);
-    });
-
-    const listBtn = el('button', activeMode === 'list' ? 'on' : '', isAr() ? '☷ القائمة السريعة (Quick list)' : '☷ Quick list');
-    listBtn.type = 'button';
-    listBtn.addEventListener('click', () => {
-      const db = store().getDB();
-      db.preferences.viewMode = 'list';
-      store().saveOrdersDB();
-      ordGo('products/' + catId);
-    });
-
-    sw.append(stepBtn, listBtn);
-    return sw;
-  }
-
-  function appendBottomBar(root, buildFn) {
-    const bar = el('nav', 'ord-bottom-bar');
-    const inner = el('div', 'ord-bottom-inner');
-    buildFn(inner);
-    bar.append(inner);
-    root.append(bar);
-    root.style.paddingBottom = 'calc(146px + env(safe-area-inset-bottom, 16px))';
-  }
-
-  function appendGeneralBottomBar(root) {
-    const selectedList = store().ordSelectedItems();
-    appendBottomBar(root, (inner) => {
-      const info = el('div', '');
-      info.style.minWidth = '110px';
-      info.append(
-        el('strong', '', String(selectedList.length) + ' '),
-        el('small', '', isAr() ? 'أصناف مختارة' : 'selected')
-      );
-      const revBtn = el('button', 'btn primary', isAr() ? 'مراجعة الطلبية الكاملة ←' : 'Review full order →');
-      revBtn.type = 'button';
-      revBtn.disabled = selectedList.length === 0;
-      revBtn.addEventListener('click', () => ordGo('review'));
-      inner.append(info, revBtn);
-    });
-  }
-
-  function openReceivingModal() {
-    const ar = isAr();
-    const list = store().ordSelectedItems();
-    const overlay = el('div', 'modal-overlay');
-    overlay.style.display = 'flex';
-    overlay.style.zIndex = '9999';
-
-    const dialog = el('div', 'modal-box');
-    dialog.style.maxWidth = '520px';
-    dialog.style.width = '94%';
-    dialog.style.padding = '20px';
-
-    const title = el('h3', '', '📦 ' + (ar ? 'تأكيد استلام طلبية المستودع' : 'Confirm Order Receiving'));
-    const sub = el('p', '', ar ? 'تأكيد وصول الأصناف وتوريدها لمخزون البار والصالة' : 'Verify delivered items & ingest into bar stock');
-    sub.style.color = 'var(--ink2)';
-    sub.style.marginBottom = '12px';
-
-    const itemsBox = el('div', '');
-    itemsBox.style.maxHeight = '280px';
-    itemsBox.style.overflowY = 'auto';
-    itemsBox.style.margin = '10px 0';
-
-    const receivedMap = {};
-    list.forEach((i) => {
-      const line = store().ordLine(i.id);
-      receivedMap[i.id] = line.qty;
-      const row = el('div', 'dayoff-item');
-      row.style.display = 'flex';
-      row.style.justifyContent = 'space-between';
-      row.style.alignItems = 'center';
-      row.style.margin = '6px 0';
-      row.innerHTML = '<div><b>' + i.name + '</b><small style="display:block;color:var(--ink2);">' +
-        (ar ? 'المطلوب: ' : 'Requested: ') + line.qty + ' ' + (line.unit || i.unit) + '</small></div>';
-      const badge = el('span', 'dayoff-badge approved', '✓ ' + line.qty + ' ' + (line.unit || i.unit));
-      row.append(badge);
-      itemsBox.append(row);
-    });
-
-    const btnRow = el('div', '');
-    btnRow.style.display = 'flex';
-    btnRow.style.gap = '8px';
-    btnRow.style.marginTop = '16px';
-
-    const cancelBtn = el('button', 'btn', ar ? 'إلغاء' : 'Cancel');
-    cancelBtn.type = 'button';
-    cancelBtn.style.flex = '1';
-    cancelBtn.addEventListener('click', () => overlay.remove());
-
-    const confirmBtn = el('button', 'btn primary', ar ? '✓ تأكيد الاستلام بالكامل' : '✓ Confirm Full Receipt');
-    confirmBtn.type = 'button';
-    confirmBtn.style.flex = '1.5';
-    confirmBtn.addEventListener('click', () => {
-      store().confirmOrderReceiving({
-        receivedLines: receivedMap,
-        receiverName: (getSession() && getSession().displayName) || S().me.name || 'Staff',
-      });
-      overlay.remove();
-      if (FOH.edit && FOH.edit.toast) {
-        FOH.edit.toast(ar ? 'تم تأكيد استلام الطلبية والتوريد بنجاح ✓' : 'Order received & archived ✓');
-      }
-      ordGo('home');
-    });
-
-    btnRow.append(cancelBtn, confirmBtn);
-    dialog.append(title, sub, itemsBox, btnRow);
-    overlay.append(dialog);
-    document.body.append(overlay);
-  }
-
-  function renderReceivingBanner(ar) {
-    const banner = el('div', 'ord-receiving-banner');
-    banner.style.background = 'linear-gradient(135deg, rgba(245, 158, 11, 0.16), rgba(217, 119, 6, 0.24))';
-    banner.style.border = '1px solid rgba(245, 158, 11, 0.4)';
-    banner.style.borderRadius = '12px';
-    banner.style.padding = '12px 16px';
-    banner.style.marginBottom = '14px';
-    banner.style.display = 'flex';
-    banner.style.justifyContent = 'space-between';
-    banner.style.alignItems = 'center';
-    banner.style.flexWrap = 'wrap';
-    banner.style.gap = '10px';
-
-    const info = el('div', '');
-    info.innerHTML = '<strong>📦 ' + (ar ? 'طلبية المستودع قيد التوريد (Dispatched)' : 'Warehouse Delivery Dispatched') + '</strong>' +
-      '<small style="display:block;color:var(--ink2);">' + (ar ? 'تم إرسال الطلبية بنجاح. اضغط عند وصول البضاعة لتأكيد الاستلام.' : 'Order was sent. Tap when goods arrive to confirm receiving.') + '</small>';
-
-    const recvBtn = el('button', 'btn primary small', ar ? '✓ استلام الطلبية والتوريد' : '✓ Receive & Ingest');
-    recvBtn.type = 'button';
-    recvBtn.addEventListener('click', () => openReceivingModal());
-
-    banner.append(info, recvBtn);
-    return banner;
-  }
-
-  // ---- Page 1: Home Groups ----
-  function renderHomeGroups(root) {
-    const ar = isAr();
-    const db = store().getDB();
-    const selectedList = store().ordSelectedItems();
-
-    const headWrap = el('div', '');
-    const topRow = el('div', '');
-    topRow.style.display = 'flex';
-    topRow.style.alignItems = 'center';
-    topRow.style.justifyContent = 'space-between';
-    topRow.style.gap = '8px';
-    topRow.style.flexWrap = 'wrap';
-
-    const kicker = el('div', 'ord-kicker', '01 / SECTION SELECT · أقسام الطلبيات');
-    const btnGroup = el('div', '');
-    btnGroup.style.display = 'flex';
-    btnGroup.style.gap = '6px';
-    btnGroup.style.alignItems = 'center';
-
-    const startNewBtn = el('button', 'btn small', ar ? '✨ بدء طلبية جديدة' : '✨ Start new order');
-    startNewBtn.type = 'button';
-    startNewBtn.addEventListener('click', () => {
-      store().promptStartNewOrder(() => renderOrdersView(root));
-    });
-    btnGroup.append(startNewBtn);
-
-    const canManage = store().canCurrentUserManageOrders && store().canCurrentUserManageOrders();
-    if (canManage) {
-      const setBtn = el('button', 'btn small', ar ? '⚙️ إعدادات وصلاحيات الأقسام' : '⚙️ Order Settings');
-      setBtn.type = 'button';
-      setBtn.addEventListener('click', () => {
-        if (FOH.ordersSettingsModal && FOH.ordersSettingsModal.open) {
-          FOH.ordersSettingsModal.open();
-        }
-      });
-      btnGroup.append(setBtn);
-    }
-    topRow.append(kicker, btnGroup);
-
-    headWrap.append(
-      topRow,
-      el('h2', 'ord-page-title', ar ? 'طلبيات البار ومستلزمات الصالة' : 'Bar & FOH Warehouse Orders'),
-      el('p', 'ord-page-sub', ar ? 'اختر القسم المطلوب لإعداد طلبيته وتحديد الكميات المطلوبة للمستودع:' : 'Select a section to prepare warehouse requisition:')
-    );
-    if (store().getOrderStatus() === 'DISPATCHED') {
-      headWrap.append(renderReceivingBanner(ar));
-    }
-    root.append(headWrap);
-
-    const secCards = el('div', 'ord-sec-grid');
-    const allowed = store().allowedGroupsForCurrentRole(ordForceAllGroups);
-
-    allowed.forEach(([gid, g]) => {
-      const cats = db.catalog.categories.filter((c) => c.group === gid);
-      const catCount = cats.length;
-      let totalItems = 0;
-      let doneItems = 0;
-      let reqCount = 0;
-
-      cats.forEach((c) => {
-        const cItems = store().ordCatItems(c.id);
-        totalItems += cItems.length;
-        doneItems += store().ordCatDone(c.id);
-        reqCount += cItems.filter((i) => store().ordLine(i.id).qty > 0).length;
-      });
-
-      const btn = el('button', 'ord-sec-card');
-      btn.type = 'button';
-      btn.append(
-        el('div', 'ord-sec-ico', g.icon || '📦'),
-        Object.assign(el('div', 'ord-sec-body'), {
-          innerHTML:
-            '<h3>' + FOH.escapeHtml(ar ? g.nameAr || g.name : g.name) + '</h3>' +
-            '<p>' + FOH.escapeHtml(ar ? g.subAr || g.sub : g.sub) + '</p>' +
-            '<div class="ord-sec-meta"><span>' + catCount + ' ' + (ar ? 'تصنيفات' : 'categories') + ' · ' + totalItems + ' ' + (ar ? 'أصناف' : 'items') + '</span>' +
-            (reqCount > 0 ? '<strong class="ord-req-chip">✓ ' + reqCount + ' ' + (ar ? 'مطلوب' : 'requested') + '</strong>' : '') +
-            '</div>',
-        })
-      );
-      btn.addEventListener('click', () => ordGo('types/' + gid));
-      secCards.append(btn);
-    });
-
-    root.append(secCards);
-    appendGeneralBottomBar(root);
-  }
-
-  // ---- Page 2: Types in Group ----
-  function renderCategoryTypes(root, groupKey) {
-    const ar = isAr();
-    const db = store().getDB();
-    const g = db.catalog.groups[groupKey];
-    if (!g) { ordGo('home'); return; }
-
-    root.append(buildOrdBreadcrumbs(groupKey, null));
-
-    const sess = getSession();
-    const isMgr = !sess || !!(sess.isManager || sess.roleId === 'manager');
-    const roleKey = FOH.roleIdentity ? FOH.roleIdentity.getCurrentSuperRoleKey() : 'staff';
-    const uname = (sess && sess.username) || '';
-    const canEditGroup = store().canUserEditGroup ? store().canUserEditGroup(groupKey, { roleKey, username: uname, isManager: isMgr }) : isMgr;
-
-    const headRow = el('div', '');
-    headRow.style.display = 'flex';
-    headRow.style.alignItems = 'center';
-    headRow.style.justifyContent = 'space-between';
-    headRow.style.gap = '8px';
-    headRow.style.flexWrap = 'wrap';
-
-    const kicker = el('div', 'ord-kicker', '02 / CATEGORY · تصنيفات القسم');
-    headRow.append(kicker);
-
-    if (canEditGroup) {
-      const addCatBtn = el('button', 'btn small primary', ar ? '+ تصنيف جديد' : '+ New Category');
-      addCatBtn.type = 'button';
-      addCatBtn.addEventListener('click', () => {
-        if (FOH.ordersSettingsModal && FOH.ordersSettingsModal.openAddCategoryModal) {
-          FOH.ordersSettingsModal.openAddCategoryModal(groupKey, () => renderOrdersView(root));
-        }
-      });
-      headRow.append(addCatBtn);
-    }
-
-    root.append(
-      headRow,
-      el('h2', 'ord-page-title', ar ? g.nameAr || g.name : g.name),
-      el('p', 'ord-page-sub', ar ? 'اختر تصنيفًا للبدء بفحصه وتحديد الكميات المطلوبة:' : 'Pick a category to check and order items:')
-    );
-
-    const cats = db.catalog.categories.filter((c) => c.group === groupKey);
-    const grid = el('div', 'ord-cat-grid');
-
-    cats.forEach((c) => {
-      const items = store().ordCatItems(c.id);
-      const done = store().ordCatDone(c.id);
-      const skipped = store().ordCatSkipped(c.id);
-      const req = items.filter((i) => store().ordLine(i.id).qty > 0).length;
-      const isComplete = items.length > 0 && done + skipped >= items.length;
-
-      const card = el('button', 'ord-cat-card' + (isComplete ? ' complete' : ''));
-      card.type = 'button';
-      card.append(
-        el('h4', '', ar ? c.nameAr || c.name : c.name),
-        el('div', 'ord-cat-stat', `${items.length} ${ar ? 'أصناف' : 'items'} · ${done} ${ar ? 'تم فحصها' : 'done'}`),
-        req > 0 ? el('span', 'ord-req-badge', `+${req} ${ar ? 'مطلوب' : 'picked'}`) : el('span', 'ord-req-badge zero', isComplete ? '✓ ' + (ar ? 'مكتمل' : 'done') : '—')
-      );
-      card.addEventListener('click', () => ordGo('products/' + c.id));
-      grid.append(card);
-    });
-
-    root.append(grid);
-    appendGeneralBottomBar(root);
-  }
-
-  // ---- Page 3: Products in Category ----
-  function renderCategoryProducts(root, catId) {
-    const ar = isAr();
-    const db = store().getDB();
-    const c = store().ordCat(catId);
-    if (!c) { ordGo('home'); return; }
-
-    const viewMode = (db.preferences && db.preferences.viewMode) || 'step';
-    root.append(buildOrdBreadcrumbs(c.group, c.id));
-    root.append(
-      el('div', 'ord-kicker', '03 / PRODUCTS · قائمة الأصناف'),
-      el('h2', 'ord-page-title', ar ? c.nameAr || c.name : c.name),
-      buildOrdViewSwitch(c.id, viewMode)
-    );
-
-    const items = store().ordCatItems(c.id);
-    if (viewMode === 'step') {
-      renderStepModeList(root, c, items, ar);
-    } else {
-      renderQuickListMode(root, c, items, ar);
-    }
-  }
-
-  function renderStepModeList(root, c, opts = {}) {
-    const isLegacy = Array.isArray(opts);
-    const items = isLegacy ? opts : ((opts && opts.items) || store().ordCatItems(c.id));
-    const ar = isLegacy ? !!arguments[3] : (opts && typeof opts.ar === 'boolean' ? opts.ar : isAr());
-    const db = store().getDB();
-    const listWrap = el('div', 'ord-step-list');
-    const sess = getSession();
-    const isMgr = !sess || !!(sess.isManager || sess.roleId === 'manager');
-    const roleKey = FOH.roleIdentity ? FOH.roleIdentity.getCurrentSuperRoleKey() : 'staff';
-    const uname = (sess && sess.username) || '';
-    const canEditGroup = store().canUserEditGroup ? store().canUserEditGroup(c.group, { roleKey, username: uname, isManager: isMgr }) : isMgr;
-
-    if (canEditGroup) {
-      const toolRow = el('div', '');
-      toolRow.style.display = 'flex';
-      toolRow.style.justifyContent = 'flex-end';
-      toolRow.style.marginBottom = '10px';
-      const addItemBtn = el('button', 'btn small primary', ar ? '+ إضافة صنف جديد' : '+ Add New Item');
-      addItemBtn.type = 'button';
-      addItemBtn.addEventListener('click', () => {
-        if (FOH.ordersSettingsModal && FOH.ordersSettingsModal.openAddItemModal) {
-          FOH.ordersSettingsModal.openAddItemModal(c.id, () => renderOrdersView(root));
-        }
-      });
-      toolRow.append(addItemBtn);
-      listWrap.append(toolRow);
-    }
-
-    items.forEach((i, idx) => {
-      const line = store().ordLine(i.id);
-      const isVisited = !!db.order.visited[i.id];
-      const isSkipped = !!db.order.skipped[i.id];
-
-      const row = el('button', 'ord-step-row' + (isVisited ? ' visited' : isSkipped ? ' skipped' : ''));
-      row.type = 'button';
-      row.append(
-        el('span', 'ord-step-num', String(idx + 1)),
-        Object.assign(el('div', 'ord-step-info'), {
-          innerHTML: '<strong>' + FOH.escapeHtml(ar && i.ar ? i.ar + ' · ' + i.name : i.name) + '</strong>' +
-            '<small>' + FOH.escapeHtml(ar ? 'المخزون المسجّل: ' : 'Recorded stock: ') + store().ordStockLabel(i) + '</small>',
-        }),
-        el('span', 'ord-step-status', line.qty > 0 ? `+${line.qty} ${store().ordUnitText(line.qty, line.unit || i.unit)}` : isSkipped ? (ar ? 'تخطي' : 'skip') : isVisited ? '✓' : '—')
-      );
-      row.addEventListener('click', () => ordGo('item/' + i.id));
-      listWrap.append(row);
-    });
-    root.append(listWrap);
-    appendGeneralBottomBar(root);
-  }
-
-  function createQuickItemCard(i, db, ar) {
-    const line = store().ordLine(i.id);
-    const card = el('div', 'ord-quick-card' + (line.qty > 0 ? ' ordered' : ''));
-
-    const head = el('div', 'ord-quick-head');
-    head.append(
-      Object.assign(el('div', ''), {
-        innerHTML: '<b>' + FOH.escapeHtml(ar && i.ar ? i.ar + ' · ' + i.name : i.name) + '</b>' +
-          '<small style="display:block;color:var(--ink2);">' + (ar ? 'المخزون: ' : 'Stock: ') + store().ordStockLabel(i) + '</small>',
-      })
-    );
-
-    const stepper = el('div', 'ord-stepper-sm');
-    const minus = el('button', '', '−');
-    minus.type = 'button';
-    const inVal = el('input', '');
-    inVal.type = 'number';
-    inVal.min = '0';
-    inVal.max = '9999';
-    inVal.value = String(line.qty || 0);
-
-    const plus = el('button', '', '+');
-    plus.type = 'button';
-
-    const updateQty = (delta, direct) => {
-      const cur = direct !== undefined ? Math.max(0, direct) : Math.max(0, Number(inVal.value || 0) + delta);
-      inVal.value = String(cur);
-      db.order.lines[i.id] = { ...line, qty: cur };
-      db.order.visited[i.id] = true;
-      store().saveOrdersDB();
-      card.classList.toggle('ordered', cur > 0);
-    };
-
-    minus.addEventListener('click', () => updateQty(-1));
-    plus.addEventListener('click', () => updateQty(1));
-    inVal.addEventListener('change', () => updateQty(0, Number(inVal.value || 0)));
-
-    stepper.append(minus, inVal, plus);
-    card.append(head, stepper);
-    return card;
-  }
-
-  function renderQuickListMode(root, c, opts = {}) {
-    const isLegacy = Array.isArray(opts);
-    const items = isLegacy ? opts : ((opts && opts.items) || store().ordCatItems(c.id));
-    const ar = isLegacy ? !!arguments[3] : (opts && typeof opts.ar === 'boolean' ? opts.ar : isAr());
-    const db = store().getDB();
-
-    const toolbar = el('div', 'ord-toolbar');
-    const qSearch = el('input', 'in ord-search-in');
-    qSearch.placeholder = ar ? '🔍 تصفية في هذا التصنيف...' : '🔍 Search in this category...';
-    qSearch.value = ordQuickSearch;
-    qSearch.addEventListener('input', () => {
-      ordQuickSearch = qSearch.value;
-      renderOrdersView(root);
-    });
-
-    const skipRemBtn = el('button', 'btn small', ar ? '⏭ تخطي المتبقي' : '⏭ Skip rest');
-    skipRemBtn.type = 'button';
-    skipRemBtn.addEventListener('click', () => {
-      store().ordSkipRemaining(c.id);
-      store().saveOrdersDB();
-      ordGo('complete/' + c.id);
-    });
-
-    const sess = getSession();
-    const isMgr = !sess || !!(sess.isManager || sess.roleId === 'manager');
-    const roleKey = FOH.roleIdentity ? FOH.roleIdentity.getCurrentSuperRoleKey() : 'staff';
-    const uname = (sess && sess.username) || '';
-    const canEditGroup = store().canUserEditGroup ? store().canUserEditGroup(c.group, { roleKey, username: uname, isManager: isMgr }) : isMgr;
-
-    toolbar.append(qSearch, skipRemBtn);
-    if (canEditGroup) {
-      const addItemBtn = el('button', 'btn small primary', ar ? '+ صنف جديد' : '+ New Item');
-      addItemBtn.type = 'button';
-      addItemBtn.addEventListener('click', () => {
-        if (FOH.ordersSettingsModal && FOH.ordersSettingsModal.openAddItemModal) {
-          FOH.ordersSettingsModal.openAddItemModal(c.id, () => renderOrdersView(root));
-        }
-      });
-      toolbar.append(addItemBtn);
-    }
-    root.append(toolbar);
-
-    const qFilter = (ordQuickSearch || '').toLowerCase().trim();
-    const visible = items.filter((i) => !qFilter || (i.name + ' ' + (i.ar || '')).toLowerCase().includes(qFilter));
-
-    const grid = el('div', 'ord-quick-grid');
-    visible.forEach((i) => grid.append(createQuickItemCard(i, db, ar)));
-    root.append(grid);
-    appendGeneralBottomBar(root);
-  }
-
-  // ---- Page 4: Single Item Stepper Card ----
-  function buildItemStepperControls(card, i, opts = {}) {
-    const isLegacy = typeof opts === 'object' && ('qty' in opts);
-    const line = isLegacy ? opts : ((opts && opts.line) || store().ordLine(i.id));
-    const root = isLegacy ? arguments[3] : (opts && opts.root);
-    const ar = isAr();
-    const db = store().getDB();
-    const qtyRow = el('div', 'ord-qty-row');
-    const stepper = el('div', 'ord-stepper-lg');
-    const minus = el('button', '', '−');
-    minus.type = 'button';
-    const qtyIn = el('input', '');
-    qtyIn.type = 'number';
-    qtyIn.min = '0';
-    qtyIn.max = '9999';
-    qtyIn.value = String(line.qty);
-
-    const denom = el('span', 'ord-denom');
-    denom.append('/ ', el('b', '', store().ordStockDenominator(i)));
-    const plus = el('button', '', '+');
-    plus.type = 'button';
-    stepper.append(minus, qtyIn, denom, plus);
-
-    const unitSel = el('select', 'in ord-unit-sel');
-    const units = (FOH.ordersCatalog && FOH.ordersCatalog.ORD_UNITS) || {};
-    Object.entries(units).forEach(([uk, uLabel]) => {
-      const opt = el('option', '', uLabel);
-      opt.value = uk;
-      opt.selected = uk === (line.unit || i.unit || 'bottle');
-      unitSel.append(opt);
-    });
-    qtyRow.append(stepper, unitSel);
-    card.append(qtyRow);
-
-    const commitQty = (val) => {
-      const q = Math.max(0, Number(val || 0));
-      db.order.lines[i.id] = { ...line, qty: q, unit: unitSel.value };
-      db.order.visited[i.id] = true;
-      delete db.order.skipped[i.id];
-      store().saveOrdersDB();
-    };
-
-    minus.addEventListener('click', () => {
-      const cur = Math.max(0, Number(qtyIn.value || 0) - 1);
-      qtyIn.value = String(cur);
-      commitQty(cur);
-    });
-    plus.addEventListener('click', () => {
-      const cur = Number(qtyIn.value || 0) + 1;
-      qtyIn.value = String(cur);
-      commitQty(cur);
-    });
-    qtyIn.addEventListener('change', () => commitQty(qtyIn.value));
-    unitSel.addEventListener('change', () => commitQty(qtyIn.value));
-
-    return { commitQty, qtyIn };
-  }
-
-  function buildItemStepperNav(opts) {
-    const { card, i, catItems, curIdx, c, commitFn, qtyIn } = opts;
-    const ar = isAr();
-    const db = store().getDB();
-    const actRow = el('div', 'ord-item-nav');
-    if (curIdx > 0) {
-      const prevBtn = el('button', 'btn', ar ? '← السابق' : '← Previous');
-      prevBtn.type = 'button';
-      prevBtn.addEventListener('click', () => ordGo('item/' + catItems[curIdx - 1].id));
-      actRow.append(prevBtn);
-    }
-
-    const skipBtn = el('button', 'btn', ar ? 'تخطي الصنف' : 'Skip item');
-    skipBtn.type = 'button';
-    skipBtn.addEventListener('click', () => {
-      db.order.skipped[i.id] = true;
-      store().saveOrdersDB();
-      navigateNextItem(catItems, curIdx, c);
-    });
-
-    const nextBtn = el('button', 'btn primary', ar ? 'التالي →' : 'Next →');
-    nextBtn.type = 'button';
-    nextBtn.addEventListener('click', () => {
-      commitFn(qtyIn.value);
-      navigateNextItem(catItems, curIdx, c);
-    });
-
-    actRow.append(skipBtn, nextBtn);
-    card.append(actRow);
-  }
-
-  function renderItemStepperCard(root, itemId) {
-    const ar = isAr();
-    const i = store().ordById(itemId);
-    if (!i) { ordGo('home'); return; }
-
-    const c = store().ordCat(i.cat);
-    const line = store().ordLine(i.id);
-    const catItems = store().ordCatItems(i.cat);
-    const curIdx = catItems.findIndex((it) => it.id === i.id);
-
-    root.append(buildOrdBreadcrumbs(c ? c.group : null, c ? c.id : null, i.name));
-
-    const card = el('section', 'card ord-stepper-card');
-    const head = el('div', 'ord-item-head');
-    head.append(
-      Object.assign(el('div', 'ord-item-Title'), {
-        innerHTML: '<small>' + FOH.escapeHtml(ar && c ? c.nameAr || c.name : (c ? c.name : '')) + '</small>' +
-          '<h3>' + FOH.escapeHtml(ar && i.ar ? i.ar + ' · ' + i.name : i.name) + '</h3>' +
-          '<small>' + FOH.escapeHtml(i.packSize || i.id.toUpperCase()) + '</small>',
-      })
-    );
-    card.append(head);
-
-    const stockBox = el('div', 'ord-stock-panel');
-    const stockLeft = el('div', '');
-    stockLeft.append(
-      el('b', '', ar ? 'المخزون المسجّل' : 'Recorded stock'),
-      el('small', '', ar ? 'مؤكد في الجرد' : 'Confirmed stock')
-    );
-    const editBtn = el('button', 'btn small', '✎ ' + (ar ? 'تحديث المخزون' : 'Edit stock'));
-    editBtn.type = 'button';
-    editBtn.addEventListener('click', () => {
-      store().promptEditStock(i, () => renderOrdersView(root));
-    });
-    stockLeft.append(editBtn);
-
-    const stockRight = el('div', 'ord-stock-val', store().ordStockLabel(i));
-    stockBox.append(stockLeft, stockRight);
-    card.append(stockBox);
-
-    const { commitQty, qtyIn } = buildItemStepperControls(card, i, line, root);
-    buildItemStepperNav({ card, i, catItems, curIdx, c, commitFn: commitQty, qtyIn });
-
-    root.append(card);
-    appendGeneralBottomBar(root);
-  }
-
-  function navigateNextItem(catItems, curIdx, c) {
-    if (ordReturnToReview) {
-      ordReturnToReview = false;
-      ordGo('review');
-      return;
-    }
-    if (curIdx < catItems.length - 1) {
-      ordGo('item/' + catItems[curIdx + 1].id);
-    } else {
-      ordGo('complete/' + (c ? c.id : ''));
-    }
-  }
-
-  // ---- Page 5: Category Complete ----
-  function renderCategoryComplete(root, catId) {
-    const ar = isAr();
-    const c = store().ordCat(catId);
-    if (!c) { ordGo('home'); return; }
-
-    const list = store().ordCatItems(c.id);
-    const done = store().ordCatDone(c.id);
-    const skipped = store().ordCatSkipped(c.id);
-    const pending = store().ordPendingItem(c.id);
-    const reqCount = list.filter((i) => store().ordLine(i.id).qty > 0).length;
-
-    root.append(buildOrdBreadcrumbs(c.group, c.id));
-    const box = el('section', 'card');
-    box.style.padding = '18px';
-    box.style.textAlign = 'center';
-    box.append(
-      el('div', '', '✅'),
-      el('h2', 'ord-page-title', pending ? (ar ? 'تم حفظ كمياتك' : 'Quantities saved') : (ar ? 'اكتمل فحص الكاتيجوري' : 'Category complete')),
-      el('p', 'ord-page-sub', ar ? 'تم حفظ الأصناف المطلوبة. يمكنك مراجعة الطلبية أو اختيار قسم آخر.' : 'Requested items saved. Review order or choose another section.')
-    );
-
-    const stats = el('div', 'ord-stats-grid');
-    [
-      [reqCount, ar ? 'أصناف مطلوبة' : 'Requested items'],
-      [done, ar ? 'تم فحصها' : 'Checked'],
-      [skipped, ar ? 'تم تخطيها' : 'Skipped'],
-    ].forEach(([val, lbl]) => {
-      const s = el('div', 'ord-stat-box');
-      s.append(el('strong', '', String(val)), el('span', '', lbl));
-      stats.append(s);
-    });
-    box.append(stats);
-
-    const actCol = el('div', '');
-    actCol.style.display = 'flex';
-    actCol.style.flexDirection = 'column';
-    actCol.style.gap = '8px';
-
-    const revBtn = el('button', 'btn primary', ar ? 'مراجعة الطلبية الكاملة وإرسال WhatsApp' : 'Review full order & send WhatsApp');
-    revBtn.type = 'button';
-    revBtn.addEventListener('click', () => ordGo('review'));
-
-    const typesBtn = el('button', 'btn', ar ? 'اختيار كاتيجوري آخر' : 'Choose another category');
-    typesBtn.type = 'button';
-    typesBtn.addEventListener('click', () => ordGo('types/' + c.group));
-
-    actCol.append(revBtn, typesBtn);
-    box.append(actCol);
-    root.append(box);
-    appendGeneralBottomBar(root);
-  }
-
-  // ---- Page 6: Full Order Review ----
-  function renderOrderReview(root) {
-    const ar = isAr();
-    const db = store().getDB();
-    const selectedList = store().ordSelectedItems();
-
-    root.append(buildOrdBreadcrumbs(null, null, ar ? 'مراجعة الطلبية' : 'Review order'));
-    root.append(
-      el('div', 'ord-kicker', '04 / REVIEW & SEND · مراجعة وإرسال الطلبية'),
-      el('h2', 'ord-page-title', (ar ? 'مراجعة الطلبية الكاملة (' : 'Review full order (') + selectedList.length + ')')
-    );
-
-    const metaCard = el('section', 'card');
-    metaCard.style.padding = '14px';
-    const m = db.order.meta;
-    const session = getSession();
-    const requester = (session && session.displayName) || (S().me && S().me.name) || m.requester || 'Staff';
-    const orderDate = S().date || (FOH.time ? FOH.time.todayISO() : '');
-
-    const autoBanner = el('div', 'ord-meta-auto-banner');
-    autoBanner.append(
-      el('div', 'ord-meta-pill', `👤 ${requester}`),
-      el('div', 'ord-meta-pill', `📅 ${orderDate}`),
-      el('div', 'ord-meta-pill', `📦 ${ar ? 'المستودع الرئيسي' : 'Store Warehouse'}`)
-    );
-
-    const noteLbl = el('label', '', ar ? 'ملاحظة عامة على الطلبية (اختياري)' : 'General order note (optional)');
-    noteLbl.style.display = 'block';
-    noteLbl.style.marginTop = '10px';
-    const noteIn = el('input', 'in');
-    noteIn.value = m.orderNote || '';
-    noteIn.addEventListener('input', () => {
-      m.orderNote = noteIn.value;
-      store().saveOrdersDB();
-    });
-    noteLbl.append(noteIn);
-    metaCard.append(autoBanner, noteLbl);
-    root.append(metaCard);
-
-    if (!selectedList.length) {
-      const emp = el('section', 'card');
-      emp.append(el('p', 'empty', ar ? 'لم تقم بطلب أي صنف بعد.' : 'No items requested yet.'));
-      root.append(emp);
-    } else {
-      renderReviewItemsList(root, selectedList, ar);
-    }
-
-    appendBottomBar(root, (inner) => {
-      const addMoreB = el('button', 'btn', ar ? '+ إضافة أصناف' : '+ Add items');
-      addMoreB.type = 'button';
-      addMoreB.addEventListener('click', () => ordGo('home'));
-
-      const waB = el('button', 'btn primary', ar ? '📲 إرسال عبر WhatsApp' : '📲 Send via WhatsApp');
-      waB.type = 'button';
-      waB.disabled = selectedList.length === 0;
-      waB.addEventListener('click', () => {
-        const msg = dispatch().buildOrdWhatsAppText(ordIncludeStockInMsg);
-        dispatch().openWhatsApp(msg);
-      });
-      inner.append(addMoreB, waB);
-    });
-  }
-
-  function renderReviewItemsList(root, selectedList, ar) {
-    const db = store().getDB();
-    const listCard = el('section', 'card');
-    listCard.style.padding = '12px 14px';
-
-    selectedList.forEach((i) => {
-      const l = store().ordLine(i.id);
-      const row = el('div', 'ord-review-row');
-      row.style.display = 'flex';
-      row.style.alignItems = 'center';
-      row.style.justifyContent = 'space-between';
-      row.style.padding = '8px 0';
-      row.style.borderBottom = '1px dashed var(--line)';
-
-      const left = el('div', '');
-      left.append(
-        el('b', '', ar && i.ar ? `${i.ar} · ${i.name}` : i.name),
-        el('small', '', `${l.note ? '📝 ' + l.note + ' · ' : ''}${ar ? 'المخزون' : 'Stock'}: ${store().ordStockLabel(i)}`)
-      );
-      left.querySelector('small').style.display = 'block';
-      left.querySelector('small').style.color = 'var(--ink2)';
-
-      const right = el('div', '');
-      right.style.display = 'flex';
-      right.style.alignItems = 'center';
-      right.style.gap = '6px';
-      right.append(el('strong', 'ord-picked-pill', `${l.qty} ${store().ordUnitText(l.qty, l.unit || i.unit)}`));
-
-      const delBtn = el('button', 'btn danger small', '✕');
-      delBtn.type = 'button';
-      delBtn.addEventListener('click', () => {
-        db.order.lines[i.id] = { ...l, qty: 0 };
-        store().saveOrdersDB();
-        renderOrdersView(root);
-      });
-      right.append(delBtn);
-
-      row.append(left, right);
-      listCard.append(row);
-    });
-
-    // WhatsApp Message Preview Box
-    const msgText = dispatch().buildOrdWhatsAppText(ordIncludeStockInMsg);
-    const ta = el('textarea', 'ord-msg-box');
-    ta.readOnly = true;
-    ta.value = msgText;
-    listCard.append(ta);
-
-    const actRow = el('div', '');
-    actRow.style.display = 'flex';
-    actRow.style.gap = '8px';
-    actRow.style.marginTop = '10px';
-
-    const copyBtn = el('button', 'btn', ar ? '📋 نسخ النص' : '📋 Copy text');
-    copyBtn.type = 'button';
-    copyBtn.addEventListener('click', () => dispatch().copyOrderText(msgText));
-
-    const resetBtn = el('button', 'btn danger', ar ? 'بدء طلبية جديدة' : 'Start new order');
-    resetBtn.type = 'button';
-    resetBtn.addEventListener('click', () => {
-      store().promptStartNewOrder(() => ordGo('home'));
-    });
-
-    actRow.append(copyBtn, resetBtn);
-    listCard.append(actRow);
-    root.append(listCard);
-  }
-
-  // ---- Router ----
-  function renderOrdersView(root) {
-    if (!root) return;
-    root.replaceChildren();
-
-    const [page, param] = (ordRoute || 'home').split('/');
-    if (page === 'home') renderHomeGroups(root);
-    else if (page === 'types') renderCategoryTypes(root, param);
-    else if (page === 'products') renderCategoryProducts(root, param);
-    else if (page === 'item') renderItemStepperCard(root, param);
-    else if (page === 'complete') renderCategoryComplete(root, param);
-    else if (page === 'review') renderOrderReview(root);
-    else renderHomeGroups(root);
-
-    updateOrderBadge();
-  }
-
-  // Expose backwards-compatible API on FOH.ordersView
-  FOH.ordersView = {
-    emptyOrderState: () => store().emptyOrderState(),
-    loadOrdersDB: () => store().loadOrdersDB(),
-    saveOrdersDB: () => store().saveOrdersDB(),
-    allowedGroupsForCurrentRole: (force) => store().allowedGroupsForCurrentRole(force),
-    updateOrderBadge,
-    renderOrdersView,
-    buildOrdWhatsAppText: (inc) => dispatch().buildOrdWhatsAppText(inc),
-    promptStartNewOrder: (cb) => store().promptStartNewOrder(cb),
-    go: ordGo,
-    get ORD_SEED() {
-      return (FOH.ordersCatalog && FOH.ordersCatalog.ORD_SEED) || {};
-    },
-  };
-
-  FOH.renderOrdersView = renderOrdersView;
-  FOH.updateOrderBadge = updateOrderBadge;
-})(window.FOH = window.FOH || {});
+// foh-opening/js/domains/orders/orders-view.js
+// Warehouse & Bar Ordering Workflow (Item Selection, Stock Tally & WhatsApp Dispatch)
+(function (FOH) {
+  'use strict';
+
+  const $ = (id) => document.getElementById(id);
+  const S = () => FOH.state;
+  const store = () => FOH.ordersStore;
+  const dispatch = () => FOH.ordersDispatch;
+  const { el } = FOH.view;
+
+  let ordRoute = 'home'; // 'home' | 'types/<group>' | 'products/<cat>' | 'item/<id>' | 'complete/<cat>' | 'review'
+  let ordForceAllGroups = false;
+  let ordProductSearch = '';
+  let ordQuickSearch = '';
+  let ordQuickOnlyRequested = false;
+  let ordReturnToReview = false;
+  let ordIncludeStockInMsg = false;
+
+  const isAr = () => (FOH.i18n ? FOH.i18n.lang === 'ar' : false);
+  const getSession = () => ((FOH.auth && FOH.auth.getSession) ? FOH.auth.getSession() : (FOH.sessionAuth ? FOH.sessionAuth.getSession() : null));
+
+  function updateOrderBadge() {
+    const count = store().ordSelectedItems().length;
+    const badge = $('badgeOrders');
+    if (badge) {
+      badge.textContent = String(count);
+      badge.hidden = count === 0;
+    }
+    const lbl = $('ordersTabLbl');
+    if (lbl && FOH.i18n && FOH.i18n.t) lbl.textContent = FOH.i18n.t('ordersTab');
+  }
+
+  function ordGo(nextRoute) {
+    ordRoute = nextRoute || 'home';
+    const root = $('ordersView');
+    if (root) {
+      renderOrdersView(root);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  function buildOrdBreadcrumbs(groupKey, catId, tailLabel) {
+    const ar = isAr();
+    const nav = el('nav', 'ord-crumbs');
+    const homeBtn = el('button', '', ar ? 'الأقسام (Sections)' : 'Sections');
+    homeBtn.type = 'button';
+    homeBtn.addEventListener('click', () => ordGo('home'));
+    nav.append(homeBtn);
+
+    const db = store().getDB();
+    if (groupKey && db.catalog.groups[groupKey]) {
+      nav.append(el('span', '', '›'));
+      const g = db.catalog.groups[groupKey];
+      const gBtn = el('button', '', ar ? g.nameAr || g.name : g.name);
+      gBtn.type = 'button';
+      gBtn.addEventListener('click', () => ordGo('types/' + groupKey));
+      nav.append(gBtn);
+    }
+    if (catId && store().ordCat(catId)) {
+      nav.append(el('span', '', '›'));
+      const c = store().ordCat(catId);
+      const cBtn = el('button', '', ar ? c.nameAr || c.name : c.name);
+      cBtn.type = 'button';
+      cBtn.addEventListener('click', () => ordGo('products/' + catId));
+      nav.append(cBtn);
+    }
+    if (tailLabel) {
+      nav.append(el('span', '', '›'), el('span', '', tailLabel));
+    }
+    return nav;
+  }
+
+  function buildOrdViewSwitch(catId, activeMode) {
+    const sw = el('div', 'ord-view-switch');
+    const stepBtn = el('button', activeMode === 'step' ? 'on' : '', isAr() ? '▣ صنفًا بصنف (Step-by-step)' : '▣ Step-by-step');
+    stepBtn.type = 'button';
+    stepBtn.addEventListener('click', () => {
+      const db = store().getDB();
+      db.preferences.viewMode = 'step';
+      store().saveOrdersDB();
+      const pending = store().ordPendingItem(catId) || store().ordCatItems(catId)[0];
+      ordGo(pending ? 'item/' + pending.id : 'products/' + catId);
+    });
+
+    const listBtn = el('button', activeMode === 'list' ? 'on' : '', isAr() ? '☷ القائمة السريعة (Quick list)' : '☷ Quick list');
+    listBtn.type = 'button';
+    listBtn.addEventListener('click', () => {
+      const db = store().getDB();
+      db.preferences.viewMode = 'list';
+      store().saveOrdersDB();
+      ordGo('products/' + catId);
+    });
+
+    sw.append(stepBtn, listBtn);
+    return sw;
+  }
+
+  function appendBottomBar(root, buildFn) {
+    const bar = el('nav', 'ord-bottom-bar');
+    const inner = el('div', 'ord-bottom-inner');
+    buildFn(inner);
+    bar.append(inner);
+    root.append(bar);
+    root.style.paddingBottom = 'calc(146px + env(safe-area-inset-bottom, 16px))';
+  }
+
+  function appendGeneralBottomBar(root) {
+    const selectedList = store().ordSelectedItems();
+    appendBottomBar(root, (inner) => {
+      const info = el('div', '');
+      info.style.minWidth = '110px';
+      info.append(
+        el('strong', '', String(selectedList.length) + ' '),
+        el('small', '', isAr() ? 'أصناف مختارة' : 'selected')
+      );
+      const revBtn = el('button', 'btn primary', isAr() ? 'مراجعة الطلبية الكاملة ←' : 'Review full order →');
+      revBtn.type = 'button';
+      revBtn.disabled = selectedList.length === 0;
+      revBtn.addEventListener('click', () => ordGo('review'));
+      inner.append(info, revBtn);
+    });
+  }
+
+  function openReceivingModal() {
+    const ar = isAr();
+    const list = store().ordSelectedItems();
+    const overlay = el('div', 'modal-overlay');
+    overlay.style.display = 'flex';
+    overlay.style.zIndex = '9999';
+
+    const dialog = el('div', 'modal-box');
+    dialog.style.maxWidth = '520px';
+    dialog.style.width = '94%';
+    dialog.style.padding = '20px';
+
+    const title = el('h3', '', '📦 ' + (ar ? 'تأكيد استلام طلبية المستودع' : 'Confirm Order Receiving'));
+    const sub = el('p', '', ar ? 'تأكيد وصول الأصناف وتوريدها لمخزون البار والصالة' : 'Verify delivered items & ingest into bar stock');
+    sub.style.color = 'var(--ink2)';
+    sub.style.marginBottom = '12px';
+
+    const itemsBox = el('div', '');
+    itemsBox.style.maxHeight = '280px';
+    itemsBox.style.overflowY = 'auto';
+    itemsBox.style.margin = '10px 0';
+
+    const receivedMap = {};
+    list.forEach((i) => {
+      const line = store().ordLine(i.id);
+      receivedMap[i.id] = line.qty;
+      const row = el('div', 'dayoff-item');
+      row.style.display = 'flex';
+      row.style.justifyContent = 'space-between';
+      row.style.alignItems = 'center';
+      row.style.margin = '6px 0';
+      const safeName = FOH.escapeHtml(ar && i.ar ? i.ar + ' · ' + i.name : i.name);
+      const safeUnit = FOH.escapeHtml(line.unit || i.unit || '');
+      const safeQty = Number(line.qty) || 0;
+      row.innerHTML = '<div><b>' + safeName + '</b><small style="display:block;color:var(--ink2);">' +
+        (ar ? 'المطلوب: ' : 'Requested: ') + safeQty + ' ' + safeUnit + '</small></div>';
+      const badge = el('span', 'dayoff-badge approved', '✓ ' + safeQty + ' ' + safeUnit);
+      row.append(badge);
+      itemsBox.append(row);
+    });
+
+    const btnRow = el('div', '');
+    btnRow.style.display = 'flex';
+    btnRow.style.gap = '8px';
+    btnRow.style.marginTop = '16px';
+
+    const cancelBtn = el('button', 'btn', ar ? 'إلغاء' : 'Cancel');
+    cancelBtn.type = 'button';
+    cancelBtn.style.flex = '1';
+    cancelBtn.addEventListener('click', () => overlay.remove());
+
+    const confirmBtn = el('button', 'btn primary', ar ? '✓ تأكيد الاستلام بالكامل' : '✓ Confirm Full Receipt');
+    confirmBtn.type = 'button';
+    confirmBtn.style.flex = '1.5';
+    confirmBtn.addEventListener('click', () => {
+      store().confirmOrderReceiving({
+        receivedLines: receivedMap,
+        receiverName: (getSession() && getSession().displayName) || S().me.name || 'Staff',
+      });
+      overlay.remove();
+      if (FOH.edit && FOH.edit.toast) {
+        FOH.edit.toast(ar ? 'تم تأكيد استلام الطلبية والتوريد بنجاح ✓' : 'Order received & archived ✓');
+      }
+      ordGo('home');
+    });
+
+    btnRow.append(cancelBtn, confirmBtn);
+    dialog.append(title, sub, itemsBox, btnRow);
+    overlay.append(dialog);
+    document.body.append(overlay);
+  }
+
+  function renderReceivingBanner(ar) {
+    const banner = el('div', 'ord-receiving-banner');
+    banner.style.background = 'linear-gradient(135deg, rgba(245, 158, 11, 0.16), rgba(217, 119, 6, 0.24))';
+    banner.style.border = '1px solid rgba(245, 158, 11, 0.4)';
+    banner.style.borderRadius = '12px';
+    banner.style.padding = '12px 16px';
+    banner.style.marginBottom = '14px';
+    banner.style.display = 'flex';
+    banner.style.justifyContent = 'space-between';
+    banner.style.alignItems = 'center';
+    banner.style.flexWrap = 'wrap';
+    banner.style.gap = '10px';
+
+    const info = el('div', '');
+    info.innerHTML = '<strong>📦 ' + (ar ? 'طلبية المستودع قيد التوريد (Dispatched)' : 'Warehouse Delivery Dispatched') + '</strong>' +
+      '<small style="display:block;color:var(--ink2);">' + (ar ? 'تم إرسال الطلبية بنجاح. اضغط عند وصول البضاعة لتأكيد الاستلام.' : 'Order was sent. Tap when goods arrive to confirm receiving.') + '</small>';
+
+    const recvBtn = el('button', 'btn primary small', ar ? '✓ استلام الطلبية والتوريد' : '✓ Receive & Ingest');
+    recvBtn.type = 'button';
+    recvBtn.addEventListener('click', () => openReceivingModal());
+
+    banner.append(info, recvBtn);
+    return banner;
+  }
+
+  // ---- Page 1: Home Groups ----
+  function renderHomeGroups(root) {
+    const ar = isAr();
+    const db = store().getDB();
+    const selectedList = store().ordSelectedItems();
+
+    const headWrap = el('div', '');
+    const topRow = el('div', '');
+    topRow.style.display = 'flex';
+    topRow.style.alignItems = 'center';
+    topRow.style.justifyContent = 'space-between';
+    topRow.style.gap = '8px';
+    topRow.style.flexWrap = 'wrap';
+
+    const kicker = el('div', 'ord-kicker', '01 / SECTION SELECT · أقسام الطلبيات');
+    const btnGroup = el('div', '');
+    btnGroup.style.display = 'flex';
+    btnGroup.style.gap = '6px';
+    btnGroup.style.alignItems = 'center';
+
+    const startNewBtn = el('button', 'btn small', ar ? '✨ بدء طلبية جديدة' : '✨ Start new order');
+    startNewBtn.type = 'button';
+    startNewBtn.addEventListener('click', () => {
+      store().promptStartNewOrder(() => renderOrdersView(root));
+    });
+    btnGroup.append(startNewBtn);
+
+    const canManage = store().canCurrentUserManageOrders && store().canCurrentUserManageOrders();
+    if (canManage) {
+      const setBtn = el('button', 'btn small', ar ? '⚙️ إعدادات وصلاحيات الأقسام' : '⚙️ Order Settings');
+      setBtn.type = 'button';
+      setBtn.addEventListener('click', () => {
+        if (FOH.ordersSettingsModal && FOH.ordersSettingsModal.open) {
+          FOH.ordersSettingsModal.open();
+        }
+      });
+      btnGroup.append(setBtn);
+    }
+    topRow.append(kicker, btnGroup);
+
+    headWrap.append(
+      topRow,
+      el('h2', 'ord-page-title', ar ? 'طلبيات البار ومستلزمات الصالة' : 'Bar & FOH Warehouse Orders'),
+      el('p', 'ord-page-sub', ar ? 'اختر القسم المطلوب لإعداد طلبيته وتحديد الكميات المطلوبة للمستودع:' : 'Select a section to prepare warehouse requisition:')
+    );
+    if (store().getOrderStatus() === 'DISPATCHED') {
+      headWrap.append(renderReceivingBanner(ar));
+    }
+    root.append(headWrap);
+
+    const secCards = el('div', 'ord-sec-grid');
+    const allowed = store().allowedGroupsForCurrentRole(ordForceAllGroups);
+
+    allowed.forEach(([gid, g]) => {
+      const cats = db.catalog.categories.filter((c) => c.group === gid);
+      const catCount = cats.length;
+      let totalItems = 0;
+      let doneItems = 0;
+      let reqCount = 0;
+
+      cats.forEach((c) => {
+        const cItems = store().ordCatItems(c.id);
+        totalItems += cItems.length;
+        doneItems += store().ordCatDone(c.id);
+        reqCount += cItems.filter((i) => store().ordLine(i.id).qty > 0).length;
+      });
+
+      const btn = el('button', 'ord-sec-card');
+      btn.type = 'button';
+      btn.append(
+        el('div', 'ord-sec-ico', g.icon || '📦'),
+        Object.assign(el('div', 'ord-sec-body'), {
+          innerHTML:
+            '<h3>' + FOH.escapeHtml(ar ? g.nameAr || g.name : g.name) + '</h3>' +
+            '<p>' + FOH.escapeHtml(ar ? g.subAr || g.sub : g.sub) + '</p>' +
+            '<div class="ord-sec-meta"><span>' + catCount + ' ' + (ar ? 'تصنيفات' : 'categories') + ' · ' + totalItems + ' ' + (ar ? 'أصناف' : 'items') + '</span>' +
+            (reqCount > 0 ? '<strong class="ord-req-chip">✓ ' + reqCount + ' ' + (ar ? 'مطلوب' : 'requested') + '</strong>' : '') +
+            '</div>',
+        })
+      );
+      btn.addEventListener('click', () => ordGo('types/' + gid));
+      secCards.append(btn);
+    });
+
+    root.append(secCards);
+    appendGeneralBottomBar(root);
+  }
+
+  // ---- Page 2: Types in Group ----
+  function renderCategoryTypes(root, groupKey) {
+    const ar = isAr();
+    const db = store().getDB();
+    const g = db.catalog.groups[groupKey];
+    if (!g) { ordGo('home'); return; }
+
+    root.append(buildOrdBreadcrumbs(groupKey, null));
+
+    const sess = getSession();
+    const isMgr = !sess || !!(sess.isManager || sess.roleId === 'manager');
+    const roleKey = FOH.roleIdentity ? FOH.roleIdentity.getCurrentSuperRoleKey() : 'staff';
+    const uname = (sess && sess.username) || '';
+    const canEditGroup = store().canUserEditGroup ? store().canUserEditGroup(groupKey, { roleKey, username: uname, isManager: isMgr }) : isMgr;
+
+    const headRow = el('div', '');
+    headRow.style.display = 'flex';
+    headRow.style.alignItems = 'center';
+    headRow.style.justifyContent = 'space-between';
+    headRow.style.gap = '8px';
+    headRow.style.flexWrap = 'wrap';
+
+    const kicker = el('div', 'ord-kicker', '02 / CATEGORY · تصنيفات القسم');
+    headRow.append(kicker);
+
+    if (canEditGroup) {
+      const addCatBtn = el('button', 'btn small primary', ar ? '+ تصنيف جديد' : '+ New Category');
+      addCatBtn.type = 'button';
+      addCatBtn.addEventListener('click', () => {
+        if (FOH.ordersSettingsModal && FOH.ordersSettingsModal.openAddCategoryModal) {
+          FOH.ordersSettingsModal.openAddCategoryModal(groupKey, () => renderOrdersView(root));
+        }
+      });
+      headRow.append(addCatBtn);
+    }
+
+    root.append(
+      headRow,
+      el('h2', 'ord-page-title', ar ? g.nameAr || g.name : g.name),
+      el('p', 'ord-page-sub', ar ? 'اختر تصنيفًا للبدء بفحصه وتحديد الكميات المطلوبة:' : 'Pick a category to check and order items:')
+    );
+
+    const cats = db.catalog.categories.filter((c) => c.group === groupKey);
+    const grid = el('div', 'ord-cat-grid');
+
+    cats.forEach((c) => {
+      const items = store().ordCatItems(c.id);
+      const done = store().ordCatDone(c.id);
+      const skipped = store().ordCatSkipped(c.id);
+      const req = items.filter((i) => store().ordLine(i.id).qty > 0).length;
+      const isComplete = items.length > 0 && done + skipped >= items.length;
+
+      const card = el('button', 'ord-cat-card' + (isComplete ? ' complete' : ''));
+      card.type = 'button';
+      card.append(
+        el('h4', '', ar ? c.nameAr || c.name : c.name),
+        el('div', 'ord-cat-stat', `${items.length} ${ar ? 'أصناف' : 'items'} · ${done} ${ar ? 'تم فحصها' : 'done'}`),
+        req > 0 ? el('span', 'ord-req-badge', `+${req} ${ar ? 'مطلوب' : 'picked'}`) : el('span', 'ord-req-badge zero', isComplete ? '✓ ' + (ar ? 'مكتمل' : 'done') : '—')
+      );
+      card.addEventListener('click', () => ordGo('products/' + c.id));
+      grid.append(card);
+    });
+
+    root.append(grid);
+    appendGeneralBottomBar(root);
+  }
+
+  // ---- Page 3: Products in Category ----
+  function renderCategoryProducts(root, catId) {
+    const ar = isAr();
+    const db = store().getDB();
+    const c = store().ordCat(catId);
+    if (!c) { ordGo('home'); return; }
+
+    const viewMode = (db.preferences && db.preferences.viewMode) || 'step';
+    root.append(buildOrdBreadcrumbs(c.group, c.id));
+    root.append(
+      el('div', 'ord-kicker', '03 / PRODUCTS · قائمة الأصناف'),
+      el('h2', 'ord-page-title', ar ? c.nameAr || c.name : c.name),
+      buildOrdViewSwitch(c.id, viewMode)
+    );
+
+    const items = store().ordCatItems(c.id);
+    if (viewMode === 'step') {
+      renderStepModeList(root, c, items, ar);
+    } else {
+      renderQuickListMode(root, c, items, ar);
+    }
+  }
+
+  function renderStepModeList(root, c, opts = {}) {
+    const isLegacy = Array.isArray(opts);
+    const items = isLegacy ? opts : ((opts && opts.items) || store().ordCatItems(c.id));
+    const ar = isLegacy ? !!arguments[3] : (opts && typeof opts.ar === 'boolean' ? opts.ar : isAr());
+    const db = store().getDB();
+    const listWrap = el('div', 'ord-step-list');
+    const sess = getSession();
+    const isMgr = !sess || !!(sess.isManager || sess.roleId === 'manager');
+    const roleKey = FOH.roleIdentity ? FOH.roleIdentity.getCurrentSuperRoleKey() : 'staff';
+    const uname = (sess && sess.username) || '';
+    const canEditGroup = store().canUserEditGroup ? store().canUserEditGroup(c.group, { roleKey, username: uname, isManager: isMgr }) : isMgr;
+
+    if (canEditGroup) {
+      const toolRow = el('div', '');
+      toolRow.style.display = 'flex';
+      toolRow.style.justifyContent = 'flex-end';
+      toolRow.style.marginBottom = '10px';
+      const addItemBtn = el('button', 'btn small primary', ar ? '+ إضافة صنف جديد' : '+ Add New Item');
+      addItemBtn.type = 'button';
+      addItemBtn.addEventListener('click', () => {
+        if (FOH.ordersSettingsModal && FOH.ordersSettingsModal.openAddItemModal) {
+          FOH.ordersSettingsModal.openAddItemModal(c.id, () => renderOrdersView(root));
+        }
+      });
+      toolRow.append(addItemBtn);
+      listWrap.append(toolRow);
+    }
+
+    items.forEach((i, idx) => {
+      const line = store().ordLine(i.id);
+      const isVisited = !!db.order.visited[i.id];
+      const isSkipped = !!db.order.skipped[i.id];
+
+      const row = el('button', 'ord-step-row' + (isVisited ? ' visited' : isSkipped ? ' skipped' : ''));
+      row.type = 'button';
+      row.append(
+        el('span', 'ord-step-num', String(idx + 1)),
+        Object.assign(el('div', 'ord-step-info'), {
+          innerHTML: '<strong>' + FOH.escapeHtml(ar && i.ar ? i.ar + ' · ' + i.name : i.name) + '</strong>' +
+            '<small>' + FOH.escapeHtml(ar ? 'المخزون المسجّل: ' : 'Recorded stock: ') + store().ordStockLabel(i) + '</small>',
+        }),
+        el('span', 'ord-step-status', line.qty > 0 ? `+${line.qty} ${store().ordUnitText(line.qty, line.unit || i.unit)}` : isSkipped ? (ar ? 'تخطي' : 'skip') : isVisited ? '✓' : '—')
+      );
+      row.addEventListener('click', () => ordGo('item/' + i.id));
+      listWrap.append(row);
+    });
+    root.append(listWrap);
+    appendGeneralBottomBar(root);
+  }
+
+  function createQuickItemCard(i, db, ar) {
+    const line = store().ordLine(i.id);
+    const card = el('div', 'ord-quick-card' + (line.qty > 0 ? ' ordered' : ''));
+
+    const head = el('div', 'ord-quick-head');
+    head.append(
+      Object.assign(el('div', ''), {
+        innerHTML: '<b>' + FOH.escapeHtml(ar && i.ar ? i.ar + ' · ' + i.name : i.name) + '</b>' +
+          '<small style="display:block;color:var(--ink2);">' + (ar ? 'المخزون: ' : 'Stock: ') + store().ordStockLabel(i) + '</small>',
+      })
+    );
+
+    const stepper = el('div', 'ord-stepper-sm');
+    const minus = el('button', '', '−');
+    minus.type = 'button';
+    const inVal = el('input', '');
+    inVal.type = 'number';
+    inVal.min = '0';
+    inVal.max = '9999';
+    inVal.value = String(line.qty || 0);
+
+    const plus = el('button', '', '+');
+    plus.type = 'button';
+
+    const updateQty = (delta, direct) => {
+      const cur = direct !== undefined ? Math.max(0, direct) : Math.max(0, Number(inVal.value || 0) + delta);
+      inVal.value = String(cur);
+      db.order.lines[i.id] = { ...line, qty: cur };
+      db.order.visited[i.id] = true;
+      store().saveOrdersDB();
+      card.classList.toggle('ordered', cur > 0);
+    };
+
+    minus.addEventListener('click', () => updateQty(-1));
+    plus.addEventListener('click', () => updateQty(1));
+    inVal.addEventListener('change', () => updateQty(0, Number(inVal.value || 0)));
+
+    stepper.append(minus, inVal, plus);
+    card.append(head, stepper);
+    return card;
+  }
+
+  function renderQuickListMode(root, c, opts = {}) {
+    const isLegacy = Array.isArray(opts);
+    const items = isLegacy ? opts : ((opts && opts.items) || store().ordCatItems(c.id));
+    const ar = isLegacy ? !!arguments[3] : (opts && typeof opts.ar === 'boolean' ? opts.ar : isAr());
+    const db = store().getDB();
+
+    const toolbar = el('div', 'ord-toolbar');
+    const qSearch = el('input', 'in ord-search-in');
+    qSearch.placeholder = ar ? '🔍 تصفية في هذا التصنيف...' : '🔍 Search in this category...';
+    qSearch.value = ordQuickSearch;
+    qSearch.addEventListener('input', () => {
+      ordQuickSearch = qSearch.value;
+      renderOrdersView(root);
+    });
+
+    const skipRemBtn = el('button', 'btn small', ar ? '⏭ تخطي المتبقي' : '⏭ Skip rest');
+    skipRemBtn.type = 'button';
+    skipRemBtn.addEventListener('click', () => {
+      store().ordSkipRemaining(c.id);
+      store().saveOrdersDB();
+      ordGo('complete/' + c.id);
+    });
+
+    const sess = getSession();
+    const isMgr = !sess || !!(sess.isManager || sess.roleId === 'manager');
+    const roleKey = FOH.roleIdentity ? FOH.roleIdentity.getCurrentSuperRoleKey() : 'staff';
+    const uname = (sess && sess.username) || '';
+    const canEditGroup = store().canUserEditGroup ? store().canUserEditGroup(c.group, { roleKey, username: uname, isManager: isMgr }) : isMgr;
+
+    toolbar.append(qSearch, skipRemBtn);
+    if (canEditGroup) {
+      const addItemBtn = el('button', 'btn small primary', ar ? '+ صنف جديد' : '+ New Item');
+      addItemBtn.type = 'button';
+      addItemBtn.addEventListener('click', () => {
+        if (FOH.ordersSettingsModal && FOH.ordersSettingsModal.openAddItemModal) {
+          FOH.ordersSettingsModal.openAddItemModal(c.id, () => renderOrdersView(root));
+        }
+      });
+      toolbar.append(addItemBtn);
+    }
+    root.append(toolbar);
+
+    const qFilter = (ordQuickSearch || '').toLowerCase().trim();
+    const visible = items.filter((i) => !qFilter || (i.name + ' ' + (i.ar || '')).toLowerCase().includes(qFilter));
+
+    const grid = el('div', 'ord-quick-grid');
+    visible.forEach((i) => grid.append(createQuickItemCard(i, db, ar)));
+    root.append(grid);
+    appendGeneralBottomBar(root);
+  }
+
+  // ---- Page 4: Single Item Stepper Card ----
+  function buildItemStepperControls(card, i, opts = {}) {
+    const isLegacy = typeof opts === 'object' && ('qty' in opts);
+    const line = isLegacy ? opts : ((opts && opts.line) || store().ordLine(i.id));
+    const root = isLegacy ? arguments[3] : (opts && opts.root);
+    const ar = isAr();
+    const db = store().getDB();
+    const qtyRow = el('div', 'ord-qty-row');
+    const stepper = el('div', 'ord-stepper-lg');
+    const minus = el('button', '', '−');
+    minus.type = 'button';
+    const qtyIn = el('input', '');
+    qtyIn.type = 'number';
+    qtyIn.min = '0';
+    qtyIn.max = '9999';
+    qtyIn.value = String(line.qty);
+
+    const denom = el('span', 'ord-denom');
+    denom.append('/ ', el('b', '', store().ordStockDenominator(i)));
+    const plus = el('button', '', '+');
+    plus.type = 'button';
+    stepper.append(minus, qtyIn, denom, plus);
+
+    const unitSel = el('select', 'in ord-unit-sel');
+    const units = (FOH.ordersCatalog && FOH.ordersCatalog.ORD_UNITS) || {};
+    Object.entries(units).forEach(([uk, uLabel]) => {
+      const opt = el('option', '', uLabel);
+      opt.value = uk;
+      opt.selected = uk === (line.unit || i.unit || 'bottle');
+      unitSel.append(opt);
+    });
+    qtyRow.append(stepper, unitSel);
+    card.append(qtyRow);
+
+    const commitQty = (val) => {
+      const q = Math.max(0, Number(val || 0));
+      db.order.lines[i.id] = { ...line, qty: q, unit: unitSel.value };
+      db.order.visited[i.id] = true;
+      delete db.order.skipped[i.id];
+      store().saveOrdersDB();
+    };
+
+    minus.addEventListener('click', () => {
+      const cur = Math.max(0, Number(qtyIn.value || 0) - 1);
+      qtyIn.value = String(cur);
+      commitQty(cur);
+    });
+    plus.addEventListener('click', () => {
+      const cur = Number(qtyIn.value || 0) + 1;
+      qtyIn.value = String(cur);
+      commitQty(cur);
+    });
+    qtyIn.addEventListener('change', () => commitQty(qtyIn.value));
+    unitSel.addEventListener('change', () => commitQty(qtyIn.value));
+
+    return { commitQty, qtyIn };
+  }
+
+  function buildItemStepperNav(opts) {
+    const { card, i, catItems, curIdx, c, commitFn, qtyIn } = opts;
+    const ar = isAr();
+    const db = store().getDB();
+    const actRow = el('div', 'ord-item-nav');
+    if (curIdx > 0) {
+      const prevBtn = el('button', 'btn', ar ? '← السابق' : '← Previous');
+      prevBtn.type = 'button';
+      prevBtn.addEventListener('click', () => ordGo('item/' + catItems[curIdx - 1].id));
+      actRow.append(prevBtn);
+    }
+
+    const skipBtn = el('button', 'btn', ar ? 'تخطي الصنف' : 'Skip item');
+    skipBtn.type = 'button';
+    skipBtn.addEventListener('click', () => {
+      db.order.skipped[i.id] = true;
+      store().saveOrdersDB();
+      navigateNextItem(catItems, curIdx, c);
+    });
+
+    const nextBtn = el('button', 'btn primary', ar ? 'التالي →' : 'Next →');
+    nextBtn.type = 'button';
+    nextBtn.addEventListener('click', () => {
+      commitFn(qtyIn.value);
+      navigateNextItem(catItems, curIdx, c);
+    });
+
+    actRow.append(skipBtn, nextBtn);
+    card.append(actRow);
+  }
+
+  function renderItemStepperCard(root, itemId) {
+    const ar = isAr();
+    const i = store().ordById(itemId);
+    if (!i) { ordGo('home'); return; }
+
+    const c = store().ordCat(i.cat);
+    const line = store().ordLine(i.id);
+    const catItems = store().ordCatItems(i.cat);
+    const curIdx = catItems.findIndex((it) => it.id === i.id);
+
+    root.append(buildOrdBreadcrumbs(c ? c.group : null, c ? c.id : null, i.name));
+
+    const card = el('section', 'card ord-stepper-card');
+    const head = el('div', 'ord-item-head');
+    head.append(
+      Object.assign(el('div', 'ord-item-Title'), {
+        innerHTML: '<small>' + FOH.escapeHtml(ar && c ? c.nameAr || c.name : (c ? c.name : '')) + '</small>' +
+          '<h3>' + FOH.escapeHtml(ar && i.ar ? i.ar + ' · ' + i.name : i.name) + '</h3>' +
+          '<small>' + FOH.escapeHtml(i.packSize || i.id.toUpperCase()) + '</small>',
+      })
+    );
+    card.append(head);
+
+    const stockBox = el('div', 'ord-stock-panel');
+    const stockLeft = el('div', '');
+    stockLeft.append(
+      el('b', '', ar ? 'المخزون المسجّل' : 'Recorded stock'),
+      el('small', '', ar ? 'مؤكد في الجرد' : 'Confirmed stock')
+    );
+    const editBtn = el('button', 'btn small', '✎ ' + (ar ? 'تحديث المخزون' : 'Edit stock'));
+    editBtn.type = 'button';
+    editBtn.addEventListener('click', () => {
+      store().promptEditStock(i, () => renderOrdersView(root));
+    });
+    stockLeft.append(editBtn);
+
+    const stockRight = el('div', 'ord-stock-val', store().ordStockLabel(i));
+    stockBox.append(stockLeft, stockRight);
+    card.append(stockBox);
+
+    const { commitQty, qtyIn } = buildItemStepperControls(card, i, line, root);
+    buildItemStepperNav({ card, i, catItems, curIdx, c, commitFn: commitQty, qtyIn });
+
+    root.append(card);
+    appendGeneralBottomBar(root);
+  }
+
+  function navigateNextItem(catItems, curIdx, c) {
+    if (ordReturnToReview) {
+      ordReturnToReview = false;
+      ordGo('review');
+      return;
+    }
+    if (curIdx < catItems.length - 1) {
+      ordGo('item/' + catItems[curIdx + 1].id);
+    } else {
+      ordGo('complete/' + (c ? c.id : ''));
+    }
+  }
+
+  // ---- Page 5: Category Complete ----
+  function renderCategoryComplete(root, catId) {
+    const ar = isAr();
+    const c = store().ordCat(catId);
+    if (!c) { ordGo('home'); return; }
+
+    const list = store().ordCatItems(c.id);
+    const done = store().ordCatDone(c.id);
+    const skipped = store().ordCatSkipped(c.id);
+    const pending = store().ordPendingItem(c.id);
+    const reqCount = list.filter((i) => store().ordLine(i.id).qty > 0).length;
+
+    root.append(buildOrdBreadcrumbs(c.group, c.id));
+    const box = el('section', 'card');
+    box.style.padding = '18px';
+    box.style.textAlign = 'center';
+    box.append(
+      el('div', '', '✅'),
+      el('h2', 'ord-page-title', pending ? (ar ? 'تم حفظ كمياتك' : 'Quantities saved') : (ar ? 'اكتمل فحص الكاتيجوري' : 'Category complete')),
+      el('p', 'ord-page-sub', ar ? 'تم حفظ الأصناف المطلوبة. يمكنك مراجعة الطلبية أو اختيار قسم آخر.' : 'Requested items saved. Review order or choose another section.')
+    );
+
+    const stats = el('div', 'ord-stats-grid');
+    [
+      [reqCount, ar ? 'أصناف مطلوبة' : 'Requested items'],
+      [done, ar ? 'تم فحصها' : 'Checked'],
+      [skipped, ar ? 'تم تخطيها' : 'Skipped'],
+    ].forEach(([val, lbl]) => {
+      const s = el('div', 'ord-stat-box');
+      s.append(el('strong', '', String(val)), el('span', '', lbl));
+      stats.append(s);
+    });
+    box.append(stats);
+
+    const actCol = el('div', '');
+    actCol.style.display = 'flex';
+    actCol.style.flexDirection = 'column';
+    actCol.style.gap = '8px';
+
+    const revBtn = el('button', 'btn primary', ar ? 'مراجعة الطلبية الكاملة وإرسال WhatsApp' : 'Review full order & send WhatsApp');
+    revBtn.type = 'button';
+    revBtn.addEventListener('click', () => ordGo('review'));
+
+    const typesBtn = el('button', 'btn', ar ? 'اختيار كاتيجوري آخر' : 'Choose another category');
+    typesBtn.type = 'button';
+    typesBtn.addEventListener('click', () => ordGo('types/' + c.group));
+
+    actCol.append(revBtn, typesBtn);
+    box.append(actCol);
+    root.append(box);
+    appendGeneralBottomBar(root);
+  }
+
+  // ---- Page 6: Full Order Review ----
+  function renderOrderReview(root) {
+    const ar = isAr();
+    const db = store().getDB();
+    const selectedList = store().ordSelectedItems();
+
+    root.append(buildOrdBreadcrumbs(null, null, ar ? 'مراجعة الطلبية' : 'Review order'));
+    root.append(
+      el('div', 'ord-kicker', '04 / REVIEW & SEND · مراجعة وإرسال الطلبية'),
+      el('h2', 'ord-page-title', (ar ? 'مراجعة الطلبية الكاملة (' : 'Review full order (') + selectedList.length + ')')
+    );
+
+    const metaCard = el('section', 'card');
+    metaCard.style.padding = '14px';
+    const m = db.order.meta;
+    const session = getSession();
+    const requester = (session && session.displayName) || (S().me && S().me.name) || m.requester || 'Staff';
+    const orderDate = S().date || (FOH.time ? FOH.time.todayISO() : '');
+
+    const autoBanner = el('div', 'ord-meta-auto-banner');
+    autoBanner.append(
+      el('div', 'ord-meta-pill', `👤 ${requester}`),
+      el('div', 'ord-meta-pill', `📅 ${orderDate}`),
+      el('div', 'ord-meta-pill', `📦 ${ar ? 'المستودع الرئيسي' : 'Store Warehouse'}`)
+    );
+
+    const noteLbl = el('label', '', ar ? 'ملاحظة عامة على الطلبية (اختياري)' : 'General order note (optional)');
+    noteLbl.style.display = 'block';
+    noteLbl.style.marginTop = '10px';
+    const noteIn = el('input', 'in');
+    noteIn.value = m.orderNote || '';
+    noteIn.addEventListener('input', () => {
+      m.orderNote = noteIn.value;
+      store().saveOrdersDB();
+    });
+    noteLbl.append(noteIn);
+    metaCard.append(autoBanner, noteLbl);
+    root.append(metaCard);
+
+    if (!selectedList.length) {
+      const emp = el('section', 'card');
+      emp.append(el('p', 'empty', ar ? 'لم تقم بطلب أي صنف بعد.' : 'No items requested yet.'));
+      root.append(emp);
+    } else {
+      renderReviewItemsList(root, selectedList, ar);
+    }
+
+    appendBottomBar(root, (inner) => {
+      const addMoreB = el('button', 'btn', ar ? '+ إضافة أصناف' : '+ Add items');
+      addMoreB.type = 'button';
+      addMoreB.addEventListener('click', () => ordGo('home'));
+
+      const waB = el('button', 'btn primary', ar ? '📲 إرسال عبر WhatsApp' : '📲 Send via WhatsApp');
+      waB.type = 'button';
+      waB.disabled = selectedList.length === 0;
+      waB.addEventListener('click', () => {
+        const msg = dispatch().buildOrdWhatsAppText(ordIncludeStockInMsg);
+        dispatch().openWhatsApp(msg);
+      });
+      inner.append(addMoreB, waB);
+    });
+  }
+
+  function renderReviewItemsList(root, selectedList, ar) {
+    const db = store().getDB();
+    const listCard = el('section', 'card');
+    listCard.style.padding = '12px 14px';
+
+    selectedList.forEach((i) => {
+      const l = store().ordLine(i.id);
+      const row = el('div', 'ord-review-row');
+      row.style.display = 'flex';
+      row.style.alignItems = 'center';
+      row.style.justifyContent = 'space-between';
+      row.style.padding = '8px 0';
+      row.style.borderBottom = '1px dashed var(--line)';
+
+      const left = el('div', '');
+      left.append(
+        el('b', '', ar && i.ar ? `${i.ar} · ${i.name}` : i.name),
+        el('small', '', `${l.note ? '📝 ' + l.note + ' · ' : ''}${ar ? 'المخزون' : 'Stock'}: ${store().ordStockLabel(i)}`)
+      );
+      left.querySelector('small').style.display = 'block';
+      left.querySelector('small').style.color = 'var(--ink2)';
+
+      const right = el('div', '');
+      right.style.display = 'flex';
+      right.style.alignItems = 'center';
+      right.style.gap = '6px';
+      right.append(el('strong', 'ord-picked-pill', `${l.qty} ${store().ordUnitText(l.qty, l.unit || i.unit)}`));
+
+      const delBtn = el('button', 'btn danger small', '✕');
+      delBtn.type = 'button';
+      delBtn.addEventListener('click', () => {
+        db.order.lines[i.id] = { ...l, qty: 0 };
+        store().saveOrdersDB();
+        renderOrdersView(root);
+      });
+      right.append(delBtn);
+
+      row.append(left, right);
+      listCard.append(row);
+    });
+
+    // WhatsApp Message Preview Box
+    const msgText = dispatch().buildOrdWhatsAppText(ordIncludeStockInMsg);
+    const ta = el('textarea', 'ord-msg-box');
+    ta.readOnly = true;
+    ta.value = msgText;
+    listCard.append(ta);
+
+    const actRow = el('div', '');
+    actRow.style.display = 'flex';
+    actRow.style.gap = '8px';
+    actRow.style.marginTop = '10px';
+
+    const copyBtn = el('button', 'btn', ar ? '📋 نسخ النص' : '📋 Copy text');
+    copyBtn.type = 'button';
+    copyBtn.addEventListener('click', () => dispatch().copyOrderText(msgText));
+
+    const resetBtn = el('button', 'btn danger', ar ? 'بدء طلبية جديدة' : 'Start new order');
+    resetBtn.type = 'button';
+    resetBtn.addEventListener('click', () => {
+      store().promptStartNewOrder(() => ordGo('home'));
+    });
+
+    actRow.append(copyBtn, resetBtn);
+    listCard.append(actRow);
+    root.append(listCard);
+  }
+
+  // ---- Router ----
+  function renderOrdersView(root) {
+    if (!root) return;
+    root.replaceChildren();
+
+    const [page, param] = (ordRoute || 'home').split('/');
+    if (page === 'home') renderHomeGroups(root);
+    else if (page === 'types') renderCategoryTypes(root, param);
+    else if (page === 'products') renderCategoryProducts(root, param);
+    else if (page === 'item') renderItemStepperCard(root, param);
+    else if (page === 'complete') renderCategoryComplete(root, param);
+    else if (page === 'review') renderOrderReview(root);
+    else renderHomeGroups(root);
+
+    updateOrderBadge();
+  }
+
+  // Expose backwards-compatible API on FOH.ordersView
+  FOH.ordersView = {
+    emptyOrderState: () => store().emptyOrderState(),
+    loadOrdersDB: () => store().loadOrdersDB(),
+    saveOrdersDB: () => store().saveOrdersDB(),
+    allowedGroupsForCurrentRole: (force) => store().allowedGroupsForCurrentRole(force),
+    updateOrderBadge,
+    renderOrdersView,
+    buildOrdWhatsAppText: (inc) => dispatch().buildOrdWhatsAppText(inc),
+    promptStartNewOrder: (cb) => store().promptStartNewOrder(cb),
+    go: ordGo,
+    get ORD_SEED() {
+      return (FOH.ordersCatalog && FOH.ordersCatalog.ORD_SEED) || {};
+    },
+  };
+
+  FOH.renderOrdersView = renderOrdersView;
+  FOH.updateOrderBadge = updateOrderBadge;
+})(window.FOH = window.FOH || {});
 
 </script>
 
@@ -20743,9 +20773,11 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
     const ar = isAr();
     const msg = el('div', '');
+    const sName = FOH.escapeHtml(top.staff ? top.staff.name : '');
+    const sExpiry = FOH.escapeHtml(top.staff ? top.staff.healthCertExpiry : '');
     const statusTxt = top.expired
-      ? (ar ? '🚨 تنبيه الشهادة الصحية: شهادة (' + top.staff.name + ') منتهية منذ ' + Math.abs(top.days) + ' يوم (' + top.staff.healthCertExpiry + ')!' : '🚨 Health Certificate Expired: ' + top.staff.name + ' expired ' + Math.abs(top.days) + 'd ago (' + top.staff.healthCertExpiry + ')!')
-      : (ar ? '⚠️ تنبيه الشهادة الصحية: شهادة (' + top.staff.name + ') تنتهي خلال ' + top.days + ' يوم (' + top.staff.healthCertExpiry + ')' : '⚠️ Health Certificate Warning: ' + top.staff.name + ' expires in ' + top.days + ' days (' + top.staff.healthCertExpiry + ')');
+      ? (ar ? '🚨 تنبيه الشهادة الصحية: شهادة (' + sName + ') منتهية منذ ' + Math.abs(top.days) + ' يوم (' + sExpiry + ')!' : '🚨 Health Certificate Expired: ' + sName + ' expired ' + Math.abs(top.days) + 'd ago (' + sExpiry + ')!')
+      : (ar ? '⚠️ تنبيه الشهادة الصحية: شهادة (' + sName + ') تنتهي خلال ' + top.days + ' يوم (' + sExpiry + ')' : '⚠️ Health Certificate Warning: ' + sName + ' expires in ' + top.days + ' days (' + sExpiry + ')');
     msg.innerHTML = '<b>' + statusTxt + '</b>' + (alerts.length > 1 ? (ar ? ' <small>(+' + (alerts.length - 1) + ' تنبيه آخر)</small>' : ' <small>(+' + (alerts.length - 1) + ' more)</small>') : '');
 
     const acts = el('div', 'health-banner-actions');
@@ -20778,481 +20810,481 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
 <script>
 // --- js/domains/governance/suggestions.js ---
-// foh-opening/js/domains/governance/suggestions.js
-// Checklist Suggestions, Manager Lock Bar & Item-Level Floor Notes
-(function (FOH) {
-  'use strict';
-
-  const $ = (id) => document.getElementById(id);
-  const S = FOH.state;
-  const { t } = FOH.i18n;
-  const { el } = FOH.view;
-  const SESSION_KEY = 'foh-opening.erpSession.v1';
-
-  const SUG_KEY = 'super-employee.suggestions.v1';
-  const NOTES_KEY = 'super-employee.itemNotes.v1';
-
-  function isAr() {
-    return FOH.i18n.lang === 'ar';
-  }
-
-  function getSession() {
-    return FOH.sessionAuth ? FOH.sessionAuth.getSession() : null;
-  }
-
-  function loadGov() {
-    return FOH.gov ? FOH.gov.loadGov() : {};
-  }
-
-  function saveGov(g) {
-    if (FOH.gov) FOH.gov.saveGov(g);
-  }
-
-  function canCurrentUserEditChecklist() {
-    return FOH.gov ? FOH.gov.canCurrentUserEditChecklist() : false;
-  }
-
-  function notifyMobileOnNewTaskAdded(t) {
-    if (FOH.taskInbox && FOH.taskInbox.notifyMobileOnNewTaskAdded) {
-      FOH.taskInbox.notifyMobileOnNewTaskAdded(t);
-    } else if (FOH.notifCenter && FOH.notifCenter.notifyMobileOnNewTaskAdded) {
-      FOH.notifCenter.notifyMobileOnNewTaskAdded(t);
-    } else if (FOH.realtime && FOH.realtime.notifyMobileOnNewTaskAdded) {
-      FOH.realtime.notifyMobileOnNewTaskAdded(t);
-    }
-  }
-
-  // ---- 4. Checklist Suggestions & Item Notes ----
-  function loadSuggestions() {
-    try {
-      const list = FOH.safeJsonParse(localStorage.getItem(SUG_KEY), 'null');
-      if (Array.isArray(list)) return list;
-    } catch (err) { /* Suggestions storage read fallback */ }
-    return [
-      {
-        id: 'sug_demo_1',
-        by: 'Sara (Waiter)',
-        role: 'Waiter',
-        kind: 'add',
-        sectionId: (S.tpl.sections[0] && S.tpl.sections[0].id) || '',
-        text: 'Check terrace heaters gas level before 16:00',
-        textAr: 'فحص مستوى الغاز في دفايات التراس قبل الساعة 4:00 عصرًا',
-        note: 'الطقس أصبح باردًا مساءً في التراس',
-        at: FOH.time.todayISO() + ' 11:20',
-        status: 'pending',
-      },
-    ];
-  }
-
-  function saveSuggestions(list) {
-    try {
-      localStorage.setItem(SUG_KEY, JSON.stringify(list));
-    } catch (err) { /* Suggestions storage write fallback */ }
-  }
-
-  function loadItemNotes() {
-    try {
-      return FOH.safeJsonParse(localStorage.getItem(NOTES_KEY), '{}');
-    } catch (err) {
-      /* Item notes storage read fallback */
-      return {};
-    }
-  }
-
-  function saveItemNotes(map) {
-    try {
-      localStorage.setItem(NOTES_KEY, JSON.stringify(map));
-    } catch (err) { /* Notes storage quota fallback */ }
-  }
-
-  function renderGovStatusBadge(gov, canEdit, ar) {
-    const status = el('div', 'gov-status');
-    if (gov.checklistLocked) {
-      status.innerHTML = ar
-        ? '🔒 <span>الشيك ليست مقفلة من المدير (' + (gov.lockedBy || 'Supervisor') + ')</span>'
-        : '🔒 <span>Checklist Locked by Manager (' + (gov.lockedBy || 'Supervisor') + ')</span>';
-    } else if (canEdit) {
-      status.innerHTML = ar
-        ? '🔓 <span>الشيك ليست مفتوحة · لديك صلاحية التعديل المباشر</span>'
-        : '🔓 <span>Checklist Unlocked · You have edit permission</span>';
-    } else {
-      status.innerHTML = ar
-        ? '🛡️ <span>وضع التنفيذ للموظف · يمكنك إضافة ملاحظات أو اقتراح تعديل</span>'
-        : '🛡️ <span>Staff Execution Mode · Add notes or suggest edits</span>';
-    }
-    return status;
-  }
-
-  function appendManagerGovButtons(actions, opts = {}) {
-    const { gov, sess, ar } = opts;
-    const lockBtn = el(
-      'button',
-      'gov-btn' + (gov.checklistLocked ? ' warn' : ''),
-      gov.checklistLocked
-        ? (ar ? '🔓 فتح قفل الشيك ليست' : '🔓 Unlock Checklist')
-        : (ar ? '🔒 قفل الشيك ليست' : '🔒 Lock Checklist')
-    );
-    lockBtn.type = 'button';
-    lockBtn.addEventListener('click', () => {
-      gov.checklistLocked = !gov.checklistLocked;
-      gov.lockedBy = (sess && sess.displayName) || 'Supervisor';
-      gov.lockedAt = FOH.time.nowHM();
-      if (gov.checklistLocked) S.editing = false;
-      saveGov(gov);
-      FOH.edit.toast(
-        gov.checklistLocked
-          ? (ar ? 'تم قفل الشيك ليست بنجاح 🔒' : 'Checklist locked 🔒')
-          : (ar ? 'تم فتح قفل الشيك ليست 🔓' : 'Checklist unlocked 🔓')
-      );
-      FOH.app.render();
-    });
-    actions.append(lockBtn);
-
-    const permBtn = el('button', 'gov-btn', ar ? '⚙️ صلاحيات الموظفين' : '⚙️ Staff Permissions');
-    permBtn.type = 'button';
-    permBtn.addEventListener('click', () => {
-      S.view = 'settings';
-      FOH.app.render();
-    });
-    actions.append(permBtn);
-  }
-
-  function renderGovActionButtons(opts = {}) {
-    const { gov, canEdit, isMgr, sess, ar } = opts;
-    const actions = el('div', 'gov-actions');
-
-    const sugBtn = el('button', 'gov-btn primary', ar ? '💡 اقتراح تعديل / إضافة مهمة' : '💡 Suggest Checklist Edit');
-    sugBtn.type = 'button';
-    sugBtn.addEventListener('click', () => openSuggestionModal());
-    actions.append(sugBtn);
-
-    if (canEdit && !gov.checklistLocked) {
-      const editBtn = el('button', 'gov-btn', ar ? '✎ تعديل بنود الشيك ليست' : '✎ Edit Checklist');
-      editBtn.type = 'button';
-      editBtn.addEventListener('click', () => {
-        S.editing = true;
-        FOH.app.render();
-      });
-      actions.append(editBtn);
-    }
-
-    if (isMgr) {
-      appendManagerGovButtons(actions, { gov, sess, ar });
-    }
-    return actions;
-  }
-
-  function handleApproveSuggestion(sg, secTitle, ar) {
-    const targetSec = S.tpl.sections.find((s) => s.id === sg.sectionId) || S.tpl.sections[0];
-    if (targetSec) {
-      targetSec.items.push({
-        id: FOH.store.uid(),
-        text: sg.text || sg.textAr,
-        textAr: sg.textAr || sg.text,
-        due: '',
-        remindBefore: null,
-        role: '',
-        children: [],
-      });
-      FOH.store.saveTemplate(S.tpl);
-      if (typeof notifyMobileOnNewTaskAdded === 'function') {
-        notifyMobileOnNewTaskAdded({
-          titleEn: sg.text || sg.textAr,
-          titleAr: sg.textAr || sg.text,
-          sectionLabel: secTitle,
-          roleLabel: sg.by,
-        });
-      }
-    }
-    const allSugs = loadSuggestions();
-    const found = allSugs.find((x) => x.id === sg.id);
-    if (found) found.status = 'approved';
-    saveSuggestions(allSugs);
-    FOH.edit.toast(ar ? 'تمت الموافقة وإضافة المهمة إلى الشيك ليست ✓' : 'Suggestion approved and added to checklist ✓');
-    FOH.app.render();
-  }
-
-  function renderSuggestionRow(sg, ar) {
-    const row = el('div', 'sug-item');
-    const info = el('div', '');
-    info.style.flex = '1';
-    const secObj = S.tpl.sections.find((s) => s.id === sg.sectionId) || S.tpl.sections[0];
-    const secTitle = secObj ? FOH.view.sectionName(secObj) : '';
-    info.innerHTML =
-      '<b>' + (sg.kind === 'add' ? '➕ ' : '✏️ ') + (ar ? sg.textAr || sg.text : sg.text || sg.textAr) + '</b>' +
-      '<small style="display:block;color:var(--ink2);margin-top:2px;">👤 ' + sg.by + ' · 📂 ' + secTitle + ' · 🕒 ' + sg.at + (sg.note ? ' · 💬 ' + sg.note : '') + '</small>';
-
-    const btns = el('div', 'gov-actions');
-    const appBtn = el('button', 'gov-btn primary', ar ? '✓ موافقة وإضافة للقائمة' : '✓ Approve & Add');
-    appBtn.type = 'button';
-    appBtn.addEventListener('click', () => handleApproveSuggestion(sg, secTitle, ar));
-
-    const rejBtn = el('button', 'gov-btn', ar ? '✕ رفض' : '✕ Reject');
-    rejBtn.type = 'button';
-    rejBtn.addEventListener('click', () => {
-      const allSugs = loadSuggestions();
-      const found = allSugs.find((x) => x.id === sg.id);
-      if (found) found.status = 'rejected';
-      saveSuggestions(allSugs);
-      FOH.app.render();
-    });
-
-    btns.append(appBtn, rejBtn);
-    row.append(info, btns);
-    return row;
-  }
-
-  function renderSuggestionsAccordion(sugs, ar) {
-    const qBox = el('details', 'sug-card sug-accordion');
-    qBox.style.width = '100%';
-    qBox.style.marginTop = '8px';
-    qBox.style.marginBottom = '0';
-
-    const summary = el('summary', 'sug-summary');
-    summary.style.display = 'flex';
-    summary.style.alignItems = 'center';
-    summary.style.justifyContent = 'space-between';
-    summary.style.cursor = 'pointer';
-    summary.style.padding = '4px 0';
-    summary.style.fontWeight = '700';
-    summary.style.fontSize = '0.84rem';
-    summary.innerHTML =
-      '<span style="display:inline-flex;align-items:center;gap:6px;">' +
-      '<span>💡</span>' +
-      '<b>' + (ar ? 'اقتراحات وملاحظات الموظفين المعلقة (' + sugs.length + ')' : 'Pending Staff Suggestions (' + sugs.length + ')') + '</b>' +
-      '</span>' +
-      '<span style="font-size:0.75rem;padding:2px 8px;border-radius:12px;background:var(--accent);color:#fff;">' + (ar ? 'مراجعة ▾' : 'Review ▾') + '</span>';
-    qBox.append(summary);
-
-    const itemsWrap = el('div', 'sug-items-wrap');
-    itemsWrap.style.marginTop = '8px';
-    sugs.forEach((sg) => {
-      itemsWrap.append(renderSuggestionRow(sg, ar));
-    });
-    qBox.append(itemsWrap);
-    return qBox;
-  }
-
-  function renderChecklistGovBar() {
-    const bar = $('checklistGovBar');
-    if (!bar) return;
-    if (S.editing || S.view !== 'opening') {
-      bar.hidden = true;
-      return;
-    }
-    bar.hidden = false;
-    bar.replaceChildren();
-
-    const ar = isAr();
-    const sess = getSession();
-    const isMgr = !sess || !!sess.isManager;
-    const gov = loadGov();
-    const canEdit = canCurrentUserEditChecklist();
-    const sugs = loadSuggestions().filter((s) => s.status === 'pending');
-
-    const topWrap = el('div', '');
-    topWrap.style.width = '100%';
-    topWrap.style.display = 'flex';
-    topWrap.style.alignItems = 'center';
-    topWrap.style.justifyContent = 'space-between';
-    topWrap.style.flexWrap = 'wrap';
-    topWrap.style.gap = '8px';
-
-    const status = renderGovStatusBadge(gov, canEdit, ar);
-    const actions = renderGovActionButtons({ gov, canEdit, isMgr, sess, ar });
-    topWrap.append(status, actions);
-    bar.append(topWrap);
-
-    if (sugs.length > 0 && isMgr) {
-      bar.append(renderSuggestionsAccordion(sugs, ar));
-    }
-  }
-
-  function buildSuggestionInputs(ar) {
-    const secLbl = el('label', '', ar ? 'القسم (Section)' : 'Section');
-    const secSel = el('select', 'in');
-    S.tpl.sections.forEach((s) => {
-      const o = el('option', '', s.icon + ' ' + FOH.view.sectionName(s));
-      o.value = s.id;
-      secSel.append(o);
-    });
-    secLbl.append(secSel);
-
-    const kindLbl = el('label', '', ar ? 'نوع الاقتراح' : 'Suggestion Type');
-    const kindSel = el('select', 'in');
-    [
-      ['add', ar ? '➕ اقتراح إضافة مهمة جديدة للشيك ليست' : '➕ Suggest adding a new checklist task'],
-      ['edit', ar ? '✏️ اقتراح تعديل مهمة حالية' : '✏️ Suggest modifying an existing task'],
-      ['note', ar ? '💬 ملاحظة ميدانية للمدير حول الشفت' : '💬 General shift note for Manager'],
-    ].forEach(([v, txt]) => {
-      const o = el('option', '', txt);
-      o.value = v;
-      kindSel.append(o);
-    });
-    kindLbl.append(kindSel);
-
-    if (FOH.modalPicker && FOH.modalPicker.enhanceSelect) {
-      FOH.modalPicker.enhanceSelect(secSel, {
-        title: ar ? 'اختر القسم المقترح' : 'Select Target Section',
-        icon: '📂',
-      });
-      FOH.modalPicker.enhanceSelect(kindSel, {
-        title: ar ? 'اختر نوع الاقتراح' : 'Select Suggestion Type',
-        icon: '💡',
-      });
-    }
-
-    const txtArLbl = el('label', '', ar ? 'نص المهمة المقترحة / التعديل (عربي أو إنجليزي)' : 'Suggested Task / Change Text');
-    const txtArIn = el('textarea', 'in');
-    txtArIn.rows = 2;
-    txtArIn.placeholder = ar ? 'مثال: التأكد من تشغيل دفايات التراس قبل الساعة 4:00...' : 'e.g. Check terrace heaters before 16:00...';
-    txtArLbl.append(txtArIn);
-
-    const noteLbl = el('label', '', ar ? 'السبب أو ملاحظة إضافية للمدير' : 'Reason or Additional Note');
-    const noteIn = el('input', 'in');
-    noteIn.placeholder = ar ? 'لماذا تقترح هذا التعديل؟' : 'Why is this helpful?';
-    noteLbl.append(noteIn);
-
-    return { secLbl, secSel, kindLbl, kindSel, txtArLbl, txtArIn, noteLbl, noteIn };
-  }
-
-  function handleSuggestionSubmit(opts = {}) {
-    const { dlg, sess, ar, secSel, kindSel, txtArIn, noteIn } = opts;
-    const val = txtArIn.value.trim();
-    if (!val) return txtArIn.focus();
-    const list = loadSuggestions();
-    list.unshift({
-      id: 'sug_' + Date.now(),
-      by: (sess && sess.displayName) || S.me.name || 'Staff',
-      role: (sess && sess.roleName) || 'Staff',
-      kind: kindSel.value,
-      sectionId: secSel.value,
-      text: val,
-      textAr: val,
-      note: noteIn.value.trim(),
-      at: FOH.time.todayISO() + ' ' + FOH.time.nowHM(),
-      status: 'pending',
-    });
-    saveSuggestions(list);
-    dlg.close();
-    FOH.edit.toast(ar ? 'تم إرسال اقتراحك للمدير للمراجعة والاعتماد ✓' : 'Suggestion sent to Manager for review ✓');
-    FOH.app.render();
-  }
-
-  function openSuggestionModal() {
-    const ar = isAr();
-    const sess = getSession();
-    let dlg = $('suggestDialog');
-    if (!dlg) {
-      dlg = el('dialog', 'sheet');
-      dlg.id = 'suggestDialog';
-      document.body.append(dlg);
-    }
-    dlg.replaceChildren();
-    const form = el('form', '');
-    form.method = 'dialog';
-    form.append(
-      el('div', 'grab'),
-      el('h2', '', ar ? '💡 اقتراح تعديل أو إضافة ملاحظة للشيك ليست' : '💡 Suggest Checklist Change or Note')
-    );
-
-    const inputs = buildSuggestionInputs(ar);
-
-    const actions = el('div', 'sheet-actions');
-    const cancelB = el('button', 'btn', ar ? 'إلغاء' : 'Cancel');
-    cancelB.type = 'button';
-    cancelB.addEventListener('click', () => dlg.close());
-
-    const submitB = el('button', 'btn primary', ar ? '📤 إرسال الاقتراح للمدير' : '📤 Submit Suggestion');
-    submitB.type = 'button';
-    submitB.addEventListener('click', () => handleSuggestionSubmit({
-      dlg,
-      sess,
-      ar,
-      secSel: inputs.secSel,
-      kindSel: inputs.kindSel,
-      txtArIn: inputs.txtArIn,
-      noteIn: inputs.noteIn,
-    }));
-
-    actions.append(cancelB, submitB);
-    form.append(inputs.secLbl, inputs.kindLbl, inputs.txtArLbl, inputs.noteLbl, actions);
-    dlg.append(form);
-    dlg.showModal();
-  }
-
-  function attachItemNoteChip(tx, opts = {}) {
-    const { noteKey, existing, notesMap, ar, sess } = opts;
-    let metaRow = tx.querySelector('.item-meta-row');
-    if (!metaRow) {
-      metaRow = el('div', 'item-meta-row');
-      tx.append(metaRow);
-    }
-    let chip = metaRow.querySelector('.item-note-chip');
-    if (!chip) {
-      chip = el('button', 'item-note-chip' + (existing ? ' has-note' : ''), existing ? (ar ? '💬 تعديل الملاحظة' : '💬 Edit note') : (ar ? '💬 +ملاحظة' : '💬 +Note'));
-      chip.type = 'button';
-      chip.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const currentTxt = (notesMap[noteKey] && notesMap[noteKey].text) || '';
-        const input = prompt(ar ? 'أضف ملاحظة ميدانية على هذه المهمة (اتركها فارغة للمسح):' : 'Add a shift note for this task (leave empty to clear):', currentTxt);
-        if (input === null) return;
-        if (!input.trim()) {
-          delete notesMap[noteKey];
-        } else {
-          notesMap[noteKey] = {
-            text: input.trim(),
-            by: (sess && sess.displayName) || S().me.name || 'Staff',
-            at: FOH.time.nowHM(),
-          };
-        }
-        saveItemNotes(notesMap);
-        FOH.app.render();
-      });
-      metaRow.append(chip);
-    }
-
-    let disp = tx.querySelector('.item-note-display');
-    if (existing && existing.text) {
-      if (!disp) {
-        disp = el('span', 'item-note-display');
-        tx.append(disp);
-      }
-      disp.textContent = '💬 ' + existing.text + ' — (' + existing.by + ' · ' + existing.at + ')';
-    } else if (disp) {
-      disp.remove();
-    }
-  }
-
-  function injectChecklistItemNotes() {
-    if (S.editing || S.view !== 'opening') return;
-    const notesMap = loadItemNotes();
-    const dateKey = S.date;
-    const ar = isAr();
-    const sess = getSession();
-
-    document.querySelectorAll('#sections li.item').forEach((li) => {
-      const cb = li.querySelector('input.ck[data-id]');
-      const tx = li.querySelector('.tx');
-      if (!cb || !tx) return;
-      const itemId = cb.dataset.id;
-      const noteKey = dateKey + '|' + itemId;
-      const existing = notesMap[noteKey];
-      attachItemNoteChip(tx, { noteKey, existing, notesMap, ar, sess });
-    });
-  }
-
-  FOH.suggestions = {
-    loadSuggestions,
-    saveSuggestions,
-    loadItemNotes,
-    saveItemNotes,
-    renderChecklistGovBar,
-    openSuggestionModal,
-    injectChecklistItemNotes,
-  };
-})(window.FOH = window.FOH || {});
+// foh-opening/js/domains/governance/suggestions.js
+// Checklist Suggestions, Manager Lock Bar & Item-Level Floor Notes
+(function (FOH) {
+  'use strict';
+
+  const $ = (id) => document.getElementById(id);
+  const S = FOH.state;
+  const { t } = FOH.i18n;
+  const { el } = FOH.view;
+  const SESSION_KEY = 'foh-opening.erpSession.v1';
+
+  const SUG_KEY = 'super-employee.suggestions.v1';
+  const NOTES_KEY = 'super-employee.itemNotes.v1';
+
+  function isAr() {
+    return FOH.i18n.lang === 'ar';
+  }
+
+  function getSession() {
+    return FOH.sessionAuth ? FOH.sessionAuth.getSession() : null;
+  }
+
+  function loadGov() {
+    return FOH.gov ? FOH.gov.loadGov() : {};
+  }
+
+  function saveGov(g) {
+    if (FOH.gov) FOH.gov.saveGov(g);
+  }
+
+  function canCurrentUserEditChecklist() {
+    return FOH.gov ? FOH.gov.canCurrentUserEditChecklist() : false;
+  }
+
+  function notifyMobileOnNewTaskAdded(t) {
+    if (FOH.taskInbox && FOH.taskInbox.notifyMobileOnNewTaskAdded) {
+      FOH.taskInbox.notifyMobileOnNewTaskAdded(t);
+    } else if (FOH.notifCenter && FOH.notifCenter.notifyMobileOnNewTaskAdded) {
+      FOH.notifCenter.notifyMobileOnNewTaskAdded(t);
+    } else if (FOH.realtime && FOH.realtime.notifyMobileOnNewTaskAdded) {
+      FOH.realtime.notifyMobileOnNewTaskAdded(t);
+    }
+  }
+
+  // ---- 4. Checklist Suggestions & Item Notes ----
+  function loadSuggestions() {
+    try {
+      const list = FOH.safeJsonParse(localStorage.getItem(SUG_KEY), 'null');
+      if (Array.isArray(list)) return list;
+    } catch (err) { /* Suggestions storage read fallback */ }
+    return [
+      {
+        id: 'sug_demo_1',
+        by: 'Sara (Waiter)',
+        role: 'Waiter',
+        kind: 'add',
+        sectionId: (S.tpl.sections[0] && S.tpl.sections[0].id) || '',
+        text: 'Check terrace heaters gas level before 16:00',
+        textAr: 'فحص مستوى الغاز في دفايات التراس قبل الساعة 4:00 عصرًا',
+        note: 'الطقس أصبح باردًا مساءً في التراس',
+        at: FOH.time.todayISO() + ' 11:20',
+        status: 'pending',
+      },
+    ];
+  }
+
+  function saveSuggestions(list) {
+    try {
+      localStorage.setItem(SUG_KEY, JSON.stringify(list));
+    } catch (err) { /* Suggestions storage write fallback */ }
+  }
+
+  function loadItemNotes() {
+    try {
+      return FOH.safeJsonParse(localStorage.getItem(NOTES_KEY), '{}');
+    } catch (err) {
+      /* Item notes storage read fallback */
+      return {};
+    }
+  }
+
+  function saveItemNotes(map) {
+    try {
+      localStorage.setItem(NOTES_KEY, JSON.stringify(map));
+    } catch (err) { /* Notes storage quota fallback */ }
+  }
+
+  function renderGovStatusBadge(gov, canEdit, ar) {
+    const status = el('div', 'gov-status');
+    if (gov.checklistLocked) {
+      status.innerHTML = ar
+        ? '🔒 <span>الشيك ليست مقفلة من المدير (' + (gov.lockedBy || 'Supervisor') + ')</span>'
+        : '🔒 <span>Checklist Locked by Manager (' + (gov.lockedBy || 'Supervisor') + ')</span>';
+    } else if (canEdit) {
+      status.innerHTML = ar
+        ? '🔓 <span>الشيك ليست مفتوحة · لديك صلاحية التعديل المباشر</span>'
+        : '🔓 <span>Checklist Unlocked · You have edit permission</span>';
+    } else {
+      status.innerHTML = ar
+        ? '🛡️ <span>وضع التنفيذ للموظف · يمكنك إضافة ملاحظات أو اقتراح تعديل</span>'
+        : '🛡️ <span>Staff Execution Mode · Add notes or suggest edits</span>';
+    }
+    return status;
+  }
+
+  function appendManagerGovButtons(actions, opts = {}) {
+    const { gov, sess, ar } = opts;
+    const lockBtn = el(
+      'button',
+      'gov-btn' + (gov.checklistLocked ? ' warn' : ''),
+      gov.checklistLocked
+        ? (ar ? '🔓 فتح قفل الشيك ليست' : '🔓 Unlock Checklist')
+        : (ar ? '🔒 قفل الشيك ليست' : '🔒 Lock Checklist')
+    );
+    lockBtn.type = 'button';
+    lockBtn.addEventListener('click', () => {
+      gov.checklistLocked = !gov.checklistLocked;
+      gov.lockedBy = (sess && sess.displayName) || 'Supervisor';
+      gov.lockedAt = FOH.time.nowHM();
+      if (gov.checklistLocked) S.editing = false;
+      saveGov(gov);
+      FOH.edit.toast(
+        gov.checklistLocked
+          ? (ar ? 'تم قفل الشيك ليست بنجاح 🔒' : 'Checklist locked 🔒')
+          : (ar ? 'تم فتح قفل الشيك ليست 🔓' : 'Checklist unlocked 🔓')
+      );
+      FOH.app.render();
+    });
+    actions.append(lockBtn);
+
+    const permBtn = el('button', 'gov-btn', ar ? '⚙️ صلاحيات الموظفين' : '⚙️ Staff Permissions');
+    permBtn.type = 'button';
+    permBtn.addEventListener('click', () => {
+      S.view = 'settings';
+      FOH.app.render();
+    });
+    actions.append(permBtn);
+  }
+
+  function renderGovActionButtons(opts = {}) {
+    const { gov, canEdit, isMgr, sess, ar } = opts;
+    const actions = el('div', 'gov-actions');
+
+    const sugBtn = el('button', 'gov-btn primary', ar ? '💡 اقتراح تعديل / إضافة مهمة' : '💡 Suggest Checklist Edit');
+    sugBtn.type = 'button';
+    sugBtn.addEventListener('click', () => openSuggestionModal());
+    actions.append(sugBtn);
+
+    if (canEdit && !gov.checklistLocked) {
+      const editBtn = el('button', 'gov-btn', ar ? '✎ تعديل بنود الشيك ليست' : '✎ Edit Checklist');
+      editBtn.type = 'button';
+      editBtn.addEventListener('click', () => {
+        S.editing = true;
+        FOH.app.render();
+      });
+      actions.append(editBtn);
+    }
+
+    if (isMgr) {
+      appendManagerGovButtons(actions, { gov, sess, ar });
+    }
+    return actions;
+  }
+
+  function handleApproveSuggestion(sg, secTitle, ar) {
+    const targetSec = S.tpl.sections.find((s) => s.id === sg.sectionId) || S.tpl.sections[0];
+    if (targetSec) {
+      targetSec.items.push({
+        id: FOH.store.uid(),
+        text: sg.text || sg.textAr,
+        textAr: sg.textAr || sg.text,
+        due: '',
+        remindBefore: null,
+        role: '',
+        children: [],
+      });
+      FOH.store.saveTemplate(S.tpl);
+      if (typeof notifyMobileOnNewTaskAdded === 'function') {
+        notifyMobileOnNewTaskAdded({
+          titleEn: sg.text || sg.textAr,
+          titleAr: sg.textAr || sg.text,
+          sectionLabel: secTitle,
+          roleLabel: sg.by,
+        });
+      }
+    }
+    const allSugs = loadSuggestions();
+    const found = allSugs.find((x) => x.id === sg.id);
+    if (found) found.status = 'approved';
+    saveSuggestions(allSugs);
+    FOH.edit.toast(ar ? 'تمت الموافقة وإضافة المهمة إلى الشيك ليست ✓' : 'Suggestion approved and added to checklist ✓');
+    FOH.app.render();
+  }
+
+  function renderSuggestionRow(sg, ar) {
+    const row = el('div', 'sug-item');
+    const info = el('div', '');
+    info.style.flex = '1';
+    const secObj = S.tpl.sections.find((s) => s.id === sg.sectionId) || S.tpl.sections[0];
+    const secTitle = secObj ? FOH.view.sectionName(secObj) : '';
+    info.innerHTML =
+      '<b>' + (sg.kind === 'add' ? '➕ ' : '✏️ ') + (ar ? sg.textAr || sg.text : sg.text || sg.textAr) + '</b>' +
+      '<small style="display:block;color:var(--ink2);margin-top:2px;">👤 ' + sg.by + ' · 📂 ' + secTitle + ' · 🕒 ' + sg.at + (sg.note ? ' · 💬 ' + sg.note : '') + '</small>';
+
+    const btns = el('div', 'gov-actions');
+    const appBtn = el('button', 'gov-btn primary', ar ? '✓ موافقة وإضافة للقائمة' : '✓ Approve & Add');
+    appBtn.type = 'button';
+    appBtn.addEventListener('click', () => handleApproveSuggestion(sg, secTitle, ar));
+
+    const rejBtn = el('button', 'gov-btn', ar ? '✕ رفض' : '✕ Reject');
+    rejBtn.type = 'button';
+    rejBtn.addEventListener('click', () => {
+      const allSugs = loadSuggestions();
+      const found = allSugs.find((x) => x.id === sg.id);
+      if (found) found.status = 'rejected';
+      saveSuggestions(allSugs);
+      FOH.app.render();
+    });
+
+    btns.append(appBtn, rejBtn);
+    row.append(info, btns);
+    return row;
+  }
+
+  function renderSuggestionsAccordion(sugs, ar) {
+    const qBox = el('details', 'sug-card sug-accordion');
+    qBox.style.width = '100%';
+    qBox.style.marginTop = '8px';
+    qBox.style.marginBottom = '0';
+
+    const summary = el('summary', 'sug-summary');
+    summary.style.display = 'flex';
+    summary.style.alignItems = 'center';
+    summary.style.justifyContent = 'space-between';
+    summary.style.cursor = 'pointer';
+    summary.style.padding = '4px 0';
+    summary.style.fontWeight = '700';
+    summary.style.fontSize = '0.84rem';
+    summary.innerHTML =
+      '<span style="display:inline-flex;align-items:center;gap:6px;">' +
+      '<span>💡</span>' +
+      '<b>' + (ar ? 'اقتراحات وملاحظات الموظفين المعلقة (' + sugs.length + ')' : 'Pending Staff Suggestions (' + sugs.length + ')') + '</b>' +
+      '</span>' +
+      '<span style="font-size:0.75rem;padding:2px 8px;border-radius:12px;background:var(--accent);color:#fff;">' + (ar ? 'مراجعة ▾' : 'Review ▾') + '</span>';
+    qBox.append(summary);
+
+    const itemsWrap = el('div', 'sug-items-wrap');
+    itemsWrap.style.marginTop = '8px';
+    sugs.forEach((sg) => {
+      itemsWrap.append(renderSuggestionRow(sg, ar));
+    });
+    qBox.append(itemsWrap);
+    return qBox;
+  }
+
+  function renderChecklistGovBar() {
+    const bar = $('checklistGovBar');
+    if (!bar) return;
+    if (S.editing || S.view !== 'opening') {
+      bar.hidden = true;
+      return;
+    }
+    bar.hidden = false;
+    bar.replaceChildren();
+
+    const ar = isAr();
+    const sess = getSession();
+    const isMgr = !sess || !!sess.isManager;
+    const gov = loadGov();
+    const canEdit = canCurrentUserEditChecklist();
+    const sugs = loadSuggestions().filter((s) => s.status === 'pending');
+
+    const topWrap = el('div', '');
+    topWrap.style.width = '100%';
+    topWrap.style.display = 'flex';
+    topWrap.style.alignItems = 'center';
+    topWrap.style.justifyContent = 'space-between';
+    topWrap.style.flexWrap = 'wrap';
+    topWrap.style.gap = '8px';
+
+    const status = renderGovStatusBadge(gov, canEdit, ar);
+    const actions = renderGovActionButtons({ gov, canEdit, isMgr, sess, ar });
+    topWrap.append(status, actions);
+    bar.append(topWrap);
+
+    if (sugs.length > 0 && isMgr) {
+      bar.append(renderSuggestionsAccordion(sugs, ar));
+    }
+  }
+
+  function buildSuggestionInputs(ar) {
+    const secLbl = el('label', '', ar ? 'القسم (Section)' : 'Section');
+    const secSel = el('select', 'in');
+    S.tpl.sections.forEach((s) => {
+      const o = el('option', '', s.icon + ' ' + FOH.view.sectionName(s));
+      o.value = s.id;
+      secSel.append(o);
+    });
+    secLbl.append(secSel);
+
+    const kindLbl = el('label', '', ar ? 'نوع الاقتراح' : 'Suggestion Type');
+    const kindSel = el('select', 'in');
+    [
+      ['add', ar ? '➕ اقتراح إضافة مهمة جديدة للشيك ليست' : '➕ Suggest adding a new checklist task'],
+      ['edit', ar ? '✏️ اقتراح تعديل مهمة حالية' : '✏️ Suggest modifying an existing task'],
+      ['note', ar ? '💬 ملاحظة ميدانية للمدير حول الشفت' : '💬 General shift note for Manager'],
+    ].forEach(([v, txt]) => {
+      const o = el('option', '', txt);
+      o.value = v;
+      kindSel.append(o);
+    });
+    kindLbl.append(kindSel);
+
+    if (FOH.modalPicker && FOH.modalPicker.enhanceSelect) {
+      FOH.modalPicker.enhanceSelect(secSel, {
+        title: ar ? 'اختر القسم المقترح' : 'Select Target Section',
+        icon: '📂',
+      });
+      FOH.modalPicker.enhanceSelect(kindSel, {
+        title: ar ? 'اختر نوع الاقتراح' : 'Select Suggestion Type',
+        icon: '💡',
+      });
+    }
+
+    const txtArLbl = el('label', '', ar ? 'نص المهمة المقترحة / التعديل (عربي أو إنجليزي)' : 'Suggested Task / Change Text');
+    const txtArIn = el('textarea', 'in');
+    txtArIn.rows = 2;
+    txtArIn.placeholder = ar ? 'مثال: التأكد من تشغيل دفايات التراس قبل الساعة 4:00...' : 'e.g. Check terrace heaters before 16:00...';
+    txtArLbl.append(txtArIn);
+
+    const noteLbl = el('label', '', ar ? 'السبب أو ملاحظة إضافية للمدير' : 'Reason or Additional Note');
+    const noteIn = el('input', 'in');
+    noteIn.placeholder = ar ? 'لماذا تقترح هذا التعديل؟' : 'Why is this helpful?';
+    noteLbl.append(noteIn);
+
+    return { secLbl, secSel, kindLbl, kindSel, txtArLbl, txtArIn, noteLbl, noteIn };
+  }
+
+  function handleSuggestionSubmit(opts = {}) {
+    const { dlg, sess, ar, secSel, kindSel, txtArIn, noteIn } = opts;
+    const val = txtArIn.value.trim();
+    if (!val) return txtArIn.focus();
+    const list = loadSuggestions();
+    list.unshift({
+      id: 'sug_' + Date.now(),
+      by: (sess && sess.displayName) || S.me.name || 'Staff',
+      role: (sess && sess.roleName) || 'Staff',
+      kind: kindSel.value,
+      sectionId: secSel.value,
+      text: val,
+      textAr: val,
+      note: noteIn.value.trim(),
+      at: FOH.time.todayISO() + ' ' + FOH.time.nowHM(),
+      status: 'pending',
+    });
+    saveSuggestions(list);
+    dlg.close();
+    FOH.edit.toast(ar ? 'تم إرسال اقتراحك للمدير للمراجعة والاعتماد ✓' : 'Suggestion sent to Manager for review ✓');
+    FOH.app.render();
+  }
+
+  function openSuggestionModal() {
+    const ar = isAr();
+    const sess = getSession();
+    let dlg = $('suggestDialog');
+    if (!dlg) {
+      dlg = el('dialog', 'sheet');
+      dlg.id = 'suggestDialog';
+      document.body.append(dlg);
+    }
+    dlg.replaceChildren();
+    const form = el('form', '');
+    form.method = 'dialog';
+    form.append(
+      el('div', 'grab'),
+      el('h2', '', ar ? '💡 اقتراح تعديل أو إضافة ملاحظة للشيك ليست' : '💡 Suggest Checklist Change or Note')
+    );
+
+    const inputs = buildSuggestionInputs(ar);
+
+    const actions = el('div', 'sheet-actions');
+    const cancelB = el('button', 'btn', ar ? 'إلغاء' : 'Cancel');
+    cancelB.type = 'button';
+    cancelB.addEventListener('click', () => dlg.close());
+
+    const submitB = el('button', 'btn primary', ar ? '📤 إرسال الاقتراح للمدير' : '📤 Submit Suggestion');
+    submitB.type = 'button';
+    submitB.addEventListener('click', () => handleSuggestionSubmit({
+      dlg,
+      sess,
+      ar,
+      secSel: inputs.secSel,
+      kindSel: inputs.kindSel,
+      txtArIn: inputs.txtArIn,
+      noteIn: inputs.noteIn,
+    }));
+
+    actions.append(cancelB, submitB);
+    form.append(inputs.secLbl, inputs.kindLbl, inputs.txtArLbl, inputs.noteLbl, actions);
+    dlg.append(form);
+    dlg.showModal();
+  }
+
+  function attachItemNoteChip(tx, opts = {}) {
+    const { noteKey, existing, notesMap, ar, sess } = opts;
+    let metaRow = tx.querySelector('.item-meta-row');
+    if (!metaRow) {
+      metaRow = el('div', 'item-meta-row');
+      tx.append(metaRow);
+    }
+    let chip = metaRow.querySelector('.item-note-chip');
+    if (!chip) {
+      chip = el('button', 'item-note-chip' + (existing ? ' has-note' : ''), existing ? (ar ? '💬 تعديل الملاحظة' : '💬 Edit note') : (ar ? '💬 +ملاحظة' : '💬 +Note'));
+      chip.type = 'button';
+      chip.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const currentTxt = (notesMap[noteKey] && notesMap[noteKey].text) || '';
+        const input = prompt(ar ? 'أضف ملاحظة ميدانية على هذه المهمة (اتركها فارغة للمسح):' : 'Add a shift note for this task (leave empty to clear):', currentTxt);
+        if (input === null) return;
+        if (!input.trim()) {
+          delete notesMap[noteKey];
+        } else {
+          notesMap[noteKey] = {
+            text: input.trim(),
+            by: (sess && sess.displayName) || S().me.name || 'Staff',
+            at: FOH.time.nowHM(),
+          };
+        }
+        saveItemNotes(notesMap);
+        FOH.app.render();
+      });
+      metaRow.append(chip);
+    }
+
+    let disp = tx.querySelector('.item-note-display');
+    if (existing && existing.text) {
+      if (!disp) {
+        disp = el('span', 'item-note-display');
+        tx.append(disp);
+      }
+      disp.textContent = '💬 ' + existing.text + ' — (' + existing.by + ' · ' + existing.at + ')';
+    } else if (disp) {
+      disp.remove();
+    }
+  }
+
+  function injectChecklistItemNotes() {
+    if (S.editing || S.view !== 'opening') return;
+    const notesMap = loadItemNotes();
+    const dateKey = S.date;
+    const ar = isAr();
+    const sess = getSession();
+
+    document.querySelectorAll('#sections li.item').forEach((li) => {
+      const cb = li.querySelector('input.ck[data-id]');
+      const tx = li.querySelector('.tx');
+      if (!cb || !tx) return;
+      const itemId = cb.dataset.id;
+      const noteKey = dateKey + '|' + itemId;
+      const existing = notesMap[noteKey];
+      attachItemNoteChip(tx, { noteKey, existing, notesMap, ar, sess });
+    });
+  }
+
+  FOH.suggestions = {
+    loadSuggestions,
+    saveSuggestions,
+    loadItemNotes,
+    saveItemNotes,
+    renderChecklistGovBar,
+    openSuggestionModal,
+    injectChecklistItemNotes,
+  };
+})(window.FOH = window.FOH || {});
 
 </script>
 
@@ -22572,7 +22604,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       row.style.padding = '8px 0';
       row.style.borderBottom = '1px dashed var(--line)';
       row.style.cursor = 'pointer';
-      row.innerHTML = '<div><b>' + rkLabel + '</b><small style="display:block;color:var(--ink2);font-size:0.72rem;">' + rkSub + '</small></div>';
+      row.innerHTML = '<div><b>' + FOH.escapeHtml(rkLabel) + '</b><small style="display:block;color:var(--ink2);font-size:0.72rem;">' + FOH.escapeHtml(rkSub) + '</small></div>';
       const cb = el('input', 'sw');
       cb.type = 'checkbox';
       cb.checked = delRoles.includes(rk);
@@ -22614,7 +22646,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       row.style.padding = '8px 0';
       row.style.borderBottom = '1px dashed var(--line)';
       row.style.cursor = uname === 'fadi' ? 'default' : 'pointer';
-      row.innerHTML = '<div><b>👤 ' + fullName + '</b><small style="display:block;color:var(--ink2);font-size:0.72rem;">' + (uname === 'fadi' ? (ar ? '👑 المدير العام (مفعل دائماً)' : '👑 General Manager (Always Active)') : (ar ? 'مهمة إدارة طلبيات الصالة والمستودع' : 'Floor & warehouse order mission')) + '</small></div>';
+      row.innerHTML = '<div><b>👤 ' + FOH.escapeHtml(fullName) + '</b><small style="display:block;color:var(--ink2);font-size:0.72rem;">' + (uname === 'fadi' ? (ar ? '👑 المدير العام (مفعل دائماً)' : '👑 General Manager (Always Active)') : (ar ? 'مهمة إدارة طلبيات الصالة والمستودع' : 'Floor & warehouse order mission')) + '</small></div>';
 
       if (uname === 'fadi') {
         const badge = el('span', 'tag mine', ar ? 'مفعل دائماً' : 'Always Active');
@@ -22691,7 +22723,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       row.style.padding = '8px 0';
       row.style.borderBottom = '1px dashed var(--line)';
       row.style.cursor = 'pointer';
-      row.innerHTML = '<div><b>' + rkLabel + '</b><small style="display:block;color:var(--ink2);font-size:0.72rem;">' + rkSub + '</small></div>';
+      row.innerHTML = '<div><b>' + FOH.escapeHtml(rkLabel) + '</b><small style="display:block;color:var(--ink2);font-size:0.72rem;">' + FOH.escapeHtml(rkSub) + '</small></div>';
       const cb = el('input', 'sw');
       cb.type = 'checkbox';
       cb.checked = delAsgRoles.includes(rk);
@@ -22733,7 +22765,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       row.style.padding = '8px 0';
       row.style.borderBottom = '1px dashed var(--line)';
       row.style.cursor = uname === 'fadi' ? 'default' : 'pointer';
-      row.innerHTML = '<div><b>👤 ' + fullName + '</b><small style="display:block;color:var(--ink2);font-size:0.72rem;">' + (uname === 'fadi' ? (ar ? '👑 المدير العام (مفعل دائماً)' : '👑 General Manager (Always Active)') : (ar ? 'صلاحية تعيين وتوجيه المهام' : 'Task assignment mission')) + '</small></div>';
+      row.innerHTML = '<div><b>👤 ' + FOH.escapeHtml(fullName) + '</b><small style="display:block;color:var(--ink2);font-size:0.72rem;">' + (uname === 'fadi' ? (ar ? '👑 المدير العام (مفعل دائماً)' : '👑 General Manager (Always Active)') : (ar ? 'صلاحية تعيين وتوجيه المهام' : 'Task assignment mission')) + '</small></div>';
 
       if (uname === 'fadi') {
         const badge = el('span', 'tag mine', ar ? 'مفعل دائماً' : 'Always Active');
@@ -24241,7 +24273,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       r.style.padding = '10px 0';
       r.style.borderTop = '1px solid var(--line)';
       const roleObj = (S.tpl.roles || []).find((x) => x.id === p.role);
-      r.innerHTML = '<span>👤 <b>' + p.name + '</b> <small style="color:var(--ink2);">(' + (roleObj ? roleObj.name : 'Staff') + ')</small></span>';
+      r.innerHTML = '<span>👤 <b>' + FOH.escapeHtml(p.name) + '</b> <small style="color:var(--ink2);">(' + FOH.escapeHtml(roleObj ? roleObj.name : 'Staff') + ')</small></span>';
       const cb = el('input', 'sw');
       cb.type = 'checkbox';
       cb.checked = !!p.canEditChecklist;
@@ -27774,21 +27806,22 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
   function resolveHeroText(opts) {
     const { rKey, dispName, leftCount, pct, myStaffId, ar } = opts;
+    const safeDispName = FOH.escapeHtml(dispName || '');
     const isOffToday = FOH.dayOff && FOH.dayOff.isStaffOffToday(myStaffId);
     let titleHtml = '';
     let subHtml = '';
 
     if (rKey === 'super_waiter' || rKey === 'staff') {
-      titleHtml = '⭐ ' + (ar ? 'أهلاً ' + dispName + ' · مساحة عمل الويتر' : 'Welcome ' + dispName + ' · Waiter Station');
+      titleHtml = '⭐ ' + (ar ? 'أهلاً ' + safeDispName + ' · مساحة عمل الويتر' : 'Welcome ' + safeDispName + ' · Waiter Station');
       subHtml = isOffToday ? (ar ? '🌴 عطلة رسمية معتمدة لليوم (OpsFlow Schedule)' : '🌴 Approved day off today (OpsFlow)') : (ar ? 'لديك ' + leftCount + ' مهام متبقية في شيك ليست هذا الشفت' : leftCount + ' tasks left');
     } else if (rKey === 'super_bartender') {
-      titleHtml = '🍸 ' + (ar ? 'أهلاً ' + dispName + ' · محطة عمليات البار' : 'Welcome ' + dispName + ' · Bar Operations');
+      titleHtml = '🍸 ' + (ar ? 'أهلاً ' + safeDispName + ' · محطة عمليات البار' : 'Welcome ' + safeDispName + ' · Bar Operations');
       subHtml = isOffToday ? (ar ? '🌴 عطلة رسمية معتمدة لليوم (OpsFlow Schedule)' : '🌴 Approved day off today') : (ar ? 'لديك ' + leftCount + ' مهام متبقية لتجهيز البار والطلبيات' : leftCount + ' tasks left');
     } else if (rKey === 'super_captain') {
-      titleHtml = '🎖️ ' + (ar ? 'قيادة الصالة والشفت · الكابتن ' + dispName : 'Floor Captain Cockpit · ' + dispName);
+      titleHtml = '🎖️ ' + (ar ? 'قيادة الصالة والشفت · الكابتن ' + safeDispName : 'Floor Captain Cockpit · ' + safeDispName);
       subHtml = ar ? 'جاهزية الصالة ' + pct + '% · إدارة وتعيين مهام الويترية' : 'Floor readiness ' + pct + '% · Waitstaff tasks';
     } else {
-      titleHtml = '👑 ' + (ar ? 'لوحة القيادة التنفيذية · المدير ' + dispName : 'Executive Manager Pulse · ' + dispName);
+      titleHtml = '👑 ' + (ar ? 'لوحة القيادة التنفيذية · المدير ' + safeDispName : 'Executive Manager Pulse · ' + safeDispName);
       subHtml = ar ? 'إشراف كامل على الشيتات الثلاثة، التبس وجاهزية المطعم' : 'Full oversight of shift sheets, tips & readiness';
     }
     return { titleHtml, subHtml };
