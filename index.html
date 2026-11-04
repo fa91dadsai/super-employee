@@ -20552,6 +20552,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       return {
         ...d,
         ...raw,
+        checklistLocked: false, // Ensure operational checklist is open by default
         preferEnglishBrand: raw.preferEnglishBrand !== undefined ? !!raw.preferEnglishBrand : true,
         restaurantName: raw.restaurantName || d.restaurantName,
         restaurantNameAr: raw.restaurantNameAr || raw.restaurantName || d.restaurantName,
@@ -28580,25 +28581,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       });
     }
 
-    ['sections', 'today', 'mine'].forEach((cid) => {
-      const node = $(cid);
-      if (!node) return;
-      node.addEventListener(
-        'click',
-        (ev) => {
-          const cb = ev.target.closest('input.ck[data-id]');
-          if (!cb) return;
-          const gov = loadGov();
-          const sess = getSession();
-          if (gov.checklistLocked && sess && !sess.isManager) {
-            ev.preventDefault();
-            ev.stopPropagation();
-            FOH.edit.toast(isAr() ? '🔒 الشيك ليست مقفلة حاليًا من قِبل المدير' : '🔒 Checklist is currently locked by Manager');
-          }
-        },
-        true
-      );
-    });
+    // Operational task checking is never blocked for staff during active shift
   }
 
   function init() {
