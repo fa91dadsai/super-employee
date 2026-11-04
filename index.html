@@ -6313,6 +6313,45 @@ body.dark .item-title-row .t {
   margin-top: 4px !important;
 }
 
+
+/* Checklist Instant Search Bar */
+.checklist-search-bar {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  background: var(--surface) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 12px !important;
+  padding: 6px 12px !important;
+  margin: 8px 0 !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04) !important;
+}
+.chk-search-icon {
+  font-size: 0.95rem !important;
+  opacity: 0.6 !important;
+}
+.chk-search-input {
+  flex: 1 !important;
+  border: none !important;
+  background: transparent !important;
+  color: var(--ink) !important;
+  font-size: 0.88rem !important;
+  outline: none !important;
+  width: 100% !important;
+}
+.chk-search-input::placeholder {
+  color: var(--ink2) !important;
+  opacity: 0.75 !important;
+}
+.chk-search-clear {
+  background: none !important;
+  border: none !important;
+  color: var(--ink2) !important;
+  font-size: 1.2rem !important;
+  cursor: pointer !important;
+  padding: 0 4px !important;
+}
+
 </style>
   </head>
   <body>
@@ -9835,6 +9874,143 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 </script>
 
 <script>
+// --- js/domains/checklist/checklist-search.js ---
+// foh-opening/js/domains/checklist/checklist-search.js
+// Ultra-fast Arabic/English fuzzy instant search for checklist items
+(function (FOH) {
+  'use strict';
+
+  const $ = (id) => document.getElementById(id);
+  const S = FOH.state;
+  const { el } = FOH.view;
+
+  function isAr() {
+    return FOH.i18n ? FOH.i18n.lang === 'ar' : false;
+  }
+
+  /**
+   * Normalizes Arabic text for tolerant fuzzy matching
+   * Strips Tashkeel, normalizes Alef variants, Ta Marbuta, and Yaa.
+   */
+  function normalizeArabic(str) {
+    if (!str || typeof str !== 'string') return '';
+    return str
+      .toLowerCase()
+      .replace(/[\u064B-\u065F\u0670]/g, '') // remove diacritics
+      .replace(/[إأآاٱ]/g, 'ا')
+      .replace(/[ة]/g, 'ه')
+      .replace(/[يى]/g, 'ي')
+      .replace(/[ؤئ]/g, 'ء')
+      .trim();
+  }
+
+  let searchQuery = '';
+
+  function applySearchFilter(query) {
+    searchQuery = (query || '').trim();
+    const cleanQ = normalizeArabic(searchQuery);
+
+    const sectionsEl = $('sections');
+    if (!sectionsEl) return;
+
+    const cards = sectionsEl.querySelectorAll('section.card');
+    if (!cleanQ) {
+      // Clear search: restore normal item display
+      cards.forEach((card) => {
+        card.querySelectorAll('li.item, li.kid').forEach((li) => {
+          li.style.display = '';
+        });
+      });
+      // Let normal scoping handle card visibility
+      if (FOH.taskAssignment && FOH.taskAssignment.renderAssignedTaskBadgesAndFilter) {
+        FOH.taskAssignment.renderAssignedTaskBadgesAndFilter();
+      }
+      return;
+    }
+
+    // Filter active items
+    cards.forEach((card) => {
+      let matchedInCard = 0;
+      card.querySelectorAll('li.item, li.kid').forEach((li) => {
+        const text = li.textContent || '';
+        const normText = normalizeArabic(text);
+        if (normText.includes(cleanQ)) {
+          li.style.display = '';
+          matchedInCard++;
+        } else {
+          li.style.display = 'none';
+        }
+      });
+
+      // Show card only if it has matches
+      if (matchedInCard > 0) {
+        card.style.display = '';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  }
+
+  function renderChecklistSearchBar() {
+    const mainEl = $('appMain');
+    const sectionsEl = $('sections');
+    if (!mainEl || !sectionsEl) return;
+
+    if (S.editing || S.view !== 'opening') {
+      const existing = $('checklistSearchBar');
+      if (existing) existing.hidden = true;
+      return;
+    }
+
+    let bar = $('checklistSearchBar');
+    if (!bar) {
+      bar = el('div', 'checklist-search-bar run-only');
+      bar.id = 'checklistSearchBar';
+      sectionsEl.parentNode.insertBefore(bar, sectionsEl);
+    }
+    bar.hidden = false;
+    bar.replaceChildren();
+
+    const ar = isAr();
+    const icon = el('span', 'chk-search-icon', '🔍');
+    const input = el('input', 'chk-search-input');
+    input.type = 'search';
+    input.id = 'checklistSearchInput';
+    input.value = searchQuery;
+    input.placeholder = ar ? 'بحث سريع في مهام الشيك ليست (مثال: تنظيف، بار، فحص)...' : 'Quick search checklist items (e.g. clean, bar, check)...';
+    input.autocomplete = 'off';
+
+    const clearBtn = el('button', 'chk-search-clear', '×');
+    clearBtn.type = 'button';
+    clearBtn.title = ar ? 'مسح البحث' : 'Clear search';
+    clearBtn.hidden = !searchQuery;
+
+    input.addEventListener('input', (e) => {
+      const val = e.target.value;
+      clearBtn.hidden = !val;
+      applySearchFilter(val);
+    });
+
+    clearBtn.addEventListener('click', () => {
+      input.value = '';
+      clearBtn.hidden = true;
+      applySearchFilter('');
+      input.focus();
+    });
+
+    bar.append(icon, input, clearBtn);
+  }
+
+  FOH.checklistSearch = {
+    render: renderChecklistSearchBar,
+    applyFilter: applySearchFilter,
+    normalizeArabic,
+  };
+})(window.FOH = window.FOH || {});
+
+</script>
+
+<script>
 // --- js/domains/tasks/tasks-view.js ---
 // Scheduled tasks on screen: "Today's tasks" on the opening page, the
 // "My tasks" tab, and in edit mode the week grid, task list and positions.
@@ -10530,7 +10706,13 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       rolesView: S.editing && S.editTab === 'roles',
     };
     Object.keys(show).forEach((id) => ($(id).hidden = !show[id]));
-    if (show.sections) FOH.view.sections($('sections'));
+    if (show.sections) {
+      FOH.view.sections($('sections'));
+      if (FOH.checklistSearch && FOH.checklistSearch.render) FOH.checklistSearch.render();
+    } else {
+      const searchBar = $('checklistSearchBar');
+      if (searchBar) searchBar.hidden = true;
+    }
     if (show.today) FOH.tasksView.today($('today'));
     if (show.mine) FOH.tasksView.mine($('mine'));
     if (show.ordersView && FOH.erpPwa && FOH.erpPwa.renderOrdersView) FOH.erpPwa.renderOrdersView($('ordersView'));
@@ -11681,7 +11863,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     $('brQty').addEventListener('input', selectedLabel);
     [['brMinus', -1], ['brPlus', 1]].forEach(([id, step]) => $(id).addEventListener('click', () => {
       const current = Number($('brQty').value);
-      $('brQty').value = String(Math.max(1, Math.min(9999, (Number.isFinite(current) ? Math.floor(current) : 1) + step))); selectedLabel();
+      $('brQty').value = String(Math.max(1, Math.min(9999, (Number.isFinite(current) ? Math.floor(current) : 1) + step))); selectedLabel(); if (navigator.vibrate) navigator.vibrate(10);
     }));
     $('brPhoto').addEventListener('change', async (e) => {
       const id = await FOH.photos.add(e.target.files[0]);
@@ -13359,71 +13541,11 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 </script>
 
 <script>
-// --- js/domains/auth/pending-approvals.js ---
-// foh-opening/js/domains/auth/pending-approvals.js
-// Governance: Pending staff name & nickname alteration requests requiring General Manager confirmation
+// --- js/domains/auth/auth-i18n.js ---
+// Auth Domain i18n
 (function (FOH) {
   'use strict';
-
-  const PENDING_CHANGES_KEY = 'super-employee.pendingNameChanges.v1';
-
-  function loadPendingNameChanges() {
-    try {
-      const list = FOH.safeJsonParse(localStorage.getItem(PENDING_CHANGES_KEY), '[]');
-      return Array.isArray(list) ? list : [];
-    } catch {
-      return [];
-    }
-  }
-
-  function savePendingNameChanges(list) {
-    try {
-      localStorage.setItem(PENDING_CHANGES_KEY, JSON.stringify(list));
-    } catch (err) { /* Storage write fallback */ }
-  }
-
-  function getActivePendingNameChanges() {
-    return loadPendingNameChanges().filter((r) => r.status === 'pending');
-  }
-
-  FOH.pendingApprovals = {
-    loadPendingNameChanges,
-    savePendingNameChanges,
-    getActivePendingNameChanges,
-  };
-
-  FOH.loadPendingNameChanges = loadPendingNameChanges;
-  FOH.savePendingNameChanges = savePendingNameChanges;
-})(window.FOH = window.FOH || {});
-
-</script>
-
-<script>
-// --- js/domains/auth/session-auth.js ---
-// foh-opening/js/domains/auth/session-auth.js
-// Authentication, Session Storage & Oasis Staff Directory Access
-(function (FOH) {
-  'use strict';
-
-  'use strict';
-
-  const SUPABASE_URL = 'https://jncnbwwhjmouxptqfjaz.supabase.co';
-  const SUPABASE_ANON_KEY = 'sb_publishable_82pr7lscQZiCiyxUT_TTEA_J9IhKuz1';
-  const TENANT_SLUG = 'odyssey';
-  const TENANT_NAME = 'Oasis';
-  const SESSION_KEY = 'foh-opening.erpSession.v1';
-  const THEME_KEY = 'foh-opening.theme';
-  const SIGNOFF_KEY = 'foh-opening.signoffs.v1';
-  const BATCH_KEY = 'foh-opening.batches.v1';
-  const PENDING_CHANGES_KEY = 'super-employee.pendingNameChanges.v1';
-
-  
-  const $ = (id) => document.getElementById(id);
-  const S = FOH.state;
-  const { t } = FOH.i18n;
-  const { el, btn } = FOH.view;
-  const isAr = () => (FOH.i18n ? FOH.i18n.lang === 'ar' : false);
-
+  if (!FOH.i18n || !FOH.i18n.extend) return;
   FOH.i18n.extend({
     en: {
       loginTitle: 'Opening Sheet FOH',
@@ -13631,6 +13753,15 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     },
   });
 
+})(window.FOH = window.FOH || {});
+
+</script>
+
+<script>
+// --- js/domains/auth/auth-accounts-data.js ---
+// Auth Demo Accounts Catalog
+(function (FOH) {
+  'use strict';
   // Built-in Oasis Staff directory mapped to template staff + OpsFlow Schedule metadata
   const DEMO_ACCOUNTS = [
     {
@@ -13717,6 +13848,79 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   ];
 
   let session = loadSession();
+
+  FOH.authAccountsData = DEMO_ACCOUNTS;
+})(window.FOH = window.FOH || {});
+
+</script>
+
+<script>
+// --- js/domains/auth/pending-approvals.js ---
+// foh-opening/js/domains/auth/pending-approvals.js
+// Governance: Pending staff name & nickname alteration requests requiring General Manager confirmation
+(function (FOH) {
+  'use strict';
+
+  const PENDING_CHANGES_KEY = 'super-employee.pendingNameChanges.v1';
+
+  function loadPendingNameChanges() {
+    try {
+      const list = FOH.safeJsonParse(localStorage.getItem(PENDING_CHANGES_KEY), '[]');
+      return Array.isArray(list) ? list : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function savePendingNameChanges(list) {
+    try {
+      localStorage.setItem(PENDING_CHANGES_KEY, JSON.stringify(list));
+    } catch (err) { /* Storage write fallback */ }
+  }
+
+  function getActivePendingNameChanges() {
+    return loadPendingNameChanges().filter((r) => r.status === 'pending');
+  }
+
+  FOH.pendingApprovals = {
+    loadPendingNameChanges,
+    savePendingNameChanges,
+    getActivePendingNameChanges,
+  };
+
+  FOH.loadPendingNameChanges = loadPendingNameChanges;
+  FOH.savePendingNameChanges = savePendingNameChanges;
+})(window.FOH = window.FOH || {});
+
+</script>
+
+<script>
+// --- js/domains/auth/session-auth.js ---
+// foh-opening/js/domains/auth/session-auth.js
+// Authentication, Session Storage & Oasis Staff Directory Access
+(function (FOH) {
+  'use strict';
+
+  'use strict';
+
+  const SUPABASE_URL = 'https://jncnbwwhjmouxptqfjaz.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_82pr7lscQZiCiyxUT_TTEA_J9IhKuz1';
+  const TENANT_SLUG = 'odyssey';
+  const TENANT_NAME = 'Oasis';
+  const SESSION_KEY = 'foh-opening.erpSession.v1';
+  const THEME_KEY = 'foh-opening.theme';
+  const SIGNOFF_KEY = 'foh-opening.signoffs.v1';
+  const BATCH_KEY = 'foh-opening.batches.v1';
+  const PENDING_CHANGES_KEY = 'super-employee.pendingNameChanges.v1';
+
+  
+  const $ = (id) => document.getElementById(id);
+  const S = FOH.state;
+  const { t } = FOH.i18n;
+  const { el, btn } = FOH.view;
+  const isAr = () => (FOH.i18n ? FOH.i18n.lang === 'ar' : false);
+
+  const DEMO_ACCOUNTS = FOH.authAccountsData || [];
   let showPreviewBar = false;
 
   function loadSession() {
@@ -14098,7 +14302,6 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     });
   } catch (err) { /* Session parse/storage fallback */ }
 })(window.FOH = window.FOH || {});
-
 </script>
 
 <script>
@@ -15800,9 +16003,10 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
     let pill = metaRow.querySelector('.sec-asg-pill');
     const session = FOH.sessionAuth ? FOH.sessionAuth.getSession() : null;
+    const curSuperRole = FOH.roleIdentity ? FOH.roleIdentity.getCurrentSuperRoleKey() : '';
     const isSelfSection = session && (
       (sec.assignedUsername && sec.assignedUsername.toLowerCase() === (session.username || '').toLowerCase()) ||
-      (sec.assignedRoleKey && sec.assignedRoleKey === session.role)
+      (sec.assignedRoleKey && (sec.assignedRoleKey === curSuperRole || sec.assignedRoleKey === session.role))
     );
 
     // Regular staff viewing their own section don't need redundant self-role badges
@@ -17037,9 +17241,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 </script>
 
 <script>
-// --- js/domains/tasks/task-assignment.js ---
-// foh-opening/js/domains/tasks/task-assignment.js
-// Add & Assign Tasks to Specific Employees or Roles with Department Filtering
+// --- js/domains/tasks/task-assignment-state.js ---
+// Task Assignment Module
 (function (FOH) {
   'use strict';
 
@@ -17050,11 +17253,11 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   const SESSION_KEY = 'foh-opening.erpSession.v1';
 
   function isAr() {
-    return FOH.i18n.lang === 'ar';
+    return FOH.i18n ? FOH.i18n.lang === 'ar' : false;
   }
 
   function getSession() {
-    return FOH.sessionAuth ? FOH.sessionAuth.getSession() : null;
+    return FOH.sessionAuth ? FOH.sessionAuth.loadSession() : null;
   }
 
   function getCurrentSuperRoleKey() {
@@ -17062,14 +17265,12 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   }
 
   function roleName(id) {
-    return FOH.taskSheet && FOH.taskSheet.roleName ? FOH.taskSheet.roleName(id) : 'Staff';
+    return (FOH.staff && FOH.staff.roleName(id)) || id || '';
   }
 
   function getActiveSheetType() {
-    return FOH.threeShifts ? FOH.threeShifts.getActiveSheetType() : 'opening';
+    return (FOH.sheetState && FOH.sheetState.getActiveSheetType) ? FOH.sheetState.getActiveSheetType() : 'opening';
   }
-
-  const roleScopeOnly = true;
 
   function notifyMobileOnNewTaskAdded(t) {
     if (FOH.taskInbox && FOH.taskInbox.notifyMobileOnNewTaskAdded) {
@@ -17105,6 +17306,220 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   // ============================================================================
   // Task Assignment Sub-Renderers & Modals (< 80 lines per function)
   // ============================================================================
+
+
+  function buildTaskRuleAndBadge(recurData, rKey, opts = {}) {
+    const isLegacy = typeof opts === 'string';
+    const empUser = isLegacy ? opts : ((opts && opts.empUser) || '');
+    const ar = isLegacy ? !!arguments[3] : (opts && typeof opts.ar === 'boolean' ? opts.ar : isAr());
+    const roleBadgeMap = {
+      super_waiter: '⭐ Super Waiter',
+      super_bartender: '🍸 Super Bartender',
+      super_captain: '🎖️ Super Captain',
+      super_manager: '👑 Super Manager',
+      all: ar ? '👥 الجميع' : '👥 All',
+    };
+    const empNameMap = {
+      sara: ar ? 'سارة (Sara)' : 'Sara',
+      maher: ar ? 'ماهر (Maher)' : 'Maher',
+      ali: ar ? 'علي (Ali)' : 'Ali',
+      fadi: ar ? 'فادي (Fadi)' : 'Fadi',
+    };
+    (S.tpl.staff || []).forEach((st) => {
+      const k = (st.name || '').toLowerCase().split(' ')[0];
+      if (k && !empNameMap[k]) empNameMap[k] = st.name;
+    });
+
+    const assignedRoleLabel = (empUser ? ('👤 ' + (empNameMap[empUser] || empUser) + ' · ') : '') + (roleBadgeMap[rKey] || '');
+
+    let taskRule, taskStart, taskEndDate, isOpenEnded, dueHM, scheduleDate;
+    if (recurData.recurType === 'recurring') {
+      dueHM = recurData.recurTimeHM;
+      taskStart = recurData.startDate;
+      isOpenEnded = recurData.isOpenEnded;
+      taskEndDate = isOpenEnded ? null : recurData.endDate;
+      taskRule = { type: 'interval', every: recurData.currentEvery };
+      scheduleDate = null;
+    } else {
+      dueHM = recurData.dueHM;
+      scheduleDate = recurData.onceDate;
+      taskStart = scheduleDate;
+      taskEndDate = null;
+      isOpenEnded = false;
+      taskRule = { type: 'once', date: scheduleDate };
+    }
+
+    const recurDesc = recurData.recurType === 'recurring'
+      ? (recurData.currentEvery === 1
+          ? (ar ? '🔄 يومياً' : '🔄 Daily')
+          : recurData.currentEvery === 7
+          ? (ar ? '🔄 أسبوعياً' : '🔄 Weekly')
+          : (ar ? '🔄 كل ' + recurData.currentEvery + ' أيام' : '🔄 Every ' + recurData.currentEvery + 'd')) +
+        (isOpenEnded ? '' : (ar ? ' (حتى ' + taskEndDate + ')' : ' (until ' + taskEndDate + ')'))
+      : (scheduleDate ? '📅 ' + scheduleDate : '');
+
+    const fullBadgeLabel = assignedRoleLabel + (recurDesc ? ' · ' + recurDesc : '');
+
+    return {
+      assignedRoleLabel,
+      fullBadgeLabel,
+      taskRule,
+      taskStart,
+      taskEndDate,
+      isOpenEnded,
+      dueHM,
+      scheduleDate,
+      empName: empUser ? (empNameMap[empUser] || empUser) : (roleBadgeMap[rKey] || 'Staff'),
+    };
+  }
+
+  function assembleNewTaskItems(params, meta) {
+    const { textVal, targetSheet, rKey, empUser, recurData } = params;
+    const newItem = {
+      id: 'asg_' + Date.now(),
+      text: textVal,
+      textAr: textVal,
+      due: meta.dueHM,
+      role: '',
+      assignedRoleKey: rKey,
+      assignedUsername: empUser,
+      assignedRoleLabel: meta.fullBadgeLabel,
+      isRecurring: recurData.recurType === 'recurring',
+      scheduleDate: recurData.recurType === 'once' ? meta.scheduleDate : null,
+      recurrence: recurData.recurType === 'recurring' ? {
+        type: 'interval',
+        every: recurData.currentEvery,
+        start: meta.taskStart,
+        endDate: meta.taskEndDate,
+        isOpenEnded: meta.isOpenEnded,
+      } : null,
+      children: [],
+    };
+    const templateTask = {
+      id: newItem.id,
+      text: textVal,
+      textAr: textVal,
+      icon: targetSheet === 'opening' ? '☀️' : targetSheet === 'mid' ? '🌤️' : '🌙',
+      rule: meta.taskRule,
+      start: meta.taskStart,
+      endDate: meta.taskEndDate,
+      isOpenEnded: meta.isOpenEnded,
+      time: meta.dueHM || '14:00',
+      lateAfter: 60,
+      role: '',
+      person: meta.empName,
+      assignedRoleKey: rKey,
+      assignedUsername: empUser,
+      assignedSheet: targetSheet,
+      carry: true,
+      paused: false,
+    };
+    return { newItem, templateTask };
+  }
+
+  function broadcastAssignedTask(sess, targetSheet, opts = {}) {
+    const isLegacy = typeof opts === 'object' && !('meta' in opts);
+    const meta = isLegacy ? opts : (opts && opts.meta);
+    const newItem = isLegacy ? arguments[3] : (opts && opts.newItem);
+    const recurData = isLegacy ? arguments[4] : (opts && opts.recurData);
+    if (FOH.cloudRealtime && FOH.cloudRealtime.broadcast) {
+      FOH.cloudRealtime.broadcast('TASK_ASSIGNED', {
+        senderName: (sess && sess.displayName) || 'Manager',
+        targetSheet,
+        dueHM: meta.dueHM,
+        item: newItem,
+        schedule: {
+          recurType: recurData.recurType,
+          every: recurData.currentEvery,
+          start: meta.taskStart,
+          endDate: meta.taskEndDate,
+          scheduleDate: meta.scheduleDate,
+        },
+      });
+    }
+  }
+
+  function saveAndNotifyTask(params) {
+    const { textVal, targetSheet, targetSecId, rKey, empUser, recurData, ar, dlg } = params;
+    const sess = getSession();
+    const meta = buildTaskRuleAndBadge(recurData, rKey, empUser, ar);
+    const { newItem, templateTask } = assembleNewTaskItems(params, meta);
+
+    if (targetSheet !== getActiveSheetType() && FOH.erpPwa && FOH.erpPwa.switchSheetType) {
+      manualSheetOverride = targetSheet !== getScheduledSheetForNow();
+      FOH.erpPwa.switchSheetType(targetSheet);
+    }
+
+    const secObj = (S.tpl.sections || []).find((s) => s.id === targetSecId) || S.tpl.sections[0];
+    if (secObj) secObj.items.unshift(newItem);
+    if (FOH.erpPwa && FOH.erpPwa.persistCurrentSheetState) FOH.erpPwa.persistCurrentSheetState();
+
+    S.tpl.tasks.unshift(templateTask);
+    FOH.store.saveTemplate(S.tpl);
+    dlg.close();
+
+    notifyMobileOnNewTaskAdded({
+      titleEn: textVal,
+      titleAr: textVal,
+      dueHM: meta.dueHM,
+      sectionLabel: (secObj ? (ar ? secObj.titleAr || secObj.title : secObj.title) : targetSheet),
+      roleLabel: meta.fullBadgeLabel,
+      remindBefore: 0,
+    });
+
+    broadcastAssignedTask(sess, targetSheet, { meta, newItem, recurData });
+    FOH.edit.toast(ar ? '✅ تم حفظ المهمة وتعيينها لـ (' + meta.assignedRoleLabel + ')!' : '✅ Task assigned to ' + meta.assignedRoleLabel + ' & saved!');
+    FOH.app.render();
+  }
+
+
+  FOH.taskAssignmentState = {
+    canCurrentUserAssignTasks,
+    addDaysIso,
+    buildTaskRuleAndBadge,
+    assembleNewTaskItems,
+    broadcastAssignedTask,
+    saveAndNotifyTask,
+    notifyMobileOnNewTaskAdded,
+    getScheduledSheetForNow,
+  };
+})(window.FOH = window.FOH || {});
+
+</script>
+
+<script>
+// --- js/domains/tasks/task-assign-modal.js ---
+// Task Assignment Module
+(function (FOH) {
+  'use strict';
+
+  const $ = (id) => document.getElementById(id);
+  const S = FOH.state;
+  const { t } = FOH.i18n;
+  const { el } = FOH.view;
+  const SESSION_KEY = 'foh-opening.erpSession.v1';
+
+  function isAr() {
+    return FOH.i18n ? FOH.i18n.lang === 'ar' : false;
+  }
+
+  function getSession() {
+    return FOH.sessionAuth ? FOH.sessionAuth.loadSession() : null;
+  }
+
+  function getCurrentSuperRoleKey() {
+    return FOH.roleIdentity ? FOH.roleIdentity.getCurrentSuperRoleKey() : 'staff';
+  }
+
+  function roleName(id) {
+    return (FOH.staff && FOH.staff.roleName(id)) || id || '';
+  }
+
+  function getActiveSheetType() {
+    return (FOH.sheetState && FOH.sheetState.getActiveSheetType) ? FOH.sheetState.getActiveSheetType() : 'opening';
+  }
+
+  const stateHelper = () => FOH.taskAssignmentState || {};
 
   function createAssignModalHeader(dlg, ar) {
     const grab = el('div', 'grab');
@@ -17673,169 +18088,6 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     return { rowAssign, roleSel, empSel };
   }
 
-  function buildTaskRuleAndBadge(recurData, rKey, opts = {}) {
-    const isLegacy = typeof opts === 'string';
-    const empUser = isLegacy ? opts : ((opts && opts.empUser) || '');
-    const ar = isLegacy ? !!arguments[3] : (opts && typeof opts.ar === 'boolean' ? opts.ar : isAr());
-    const roleBadgeMap = {
-      super_waiter: '⭐ Super Waiter',
-      super_bartender: '🍸 Super Bartender',
-      super_captain: '🎖️ Super Captain',
-      super_manager: '👑 Super Manager',
-      all: ar ? '👥 الجميع' : '👥 All',
-    };
-    const empNameMap = {
-      sara: ar ? 'سارة (Sara)' : 'Sara',
-      maher: ar ? 'ماهر (Maher)' : 'Maher',
-      ali: ar ? 'علي (Ali)' : 'Ali',
-      fadi: ar ? 'فادي (Fadi)' : 'Fadi',
-    };
-    (S.tpl.staff || []).forEach((st) => {
-      const k = (st.name || '').toLowerCase().split(' ')[0];
-      if (k && !empNameMap[k]) empNameMap[k] = st.name;
-    });
-
-    const assignedRoleLabel = (empUser ? ('👤 ' + (empNameMap[empUser] || empUser) + ' · ') : '') + (roleBadgeMap[rKey] || '');
-
-    let taskRule, taskStart, taskEndDate, isOpenEnded, dueHM, scheduleDate;
-    if (recurData.recurType === 'recurring') {
-      dueHM = recurData.recurTimeHM;
-      taskStart = recurData.startDate;
-      isOpenEnded = recurData.isOpenEnded;
-      taskEndDate = isOpenEnded ? null : recurData.endDate;
-      taskRule = { type: 'interval', every: recurData.currentEvery };
-      scheduleDate = null;
-    } else {
-      dueHM = recurData.dueHM;
-      scheduleDate = recurData.onceDate;
-      taskStart = scheduleDate;
-      taskEndDate = null;
-      isOpenEnded = false;
-      taskRule = { type: 'once', date: scheduleDate };
-    }
-
-    const recurDesc = recurData.recurType === 'recurring'
-      ? (recurData.currentEvery === 1
-          ? (ar ? '🔄 يومياً' : '🔄 Daily')
-          : recurData.currentEvery === 7
-          ? (ar ? '🔄 أسبوعياً' : '🔄 Weekly')
-          : (ar ? '🔄 كل ' + recurData.currentEvery + ' أيام' : '🔄 Every ' + recurData.currentEvery + 'd')) +
-        (isOpenEnded ? '' : (ar ? ' (حتى ' + taskEndDate + ')' : ' (until ' + taskEndDate + ')'))
-      : (scheduleDate ? '📅 ' + scheduleDate : '');
-
-    const fullBadgeLabel = assignedRoleLabel + (recurDesc ? ' · ' + recurDesc : '');
-
-    return {
-      assignedRoleLabel,
-      fullBadgeLabel,
-      taskRule,
-      taskStart,
-      taskEndDate,
-      isOpenEnded,
-      dueHM,
-      scheduleDate,
-      empName: empUser ? (empNameMap[empUser] || empUser) : (roleBadgeMap[rKey] || 'Staff'),
-    };
-  }
-
-  function assembleNewTaskItems(params, meta) {
-    const { textVal, targetSheet, rKey, empUser, recurData } = params;
-    const newItem = {
-      id: 'asg_' + Date.now(),
-      text: textVal,
-      textAr: textVal,
-      due: meta.dueHM,
-      role: '',
-      assignedRoleKey: rKey,
-      assignedUsername: empUser,
-      assignedRoleLabel: meta.fullBadgeLabel,
-      isRecurring: recurData.recurType === 'recurring',
-      scheduleDate: recurData.recurType === 'once' ? meta.scheduleDate : null,
-      recurrence: recurData.recurType === 'recurring' ? {
-        type: 'interval',
-        every: recurData.currentEvery,
-        start: meta.taskStart,
-        endDate: meta.taskEndDate,
-        isOpenEnded: meta.isOpenEnded,
-      } : null,
-      children: [],
-    };
-    const templateTask = {
-      id: newItem.id,
-      text: textVal,
-      textAr: textVal,
-      icon: targetSheet === 'opening' ? '☀️' : targetSheet === 'mid' ? '🌤️' : '🌙',
-      rule: meta.taskRule,
-      start: meta.taskStart,
-      endDate: meta.taskEndDate,
-      isOpenEnded: meta.isOpenEnded,
-      time: meta.dueHM || '14:00',
-      lateAfter: 60,
-      role: '',
-      person: meta.empName,
-      assignedRoleKey: rKey,
-      assignedUsername: empUser,
-      assignedSheet: targetSheet,
-      carry: true,
-      paused: false,
-    };
-    return { newItem, templateTask };
-  }
-
-  function broadcastAssignedTask(sess, targetSheet, opts = {}) {
-    const isLegacy = typeof opts === 'object' && !('meta' in opts);
-    const meta = isLegacy ? opts : (opts && opts.meta);
-    const newItem = isLegacy ? arguments[3] : (opts && opts.newItem);
-    const recurData = isLegacy ? arguments[4] : (opts && opts.recurData);
-    if (FOH.cloudRealtime && FOH.cloudRealtime.broadcast) {
-      FOH.cloudRealtime.broadcast('TASK_ASSIGNED', {
-        senderName: (sess && sess.displayName) || 'Manager',
-        targetSheet,
-        dueHM: meta.dueHM,
-        item: newItem,
-        schedule: {
-          recurType: recurData.recurType,
-          every: recurData.currentEvery,
-          start: meta.taskStart,
-          endDate: meta.taskEndDate,
-          scheduleDate: meta.scheduleDate,
-        },
-      });
-    }
-  }
-
-  function saveAndNotifyTask(params) {
-    const { textVal, targetSheet, targetSecId, rKey, empUser, recurData, ar, dlg } = params;
-    const sess = getSession();
-    const meta = buildTaskRuleAndBadge(recurData, rKey, empUser, ar);
-    const { newItem, templateTask } = assembleNewTaskItems(params, meta);
-
-    if (targetSheet !== getActiveSheetType() && FOH.erpPwa && FOH.erpPwa.switchSheetType) {
-      manualSheetOverride = targetSheet !== getScheduledSheetForNow();
-      FOH.erpPwa.switchSheetType(targetSheet);
-    }
-
-    const secObj = (S.tpl.sections || []).find((s) => s.id === targetSecId) || S.tpl.sections[0];
-    if (secObj) secObj.items.unshift(newItem);
-    if (FOH.erpPwa && FOH.erpPwa.persistCurrentSheetState) FOH.erpPwa.persistCurrentSheetState();
-
-    S.tpl.tasks.unshift(templateTask);
-    FOH.store.saveTemplate(S.tpl);
-    dlg.close();
-
-    notifyMobileOnNewTaskAdded({
-      titleEn: textVal,
-      titleAr: textVal,
-      dueHM: meta.dueHM,
-      sectionLabel: (secObj ? (ar ? secObj.titleAr || secObj.title : secObj.title) : targetSheet),
-      roleLabel: meta.fullBadgeLabel,
-      remindBefore: 0,
-    });
-
-    broadcastAssignedTask(sess, targetSheet, { meta, newItem, recurData });
-    FOH.edit.toast(ar ? '✅ تم حفظ المهمة وتعيينها لـ (' + meta.assignedRoleLabel + ')!' : '✅ Task assigned to ' + meta.assignedRoleLabel + ' & saved!');
-    FOH.app.render();
-  }
 
   function renderAssignModalActionButtons(dlg, title, opts = {}) {
     const isLegacy = typeof opts === 'object' && !('sheetSec' in opts);
@@ -17873,7 +18125,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     saveB.addEventListener('click', () => {
       const textVal = title.titleIn.value.trim();
       if (!textVal) return title.titleIn.focus();
-      saveAndNotifyTask({
+      FOH.taskAssignmentState.saveAndNotifyTask({
         textVal,
         targetSheet: sheetSec.sheetSel.value,
         targetSecId: sheetSec.secSel.value,
@@ -17940,6 +18192,46 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   // ============================================================================
   // Assignment Badges & Filter Sub-Renderers (< 80 lines each)
   // ============================================================================
+
+
+  FOH.taskAssignModal = {
+    openAssignTaskToStaffOrRoleModal,
+  };
+})(window.FOH = window.FOH || {});
+
+</script>
+
+<script>
+// --- js/domains/tasks/task-assignment.js ---
+// Task Assignment Module
+(function (FOH) {
+  'use strict';
+
+  const $ = (id) => document.getElementById(id);
+  const S = FOH.state;
+  const { t } = FOH.i18n;
+  const { el } = FOH.view;
+  const SESSION_KEY = 'foh-opening.erpSession.v1';
+
+  function isAr() {
+    return FOH.i18n ? FOH.i18n.lang === 'ar' : false;
+  }
+
+  function getSession() {
+    return FOH.sessionAuth ? FOH.sessionAuth.loadSession() : null;
+  }
+
+  function getCurrentSuperRoleKey() {
+    return FOH.roleIdentity ? FOH.roleIdentity.getCurrentSuperRoleKey() : 'staff';
+  }
+
+  function roleName(id) {
+    return (FOH.staff && FOH.staff.roleName(id)) || id || '';
+  }
+
+  function getActiveSheetType() {
+    return (FOH.sheetState && FOH.sheetState.getActiveSheetType) ? FOH.sheetState.getActiveSheetType() : 'opening';
+  }
 
   function applyRoleScopeCardFilter(curRole) {
     document.querySelectorAll('#sections > section.card').forEach((card) => {
@@ -18081,6 +18373,16 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
 
 
+  function openAssignTaskToStaffOrRoleModal(...args) {
+    if (FOH.taskAssignModal && FOH.taskAssignModal.openAssignTaskToStaffOrRoleModal) {
+      return FOH.taskAssignModal.openAssignTaskToStaffOrRoleModal(...args);
+    }
+  }
+
+  function canCurrentUserAssignTasks() {
+    return FOH.taskAssignmentState ? FOH.taskAssignmentState.canCurrentUserAssignTasks() : false;
+  }
+
   FOH.taskAssignment = {
     openAssignTaskToStaffOrRoleModal,
     renderAssignedTaskBadgesAndFilter,
@@ -18088,7 +18390,6 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     canCurrentUserAssignTasks,
   };
 })(window.FOH = window.FOH || {});
-
 </script>
 
 <script>
@@ -20196,11 +20497,13 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       const cur = Math.max(0, Number(qtyIn.value || 0) - 1);
       qtyIn.value = String(cur);
       commitQty(cur);
+      if (navigator.vibrate) navigator.vibrate(10);
     });
     plus.addEventListener('click', () => {
       const cur = Number(qtyIn.value || 0) + 1;
       qtyIn.value = String(cur);
       commitQty(cur);
+      if (navigator.vibrate) navigator.vibrate(10);
     });
     qtyIn.addEventListener('change', () => commitQty(qtyIn.value));
     unitSel.addEventListener('change', () => commitQty(qtyIn.value));
@@ -27685,6 +27988,9 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     const grid = renderShiftNavGrid({ ar, curType, scheduledType });
 
     bar.append(head, grid);
+    if (FOH.shiftHandover && FOH.shiftHandover.injectButton) {
+      FOH.shiftHandover.injectButton();
+    }
   }
 
   FOH.threeShifts = {
@@ -27693,6 +27999,296 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     getScheduledSheetForNow,
     enforceTimeBasedSheetSchedule,
     renderUnifiedThreeSheetNav,
+  };
+})(window.FOH = window.FOH || {});
+
+</script>
+
+<script>
+// --- js/domains/shifts/shift-handover.js ---
+// foh-opening/js/domains/shifts/shift-handover.js
+// Smart Shift Handover Cockpit, Continuity & Task Rollover between Shifts
+(function (FOH) {
+  'use strict';
+
+  const $ = (id) => document.getElementById(id);
+  const S = FOH.state;
+  const { el } = FOH.view;
+
+  function isAr() {
+    return FOH.i18n ? FOH.i18n.lang === 'ar' : false;
+  }
+
+  function getCurShiftType() {
+    return (FOH.sheetState && FOH.sheetState.getActiveSheetType) ? FOH.sheetState.getActiveSheetType() : 'opening';
+  }
+
+  function getNextShiftType(cur) {
+    if (cur === 'opening') return 'mid';
+    if (cur === 'mid') return 'closing';
+    return 'opening';
+  }
+
+  function getShiftName(type, ar) {
+    const names = {
+      opening: ar ? '☀️ شفت الافتتاح (Opening)' : '☀️ Opening Shift',
+      mid: ar ? '🌤️ شفت المنتصف (Mid-Shift)' : '🌤️ Mid-Shift',
+      closing: ar ? '🌙 شفت الإغلاق (Closing)' : '🌙 Closing Shift',
+    };
+    return names[type] || type;
+  }
+
+  function collectUncompletedTasks() {
+    const all = FOH.model.allLeaves({ sections: S.tpl.sections || [] });
+    return all.filter((it) => !S.run.checked[it.id]);
+  }
+
+  function collectBreakageCount() {
+    try {
+      const raw = localStorage.getItem('foh-opening.breakage.v1');
+      const list = raw ? JSON.parse(raw) : [];
+      return Array.isArray(list) ? list.length : 0;
+    } catch {
+      /* Safe storage fallback */
+      return 0;
+    }
+  }
+
+  function collectPendingOrdersCount() {
+    try {
+      const db = (FOH.ordersStore && FOH.ordersStore.getDB) ? FOH.ordersStore.getDB() : null;
+      if (!db || !db.order || !db.order.lines) return 0;
+      return Object.values(db.order.lines).filter((l) => Number(l.qty) > 0).length;
+    } catch {
+      /* Safe storage fallback */
+      return 0;
+    }
+  }
+
+  function rolloverTasksToNextShift(tasks, targetShift) {
+    if (!tasks || !tasks.length) return false;
+    const ar = isAr();
+    const tplKey = targetShift === 'closing' ? 'foh-opening.closingTemplate' : 'foh-opening.midTemplate';
+    let targetTpl = null;
+    try {
+      const raw = localStorage.getItem(tplKey);
+      targetTpl = raw ? JSON.parse(raw) : null;
+    } catch {
+      /* Safe storage fallback */
+      targetTpl = null;
+    }
+
+    if (!targetTpl || !Array.isArray(targetTpl.sections) || !targetTpl.sections.length) {
+      targetTpl = JSON.parse(JSON.stringify(S.tpl));
+    }
+
+    let rolloverSec = targetTpl.sections.find((s) => s.id === 'sec-rollover');
+    if (!rolloverSec) {
+      rolloverSec = {
+        id: 'sec-rollover',
+        title: 'Pending Shift Rollover',
+        titleAr: 'مهام مُرحّلة من الشفت السابق',
+        dept: 'floor',
+        items: [],
+      };
+      targetTpl.sections.unshift(rolloverSec);
+    }
+
+    const tag = ar ? ' [مُرحّل من الشفت السابق]' : ' [Shift Rollover]';
+    tasks.forEach((t) => {
+      const newId = 'roll_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      rolloverSec.items.push({
+        id: newId,
+        text: (t.text || '') + tag,
+        textAr: (t.textAr || t.text || '') + tag,
+        due: t.due || '',
+        isCritical: !!t.isCritical,
+        children: [],
+      });
+    });
+
+    try {
+      localStorage.setItem(tplKey, JSON.stringify(targetTpl));
+      return true;
+    } catch {
+      /* Storage quota fallback */
+      return false;
+    }
+  }
+
+  function renderHandoverStatsGrid(stats, ar) {
+    const grid = el('div', 'handover-stats-grid');
+    grid.style.display = 'grid';
+    grid.style.gridTemplateColumns = 'repeat(3, minmax(0, 1fr))';
+    grid.style.gap = '8px';
+    grid.style.margin = '12px 0';
+
+    const items = [
+      { num: stats.uncompleted.length, label: ar ? 'مهام متبقية' : 'Tasks Left', color: stats.uncompleted.length ? '#e74c3c' : '#27ae60', icon: '📋' },
+      { num: stats.pendingOrders, label: ar ? 'أصناف طلبيات' : 'Order Items', color: '#f39c12', icon: '🛒' },
+      { num: stats.breakage, label: ar ? 'حالات كسر' : 'Breakages', color: '#e67e22', icon: '💥' },
+    ];
+
+    items.forEach((it) => {
+      const tile = el('div', 'handover-stat-tile');
+      tile.style.background = 'var(--surface)';
+      tile.style.border = '1px solid var(--line)';
+      tile.style.borderRadius = '10px';
+      tile.style.padding = '10px 6px';
+      tile.style.textAlign = 'center';
+      tile.innerHTML = '<span style="font-size:1.2rem;display:block;">' + it.icon + '</span>' +
+        '<b style="font-size:1.25rem;color:' + it.color + ';display:block;margin:4px 0;">' + it.num + '</b>' +
+        '<small style="font-size:0.72rem;color:var(--ink2);">' + it.label + '</small>';
+      grid.append(tile);
+    });
+    return grid;
+  }
+
+  function renderHandoverHeader(dlg, ar) {
+    const header = el('div', 'handover-modal-head');
+    header.style.display = 'flex';
+    header.style.justifyContent = 'space-between';
+    header.style.alignItems = 'center';
+    header.style.borderBottom = '1px solid var(--line)';
+    header.style.paddingBottom = '10px';
+
+    const title = el('h3', '', ar ? '🤝 تسليم الشفت والتقرير التشغيلي' : '🤝 Shift Handover & Operational Log');
+    title.style.margin = '0';
+    title.style.fontSize = '1.05rem';
+    const closeBtn = el('button', 'btn-close', '×');
+    closeBtn.type = 'button';
+    closeBtn.addEventListener('click', () => dlg.close());
+    header.append(title, closeBtn);
+    return header;
+  }
+
+  function renderHandoverTasksPreview(uncompleted, ar) {
+    const tasksBox = el('div', 'handover-tasks-box');
+    tasksBox.style.maxHeight = '140px';
+    tasksBox.style.overflowY = 'auto';
+    tasksBox.style.background = 'var(--bg)';
+    tasksBox.style.borderRadius = '8px';
+    tasksBox.style.padding = '8px';
+    tasksBox.style.margin = '10px 0';
+
+    if (uncompleted.length === 0) {
+      tasksBox.innerHTML = '<p style="margin:4px;color:#27ae60;font-size:0.82rem;text-align:center;">' +
+        (ar ? '🎉 ممتاز! تم إنجاز جميع مهام الشيك ليست بنسبة 100%' : '🎉 All checklist tasks 100% completed!') + '</p>';
+      return tasksBox;
+    }
+
+    const heading = el('small', '', ar ? 'المهام المعلقة التي سيتم تسليمها:' : 'Pending tasks to hand over:');
+    heading.style.fontWeight = 'bold';
+    heading.style.display = 'block';
+    heading.style.marginBottom = '6px';
+    tasksBox.append(heading);
+    uncompleted.slice(0, 10).forEach((t, i) => {
+      const row = el('div', 'handover-item-row');
+      row.style.fontSize = '0.78rem';
+      row.style.padding = '3px 0';
+      row.style.borderBottom = '1px dashed var(--line)';
+      row.textContent = `${i + 1}. ${ar && t.textAr ? t.textAr : t.text}`;
+      tasksBox.append(row);
+    });
+    if (uncompleted.length > 10) {
+      tasksBox.append(el('small', '', ar ? `... و ${uncompleted.length - 10} مهام أخرى` : `... and ${uncompleted.length - 10} more`));
+    }
+    return tasksBox;
+  }
+
+  function renderHandoverActionButtons(dlg, opts = {}) {
+    const { uncompleted, nextShift, ar } = opts;
+    const actionRow = el('div', 'handover-actions');
+    actionRow.style.display = 'flex';
+    actionRow.style.gap = '8px';
+    actionRow.style.marginTop = '14px';
+
+    if (uncompleted.length > 0) {
+      const rollBtn = el('button', 'btn primary', ar ? '🔁 ترحيل للشفت التالي' : '🔁 Rollover to Next Shift');
+      rollBtn.type = 'button';
+      rollBtn.style.flex = '1';
+      rollBtn.addEventListener('click', () => {
+        const ok = rolloverTasksToNextShift(uncompleted, nextShift);
+        if (ok) {
+          if (navigator.vibrate) navigator.vibrate([15, 60, 15]);
+          FOH.edit.toast(ar ? 'تم ترحيل المهام بنجاح إلى شفت ' + getShiftName(nextShift, ar) + ' ✓' : 'Rolled over tasks to ' + getShiftName(nextShift, ar) + ' ✓');
+          dlg.close();
+          if (FOH.erpPwa && FOH.erpPwa.switchSheetType) {
+            FOH.erpPwa.switchSheetType(nextShift);
+          }
+        }
+      });
+      actionRow.append(rollBtn);
+    }
+
+    const doneBtn = el('button', 'btn', ar ? 'إغلاق' : 'Close');
+    doneBtn.type = 'button';
+    doneBtn.style.minWidth = '80px';
+    doneBtn.addEventListener('click', () => dlg.close());
+    actionRow.append(doneBtn);
+    return actionRow;
+  }
+
+  function openShiftHandoverModal() {
+    const ar = isAr();
+    const curShift = getCurShiftType();
+    const nextShift = getNextShiftType(curShift);
+    const uncompleted = collectUncompletedTasks();
+    const breakage = collectBreakageCount();
+    const pendingOrders = collectPendingOrdersCount();
+
+    const dlg = el('dialog', 'sheet shift-handover-dlg');
+    dlg.style.maxWidth = '460px';
+    dlg.style.width = '94%';
+    dlg.style.padding = '16px';
+    dlg.style.borderRadius = '16px';
+
+    const header = renderHandoverHeader(dlg, ar);
+    const shiftNotice = el('div', 'handover-notice');
+    shiftNotice.style.margin = '10px 0';
+    shiftNotice.style.fontSize = '0.85rem';
+    shiftNotice.innerHTML = ar
+      ? 'تسليم العمل من: <b>' + getShiftName(curShift, ar) + '</b> إلى <b>' + getShiftName(nextShift, ar) + '</b>'
+      : 'Handoff from: <b>' + getShiftName(curShift, ar) + '</b> to <b>' + getShiftName(nextShift, ar) + '</b>';
+
+    const statsGrid = renderHandoverStatsGrid({ uncompleted, breakage, pendingOrders }, ar);
+    const tasksBox = renderHandoverTasksPreview(uncompleted, ar);
+    const actionRow = renderHandoverActionButtons(dlg, { uncompleted, nextShift, ar });
+
+    dlg.append(header, shiftNotice, statsGrid, tasksBox, actionRow);
+    document.body.append(dlg);
+    dlg.showModal();
+    dlg.addEventListener('close', () => dlg.remove());
+  }
+
+  function injectHandoverButtonIntoShiftNav() {
+    const navHead = document.querySelector('.shift-nav-head');
+    if (!navHead) return;
+    let b = navHead.querySelector('#btnShiftHandover');
+    if (!b) {
+      const ar = isAr();
+      b = el('button', 'btn shift-handover-btn', ar ? '🤝 تسليم الشفت' : '🤝 Handover');
+      b.id = 'btnShiftHandover';
+      b.type = 'button';
+      b.style.fontSize = '0.75rem';
+      b.style.padding = '4px 10px';
+      b.style.borderRadius = '20px';
+      b.style.background = 'var(--surface)';
+      b.style.border = '1.5px solid var(--accent)';
+      b.style.color = 'var(--ink)';
+      b.style.fontWeight = 'bold';
+      b.style.cursor = 'pointer';
+      b.addEventListener('click', openShiftHandoverModal);
+      navHead.append(b);
+    }
+  }
+
+  FOH.shiftHandover = {
+    openHandoverModal: openShiftHandoverModal,
+    injectButton: injectHandoverButtonIntoShiftNav,
+    collectUncompletedTasks,
+    collectBreakageCount,
+    collectPendingOrdersCount,
   };
 })(window.FOH = window.FOH || {});
 
