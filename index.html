@@ -14307,6 +14307,230 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 </script>
 
 <script>
+// --- js/domains/auth/profile-dialog-settings.js ---
+// foh-opening/js/domains/auth/profile-dialog-settings.js
+// Profile Dialog Settings & Identity Tab Component
+(function (FOH) {
+  'use strict';
+
+  const $ = (id) => document.getElementById(id);
+  const { el } = FOH.view;
+
+  function isAr() {
+    return FOH.i18n ? FOH.i18n.lang === 'ar' : false;
+  }
+
+  function getSession() {
+    return FOH.sessionAuth ? FOH.sessionAuth.loadSession() : null;
+  }
+
+  function loadPendingNameChanges() {
+    try {
+      return JSON.parse(localStorage.getItem('foh_pending_name_changes') || '[]');
+    } catch {
+      /* Storage quota fallback */
+      return [];
+    }
+  }
+
+  function savePendingNameChanges(list) {
+    try {
+      localStorage.setItem('foh_pending_name_changes', JSON.stringify(list || []));
+    } catch {
+      /* Storage quota fallback */
+    }
+  }
+
+  function setTheme(mode) {
+    if (FOH.state && FOH.state.setTheme) {
+      FOH.state.setTheme(mode);
+    }
+  }
+
+  function renderIdentityForm(container, opts = {}) {
+    const { session, staffRec, isMgr, ar } = opts;
+    const secProf = el('section', 'prof-section');
+    secProf.append(el('h4', '', '👤 ' + (ar ? 'البيانات الشخصية وهوية الموظف في النظام (ERP Profile)' : 'Personal Identity & ERP Profile')));
+
+    const rowContact = el('div', 'two');
+    const emailWrap = el('label', '', ar ? '📧 البريد الإلكتروني (Email)' : '📧 Email Address');
+    const emailIn = el('input', 'in');
+    emailIn.type = 'email';
+    emailIn.value = session.email || staffRec.email || '';
+    emailWrap.append(emailIn);
+
+    const phoneWrap = el('label', '', ar ? '📱 رقم الهاتف والواتساب (Phone / WhatsApp)' : '📱 Phone / WhatsApp');
+    const phoneIn = el('input', 'in');
+    phoneIn.type = 'tel';
+    phoneIn.value = session.phone || staffRec.phone || '';
+    phoneWrap.append(phoneIn);
+    rowContact.append(emailWrap, phoneWrap);
+
+    const nickWrap = el('label', '');
+    nickWrap.style.cssText = 'display:block;margin-top:10px;';
+    nickWrap.innerHTML = '<b>🏷️ ' + (ar ? 'الاسم المستعار في الصالة (Floor Nickname):' : 'Floor Nickname:') + '</b>';
+    const nickIn = el('input', 'in');
+    nickIn.value = session.nickname || staffRec.nickname || '';
+    nickWrap.append(nickIn);
+
+    const syncPills = el('div', 'erp-sync-pill-row');
+    syncPills.innerHTML =
+      '<span class="erp-sync-pill">🏷️ Tip Manager</span>' +
+      '<span class="erp-sync-pill">🗓️ OpsFlow Schedule</span>' +
+      '<span class="erp-sync-pill">👥 HR Directory</span>';
+    nickWrap.append(syncPills);
+
+    const rowNames = el('div', 'two');
+    rowNames.style.marginTop = '10px';
+    const fnWrap = el('label', '', ar ? 'الاسم الأول (Legal First Name)' : 'Legal First Name');
+    const fnIn = el('input', 'in');
+    fnIn.value = session.firstName || '';
+    fnWrap.append(fnIn);
+    const lnWrap = el('label', '', ar ? 'اسم العائلة (Legal Last Name)' : 'Legal Last Name');
+    const lnIn = el('input', 'in');
+    lnIn.value = session.lastName || '';
+    lnWrap.append(lnIn);
+    rowNames.append(fnWrap, lnWrap);
+
+    const curCode = session.inviteCode || staffRec.inviteCode || 'CEEN-1001';
+    const codeBox = createActivationCodeBox(curCode, ar);
+
+    const saveProfBtn = el('button', 'btn primary', ar ? '💾 حفظ التعديلات وإرسال للاعتماد' : '💾 Save Profile & Submit');
+    saveProfBtn.type = 'button';
+    saveProfBtn.style.cssText = 'margin-top:12px;width:100%;';
+    saveProfBtn.addEventListener('click', () => {
+      handleProfileSave({
+        newEmail: emailIn.value.trim(),
+        newPhone: phoneIn.value.trim(),
+        newFn: fnIn.value.trim() || session.firstName,
+        newLn: lnIn.value.trim(),
+        newNick: nickIn.value.trim(),
+      }, { session, staffRec, isMgr, ar });
+    });
+
+    secProf.append(rowContact, nickWrap, rowNames, codeBox, saveProfBtn);
+    container.append(secProf);
+  }
+
+  function renderPasswordChangeBox(session) {
+    const passWrap = el('div', '');
+    passWrap.style.marginTop = '10px';
+    const passIn = el('input', 'in');
+    passIn.type = 'password';
+    passIn.placeholder = t('profNewPass');
+    const passBtn = el('button', 'btn', t('profUpdatePass'));
+    passBtn.type = 'button';
+    passBtn.style.cssText = 'margin-top:8px;width:100%;';
+    passBtn.addEventListener('click', async () => {
+      const np = passIn.value.trim();
+      if (np.length < 4) return;
+      localStorage.setItem('foh-opening.pass.' + session.username, np);
+      if (session.accessToken) {
+        try {
+          await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+            method: 'PUT',
+            headers: {
+              apikey: SUPABASE_ANON_KEY,
+              Authorization: `Bearer ${session.accessToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ password: np }),
+          });
+        } catch (err) {
+          /* Supabase password sync fallback */
+        }
+      }
+      passIn.value = '';
+      FOH.edit.toast(t('profPassChanged'));
+    });
+    passWrap.append(passIn, passBtn);
+    return passWrap;
+  }
+
+  // ---- Sub-Renderer 5B: System Preferences & Security ----
+  function renderSystemPreferences(container, opts = {}) {
+    const { session } = opts;
+    const secSet = el('section', 'prof-section');
+    secSet.append(el('h4', '', '⚙️ ' + t('profSettingsHead')));
+
+    const isDark = document.body.classList.contains('dark');
+    const themeBtn = el('button', 'btn', (isDark ? '☀️ ' + t('profThemeLight') : '🌙 ' + t('profThemeDark')));
+    themeBtn.type = 'button';
+    themeBtn.style.cssText = 'width:100%;margin-bottom:10px;';
+    themeBtn.addEventListener('click', () => {
+      setTheme(document.body.classList.contains('dark') ? 'light' : 'dark');
+      renderProfileBody();
+    });
+    secSet.append(themeBtn);
+
+    const perm = 'Notification' in window ? Notification.permission : 'unsupported';
+    const pushBtn = el('button', 'btn', '🔔 ' + (perm === 'granted' ? t('profPushGranted') : perm === 'denied' ? t('profPushDenied') : t('profPushEnable')));
+    pushBtn.type = 'button';
+    pushBtn.style.cssText = 'width:100%;margin-bottom:10px;';
+    pushBtn.addEventListener('click', async () => {
+      if (!('Notification' in window)) return;
+      let status = Notification.permission;
+      if (status === 'default') status = await Notification.requestPermission();
+      if (status === 'granted') {
+        if ('serviceWorker' in navigator) {
+          const reg = await navigator.serviceWorker.getRegistration();
+          if (reg && reg.showNotification) {
+            await reg.showNotification('Oasis FOH · ' + session.displayName, {
+              body: FOH.i18n.lang === 'ar' ? 'الإشعارات تعمل بنجاح!' : 'Push notifications active!',
+              icon: 'icons/icon-192.png',
+            });
+          }
+        }
+        FOH.edit.toast(t('profPushSent'));
+      }
+      renderProfileBody();
+    });
+    secSet.append(pushBtn);
+    secSet.append(renderPasswordChangeBox(session));
+
+    const outBtn = el('button', 'btn danger', '🚪 ' + t('profLogout'));
+    outBtn.type = 'button';
+    outBtn.style.cssText = 'width:100%;margin-top:8px;';
+    outBtn.addEventListener('click', () => {
+      $('profileSheet').close();
+      saveSession(null, { remember: false });
+      applyAuthUI();
+    });
+    secSet.append(outBtn);
+    container.append(secSet);
+  }
+
+  // ---- Sub-Renderer 5: Tab 3 Coordinator ----
+  function renderSettingsTab(container, opts = {}) {
+    const { session, staffRec, isMgr, ar } = opts;
+    if (staffRec.pendingNameChange && staffRec.pendingNameChange.status === 'pending') {
+      const pnc = staffRec.pendingNameChange;
+      const banner = el('div', 'pending-approval-banner');
+      banner.innerHTML =
+        '<div class="pab-head">⏳ ' + (ar ? 'طلب تعديل الاسم قيد المراجعة' : 'Pending Manager Approval') + '</div>' +
+        '<div class="pab-body">' +
+        '<b>' + (ar ? 'الاسم المطلوب:' : 'Legal Name:') + '</b> ' + (FOH.escapeHtml(pnc.reqFullName || '—')) + '<br>' +
+        '<b>' + (ar ? 'اللقب:' : 'Nickname:') + '</b> 🏷️ ' + (FOH.escapeHtml(pnc.reqNickname || '—')) +
+        '</div>';
+      container.append(banner);
+    }
+    renderIdentityForm(container, { session, staffRec, isMgr, ar });
+    renderSystemPreferences(container, { session, isMgr, ar });
+  }
+
+  // ---- Main Profile Sheet Coordinator ----
+
+  FOH.profileDialogSettings = {
+    renderSettingsTab,
+    renderIdentityForm,
+    renderSystemPreferences,
+    renderPasswordChangeBox
+  };
+})(window.FOH = window.FOH || {});
+
+</script>
+
+<script>
 // --- js/domains/auth/profile-dialog.js ---
 // foh-opening/js/domains/auth/profile-dialog.js
 // Employee Profile Sheet Dialog (PROF-01, Contact Info, Floor Nickname, 3-Tab System)
@@ -14692,178 +14916,13 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   }
 
   // ---- Sub-Renderer 5A: Identity Form ----
-  function renderIdentityForm(container, opts = {}) {
-    const { session, staffRec, isMgr, ar } = opts;
-    const secProf = el('section', 'prof-section');
-    secProf.append(el('h4', '', '👤 ' + (ar ? 'البيانات الشخصية وهوية الموظف في النظام (ERP Profile)' : 'Personal Identity & ERP Profile')));
 
-    const rowContact = el('div', 'two');
-    const emailWrap = el('label', '', ar ? '📧 البريد الإلكتروني (Email)' : '📧 Email Address');
-    const emailIn = el('input', 'in');
-    emailIn.type = 'email';
-    emailIn.value = session.email || staffRec.email || '';
-    emailWrap.append(emailIn);
-
-    const phoneWrap = el('label', '', ar ? '📱 رقم الهاتف والواتساب (Phone / WhatsApp)' : '📱 Phone / WhatsApp');
-    const phoneIn = el('input', 'in');
-    phoneIn.type = 'tel';
-    phoneIn.value = session.phone || staffRec.phone || '';
-    phoneWrap.append(phoneIn);
-    rowContact.append(emailWrap, phoneWrap);
-
-    const nickWrap = el('label', '');
-    nickWrap.style.cssText = 'display:block;margin-top:10px;';
-    nickWrap.innerHTML = '<b>🏷️ ' + (ar ? 'الاسم المستعار في الصالة (Floor Nickname):' : 'Floor Nickname:') + '</b>';
-    const nickIn = el('input', 'in');
-    nickIn.value = session.nickname || staffRec.nickname || '';
-    nickWrap.append(nickIn);
-
-    const syncPills = el('div', 'erp-sync-pill-row');
-    syncPills.innerHTML =
-      '<span class="erp-sync-pill">🏷️ Tip Manager</span>' +
-      '<span class="erp-sync-pill">🗓️ OpsFlow Schedule</span>' +
-      '<span class="erp-sync-pill">👥 HR Directory</span>';
-    nickWrap.append(syncPills);
-
-    const rowNames = el('div', 'two');
-    rowNames.style.marginTop = '10px';
-    const fnWrap = el('label', '', ar ? 'الاسم الأول (Legal First Name)' : 'Legal First Name');
-    const fnIn = el('input', 'in');
-    fnIn.value = session.firstName || '';
-    fnWrap.append(fnIn);
-    const lnWrap = el('label', '', ar ? 'اسم العائلة (Legal Last Name)' : 'Legal Last Name');
-    const lnIn = el('input', 'in');
-    lnIn.value = session.lastName || '';
-    lnWrap.append(lnIn);
-    rowNames.append(fnWrap, lnWrap);
-
-    const curCode = session.inviteCode || staffRec.inviteCode || 'CEEN-1001';
-    const codeBox = createActivationCodeBox(curCode, ar);
-
-    const saveProfBtn = el('button', 'btn primary', ar ? '💾 حفظ التعديلات وإرسال للاعتماد' : '💾 Save Profile & Submit');
-    saveProfBtn.type = 'button';
-    saveProfBtn.style.cssText = 'margin-top:12px;width:100%;';
-    saveProfBtn.addEventListener('click', () => {
-      handleProfileSave({
-        newEmail: emailIn.value.trim(),
-        newPhone: phoneIn.value.trim(),
-        newFn: fnIn.value.trim() || session.firstName,
-        newLn: lnIn.value.trim(),
-        newNick: nickIn.value.trim(),
-      }, { session, staffRec, isMgr, ar });
-    });
-
-    secProf.append(rowContact, nickWrap, rowNames, codeBox, saveProfBtn);
-    container.append(secProf);
-  }
-
-  function renderPasswordChangeBox(session) {
-    const passWrap = el('div', '');
-    passWrap.style.marginTop = '10px';
-    const passIn = el('input', 'in');
-    passIn.type = 'password';
-    passIn.placeholder = t('profNewPass');
-    const passBtn = el('button', 'btn', t('profUpdatePass'));
-    passBtn.type = 'button';
-    passBtn.style.cssText = 'margin-top:8px;width:100%;';
-    passBtn.addEventListener('click', async () => {
-      const np = passIn.value.trim();
-      if (np.length < 4) return;
-      localStorage.setItem('foh-opening.pass.' + session.username, np);
-      if (session.accessToken) {
-        try {
-          await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-            method: 'PUT',
-            headers: {
-              apikey: SUPABASE_ANON_KEY,
-              Authorization: `Bearer ${session.accessToken}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ password: np }),
-          });
-        } catch (err) {
-          /* Supabase password sync fallback */
-        }
-      }
-      passIn.value = '';
-      FOH.edit.toast(t('profPassChanged'));
-    });
-    passWrap.append(passIn, passBtn);
-    return passWrap;
-  }
-
-  // ---- Sub-Renderer 5B: System Preferences & Security ----
-  function renderSystemPreferences(container, opts = {}) {
-    const { session } = opts;
-    const secSet = el('section', 'prof-section');
-    secSet.append(el('h4', '', '⚙️ ' + t('profSettingsHead')));
-
-    const isDark = document.body.classList.contains('dark');
-    const themeBtn = el('button', 'btn', (isDark ? '☀️ ' + t('profThemeLight') : '🌙 ' + t('profThemeDark')));
-    themeBtn.type = 'button';
-    themeBtn.style.cssText = 'width:100%;margin-bottom:10px;';
-    themeBtn.addEventListener('click', () => {
-      setTheme(document.body.classList.contains('dark') ? 'light' : 'dark');
-      renderProfileBody();
-    });
-    secSet.append(themeBtn);
-
-    const perm = 'Notification' in window ? Notification.permission : 'unsupported';
-    const pushBtn = el('button', 'btn', '🔔 ' + (perm === 'granted' ? t('profPushGranted') : perm === 'denied' ? t('profPushDenied') : t('profPushEnable')));
-    pushBtn.type = 'button';
-    pushBtn.style.cssText = 'width:100%;margin-bottom:10px;';
-    pushBtn.addEventListener('click', async () => {
-      if (!('Notification' in window)) return;
-      let status = Notification.permission;
-      if (status === 'default') status = await Notification.requestPermission();
-      if (status === 'granted') {
-        if ('serviceWorker' in navigator) {
-          const reg = await navigator.serviceWorker.getRegistration();
-          if (reg && reg.showNotification) {
-            await reg.showNotification('Oasis FOH · ' + session.displayName, {
-              body: FOH.i18n.lang === 'ar' ? 'الإشعارات تعمل بنجاح!' : 'Push notifications active!',
-              icon: 'icons/icon-192.png',
-            });
-          }
-        }
-        FOH.edit.toast(t('profPushSent'));
-      }
-      renderProfileBody();
-    });
-    secSet.append(pushBtn);
-    secSet.append(renderPasswordChangeBox(session));
-
-    const outBtn = el('button', 'btn danger', '🚪 ' + t('profLogout'));
-    outBtn.type = 'button';
-    outBtn.style.cssText = 'width:100%;margin-top:8px;';
-    outBtn.addEventListener('click', () => {
-      $('profileSheet').close();
-      saveSession(null, { remember: false });
-      applyAuthUI();
-    });
-    secSet.append(outBtn);
-    container.append(secSet);
-  }
-
-  // ---- Sub-Renderer 5: Tab 3 Coordinator ----
   function renderSettingsTab(container, opts = {}) {
-    const { session, staffRec, isMgr, ar } = opts;
-    if (staffRec.pendingNameChange && staffRec.pendingNameChange.status === 'pending') {
-      const pnc = staffRec.pendingNameChange;
-      const banner = el('div', 'pending-approval-banner');
-      banner.innerHTML =
-        '<div class="pab-head">⏳ ' + (ar ? 'طلب تعديل الاسم قيد المراجعة' : 'Pending Manager Approval') + '</div>' +
-        '<div class="pab-body">' +
-        '<b>' + (ar ? 'الاسم المطلوب:' : 'Legal Name:') + '</b> ' + (FOH.escapeHtml(pnc.reqFullName || '—')) + '<br>' +
-        '<b>' + (ar ? 'اللقب:' : 'Nickname:') + '</b> 🏷️ ' + (FOH.escapeHtml(pnc.reqNickname || '—')) +
-        '</div>';
-      container.append(banner);
+    if (FOH.profileDialogSettings && FOH.profileDialogSettings.renderSettingsTab) {
+      return FOH.profileDialogSettings.renderSettingsTab(container, opts);
     }
-    renderIdentityForm(container, { session, staffRec, isMgr, ar });
-    renderSystemPreferences(container, { session, isMgr, ar });
   }
 
-  // ---- Main Profile Sheet Coordinator ----
   function renderProfileBody() {
     const session = getSession();
     if (!session) return;
@@ -15451,7 +15510,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 </script>
 
 <script>
-// --- js/domains/checklist/section-assignment.js ---
+// --- js/domains/checklist/section-assignment-modal.js ---
 // foh-opening/js/domains/checklist/section-assignment.js
 // Section Division, Role & Staff Assignment, and Custom Department Management
 (function (FOH) {
@@ -15992,6 +16051,110 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     dlg.append(box);
     dlg.showModal();
     (ar ? titles.titleArIn : titles.titleEnIn).focus();
+  }
+
+
+  FOH.sectionAssignmentModal = {
+    openSectionModal,
+    getStaffList,
+    canCurrentUserAssign,
+    ROLE_OPTIONS,
+    DEPT_ICON_PRESETS
+  };
+})(window.FOH = window.FOH || {});
+
+</script>
+
+<script>
+// --- js/domains/checklist/section-assignment.js ---
+// foh-opening/js/domains/checklist/section-assignment.js
+// Section Division, Role & Staff Assignment, and Custom Department Management
+(function (FOH) {
+  'use strict';
+
+  const $ = (id) => document.getElementById(id);
+  const S = () => FOH.state;
+  const { t, pick } = FOH.i18n;
+  const { el } = FOH.view;
+  const isAr = () => (FOH.i18n ? FOH.i18n.lang === 'ar' : false);
+
+  const ICONS = ['🍸', '🍽️', '🚪', '🛎️', '💳', '📦', '☕', '🧹', '🧽', '👥', '✨'];
+
+  const ROLE_OPTIONS = [
+    { key: 'all', labelEn: '👥 All Positions (Shared)', labelAr: '👥 متاح للجميع (مشترك)' },
+    { key: 'super_bartender', labelEn: '🍸 Super Bartender', labelAr: '🍸 سوبر بارتندر (Super Bartender)' },
+    { key: 'super_waiter', labelEn: '⭐ Super Waiter', labelAr: '⭐ سوبر ويتر (Super Waiter)' },
+    { key: 'super_captain', labelEn: '🎖️ Super Captain', labelAr: '🎖️ سوبر كابتن (Super Captain)' },
+    { key: 'super_manager', labelEn: '👑 Super Manager', labelAr: '👑 سوبر مانجر (Super Manager)' },
+    { key: 'host', labelEn: '🛎️ Host & Reception', labelAr: '🛎️ هوست واستقبال (Host)' },
+    { key: 'runner', labelEn: '🏃 Runner / Support', labelAr: '🏃 رانر ومساعد (Runner)' },
+  ];
+
+  const SCOPE_ROLES = [
+    { key: 'all', labelEn: 'All Positions', labelAr: 'الجميع (مشترك)' },
+    { key: 'super_captain', labelEn: 'Super Captain', labelAr: 'سوبر كابتن' },
+    { key: 'super_waiter', labelEn: 'Super Waiter', labelAr: 'سوبر ويتر' },
+    { key: 'super_bartender', labelEn: 'Super Bartender', labelAr: 'سوبر بارتندر' },
+    { key: 'super_manager', labelEn: 'Super Manager', labelAr: 'سوبر مانجر' },
+  ];
+
+  const DEPT_OPTIONS = [
+    { key: 'bar', labelEn: '🍸 Bar Department', labelAr: '🍸 قسم البار والمشروبات' },
+    { key: 'floor', labelEn: '🍽️ Floor & Dining Area', labelAr: '🍽️ قسم الصالة والطاولات' },
+    { key: 'back', labelEn: '🚪 Back Area & Stations', labelAr: '🚪 قسم المنطقة الخلفية والمحطات' },
+    { key: 'host', labelEn: '🛎️ Host & Reception Area', labelAr: '🛎️ قسم الاستقبال والهوست' },
+    { key: 'cash', labelEn: '💳 Cashier, POS & Tech', labelAr: '💳 قسم الكاشير والأجهزة' },
+    { key: 'general', labelEn: '🏢 General Operations', labelAr: '🏢 تشغيل عام' },
+  ];
+
+  function getStaffList() {
+    const ar = isAr();
+    const list = [
+      { uname: '', label: ar ? '— أي موظف في هذا المنصب —' : '— Any staff in this role —' },
+      { uname: 'sara', label: ar ? '👤 سارة خوري (سوبر ويتر)' : '👤 Sara Khoury (Super Waiter)' },
+      { uname: 'maher', label: ar ? '👤 ماهر زيد (سوبر بارتندر)' : '👤 Maher Zaid (Super Bartender)' },
+      { uname: 'ali', label: ar ? '👤 علي حسن (سوبر كابتن)' : '👤 Ali Hassan (Super Captain)' },
+      { uname: 'fadi', label: ar ? '👑 فادي المصري (سوبر مانجر)' : '👑 Fadi Al-Masri (Super Manager)' },
+    ];
+    const seen = new Set(list.map((s) => s.uname));
+    const st = S();
+    ((st && st.tpl && st.tpl.staff) || []).forEach((p) => {
+      const u = (p.username || (p.name || '').split(' ')[0] || p.id || '').toLowerCase().trim();
+      if (u && !seen.has(u)) {
+        seen.add(u);
+        list.push({ uname: u, label: '👤 ' + p.name });
+      }
+    });
+    return list;
+  }
+
+  function canCurrentUserAssign() {
+    if (FOH.roleIdentity && FOH.roleIdentity.canCurrentUserAssignTasks) {
+      return FOH.roleIdentity.canCurrentUserAssignTasks();
+    }
+    const sess = FOH.sessionAuth ? FOH.sessionAuth.getSession() : null;
+    return !!(sess && (sess.isManager || sess.isCaptain));
+  }
+
+  function getActiveSheetType() {
+    return (FOH.threeShifts && FOH.threeShifts.getActiveSheetType)
+      ? FOH.threeShifts.getActiveSheetType()
+      : ((FOH.opsLifecycle && FOH.opsLifecycle.isClosingSheetActive && FOH.opsLifecycle.isClosingSheetActive()) ? 'closing' : 'opening');
+  }
+
+  function persistCurrentSheet() {
+    if (FOH.erpPwa && FOH.erpPwa.persistCurrentSheetState) {
+      FOH.erpPwa.persistCurrentSheetState();
+    } else {
+      FOH.store.saveTemplate(S().tpl);
+    }
+  }
+
+
+  function openSectionModal(targetSec, opts = {}) {
+    if (FOH.sectionAssignmentModal && FOH.sectionAssignmentModal.openSectionModal) {
+      return FOH.sectionAssignmentModal.openSectionModal(targetSec, opts);
+    }
   }
 
   function decorateSectionCard(sec, opts = {}) {
@@ -17490,103 +17653,16 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 </script>
 
 <script>
-// --- js/domains/tasks/task-assign-modal.js ---
-// Task Assignment Module
+// --- js/domains/tasks/task-recurrence-card.js ---
+// Task Recurrence Card Component
 (function (FOH) {
   'use strict';
 
   const $ = (id) => document.getElementById(id);
-  const S = FOH.state;
-  const { t } = FOH.i18n;
   const { el } = FOH.view;
-  const SESSION_KEY = 'foh-opening.erpSession.v1';
 
   function isAr() {
     return FOH.i18n ? FOH.i18n.lang === 'ar' : false;
-  }
-
-  function getSession() {
-    return FOH.sessionAuth ? FOH.sessionAuth.loadSession() : null;
-  }
-
-  function getCurrentSuperRoleKey() {
-    return FOH.roleIdentity ? FOH.roleIdentity.getCurrentSuperRoleKey() : 'staff';
-  }
-
-  function roleName(id) {
-    return (FOH.staff && FOH.staff.roleName(id)) || id || '';
-  }
-
-  function getActiveSheetType() {
-    return (FOH.sheetState && FOH.sheetState.getActiveSheetType) ? FOH.sheetState.getActiveSheetType() : 'opening';
-  }
-
-  const stateHelper = () => FOH.taskAssignmentState || {};
-
-  function createAssignModalHeader(dlg, ar) {
-    const grab = el('div', 'grab');
-    const headerRow = el('div', '');
-    headerRow.style.display = 'flex';
-    headerRow.style.justifyContent = 'space-between';
-    headerRow.style.alignItems = 'center';
-    headerRow.style.marginBottom = '6px';
-
-    const hTitle = el('h2', '');
-    hTitle.style.margin = '0';
-    hTitle.style.fontSize = '1.14rem';
-    hTitle.style.fontWeight = '800';
-    hTitle.style.display = 'flex';
-    hTitle.style.alignItems = 'center';
-    hTitle.style.gap = '8px';
-    hTitle.innerHTML = '<span>➕</span><span>' + (ar ? 'إضافة وتعيين مهمة تشغيلية' : 'Add & Assign Operational Task') + '</span>';
-
-    const closeBtn = el('button', '');
-    closeBtn.type = 'button';
-    closeBtn.textContent = '✕';
-    closeBtn.style.background = 'none';
-    closeBtn.style.border = 'none';
-    closeBtn.style.fontSize = '1.25rem';
-    closeBtn.style.cursor = 'pointer';
-    closeBtn.style.color = 'var(--muted)';
-    closeBtn.style.padding = '4px 8px';
-    closeBtn.addEventListener('click', () => dlg.close());
-
-    headerRow.append(hTitle, closeBtn);
-
-    const descP = el('p', '');
-    descP.style.margin = '0 0 14px';
-    descP.style.fontSize = '0.78rem';
-    descP.style.color = 'var(--ink2)';
-    descP.style.lineHeight = '1.45';
-    descP.textContent = ar
-      ? 'عيّن مهمة لمنصب أو موظف محدد، وحدد ما إذا كانت لمرة واحدة بتاريخ معين أو متكررة دورياً، مع إشعار فوري للموظف:'
-      : 'Assign a task to a role or staff, choose single-date or recurring schedule, and notify instantly:';
-
-    return { grab, headerRow, descP };
-  }
-
-  function createTaskTitleInput(ar) {
-    const titleGroup = el('div', 'task-asg-group');
-    titleGroup.style.marginBottom = '12px';
-    const titleLbl = el('label', '');
-    titleLbl.style.fontWeight = '700';
-    titleLbl.style.fontSize = '0.82rem';
-    titleLbl.style.display = 'flex';
-    titleLbl.style.alignItems = 'center';
-    titleLbl.style.gap = '6px';
-    titleLbl.style.marginBottom = '4px';
-    titleLbl.innerHTML = '<span>📝</span><span>' + (ar ? 'عنوان المهمة وملاحظات التنفيذ:' : 'Task Description & Details:') + '</span>';
-
-    const titleIn = el('input', 'in');
-    titleIn.placeholder = ar ? 'مثال: تجهيز طاولة VIP رقم 8 وتلميع كؤوس العصير...' : 'e.g. Prepare VIP Table 8 & polish wine glasses...';
-    titleIn.style.width = '100%';
-    titleIn.style.minHeight = '42px';
-    titleIn.style.fontSize = '0.92rem';
-    titleIn.style.fontWeight = '600';
-    titleIn.style.padding = '8px 12px';
-    titleIn.style.borderRadius = '12px';
-    titleGroup.append(titleLbl, titleIn);
-    return { titleGroup, titleIn };
   }
 
   function createOncePanel(ar, today, nowHM) {
@@ -17944,6 +18020,123 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     };
   }
 
+
+  FOH.taskRecurrenceCard = {
+    createRecurrenceCard,
+  };
+})(window.FOH = window.FOH || {});
+
+</script>
+
+<script>
+// --- js/domains/tasks/task-assign-modal.js ---
+// Task Assignment Module
+(function (FOH) {
+  'use strict';
+
+  const $ = (id) => document.getElementById(id);
+  const S = FOH.state;
+  const { t } = FOH.i18n;
+  const { el } = FOH.view;
+  const SESSION_KEY = 'foh-opening.erpSession.v1';
+
+  function isAr() {
+    return FOH.i18n ? FOH.i18n.lang === 'ar' : false;
+  }
+
+  function getSession() {
+    return FOH.sessionAuth ? FOH.sessionAuth.loadSession() : null;
+  }
+
+  function getCurrentSuperRoleKey() {
+    return FOH.roleIdentity ? FOH.roleIdentity.getCurrentSuperRoleKey() : 'staff';
+  }
+
+  function roleName(id) {
+    return (FOH.staff && FOH.staff.roleName(id)) || id || '';
+  }
+
+  function getActiveSheetType() {
+    return (FOH.sheetState && FOH.sheetState.getActiveSheetType) ? FOH.sheetState.getActiveSheetType() : 'opening';
+  }
+
+  const stateHelper = () => FOH.taskAssignmentState || {};
+
+  function createAssignModalHeader(dlg, ar) {
+    const grab = el('div', 'grab');
+    const headerRow = el('div', '');
+    headerRow.style.display = 'flex';
+    headerRow.style.justifyContent = 'space-between';
+    headerRow.style.alignItems = 'center';
+    headerRow.style.marginBottom = '6px';
+
+    const hTitle = el('h2', '');
+    hTitle.style.margin = '0';
+    hTitle.style.fontSize = '1.14rem';
+    hTitle.style.fontWeight = '800';
+    hTitle.style.display = 'flex';
+    hTitle.style.alignItems = 'center';
+    hTitle.style.gap = '8px';
+    hTitle.innerHTML = '<span>➕</span><span>' + (ar ? 'إضافة وتعيين مهمة تشغيلية' : 'Add & Assign Operational Task') + '</span>';
+
+    const closeBtn = el('button', '');
+    closeBtn.type = 'button';
+    closeBtn.textContent = '✕';
+    closeBtn.style.background = 'none';
+    closeBtn.style.border = 'none';
+    closeBtn.style.fontSize = '1.25rem';
+    closeBtn.style.cursor = 'pointer';
+    closeBtn.style.color = 'var(--muted)';
+    closeBtn.style.padding = '4px 8px';
+    closeBtn.addEventListener('click', () => dlg.close());
+
+    headerRow.append(hTitle, closeBtn);
+
+    const descP = el('p', '');
+    descP.style.margin = '0 0 14px';
+    descP.style.fontSize = '0.78rem';
+    descP.style.color = 'var(--ink2)';
+    descP.style.lineHeight = '1.45';
+    descP.textContent = ar
+      ? 'عيّن مهمة لمنصب أو موظف محدد، وحدد ما إذا كانت لمرة واحدة بتاريخ معين أو متكررة دورياً، مع إشعار فوري للموظف:'
+      : 'Assign a task to a role or staff, choose single-date or recurring schedule, and notify instantly:';
+
+    return { grab, headerRow, descP };
+  }
+
+  function createTaskTitleInput(ar) {
+    const titleGroup = el('div', 'task-asg-group');
+    titleGroup.style.marginBottom = '12px';
+    const titleLbl = el('label', '');
+    titleLbl.style.fontWeight = '700';
+    titleLbl.style.fontSize = '0.82rem';
+    titleLbl.style.display = 'flex';
+    titleLbl.style.alignItems = 'center';
+    titleLbl.style.gap = '6px';
+    titleLbl.style.marginBottom = '4px';
+    titleLbl.innerHTML = '<span>📝</span><span>' + (ar ? 'عنوان المهمة وملاحظات التنفيذ:' : 'Task Description & Details:') + '</span>';
+
+    const titleIn = el('input', 'in');
+    titleIn.placeholder = ar ? 'مثال: تجهيز طاولة VIP رقم 8 وتلميع كؤوس العصير...' : 'e.g. Prepare VIP Table 8 & polish wine glasses...';
+    titleIn.style.width = '100%';
+    titleIn.style.minHeight = '42px';
+    titleIn.style.fontSize = '0.92rem';
+    titleIn.style.fontWeight = '600';
+    titleIn.style.padding = '8px 12px';
+    titleIn.style.borderRadius = '12px';
+    titleGroup.append(titleLbl, titleIn);
+    return { titleGroup, titleIn };
+  }
+
+
+  function createRecurrenceCard(ar, today, nowHM) {
+    if (FOH.taskRecurrenceCard && FOH.taskRecurrenceCard.createRecurrenceCard) {
+      return FOH.taskRecurrenceCard.createRecurrenceCard(ar, today, nowHM);
+    }
+    const fallback = el('div', 'task-field-card');
+    return { card: fallback, getRecurrenceData: () => ({ isRecurring: false }) };
+  }
+
   function createSheetAndSectionCard(ar, curSheet) {
     const rowSheet = el('div', 'two');
     rowSheet.style.marginBottom = '12px';
@@ -18200,7 +18393,6 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     openAssignTaskToStaffOrRoleModal,
   };
 })(window.FOH = window.FOH || {});
-
 </script>
 
 <script>
@@ -18799,6 +18991,138 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
 
 
+  // Delegate to ordersCatalogMutations
+  function isGroupAllowedForUser(...args) {
+    return FOH.ordersCatalogMutations.isGroupAllowedForUser(...args);
+  }
+  function canUserEditGroup(...args) {
+    return FOH.ordersCatalogMutations.canUserEditGroup(...args);
+  }
+  function canCurrentUserManageOrders(...args) {
+    return FOH.ordersCatalogMutations.canCurrentUserManageOrders(...args);
+  }
+  function allowedGroupsForCurrentRole(...args) {
+    return FOH.ordersCatalogMutations.allowedGroupsForCurrentRole(...args);
+  }
+  function updateGroupConfig(...args) {
+    return FOH.ordersCatalogMutations.updateGroupConfig(...args);
+  }
+  function addNewCategory(...args) {
+    return FOH.ordersCatalogMutations.addNewCategory(...args);
+  }
+  function addNewItem(...args) {
+    return FOH.ordersCatalogMutations.addNewItem(...args);
+  }
+  function updateItem(...args) {
+    return FOH.ordersCatalogMutations.updateItem(...args);
+  }
+  function deleteItem(...args) {
+    return FOH.ordersCatalogMutations.deleteItem(...args);
+  }
+  function promptEditStock(...args) {
+    return FOH.ordersCatalogMutations.promptEditStock(...args);
+  }
+
+  // Delegate to ordersLifecycleStore
+  function promptStartNewOrder(...args) {
+    return FOH.ordersLifecycleStore.promptStartNewOrder(...args);
+  }
+  function getOrderStatus(...args) {
+    return FOH.ordersLifecycleStore.getOrderStatus(...args);
+  }
+  function setOrderStatus(...args) {
+    return FOH.ordersLifecycleStore.setOrderStatus(...args);
+  }
+  function addBreakageReplacement(...args) {
+    return FOH.ordersLifecycleStore.addBreakageReplacement(...args);
+  }
+  function confirmOrderReceiving(...args) {
+    return FOH.ordersLifecycleStore.confirmOrderReceiving(...args);
+  }
+  function getOrderHistory(...args) {
+    return FOH.ordersLifecycleStore.getOrderHistory(...args);
+  }
+
+
+  FOH.ordersStore = {
+    ORDERS_DB_KEY,
+    emptyOrderState,
+    loadOrdersDB,
+    saveOrdersDB,
+    getDB,
+    setDB,
+    ordById,
+    ordCat,
+    ordCatItems,
+    ordLine,
+    ordSelectedItems,
+    ordCatDone,
+    ordCatSkipped,
+    ordPendingItem,
+
+    ordUnitText,
+
+    ordStockDenominator,
+
+    ordStockLabel,
+
+    ordStockRatioHint,
+
+    ordSkipRemaining,
+
+    allowedGroupsForCurrentRole,
+
+    promptEditStock,
+
+    promptStartNewOrder,
+
+    getOrderStatus,
+
+    setOrderStatus,
+
+    addBreakageReplacement,
+
+    confirmOrderReceiving,
+
+    getOrderHistory,
+
+    isGroupAllowedForUser,
+
+    canUserEditGroup,
+
+    canCurrentUserManageOrders,
+
+    updateGroupConfig,
+
+    addNewCategory,
+
+    addNewItem,
+
+    updateItem,
+
+    deleteItem,
+
+  };
+
+})(window.FOH = window.FOH || {});
+
+</script>
+
+<script>
+// --- js/domains/orders/orders-catalog-mutations.js ---
+// Orders Store Component
+(function (FOH) {
+  'use strict';
+  const getOrdDB = () => (FOH.ordersStore && FOH.ordersStore.getDB ? FOH.ordersStore.getDB() : { catalog: { groups: {}, categories: [], items: [] }, order: {} });
+  const saveOrdersDB = () => (FOH.ordersStore && FOH.ordersStore.saveOrdersDB ? FOH.ordersStore.saveOrdersDB() : null);
+  const ordCat = (cid) => (FOH.ordersStore && FOH.ordersStore.ordCat ? FOH.ordersStore.ordCat(cid) : getOrdDB().catalog.categories.find((c) => c.id === cid));
+  const ordById = (id) => (FOH.ordersStore && FOH.ordersStore.ordById ? FOH.ordersStore.ordById(id) : getOrdDB().catalog.items.find((i) => i.id === id));
+
+
+  const store = () => FOH.ordersStore;
+  const isAr = () => (FOH.i18n ? FOH.i18n.lang === 'ar' : false);
+  const getSession = () => ((FOH.auth && FOH.auth.getSession) ? FOH.auth.getSession() : (FOH.sessionAuth ? FOH.sessionAuth.loadSession() : null));
+
   function isGroupAllowedForUser(gid, opts = {}) {
     const isObj = typeof opts === 'object' && opts !== null;
     const roleKey = isObj ? (opts.roleKey || 'staff') : (opts || 'staff');
@@ -18807,7 +19131,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
     if (isManager) return true;
 
-    const g = ordDB.catalog.groups[gid];
+    const g = getOrdDB().catalog.groups[gid];
 
     if (!g) return false;
 
@@ -18854,7 +19178,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
     if (isManager) return true;
 
-    const g = ordDB.catalog.groups[gid];
+    const g = getOrdDB().catalog.groups[gid];
 
     if (!g) return false;
 
@@ -18904,7 +19228,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
   function allowedGroupsForCurrentRole(forceAll = false) {
 
-    const entries = Object.entries(ordDB.catalog.groups);
+    const entries = Object.entries(getOrdDB().catalog.groups);
 
     const session = getSession();
 
@@ -18924,7 +19248,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
   function updateGroupConfig(gid, updates = {}) {
 
-    const g = ordDB.catalog.groups[gid];
+    const g = getOrdDB().catalog.groups[gid];
 
     if (!g) return false;
 
@@ -18954,7 +19278,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
   function addNewCategory(groupKey, data = {}) {
 
-    const g = ordDB.catalog.groups[groupKey];
+    const g = getOrdDB().catalog.groups[groupKey];
 
     if (!g) return null;
 
@@ -18972,7 +19296,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
     };
 
-    ordDB.catalog.categories.push(cat);
+    getOrdDB().catalog.categories.push(cat);
 
     saveOrdersDB();
 
@@ -19018,7 +19342,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
     };
 
-    ordDB.catalog.items.push(item);
+    getOrdDB().catalog.items.push(item);
 
     saveOrdersDB();
 
@@ -19116,6 +19440,36 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
 
 
+
+  FOH.ordersCatalogMutations = {
+    isGroupAllowedForUser,
+    canUserEditGroup,
+    canCurrentUserManageOrders,
+    allowedGroupsForCurrentRole,
+    updateGroupConfig,
+    addNewCategory,
+    addNewItem,
+    updateItem,
+    deleteItem,
+    promptEditStock,
+  };
+})(window.FOH = window.FOH || {});
+
+</script>
+
+<script>
+// --- js/domains/orders/orders-lifecycle-store.js ---
+// Orders Store Component
+(function (FOH) {
+  'use strict';
+  const getOrdDB = () => (FOH.ordersStore && FOH.ordersStore.getDB ? FOH.ordersStore.getDB() : { catalog: { groups: {}, categories: [], items: [] }, order: {} });
+  const saveOrdersDB = () => (FOH.ordersStore && FOH.ordersStore.saveOrdersDB ? FOH.ordersStore.saveOrdersDB() : null);
+
+
+  const store = () => FOH.ordersStore;
+  const isAr = () => (FOH.i18n ? FOH.i18n.lang === 'ar' : false);
+  const getSession = () => ((FOH.auth && FOH.auth.getSession) ? FOH.auth.getSession() : (FOH.sessionAuth ? FOH.sessionAuth.loadSession() : null));
+
   function promptStartNewOrder(onComplete) {
 
     const ar = FOH.i18n && FOH.i18n.lang === 'ar';
@@ -19126,21 +19480,21 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
     const doReset = () => {
 
-      const priorMeta = ordDB.order && ordDB.order.meta ? { ...ordDB.order.meta } : null;
+      const priorMeta = getOrdDB().order && getOrdDB().order.meta ? { ...getOrdDB().order.meta } : null;
 
       if (currentCount > 0) {
 
-        ordDB.orderHistory = ordDB.orderHistory || [];
+        getOrdDB().orderHistory = getOrdDB().orderHistory || [];
 
-        ordDB.orderHistory.unshift({
+        getOrdDB().orderHistory.unshift({
 
-          token: (ordDB.order && ordDB.order.orderToken) || ('ord-' + Date.now().toString(36)),
+          token: (getOrdDB().order && getOrdDB().order.orderToken) || ('ord-' + Date.now().toString(36)),
 
           date: (priorMeta && priorMeta.orderDate) || (FOH.time ? FOH.time.todayISO() : ''),
 
           itemsCount: currentCount,
 
-          lines: JSON.parse(JSON.stringify((ordDB.order && ordDB.order.lines) || {})),
+          lines: JSON.parse(JSON.stringify((getOrdDB().order && getOrdDB().order.lines) || {})),
 
           meta: priorMeta,
 
@@ -19148,13 +19502,13 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
         });
 
-        if (ordDB.orderHistory.length > 20) ordDB.orderHistory.length = 20;
+        if (getOrdDB().orderHistory.length > 20) getOrdDB().orderHistory.length = 20;
 
       }
 
 
 
-      ordDB.order = emptyOrderState();
+      getOrdDB().order = emptyOrderState();
 
       saveOrdersDB();
 
@@ -19196,7 +19550,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
   function getOrderStatus() {
 
-    return (ordDB.order && ordDB.order.status) || 'DRAFT';
+    return (getOrdDB().order && getOrdDB().order.status) || 'DRAFT';
 
   }
 
@@ -19204,11 +19558,11 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
   function setOrderStatus(st) {
 
-    ordDB.order = ordDB.order || emptyOrderState();
+    getOrdDB().order = getOrdDB().order || emptyOrderState();
 
-    ordDB.order.status = st;
+    getOrdDB().order.status = st;
 
-    if (st === 'DISPATCHED') ordDB.order.dispatchedAt = Date.now();
+    if (st === 'DISPATCHED') getOrdDB().order.dispatchedAt = Date.now();
 
     saveOrdersDB();
 
@@ -19222,11 +19576,11 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
     if (!name) return;
 
-    ordDB.order = ordDB.order || emptyOrderState();
+    getOrdDB().order = getOrdDB().order || emptyOrderState();
 
-    ordDB.order.lines = ordDB.order.lines || {};
+    getOrdDB().order.lines = getOrdDB().order.lines || {};
 
-    const match = ordDB.catalog.items.find((i) =>
+    const match = getOrdDB().catalog.items.find((i) =>
 
       i.name.toLowerCase().includes(name.toLowerCase()) || (i.nameAr && i.nameAr.includes(name))
 
@@ -19234,9 +19588,9 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
     const itemId = match ? match.id : 'break_' + Date.now().toString(36);
 
-    const prev = ordDB.order.lines[itemId] ? ordDB.order.lines[itemId].qty : 0;
+    const prev = getOrdDB().order.lines[itemId] ? getOrdDB().order.lines[itemId].qty : 0;
 
-    ordDB.order.lines[itemId] = {
+    getOrdDB().order.lines[itemId] = {
 
       qty: prev + Number(qty),
 
@@ -19256,29 +19610,29 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
     const { receivedLines, receiverName, notes } = opts;
 
-    ordDB.history = ordDB.history || [];
+    getOrdDB().history = getOrdDB().history || [];
 
-    ordDB.history.unshift({
+    getOrdDB().history.unshift({
 
-      orderToken: ordDB.order.orderToken,
+      orderToken: getOrdDB().order.orderToken,
 
-      orderDate: (ordDB.order.meta && ordDB.order.meta.orderDate) || (FOH.time ? FOH.time.todayISO() : ''),
+      orderDate: (getOrdDB().order.meta && getOrdDB().order.meta.orderDate) || (FOH.time ? FOH.time.todayISO() : ''),
 
-      dispatchedAt: ordDB.order.dispatchedAt,
+      dispatchedAt: getOrdDB().order.dispatchedAt,
 
       receivedAt: Date.now(),
 
       receiverName: receiverName || 'Staff',
 
-      requestedLines: JSON.parse(JSON.stringify(ordDB.order.lines || {})),
+      requestedLines: JSON.parse(JSON.stringify(getOrdDB().order.lines || {})),
 
-      receivedLines: receivedLines || JSON.parse(JSON.stringify(ordDB.order.lines || {})),
+      receivedLines: receivedLines || JSON.parse(JSON.stringify(getOrdDB().order.lines || {})),
 
       notes: notes || '',
 
     });
 
-    ordDB.order = emptyOrderState();
+    getOrdDB().order = emptyOrderState();
 
     saveOrdersDB();
 
@@ -19288,88 +19642,19 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
   function getOrderHistory() {
 
-    return ordDB.history || [];
+    return getOrdDB().history || [];
 
   }
 
-
-
-  FOH.ordersStore = {
-
-    ORDERS_DB_KEY,
-
-    emptyOrderState,
-
-    loadOrdersDB,
-
-    saveOrdersDB,
-
-    getDB,
-
-    setDB,
-
-    ordById,
-
-    ordCat,
-
-    ordCatItems,
-
-    ordLine,
-
-    ordSelectedItems,
-
-    ordCatDone,
-
-    ordCatSkipped,
-
-    ordPendingItem,
-
-    ordUnitText,
-
-    ordStockDenominator,
-
-    ordStockLabel,
-
-    ordStockRatioHint,
-
-    ordSkipRemaining,
-
-    allowedGroupsForCurrentRole,
-
-    promptEditStock,
-
+  FOH.ordersLifecycleStore = {
     promptStartNewOrder,
-
     getOrderStatus,
-
     setOrderStatus,
-
     addBreakageReplacement,
-
     confirmOrderReceiving,
-
     getOrderHistory,
-
-    isGroupAllowedForUser,
-
-    canUserEditGroup,
-
-    canCurrentUserManageOrders,
-
-    updateGroupConfig,
-
-    addNewCategory,
-
-    addNewItem,
-
-    updateItem,
-
-    deleteItem,
-
   };
-
 })(window.FOH = window.FOH || {});
-
 
 </script>
 
@@ -19910,9 +20195,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 </script>
 
 <script>
-// --- js/domains/orders/orders-view.js ---
-// foh-opening/js/domains/orders/orders-view.js
-// Warehouse & Bar Ordering Workflow (Item Selection, Stock Tally & WhatsApp Dispatch)
+// --- js/domains/orders/orders-view-items.js ---
+// Orders View Component
 (function (FOH) {
   'use strict';
 
@@ -19921,393 +20205,27 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   const store = () => FOH.ordersStore;
   const dispatch = () => FOH.ordersDispatch;
   const { el } = FOH.view;
-
-  let ordRoute = 'home'; // 'home' | 'types/<group>' | 'products/<cat>' | 'item/<id>' | 'complete/<cat>' | 'review'
-  let ordForceAllGroups = false;
-  let ordProductSearch = '';
-  let ordQuickSearch = '';
-  let ordQuickOnlyRequested = false;
-  let ordReturnToReview = false;
-  let ordIncludeStockInMsg = false;
-
   const isAr = () => (FOH.i18n ? FOH.i18n.lang === 'ar' : false);
-  const getSession = () => ((FOH.auth && FOH.auth.getSession) ? FOH.auth.getSession() : (FOH.sessionAuth ? FOH.sessionAuth.getSession() : null));
-
-  function updateOrderBadge() {
-    const count = store().ordSelectedItems().length;
-    const badge = $('badgeOrders');
-    if (badge) {
-      badge.textContent = String(count);
-      badge.hidden = count === 0;
-    }
-    const lbl = $('ordersTabLbl');
-    if (lbl && FOH.i18n && FOH.i18n.t) lbl.textContent = FOH.i18n.t('ordersTab');
-  }
+  const getSession = () => ((FOH.auth && FOH.auth.getSession) ? FOH.auth.getSession() : (FOH.sessionAuth ? FOH.sessionAuth.loadSession() : null));
 
   function ordGo(nextRoute) {
-    ordRoute = nextRoute || 'home';
-    const root = $('ordersView');
-    if (root) {
-      renderOrdersView(root);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  }
-
-  function buildOrdBreadcrumbs(groupKey, catId, tailLabel) {
-    const ar = isAr();
-    const nav = el('nav', 'ord-crumbs');
-    const homeBtn = el('button', '', ar ? 'الأقسام (Sections)' : 'Sections');
-    homeBtn.type = 'button';
-    homeBtn.addEventListener('click', () => ordGo('home'));
-    nav.append(homeBtn);
-
-    const db = store().getDB();
-    if (groupKey && db.catalog.groups[groupKey]) {
-      nav.append(el('span', '', '›'));
-      const g = db.catalog.groups[groupKey];
-      const gBtn = el('button', '', ar ? g.nameAr || g.name : g.name);
-      gBtn.type = 'button';
-      gBtn.addEventListener('click', () => ordGo('types/' + groupKey));
-      nav.append(gBtn);
-    }
-    if (catId && store().ordCat(catId)) {
-      nav.append(el('span', '', '›'));
-      const c = store().ordCat(catId);
-      const cBtn = el('button', '', ar ? c.nameAr || c.name : c.name);
-      cBtn.type = 'button';
-      cBtn.addEventListener('click', () => ordGo('products/' + catId));
-      nav.append(cBtn);
-    }
-    if (tailLabel) {
-      nav.append(el('span', '', '›'), el('span', '', tailLabel));
-    }
-    return nav;
-  }
-
-  function buildOrdViewSwitch(catId, activeMode) {
-    const sw = el('div', 'ord-view-switch');
-    const stepBtn = el('button', activeMode === 'step' ? 'on' : '', isAr() ? '▣ صنفًا بصنف (Step-by-step)' : '▣ Step-by-step');
-    stepBtn.type = 'button';
-    stepBtn.addEventListener('click', () => {
-      const db = store().getDB();
-      db.preferences.viewMode = 'step';
-      store().saveOrdersDB();
-      const pending = store().ordPendingItem(catId) || store().ordCatItems(catId)[0];
-      ordGo(pending ? 'item/' + pending.id : 'products/' + catId);
-    });
-
-    const listBtn = el('button', activeMode === 'list' ? 'on' : '', isAr() ? '☷ القائمة السريعة (Quick list)' : '☷ Quick list');
-    listBtn.type = 'button';
-    listBtn.addEventListener('click', () => {
-      const db = store().getDB();
-      db.preferences.viewMode = 'list';
-      store().saveOrdersDB();
-      ordGo('products/' + catId);
-    });
-
-    sw.append(stepBtn, listBtn);
-    return sw;
+    if (FOH.ordersView && FOH.ordersView.ordGo) return FOH.ordersView.ordGo(nextRoute);
   }
 
   function appendBottomBar(root, buildFn) {
-    const bar = el('nav', 'ord-bottom-bar');
-    const inner = el('div', 'ord-bottom-inner');
-    buildFn(inner);
-    bar.append(inner);
-    root.append(bar);
-    root.style.paddingBottom = 'calc(146px + env(safe-area-inset-bottom, 16px))';
+    if (FOH.ordersView && FOH.ordersView.appendBottomBar) return FOH.ordersView.appendBottomBar(root, buildFn);
   }
 
   function appendGeneralBottomBar(root) {
-    const selectedList = store().ordSelectedItems();
-    appendBottomBar(root, (inner) => {
-      const info = el('div', '');
-      info.style.minWidth = '110px';
-      info.append(
-        el('strong', '', String(selectedList.length) + ' '),
-        el('small', '', isAr() ? 'أصناف مختارة' : 'selected')
-      );
-      const revBtn = el('button', 'btn primary', isAr() ? 'مراجعة الطلبية الكاملة ←' : 'Review full order →');
-      revBtn.type = 'button';
-      revBtn.disabled = selectedList.length === 0;
-      revBtn.addEventListener('click', () => ordGo('review'));
-      inner.append(info, revBtn);
-    });
+    if (FOH.ordersView && FOH.ordersView.appendGeneralBottomBar) return FOH.ordersView.appendGeneralBottomBar(root);
   }
 
-  function openReceivingModal() {
-    const ar = isAr();
-    const list = store().ordSelectedItems();
-    const overlay = el('div', 'modal-overlay');
-    overlay.style.display = 'flex';
-    overlay.style.zIndex = '9999';
-
-    const dialog = el('div', 'modal-box');
-    dialog.style.maxWidth = '520px';
-    dialog.style.width = '94%';
-    dialog.style.padding = '20px';
-
-    const title = el('h3', '', '📦 ' + (ar ? 'تأكيد استلام طلبية المستودع' : 'Confirm Order Receiving'));
-    const sub = el('p', '', ar ? 'تأكيد وصول الأصناف وتوريدها لمخزون البار والصالة' : 'Verify delivered items & ingest into bar stock');
-    sub.style.color = 'var(--ink2)';
-    sub.style.marginBottom = '12px';
-
-    const itemsBox = el('div', '');
-    itemsBox.style.maxHeight = '280px';
-    itemsBox.style.overflowY = 'auto';
-    itemsBox.style.margin = '10px 0';
-
-    const receivedMap = {};
-    list.forEach((i) => {
-      const line = store().ordLine(i.id);
-      receivedMap[i.id] = line.qty;
-      const row = el('div', 'dayoff-item');
-      row.style.display = 'flex';
-      row.style.justifyContent = 'space-between';
-      row.style.alignItems = 'center';
-      row.style.margin = '6px 0';
-      const safeName = FOH.escapeHtml(ar && i.ar ? i.ar + ' · ' + i.name : i.name);
-      const safeUnit = FOH.escapeHtml(line.unit || i.unit || '');
-      const safeQty = Number(line.qty) || 0;
-      row.innerHTML = '<div><b>' + safeName + '</b><small style="display:block;color:var(--ink2);">' +
-        (ar ? 'المطلوب: ' : 'Requested: ') + safeQty + ' ' + safeUnit + '</small></div>';
-      const badge = el('span', 'dayoff-badge approved', '✓ ' + safeQty + ' ' + safeUnit);
-      row.append(badge);
-      itemsBox.append(row);
-    });
-
-    const btnRow = el('div', '');
-    btnRow.style.display = 'flex';
-    btnRow.style.gap = '8px';
-    btnRow.style.marginTop = '16px';
-
-    const cancelBtn = el('button', 'btn', ar ? 'إلغاء' : 'Cancel');
-    cancelBtn.type = 'button';
-    cancelBtn.style.flex = '1';
-    cancelBtn.addEventListener('click', () => overlay.remove());
-
-    const confirmBtn = el('button', 'btn primary', ar ? '✓ تأكيد الاستلام بالكامل' : '✓ Confirm Full Receipt');
-    confirmBtn.type = 'button';
-    confirmBtn.style.flex = '1.5';
-    confirmBtn.addEventListener('click', () => {
-      store().confirmOrderReceiving({
-        receivedLines: receivedMap,
-        receiverName: (getSession() && getSession().displayName) || S().me.name || 'Staff',
-      });
-      overlay.remove();
-      if (FOH.edit && FOH.edit.toast) {
-        FOH.edit.toast(ar ? 'تم تأكيد استلام الطلبية والتوريد بنجاح ✓' : 'Order received & archived ✓');
-      }
-      ordGo('home');
-    });
-
-    btnRow.append(cancelBtn, confirmBtn);
-    dialog.append(title, sub, itemsBox, btnRow);
-    overlay.append(dialog);
-    document.body.append(overlay);
+  function buildOrdBreadcrumbs(groupKey, catId, tailLabel) {
+    if (FOH.ordersView && FOH.ordersView.buildOrdBreadcrumbs) return FOH.ordersView.buildOrdBreadcrumbs(groupKey, catId, tailLabel);
   }
 
-  function renderReceivingBanner(ar) {
-    const banner = el('div', 'ord-receiving-banner');
-    banner.style.background = 'linear-gradient(135deg, rgba(245, 158, 11, 0.16), rgba(217, 119, 6, 0.24))';
-    banner.style.border = '1px solid rgba(245, 158, 11, 0.4)';
-    banner.style.borderRadius = '12px';
-    banner.style.padding = '12px 16px';
-    banner.style.marginBottom = '14px';
-    banner.style.display = 'flex';
-    banner.style.justifyContent = 'space-between';
-    banner.style.alignItems = 'center';
-    banner.style.flexWrap = 'wrap';
-    banner.style.gap = '10px';
-
-    const info = el('div', '');
-    info.innerHTML = '<strong>📦 ' + (ar ? 'طلبية المستودع قيد التوريد (Dispatched)' : 'Warehouse Delivery Dispatched') + '</strong>' +
-      '<small style="display:block;color:var(--ink2);">' + (ar ? 'تم إرسال الطلبية بنجاح. اضغط عند وصول البضاعة لتأكيد الاستلام.' : 'Order was sent. Tap when goods arrive to confirm receiving.') + '</small>';
-
-    const recvBtn = el('button', 'btn primary small', ar ? '✓ استلام الطلبية والتوريد' : '✓ Receive & Ingest');
-    recvBtn.type = 'button';
-    recvBtn.addEventListener('click', () => openReceivingModal());
-
-    banner.append(info, recvBtn);
-    return banner;
-  }
-
-  // ---- Page 1: Home Groups ----
-  function renderHomeGroups(root) {
-    const ar = isAr();
-    const db = store().getDB();
-    const selectedList = store().ordSelectedItems();
-
-    const headWrap = el('div', '');
-    const topRow = el('div', '');
-    topRow.style.display = 'flex';
-    topRow.style.alignItems = 'center';
-    topRow.style.justifyContent = 'space-between';
-    topRow.style.gap = '8px';
-    topRow.style.flexWrap = 'wrap';
-
-    const kicker = el('div', 'ord-kicker', '01 / SECTION SELECT · أقسام الطلبيات');
-    const btnGroup = el('div', '');
-    btnGroup.style.display = 'flex';
-    btnGroup.style.gap = '6px';
-    btnGroup.style.alignItems = 'center';
-
-    const startNewBtn = el('button', 'btn small', ar ? '✨ بدء طلبية جديدة' : '✨ Start new order');
-    startNewBtn.type = 'button';
-    startNewBtn.addEventListener('click', () => {
-      store().promptStartNewOrder(() => renderOrdersView(root));
-    });
-    btnGroup.append(startNewBtn);
-
-    const canManage = store().canCurrentUserManageOrders && store().canCurrentUserManageOrders();
-    if (canManage) {
-      const setBtn = el('button', 'btn small', ar ? '⚙️ إعدادات وصلاحيات الأقسام' : '⚙️ Order Settings');
-      setBtn.type = 'button';
-      setBtn.addEventListener('click', () => {
-        if (FOH.ordersSettingsModal && FOH.ordersSettingsModal.open) {
-          FOH.ordersSettingsModal.open();
-        }
-      });
-      btnGroup.append(setBtn);
-    }
-    topRow.append(kicker, btnGroup);
-
-    headWrap.append(
-      topRow,
-      el('h2', 'ord-page-title', ar ? 'طلبيات البار ومستلزمات الصالة' : 'Bar & FOH Warehouse Orders'),
-      el('p', 'ord-page-sub', ar ? 'اختر القسم المطلوب لإعداد طلبيته وتحديد الكميات المطلوبة للمستودع:' : 'Select a section to prepare warehouse requisition:')
-    );
-    if (store().getOrderStatus() === 'DISPATCHED') {
-      headWrap.append(renderReceivingBanner(ar));
-    }
-    root.append(headWrap);
-
-    const secCards = el('div', 'ord-sec-grid');
-    const allowed = store().allowedGroupsForCurrentRole(ordForceAllGroups);
-
-    allowed.forEach(([gid, g]) => {
-      const cats = db.catalog.categories.filter((c) => c.group === gid);
-      const catCount = cats.length;
-      let totalItems = 0;
-      let doneItems = 0;
-      let reqCount = 0;
-
-      cats.forEach((c) => {
-        const cItems = store().ordCatItems(c.id);
-        totalItems += cItems.length;
-        doneItems += store().ordCatDone(c.id);
-        reqCount += cItems.filter((i) => store().ordLine(i.id).qty > 0).length;
-      });
-
-      const btn = el('button', 'ord-sec-card');
-      btn.type = 'button';
-      btn.append(
-        el('div', 'ord-sec-ico', g.icon || '📦'),
-        Object.assign(el('div', 'ord-sec-body'), {
-          innerHTML:
-            '<h3>' + FOH.escapeHtml(ar ? g.nameAr || g.name : g.name) + '</h3>' +
-            '<p>' + FOH.escapeHtml(ar ? g.subAr || g.sub : g.sub) + '</p>' +
-            '<div class="ord-sec-meta"><span>' + catCount + ' ' + (ar ? 'تصنيفات' : 'categories') + ' · ' + totalItems + ' ' + (ar ? 'أصناف' : 'items') + '</span>' +
-            (reqCount > 0 ? '<strong class="ord-req-chip">✓ ' + reqCount + ' ' + (ar ? 'مطلوب' : 'requested') + '</strong>' : '') +
-            '</div>',
-        })
-      );
-      btn.addEventListener('click', () => ordGo('types/' + gid));
-      secCards.append(btn);
-    });
-
-    root.append(secCards);
-    appendGeneralBottomBar(root);
-  }
-
-  // ---- Page 2: Types in Group ----
-  function renderCategoryTypes(root, groupKey) {
-    const ar = isAr();
-    const db = store().getDB();
-    const g = db.catalog.groups[groupKey];
-    if (!g) { ordGo('home'); return; }
-
-    root.append(buildOrdBreadcrumbs(groupKey, null));
-
-    const sess = getSession();
-    const isMgr = !sess || !!(sess.isManager || sess.roleId === 'manager');
-    const roleKey = FOH.roleIdentity ? FOH.roleIdentity.getCurrentSuperRoleKey() : 'staff';
-    const uname = (sess && sess.username) || '';
-    const canEditGroup = store().canUserEditGroup ? store().canUserEditGroup(groupKey, { roleKey, username: uname, isManager: isMgr }) : isMgr;
-
-    const headRow = el('div', '');
-    headRow.style.display = 'flex';
-    headRow.style.alignItems = 'center';
-    headRow.style.justifyContent = 'space-between';
-    headRow.style.gap = '8px';
-    headRow.style.flexWrap = 'wrap';
-
-    const kicker = el('div', 'ord-kicker', '02 / CATEGORY · تصنيفات القسم');
-    headRow.append(kicker);
-
-    if (canEditGroup) {
-      const addCatBtn = el('button', 'btn small primary', ar ? '+ تصنيف جديد' : '+ New Category');
-      addCatBtn.type = 'button';
-      addCatBtn.addEventListener('click', () => {
-        if (FOH.ordersSettingsModal && FOH.ordersSettingsModal.openAddCategoryModal) {
-          FOH.ordersSettingsModal.openAddCategoryModal(groupKey, () => renderOrdersView(root));
-        }
-      });
-      headRow.append(addCatBtn);
-    }
-
-    root.append(
-      headRow,
-      el('h2', 'ord-page-title', ar ? g.nameAr || g.name : g.name),
-      el('p', 'ord-page-sub', ar ? 'اختر تصنيفًا للبدء بفحصه وتحديد الكميات المطلوبة:' : 'Pick a category to check and order items:')
-    );
-
-    const cats = db.catalog.categories.filter((c) => c.group === groupKey);
-    const grid = el('div', 'ord-cat-grid');
-
-    cats.forEach((c) => {
-      const items = store().ordCatItems(c.id);
-      const done = store().ordCatDone(c.id);
-      const skipped = store().ordCatSkipped(c.id);
-      const req = items.filter((i) => store().ordLine(i.id).qty > 0).length;
-      const isComplete = items.length > 0 && done + skipped >= items.length;
-
-      const card = el('button', 'ord-cat-card' + (isComplete ? ' complete' : ''));
-      card.type = 'button';
-      card.append(
-        el('h4', '', ar ? c.nameAr || c.name : c.name),
-        el('div', 'ord-cat-stat', `${items.length} ${ar ? 'أصناف' : 'items'} · ${done} ${ar ? 'تم فحصها' : 'done'}`),
-        req > 0 ? el('span', 'ord-req-badge', `+${req} ${ar ? 'مطلوب' : 'picked'}`) : el('span', 'ord-req-badge zero', isComplete ? '✓ ' + (ar ? 'مكتمل' : 'done') : '—')
-      );
-      card.addEventListener('click', () => ordGo('products/' + c.id));
-      grid.append(card);
-    });
-
-    root.append(grid);
-    appendGeneralBottomBar(root);
-  }
-
-  // ---- Page 3: Products in Category ----
-  function renderCategoryProducts(root, catId) {
-    const ar = isAr();
-    const db = store().getDB();
-    const c = store().ordCat(catId);
-    if (!c) { ordGo('home'); return; }
-
-    const viewMode = (db.preferences && db.preferences.viewMode) || 'step';
-    root.append(buildOrdBreadcrumbs(c.group, c.id));
-    root.append(
-      el('div', 'ord-kicker', '03 / PRODUCTS · قائمة الأصناف'),
-      el('h2', 'ord-page-title', ar ? c.nameAr || c.name : c.name),
-      buildOrdViewSwitch(c.id, viewMode)
-    );
-
-    const items = store().ordCatItems(c.id);
-    if (viewMode === 'step') {
-      renderStepModeList(root, c, items, ar);
-    } else {
-      renderQuickListMode(root, c, items, ar);
-    }
+  function buildOrdViewSwitch(catId, activeMode) {
+    if (FOH.ordersView && FOH.ordersView.buildOrdViewSwitch) return FOH.ordersView.buildOrdViewSwitch(catId, activeMode);
   }
 
   function renderStepModeList(root, c, opts = {}) {
@@ -20605,6 +20523,152 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   }
 
   // ---- Page 5: Category Complete ----
+
+  FOH.ordersViewItems = {
+    renderStepModeList,
+    createQuickItemCard,
+    renderQuickListMode,
+    buildItemStepperControls,
+    buildItemStepperNav,
+    renderItemStepperCard,
+    navigateNextItem,
+  };
+})(window.FOH = window.FOH || {});
+
+</script>
+
+<script>
+// --- js/domains/orders/orders-view-review.js ---
+// Orders View Component
+(function (FOH) {
+  'use strict';
+
+  const $ = (id) => document.getElementById(id);
+  const S = () => FOH.state;
+  const store = () => FOH.ordersStore;
+  const dispatch = () => FOH.ordersDispatch;
+  const { el } = FOH.view;
+  const isAr = () => (FOH.i18n ? FOH.i18n.lang === 'ar' : false);
+  const getSession = () => ((FOH.auth && FOH.auth.getSession) ? FOH.auth.getSession() : (FOH.sessionAuth ? FOH.sessionAuth.loadSession() : null));
+
+  function ordGo(nextRoute) {
+    if (FOH.ordersView && FOH.ordersView.ordGo) return FOH.ordersView.ordGo(nextRoute);
+  }
+
+  function appendBottomBar(root, buildFn) {
+    if (FOH.ordersView && FOH.ordersView.appendBottomBar) return FOH.ordersView.appendBottomBar(root, buildFn);
+  }
+
+  function appendGeneralBottomBar(root) {
+    if (FOH.ordersView && FOH.ordersView.appendGeneralBottomBar) return FOH.ordersView.appendGeneralBottomBar(root);
+  }
+
+  function buildOrdBreadcrumbs(groupKey, catId, tailLabel) {
+    if (FOH.ordersView && FOH.ordersView.buildOrdBreadcrumbs) return FOH.ordersView.buildOrdBreadcrumbs(groupKey, catId, tailLabel);
+  }
+
+  function buildOrdViewSwitch(catId, activeMode) {
+    if (FOH.ordersView && FOH.ordersView.buildOrdViewSwitch) return FOH.ordersView.buildOrdViewSwitch(catId, activeMode);
+  }
+
+  function openReceivingModal() {
+    const ar = isAr();
+    const list = store().ordSelectedItems();
+    const overlay = el('div', 'modal-overlay');
+    overlay.style.display = 'flex';
+    overlay.style.zIndex = '9999';
+
+    const dialog = el('div', 'modal-box');
+    dialog.style.maxWidth = '520px';
+    dialog.style.width = '94%';
+    dialog.style.padding = '20px';
+
+    const title = el('h3', '', '📦 ' + (ar ? 'تأكيد استلام طلبية المستودع' : 'Confirm Order Receiving'));
+    const sub = el('p', '', ar ? 'تأكيد وصول الأصناف وتوريدها لمخزون البار والصالة' : 'Verify delivered items & ingest into bar stock');
+    sub.style.color = 'var(--ink2)';
+    sub.style.marginBottom = '12px';
+
+    const itemsBox = el('div', '');
+    itemsBox.style.maxHeight = '280px';
+    itemsBox.style.overflowY = 'auto';
+    itemsBox.style.margin = '10px 0';
+
+    const receivedMap = {};
+    list.forEach((i) => {
+      const line = store().ordLine(i.id);
+      receivedMap[i.id] = line.qty;
+      const row = el('div', 'dayoff-item');
+      row.style.display = 'flex';
+      row.style.justifyContent = 'space-between';
+      row.style.alignItems = 'center';
+      row.style.margin = '6px 0';
+      const safeName = FOH.escapeHtml(ar && i.ar ? i.ar + ' · ' + i.name : i.name);
+      const safeUnit = FOH.escapeHtml(line.unit || i.unit || '');
+      const safeQty = Number(line.qty) || 0;
+      row.innerHTML = '<div><b>' + safeName + '</b><small style="display:block;color:var(--ink2);">' +
+        (ar ? 'المطلوب: ' : 'Requested: ') + safeQty + ' ' + safeUnit + '</small></div>';
+      const badge = el('span', 'dayoff-badge approved', '✓ ' + safeQty + ' ' + safeUnit);
+      row.append(badge);
+      itemsBox.append(row);
+    });
+
+    const btnRow = el('div', '');
+    btnRow.style.display = 'flex';
+    btnRow.style.gap = '8px';
+    btnRow.style.marginTop = '16px';
+
+    const cancelBtn = el('button', 'btn', ar ? 'إلغاء' : 'Cancel');
+    cancelBtn.type = 'button';
+    cancelBtn.style.flex = '1';
+    cancelBtn.addEventListener('click', () => overlay.remove());
+
+    const confirmBtn = el('button', 'btn primary', ar ? '✓ تأكيد الاستلام بالكامل' : '✓ Confirm Full Receipt');
+    confirmBtn.type = 'button';
+    confirmBtn.style.flex = '1.5';
+    confirmBtn.addEventListener('click', () => {
+      store().confirmOrderReceiving({
+        receivedLines: receivedMap,
+        receiverName: (getSession() && getSession().displayName) || S().me.name || 'Staff',
+      });
+      overlay.remove();
+      if (FOH.edit && FOH.edit.toast) {
+        FOH.edit.toast(ar ? 'تم تأكيد استلام الطلبية والتوريد بنجاح ✓' : 'Order received & archived ✓');
+      }
+      ordGo('home');
+    });
+
+    btnRow.append(cancelBtn, confirmBtn);
+    dialog.append(title, sub, itemsBox, btnRow);
+    overlay.append(dialog);
+    document.body.append(overlay);
+  }
+
+  function renderReceivingBanner(ar) {
+    const banner = el('div', 'ord-receiving-banner');
+    banner.style.background = 'linear-gradient(135deg, rgba(245, 158, 11, 0.16), rgba(217, 119, 6, 0.24))';
+    banner.style.border = '1px solid rgba(245, 158, 11, 0.4)';
+    banner.style.borderRadius = '12px';
+    banner.style.padding = '12px 16px';
+    banner.style.marginBottom = '14px';
+    banner.style.display = 'flex';
+    banner.style.justifyContent = 'space-between';
+    banner.style.alignItems = 'center';
+    banner.style.flexWrap = 'wrap';
+    banner.style.gap = '10px';
+
+    const info = el('div', '');
+    info.innerHTML = '<strong>📦 ' + (ar ? 'طلبية المستودع قيد التوريد (Dispatched)' : 'Warehouse Delivery Dispatched') + '</strong>' +
+      '<small style="display:block;color:var(--ink2);">' + (ar ? 'تم إرسال الطلبية بنجاح. اضغط عند وصول البضاعة لتأكيد الاستلام.' : 'Order was sent. Tap when goods arrive to confirm receiving.') + '</small>';
+
+    const recvBtn = el('button', 'btn primary small', ar ? '✓ استلام الطلبية والتوريد' : '✓ Receive & Ingest');
+    recvBtn.type = 'button';
+    recvBtn.addEventListener('click', () => openReceivingModal());
+
+    banner.append(info, recvBtn);
+    return banner;
+  }
+
+
   function renderCategoryComplete(root, catId) {
     const ar = isAr();
     const c = store().ordCat(catId);
@@ -20789,6 +20853,354 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   }
 
   // ---- Router ----
+
+  FOH.ordersViewReview = {
+    openReceivingModal,
+    renderReceivingBanner,
+    renderCategoryComplete,
+    renderOrderReview,
+    renderReviewItemsList,
+  };
+})(window.FOH = window.FOH || {});
+
+</script>
+
+<script>
+// --- js/domains/orders/orders-view.js ---
+// foh-opening/js/domains/orders/orders-view.js
+// Warehouse & Bar Ordering Workflow (Item Selection, Stock Tally & WhatsApp Dispatch)
+(function (FOH) {
+  'use strict';
+
+  const $ = (id) => document.getElementById(id);
+  const S = () => FOH.state;
+  const store = () => FOH.ordersStore;
+  const dispatch = () => FOH.ordersDispatch;
+  const { el } = FOH.view;
+
+  let ordRoute = 'home'; // 'home' | 'types/<group>' | 'products/<cat>' | 'item/<id>' | 'complete/<cat>' | 'review'
+  let ordForceAllGroups = false;
+  let ordProductSearch = '';
+  let ordQuickSearch = '';
+  let ordQuickOnlyRequested = false;
+  let ordReturnToReview = false;
+  let ordIncludeStockInMsg = false;
+
+  const isAr = () => (FOH.i18n ? FOH.i18n.lang === 'ar' : false);
+  const getSession = () => ((FOH.auth && FOH.auth.getSession) ? FOH.auth.getSession() : (FOH.sessionAuth ? FOH.sessionAuth.getSession() : null));
+
+  function updateOrderBadge() {
+    const count = store().ordSelectedItems().length;
+    const badge = $('badgeOrders');
+    if (badge) {
+      badge.textContent = String(count);
+      badge.hidden = count === 0;
+    }
+    const lbl = $('ordersTabLbl');
+    if (lbl && FOH.i18n && FOH.i18n.t) lbl.textContent = FOH.i18n.t('ordersTab');
+  }
+
+  function ordGo(nextRoute) {
+    ordRoute = nextRoute || 'home';
+    const root = $('ordersView');
+    if (root) {
+      renderOrdersView(root);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  function buildOrdBreadcrumbs(groupKey, catId, tailLabel) {
+    const ar = isAr();
+    const nav = el('nav', 'ord-crumbs');
+    const homeBtn = el('button', '', ar ? 'الأقسام (Sections)' : 'Sections');
+    homeBtn.type = 'button';
+    homeBtn.addEventListener('click', () => ordGo('home'));
+    nav.append(homeBtn);
+
+    const db = store().getDB();
+    if (groupKey && db.catalog.groups[groupKey]) {
+      nav.append(el('span', '', '›'));
+      const g = db.catalog.groups[groupKey];
+      const gBtn = el('button', '', ar ? g.nameAr || g.name : g.name);
+      gBtn.type = 'button';
+      gBtn.addEventListener('click', () => ordGo('types/' + groupKey));
+      nav.append(gBtn);
+    }
+    if (catId && store().ordCat(catId)) {
+      nav.append(el('span', '', '›'));
+      const c = store().ordCat(catId);
+      const cBtn = el('button', '', ar ? c.nameAr || c.name : c.name);
+      cBtn.type = 'button';
+      cBtn.addEventListener('click', () => ordGo('products/' + catId));
+      nav.append(cBtn);
+    }
+    if (tailLabel) {
+      nav.append(el('span', '', '›'), el('span', '', tailLabel));
+    }
+    return nav;
+  }
+
+  function buildOrdViewSwitch(catId, activeMode) {
+    const sw = el('div', 'ord-view-switch');
+    const stepBtn = el('button', activeMode === 'step' ? 'on' : '', isAr() ? '▣ صنفًا بصنف (Step-by-step)' : '▣ Step-by-step');
+    stepBtn.type = 'button';
+    stepBtn.addEventListener('click', () => {
+      const db = store().getDB();
+      db.preferences.viewMode = 'step';
+      store().saveOrdersDB();
+      const pending = store().ordPendingItem(catId) || store().ordCatItems(catId)[0];
+      ordGo(pending ? 'item/' + pending.id : 'products/' + catId);
+    });
+
+    const listBtn = el('button', activeMode === 'list' ? 'on' : '', isAr() ? '☷ القائمة السريعة (Quick list)' : '☷ Quick list');
+    listBtn.type = 'button';
+    listBtn.addEventListener('click', () => {
+      const db = store().getDB();
+      db.preferences.viewMode = 'list';
+      store().saveOrdersDB();
+      ordGo('products/' + catId);
+    });
+
+    sw.append(stepBtn, listBtn);
+    return sw;
+  }
+
+  function appendBottomBar(root, buildFn) {
+    const bar = el('nav', 'ord-bottom-bar');
+    const inner = el('div', 'ord-bottom-inner');
+    buildFn(inner);
+    bar.append(inner);
+    root.append(bar);
+    root.style.paddingBottom = 'calc(146px + env(safe-area-inset-bottom, 16px))';
+  }
+
+  function appendGeneralBottomBar(root) {
+    const selectedList = store().ordSelectedItems();
+    appendBottomBar(root, (inner) => {
+      const info = el('div', '');
+      info.style.minWidth = '110px';
+      info.append(
+        el('strong', '', String(selectedList.length) + ' '),
+        el('small', '', isAr() ? 'أصناف مختارة' : 'selected')
+      );
+      const revBtn = el('button', 'btn primary', isAr() ? 'مراجعة الطلبية الكاملة ←' : 'Review full order →');
+      revBtn.type = 'button';
+      revBtn.disabled = selectedList.length === 0;
+      revBtn.addEventListener('click', () => ordGo('review'));
+      inner.append(info, revBtn);
+    });
+  }
+
+  function openReceivingModal() {
+    if (FOH.ordersViewReview && FOH.ordersViewReview.openReceivingModal) {
+      return FOH.ordersViewReview.openReceivingModal();
+    }
+  }
+
+  function renderReceivingBanner(ar) {
+    if (FOH.ordersViewReview && FOH.ordersViewReview.renderReceivingBanner) {
+      return FOH.ordersViewReview.renderReceivingBanner(ar);
+    }
+  }
+
+  // ---- Page 1: Home Groups ----
+  function renderHomeGroups(root) {
+    const ar = isAr();
+    const db = store().getDB();
+    const selectedList = store().ordSelectedItems();
+
+    const headWrap = el('div', '');
+    const topRow = el('div', '');
+    topRow.style.display = 'flex';
+    topRow.style.alignItems = 'center';
+    topRow.style.justifyContent = 'space-between';
+    topRow.style.gap = '8px';
+    topRow.style.flexWrap = 'wrap';
+
+    const kicker = el('div', 'ord-kicker', '01 / SECTION SELECT · أقسام الطلبيات');
+    const btnGroup = el('div', '');
+    btnGroup.style.display = 'flex';
+    btnGroup.style.gap = '6px';
+    btnGroup.style.alignItems = 'center';
+
+    const startNewBtn = el('button', 'btn small', ar ? '✨ بدء طلبية جديدة' : '✨ Start new order');
+    startNewBtn.type = 'button';
+    startNewBtn.addEventListener('click', () => {
+      store().promptStartNewOrder(() => renderOrdersView(root));
+    });
+    btnGroup.append(startNewBtn);
+
+    const canManage = store().canCurrentUserManageOrders && store().canCurrentUserManageOrders();
+    if (canManage) {
+      const setBtn = el('button', 'btn small', ar ? '⚙️ إعدادات وصلاحيات الأقسام' : '⚙️ Order Settings');
+      setBtn.type = 'button';
+      setBtn.addEventListener('click', () => {
+        if (FOH.ordersSettingsModal && FOH.ordersSettingsModal.open) {
+          FOH.ordersSettingsModal.open();
+        }
+      });
+      btnGroup.append(setBtn);
+    }
+    topRow.append(kicker, btnGroup);
+
+    headWrap.append(
+      topRow,
+      el('h2', 'ord-page-title', ar ? 'طلبيات البار ومستلزمات الصالة' : 'Bar & FOH Warehouse Orders'),
+      el('p', 'ord-page-sub', ar ? 'اختر القسم المطلوب لإعداد طلبيته وتحديد الكميات المطلوبة للمستودع:' : 'Select a section to prepare warehouse requisition:')
+    );
+    if (store().getOrderStatus() === 'DISPATCHED') {
+      headWrap.append(renderReceivingBanner(ar));
+    }
+    root.append(headWrap);
+
+    const secCards = el('div', 'ord-sec-grid');
+    const allowed = store().allowedGroupsForCurrentRole(ordForceAllGroups);
+
+    allowed.forEach(([gid, g]) => {
+      const cats = db.catalog.categories.filter((c) => c.group === gid);
+      const catCount = cats.length;
+      let totalItems = 0;
+      let doneItems = 0;
+      let reqCount = 0;
+
+      cats.forEach((c) => {
+        const cItems = store().ordCatItems(c.id);
+        totalItems += cItems.length;
+        doneItems += store().ordCatDone(c.id);
+        reqCount += cItems.filter((i) => store().ordLine(i.id).qty > 0).length;
+      });
+
+      const btn = el('button', 'ord-sec-card');
+      btn.type = 'button';
+      btn.append(
+        el('div', 'ord-sec-ico', g.icon || '📦'),
+        Object.assign(el('div', 'ord-sec-body'), {
+          innerHTML:
+            '<h3>' + FOH.escapeHtml(ar ? g.nameAr || g.name : g.name) + '</h3>' +
+            '<p>' + FOH.escapeHtml(ar ? g.subAr || g.sub : g.sub) + '</p>' +
+            '<div class="ord-sec-meta"><span>' + catCount + ' ' + (ar ? 'تصنيفات' : 'categories') + ' · ' + totalItems + ' ' + (ar ? 'أصناف' : 'items') + '</span>' +
+            (reqCount > 0 ? '<strong class="ord-req-chip">✓ ' + reqCount + ' ' + (ar ? 'مطلوب' : 'requested') + '</strong>' : '') +
+            '</div>',
+        })
+      );
+      btn.addEventListener('click', () => ordGo('types/' + gid));
+      secCards.append(btn);
+    });
+
+    root.append(secCards);
+    appendGeneralBottomBar(root);
+  }
+
+  // ---- Page 2: Types in Group ----
+  function renderCategoryTypes(root, groupKey) {
+    const ar = isAr();
+    const db = store().getDB();
+    const g = db.catalog.groups[groupKey];
+    if (!g) { ordGo('home'); return; }
+
+    root.append(buildOrdBreadcrumbs(groupKey, null));
+
+    const sess = getSession();
+    const isMgr = !sess || !!(sess.isManager || sess.roleId === 'manager');
+    const roleKey = FOH.roleIdentity ? FOH.roleIdentity.getCurrentSuperRoleKey() : 'staff';
+    const uname = (sess && sess.username) || '';
+    const canEditGroup = store().canUserEditGroup ? store().canUserEditGroup(groupKey, { roleKey, username: uname, isManager: isMgr }) : isMgr;
+
+    const headRow = el('div', '');
+    headRow.style.display = 'flex';
+    headRow.style.alignItems = 'center';
+    headRow.style.justifyContent = 'space-between';
+    headRow.style.gap = '8px';
+    headRow.style.flexWrap = 'wrap';
+
+    const kicker = el('div', 'ord-kicker', '02 / CATEGORY · تصنيفات القسم');
+    headRow.append(kicker);
+
+    if (canEditGroup) {
+      const addCatBtn = el('button', 'btn small primary', ar ? '+ تصنيف جديد' : '+ New Category');
+      addCatBtn.type = 'button';
+      addCatBtn.addEventListener('click', () => {
+        if (FOH.ordersSettingsModal && FOH.ordersSettingsModal.openAddCategoryModal) {
+          FOH.ordersSettingsModal.openAddCategoryModal(groupKey, () => renderOrdersView(root));
+        }
+      });
+      headRow.append(addCatBtn);
+    }
+
+    root.append(
+      headRow,
+      el('h2', 'ord-page-title', ar ? g.nameAr || g.name : g.name),
+      el('p', 'ord-page-sub', ar ? 'اختر تصنيفًا للبدء بفحصه وتحديد الكميات المطلوبة:' : 'Pick a category to check and order items:')
+    );
+
+    const cats = db.catalog.categories.filter((c) => c.group === groupKey);
+    const grid = el('div', 'ord-cat-grid');
+
+    cats.forEach((c) => {
+      const items = store().ordCatItems(c.id);
+      const done = store().ordCatDone(c.id);
+      const skipped = store().ordCatSkipped(c.id);
+      const req = items.filter((i) => store().ordLine(i.id).qty > 0).length;
+      const isComplete = items.length > 0 && done + skipped >= items.length;
+
+      const card = el('button', 'ord-cat-card' + (isComplete ? ' complete' : ''));
+      card.type = 'button';
+      card.append(
+        el('h4', '', ar ? c.nameAr || c.name : c.name),
+        el('div', 'ord-cat-stat', `${items.length} ${ar ? 'أصناف' : 'items'} · ${done} ${ar ? 'تم فحصها' : 'done'}`),
+        req > 0 ? el('span', 'ord-req-badge', `+${req} ${ar ? 'مطلوب' : 'picked'}`) : el('span', 'ord-req-badge zero', isComplete ? '✓ ' + (ar ? 'مكتمل' : 'done') : '—')
+      );
+      card.addEventListener('click', () => ordGo('products/' + c.id));
+      grid.append(card);
+    });
+
+    root.append(grid);
+    appendGeneralBottomBar(root);
+  }
+
+  // ---- Page 3: Products in Category ----
+  function renderCategoryProducts(root, catId) {
+    const ar = isAr();
+    const db = store().getDB();
+    const c = store().ordCat(catId);
+    if (!c) { ordGo('home'); return; }
+
+    const viewMode = (db.preferences && db.preferences.viewMode) || 'step';
+    root.append(buildOrdBreadcrumbs(c.group, c.id));
+    root.append(
+      el('div', 'ord-kicker', '03 / PRODUCTS · قائمة الأصناف'),
+      el('h2', 'ord-page-title', ar ? c.nameAr || c.name : c.name),
+      buildOrdViewSwitch(c.id, viewMode)
+    );
+
+    const items = store().ordCatItems(c.id);
+    if (viewMode === 'step') {
+      renderStepModeList(root, c, items, ar);
+    } else {
+      renderQuickListMode(root, c, items, ar);
+    }
+  }
+
+  function renderStepModeList(root, c, opts) {
+    return FOH.ordersViewItems.renderStepModeList(root, c, opts);
+  }
+
+  function renderQuickListMode(root, c, opts) {
+    return FOH.ordersViewItems.renderQuickListMode(root, c, opts);
+  }
+
+  function renderItemStepperCard(root, itemId) {
+    return FOH.ordersViewItems.renderItemStepperCard(root, itemId);
+  }
+
+  function renderCategoryComplete(root, catId) {
+    return FOH.ordersViewReview.renderCategoryComplete(root, catId);
+  }
+
+  function renderOrderReview(root) {
+    return FOH.ordersViewReview.renderOrderReview(root);
+  }
+
   function renderOrdersView(root) {
     if (!root) return;
     root.replaceChildren();
@@ -20824,7 +21236,6 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   FOH.renderOrdersView = renderOrdersView;
   FOH.updateOrderBadge = updateOrderBadge;
 })(window.FOH = window.FOH || {});
-
 </script>
 
 <script>
@@ -21816,9 +22227,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 </script>
 
 <script>
-// --- js/domains/operations/ops-lifecycle.js ---
-// foh-opening/js/domains/operations/ops-lifecycle.js
-// Operational Hours, Lifecycle Bar & Closing Department Flow
+// --- js/domains/operations/ops-config-store.js ---
+// Operations Lifecycle Component
 (function (FOH) {
   'use strict';
 
@@ -21826,51 +22236,19 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   const S = FOH.state;
   const { t } = FOH.i18n;
   const { el } = FOH.view;
-  const SESSION_KEY = 'foh-opening.erpSession.v1';
-
-  const OPS_CONFIG_KEY = 'super-employee.opsConfig.v2';
-  const OPS_DAY_STATE_KEY = 'super-employee.opsDayState.v1';
 
   function isAr() {
-    return FOH.i18n.lang === 'ar';
+    return FOH.i18n ? FOH.i18n.lang === 'ar' : false;
   }
 
   function getSession() {
-    return FOH.sessionAuth ? FOH.sessionAuth.getSession() : null;
-  }
-
-  function loadGov() {
-    return FOH.gov ? FOH.gov.loadGov() : {};
+    return (FOH.sessionAuth && FOH.sessionAuth.loadSession) ? FOH.sessionAuth.loadSession() : null;
   }
 
   function getCurrentSuperRoleKey() {
     return FOH.roleIdentity ? FOH.roleIdentity.getCurrentSuperRoleKey() : 'staff';
   }
 
-  function getSheetType() {
-    return FOH.sheetState ? FOH.sheetState.getSheetType() : 'opening';
-  }
-
-  function switchSheetType(t) {
-    if (FOH.sheetState) FOH.sheetState.switchSheetType(t);
-  }
-
-  function loadTipsData() {
-    return FOH.tipsView ? FOH.tipsView.loadTipsData() : {};
-  }
-
-  function saveTipsData(d) {
-    if (FOH.tipsView) FOH.tipsView.saveTipsData(d);
-  }
-
-  function hasSuperPerm(p) {
-    return FOH.roleIdentity ? FOH.roleIdentity.hasSuperPerm(p) : true;
-  }
-
-    // ============================================================================
-  // 11. Operational Hours, Shift Prep, Department Last Order, Closing Sheet
-  //     by Department, "Close Restaurant (Last Guest)" Gate & Super Roles (v9)
-  // ============================================================================
   const OPS_CFG_KEY = 'super-employee.opsConfig.v1';
   const OPS_DAY_PREFIX = 'super-employee.opsDay.v1.';
 
@@ -22070,6 +22448,359 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   }
 
   // ---- Department-Specific Closing Sheet Sections ----
+
+  FOH.opsConfigStore = {
+    SUPER_ROLES_META,
+    PERM_LABELS,
+    DEFAULT_OPS_HOURS,
+    DEFAULT_STAFF_SUPER_ROLES,
+    DEFAULT_ORDERING_DELEGATION,
+    DEFAULT_TASK_DELEGATION,
+    DEFAULT_ROLE_PERMISSIONS,
+    defaultOpsConfig,
+    loadOpsConfig,
+    saveOpsConfig,
+    toBizMinutes,
+    formatTime12Ar,
+    getEffectiveNowHM,
+    loadOpsDayState,
+    saveOpsDayState,
+  };
+})(window.FOH = window.FOH || {});
+
+</script>
+
+<script>
+// --- js/domains/operations/ops-close-dialog.js ---
+// Operations Lifecycle Component
+(function (FOH) {
+  'use strict';
+
+  const $ = (id) => document.getElementById(id);
+  const S = FOH.state;
+  const { t } = FOH.i18n;
+  const { el } = FOH.view;
+
+  function isAr() {
+    return FOH.i18n ? FOH.i18n.lang === 'ar' : false;
+  }
+
+  function getSession() {
+    return (FOH.sessionAuth && FOH.sessionAuth.loadSession) ? FOH.sessionAuth.loadSession() : null;
+  }
+
+  function getCurrentSuperRoleKey() {
+    return FOH.roleIdentity ? FOH.roleIdentity.getCurrentSuperRoleKey() : 'staff';
+  }
+
+  const configHelper = () => FOH.opsConfigStore || {};
+  const formatTime12Ar = (hm) => (FOH.opsConfigStore && FOH.opsConfigStore.formatTime12Ar ? FOH.opsConfigStore.formatTime12Ar(hm) : hm);
+  const saveOpsDayState = (d, st) => (FOH.opsConfigStore && FOH.opsConfigStore.saveOpsDayState ? FOH.opsConfigStore.saveOpsDayState(d, st) : null);
+  const loadOpsDayState = (d) => (FOH.opsConfigStore && FOH.opsConfigStore.loadOpsDayState ? FOH.opsConfigStore.loadOpsDayState(d) : {});
+
+  function renderClosePermissionDenied(dlg, roleMeta, ar) {
+    const box = el('div', '');
+    box.style.padding = '16px 18px 22px';
+    box.innerHTML =
+      '<div class="grab"></div>' +
+      '<h2 style="color:var(--danger);">🔒 ' + (ar ? 'صلاحية إغلاق المطعم غير متوفرة لمنصبك' : 'Permission Required to Close Restaurant') + '</h2>' +
+      '<p style="font-size:0.88rem;color:var(--ink2);line-height:1.5;">' +
+      (ar ? 'منصبك الحالي هو <b>' + roleMeta.badge + '</b>. إغلاق المطعم رسمياً في نهاية الشفت مخصص لـ <b>👑 Super Manager</b> أو <b>🎖️ Super Captain</b> (يمكن للمدير تعديل هذه الصلاحية من ⚙️ الإعدادات).' : 'Your current role is ' + roleMeta.badge + '. Super Manager or Super Captain permission required.') +
+      '</p>';
+    const okB = el('button', 'btn primary', ar ? 'حسناً' : 'OK');
+    okB.type = 'button';
+    okB.style.width = '100%';
+    okB.addEventListener('click', () => dlg.close());
+    box.append(okB);
+    dlg.append(box);
+    dlg.showModal();
+  }
+
+  function renderEmergencyOverrideSection(dlg, opts, ar) {
+    const { nowHM, daySt, myName, roleMeta } = opts;
+    const ovWrap = el('div', '');
+    ovWrap.style.marginTop = '10px';
+    ovWrap.style.paddingTop = '10px';
+    ovWrap.style.borderTop = '1px dashed var(--line)';
+    const ovLbl = el('label', '', ar ? '👑 تجاوز استثنائي بأمر Super Manager فقط (أدخل سبب الإغلاق المبكر الإلزامي):' : '👑 Super Manager Emergency Override:');
+    ovLbl.style.fontSize = '0.8rem';
+    ovLbl.style.fontWeight = '700';
+    const ovIn = el('input', 'in');
+    ovIn.placeholder = ar ? 'مثال: صيانة طارئة للكهرباء / ظرف جوي استثنائي...' : 'Emergency reason...';
+    ovIn.style.marginTop = '6px';
+    const ovBtn = el('button', 'btn danger', ar ? '⚠️ فرض الإغلاق المبكر بأمر السوبر مانجر' : '⚠️ Force Early Close');
+    ovBtn.type = 'button';
+    ovBtn.style.width = '100%';
+    ovBtn.style.marginTop = '8px';
+    ovBtn.addEventListener('click', () => {
+      if (!ovIn.value.trim()) return ovIn.focus();
+      daySt.closedAt = nowHM;
+      daySt.closedBy = myName;
+      daySt.closedRole = roleMeta.badge;
+      daySt.extensionMins = 0;
+      daySt.earlyOverrideReason = ovIn.value.trim();
+      saveOpsDayState(S.date, daySt);
+      dlg.close();
+      FOH.edit.toast(ar ? '🔒 تم إغلاق المطعم استثنائياً بأمر السوبر مانجر' : '🔒 Restaurant closed via override');
+      FOH.app.render();
+    });
+    ovWrap.append(ovLbl, ovIn, ovBtn);
+    return ovWrap;
+  }
+
+  function renderEarlyCloseWarning(dlg, box, opts = {}) {
+    const isLegacy = typeof opts === 'object' && ('h' in opts);
+    const options = isLegacy ? opts : (opts && opts.options) || {};
+    const ar = (opts && typeof opts.ar === 'boolean') ? opts.ar : (isLegacy ? !!arguments[3] : isAr());
+    const { h, nowHM, minCloseBiz, canOverrideEarly } = options;
+
+    box.innerHTML =
+      '<div class="grab"></div>' +
+      '<div style="padding:12px;border-radius:12px;background:var(--danger-soft);border:1.5px solid var(--danger);margin-bottom:12px;">' +
+      '<h3 style="margin:0 0 6px;color:var(--danger);">⛔ ' + (ar ? 'منع الإغلاق المبكر للمطعم (الساعة الآن ' + formatTime12Ar(nowHM) + ')' : 'Early Closing Blocked (' + formatTime12Ar(nowHM) + ')') + '</h3>' +
+      '<p style="margin:0;font-size:0.84rem;line-height:1.5;">' + (ar ? 'الحد الأدنى الرسمي لإغلاق المطعم هو <b>' + formatTime12Ar(h.minCloseTime) + '</b>. حسب قوانين المطعم، <b>لا يُغلق المطعم مبكراً (مثلاً الساعة 11:30 مساءً) حتى لو كانت الصالة فارغة من الزبائن</b>.' : 'Minimum closing time is ' + formatTime12Ar(h.minCloseTime) + '. Early close is blocked.') + '</p>' +
+      '</div>';
+
+    const simHint = el('button', 'btn', ar ? '⏱ تجربة محاكاة الساعة 02:30 ص (بعد مغادرة آخر زبون)' : '⏱ Simulate 02:30 AM (Last Guest Left)');
+    simHint.type = 'button';
+    simHint.style.width = '100%';
+    simHint.style.marginBottom = '10px';
+    simHint.addEventListener('click', () => {
+      simulatedShiftTime = '02:30';
+      dlg.close();
+      renderOpsLifecycleBar();
+      openCloseRestaurantDialog('02:30', toBizMinutes('02:30'), minCloseBiz);
+    });
+    box.append(simHint);
+
+    if (canOverrideEarly) {
+      box.append(renderEmergencyOverrideSection(dlg, options, ar));
+    }
+
+    const closeDlgB = el('button', 'btn', ar ? 'إلغاء' : 'Cancel');
+    closeDlgB.type = 'button';
+    closeDlgB.style.width = '100%';
+    closeDlgB.style.marginTop = '8px';
+    closeDlgB.addEventListener('click', () => dlg.close());
+    box.append(closeDlgB);
+    dlg.append(box);
+    dlg.showModal();
+  }
+
+  function submitOfficialRestaurantClose(dlg, opts, ar) {
+    const { h, nowHM, extMins, daySt, myName, roleMeta } = opts;
+    daySt.closedAt = nowHM;
+    daySt.closedBy = myName;
+    daySt.closedRole = roleMeta.badge;
+    daySt.extensionMins = extMins;
+    if (!daySt.kitchenLastOrderAt) daySt.kitchenLastOrderAt = h.kitchenLastOrder;
+    if (!daySt.barLastOrderAt) daySt.barLastOrderAt = h.barLastOrder;
+
+    if (extMins > 0 && !daySt.overtimeCredited) {
+      const extraHours = Math.round((extMins / 60) * 10) / 10;
+      const tipsDB = loadTipsData();
+      if (tipsDB && tipsDB.staff) {
+        Object.values(tipsDB.staff).forEach((st) => {
+          st.hours = Math.round(((Number(st.hours) || 40) + extraHours) * 10) / 10;
+        });
+        saveTipsData(tipsDB);
+      }
+      daySt.overtimeCredited = true;
+    }
+    saveOpsDayState(S.date, daySt);
+    dlg.close();
+    FOH.edit.toast(ar ? '🚪 تم إغلاق المطعم رسمياً الساعة ' + formatTime12Ar(nowHM) + (extMins > 0 ? ' واحتساب +' + extMins + ' دقيقة تمديد ✓' : ' ✓') : '🚪 Closed at ' + formatTime12Ar(nowHM) + ' ✓');
+    FOH.app.render();
+  }
+
+  function renderOfficialCloseConfirmation(dlg, box, opts = {}) {
+    const isLegacy = typeof opts === 'object' && ('h' in opts);
+    const options = isLegacy ? opts : (opts && opts.options) || {};
+    const ar = (opts && typeof opts.ar === 'boolean') ? opts.ar : (isLegacy ? !!arguments[3] : isAr());
+    const { h, nowHM, extMins, doneClosingCount, allClosingLeaves, leftClosingCount } = options;
+
+    box.innerHTML =
+      '<div class="grab"></div>' +
+      '<h2>🚪 ' + (ar ? 'تأكيد إغلاق المطعم رسمياً (مع مغادرة آخر زبون)' : 'Confirm Official Restaurant Closing') + '</h2>' +
+      '<div style="padding:12px;border-radius:12px;background:var(--accent-soft);border:1px solid var(--accent);margin-bottom:12px;font-size:0.84rem;line-height:1.55;">' +
+      '<div>🕒 <b>' + (ar ? 'وقت الإغلاق الفعلي:' : 'Closing Time:') + '</b> ' + formatTime12Ar(nowHM) + (extMins > 0 ? (ar ? ' (تمديد +' + extMins + ' دقيقة بعد الـ ' + formatTime12Ar(h.minCloseTime) + ')' : ' (+' + extMins + 'm extension)') : '') + '</div>' +
+      '<div>🌙 <b>' + (ar ? 'إنجاز شيت الإغلاق:' : 'Closing Sheet:') + '</b> ' + doneClosingCount + ' / ' + allClosingLeaves.length + (leftClosingCount === 0 ? ' ✅' : (ar ? ' (متبقي ' + leftClosingCount + ' مهام)' : ' (' + leftClosingCount + ' left)')) + '</div>' +
+      '<div>💰 <b>' + (ar ? 'ربط الساعات مع Tip Manager:' : 'Tip Manager Sync:') + '</b> ' + (extMins > 0 ? (ar ? 'سيتم احتساب +' + (extMins / 60).toFixed(1) + ' س إضافية تلقائياً' : '+' + (extMins / 60).toFixed(1) + 'h overtime logged') : (ar ? 'ساعات الشفت القياسية مكتملة' : 'Standard hours')) + '</div>' +
+      '</div>';
+
+    if (leftClosingCount > 0) {
+      const openClsBtn = el('button', 'btn', ar ? '🌙 مراجعة واستكمال مهام الـ Closing Sheet المتبقية (' + leftClosingCount + ')' : '🌙 Review Remaining Items (' + leftClosingCount + ')');
+      openClsBtn.type = 'button';
+      openClsBtn.style.width = '100%';
+      openClsBtn.style.marginBottom = '10px';
+      openClsBtn.addEventListener('click', () => { dlg.close(); activateClosingSheet('all'); });
+      box.append(openClsBtn);
+    }
+
+    const confirmCloseBtn = el('button', 'btn primary', ar ? '✅ تأكيد مغادرة آخر زبون وإغلاق المطعم الآن (' + formatTime12Ar(nowHM) + ')' : '✅ Confirm Close (' + formatTime12Ar(nowHM) + ')');
+    confirmCloseBtn.type = 'button';
+    confirmCloseBtn.style.width = '100%';
+    confirmCloseBtn.addEventListener('click', () => submitOfficialRestaurantClose(dlg, options, ar));
+
+    const cancelB = el('button', 'btn', ar ? 'إلغاء' : 'Cancel');
+    cancelB.type = 'button';
+    cancelB.style.width = '100%';
+    cancelB.style.marginTop = '8px';
+    cancelB.addEventListener('click', () => dlg.close());
+
+    box.append(confirmCloseBtn, cancelB);
+    dlg.append(box);
+    dlg.showModal();
+  }
+
+  function openCloseRestaurantDialog(nowHM, nowBiz, minCloseBiz) {
+    const ar = isAr();
+    const cfg = loadOpsConfig();
+    const h = cfg.hours;
+    const daySt = loadOpsDayState(S.date);
+    const sess = getSession();
+    const myName = (sess && sess.displayName) || S.me.name || 'Supervisor';
+    const roleKey = getCurrentSuperRoleKey();
+    const roleMeta = SUPER_ROLES_META[roleKey] || SUPER_ROLES_META.staff;
+    const canClose = hasSuperPerm('canCloseRestaurant');
+    const canOverrideEarly = hasSuperPerm('canEarlyCloseOverride');
+
+    let dlg = $('closeRestaurantDialog');
+    if (!dlg) {
+      dlg = el('dialog', 'sheet');
+      dlg.id = 'closeRestaurantDialog';
+      document.body.append(dlg);
+    }
+    dlg.replaceChildren();
+
+    if (!canClose) {
+      renderClosePermissionDenied(dlg, roleMeta, ar);
+      return;
+    }
+
+    const box = el('div', '');
+    box.style.padding = '16px 18px 22px';
+
+    if (nowBiz < minCloseBiz) {
+      renderEarlyCloseWarning(dlg, box, { h, nowHM, minCloseBiz, canOverrideEarly, daySt, myName, roleMeta }, ar);
+      return;
+    }
+
+    ensureUpgradedClosingSections();
+    const closingSecs = FOH.safeJsonParse(localStorage.getItem('foh-opening.closingSections.v1'), 'null') || DEPT_CLOSING_SECTIONS;
+    const closingRun = FOH.safeJsonParse(localStorage.getItem('foh-opening.closingRun.' + S.date), '{"checked":{}}');
+    const checkedMap = (isClosingSheetActive() ? S.run.checked : closingRun.checked) || {};
+    const allClosingLeaves = closingSecs.flatMap((s) => s.items || []);
+    const doneClosingCount = allClosingLeaves.filter((it) => checkedMap[it.id]).length;
+    const leftClosingCount = allClosingLeaves.length - doneClosingCount;
+    const extMins = Math.max(0, nowBiz - minCloseBiz);
+
+    renderOfficialCloseConfirmation(dlg, box, { h, nowHM, extMins, doneClosingCount, allClosingLeaves, leftClosingCount, daySt, myName, roleMeta }, ar);
+  }
+
+  FOH.opsLifecycle = {
+    defaultOpsConfig,
+    loadOpsConfig,
+    saveOpsConfig,
+    toBizMinutes,
+    formatTime12Ar,
+    getEffectiveNowHM,
+    loadOpsDayState,
+    saveOpsDayState,
+    ensureUpgradedClosingSections,
+    isClosingSheetActive,
+    activateClosingSheet,
+    setActiveClosingDeptFilter: (d) => { activeClosingDeptFilter = d; },
+    getActiveClosingDeptFilter: () => activeClosingDeptFilter,
+    renderClosingDeptFilterBar,
+    SUPER_ROLES_META,
+    PERM_LABELS,
+    renderOpsLifecycleBar,
+    openCloseRestaurantDialog,
+  };
+  FOH.SUPER_ROLES_META = SUPER_ROLES_META;
+  FOH.PERM_LABELS = PERM_LABELS;
+})(window.FOH = window.FOH || {});
+
+  FOH.opsCloseDialog = {
+    openCloseRestaurantDialog,
+  };
+})(window.FOH = window.FOH || {});
+
+</script>
+
+<script>
+// --- js/domains/operations/ops-lifecycle.js ---
+// foh-opening/js/domains/operations/ops-lifecycle.js
+// Operational Hours, Lifecycle Bar & Closing Department Flow
+(function (FOH) {
+  'use strict';
+
+  const $ = (id) => document.getElementById(id);
+  const S = FOH.state;
+  const { t } = FOH.i18n;
+  const { el } = FOH.view;
+  const SESSION_KEY = 'foh-opening.erpSession.v1';
+
+  const OPS_CONFIG_KEY = 'super-employee.opsConfig.v2';
+  const OPS_DAY_STATE_KEY = 'super-employee.opsDayState.v1';
+
+  function isAr() {
+    return FOH.i18n.lang === 'ar';
+  }
+
+  function getSession() {
+    return FOH.sessionAuth ? FOH.sessionAuth.getSession() : null;
+  }
+
+  function loadGov() {
+    return FOH.gov ? FOH.gov.loadGov() : {};
+  }
+
+  function getCurrentSuperRoleKey() {
+    return FOH.roleIdentity ? FOH.roleIdentity.getCurrentSuperRoleKey() : 'staff';
+  }
+
+  function getSheetType() {
+    return FOH.sheetState ? FOH.sheetState.getSheetType() : 'opening';
+  }
+
+  function switchSheetType(t) {
+    if (FOH.sheetState) FOH.sheetState.switchSheetType(t);
+  }
+
+  function loadTipsData() {
+    return FOH.tipsView ? FOH.tipsView.loadTipsData() : {};
+  }
+
+  function saveTipsData(d) {
+    if (FOH.tipsView) FOH.tipsView.saveTipsData(d);
+  }
+
+  function hasSuperPerm(p) {
+    return FOH.roleIdentity ? FOH.roleIdentity.hasSuperPerm(p) : true;
+  }
+
+    // ============================================================================
+  // 11. Operational Hours, Shift Prep, Department Last Order, Closing Sheet
+  //     by Department, "Close Restaurant (Last Guest)" Gate & Super Roles (v9)
+  // ============================================================================
+  // Delegate to opsConfigStore
+  const SUPER_ROLES_META = (FOH.opsConfigStore && FOH.opsConfigStore.SUPER_ROLES_META) || {};
+  const loadOpsConfig = () => (FOH.opsConfigStore && FOH.opsConfigStore.loadOpsConfig ? FOH.opsConfigStore.loadOpsConfig() : {});
+  const saveOpsConfig = (c) => (FOH.opsConfigStore && FOH.opsConfigStore.saveOpsConfig ? FOH.opsConfigStore.saveOpsConfig(c) : null);
+  const toBizMinutes = (hm) => (FOH.opsConfigStore && FOH.opsConfigStore.toBizMinutes ? FOH.opsConfigStore.toBizMinutes(hm) : 0);
+  const formatTime12Ar = (hm) => (FOH.opsConfigStore && FOH.opsConfigStore.formatTime12Ar ? FOH.opsConfigStore.formatTime12Ar(hm) : hm);
+  const getEffectiveNowHM = () => (FOH.opsConfigStore && FOH.opsConfigStore.getEffectiveNowHM ? FOH.opsConfigStore.getEffectiveNowHM() : '12:00');
+  const loadOpsDayState = (d) => (FOH.opsConfigStore && FOH.opsConfigStore.loadOpsDayState ? FOH.opsConfigStore.loadOpsDayState(d) : {});
+  const saveOpsDayState = (d, st) => (FOH.opsConfigStore && FOH.opsConfigStore.saveOpsDayState ? FOH.opsConfigStore.saveOpsDayState(d, st) : null);
+
+  function openCloseRestaurantDialog(...args) {
+    if (FOH.opsCloseDialog && FOH.opsCloseDialog.openCloseRestaurantDialog) {
+      return FOH.opsCloseDialog.openCloseRestaurantDialog(...args);
+    }
+  }
+
   const DEPT_CLOSING_SECTIONS = [
     {
       id: 'cls-bar',
@@ -22413,228 +23144,17 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     bar.append(topRow, timeline, actRow);
   }
 
-  function renderClosePermissionDenied(dlg, roleMeta, ar) {
-    const box = el('div', '');
-    box.style.padding = '16px 18px 22px';
-    box.innerHTML =
-      '<div class="grab"></div>' +
-      '<h2 style="color:var(--danger);">🔒 ' + (ar ? 'صلاحية إغلاق المطعم غير متوفرة لمنصبك' : 'Permission Required to Close Restaurant') + '</h2>' +
-      '<p style="font-size:0.88rem;color:var(--ink2);line-height:1.5;">' +
-      (ar ? 'منصبك الحالي هو <b>' + roleMeta.badge + '</b>. إغلاق المطعم رسمياً في نهاية الشفت مخصص لـ <b>👑 Super Manager</b> أو <b>🎖️ Super Captain</b> (يمكن للمدير تعديل هذه الصلاحية من ⚙️ الإعدادات).' : 'Your current role is ' + roleMeta.badge + '. Super Manager or Super Captain permission required.') +
-      '</p>';
-    const okB = el('button', 'btn primary', ar ? 'حسناً' : 'OK');
-    okB.type = 'button';
-    okB.style.width = '100%';
-    okB.addEventListener('click', () => dlg.close());
-    box.append(okB);
-    dlg.append(box);
-    dlg.showModal();
-  }
-
-  function renderEmergencyOverrideSection(dlg, opts, ar) {
-    const { nowHM, daySt, myName, roleMeta } = opts;
-    const ovWrap = el('div', '');
-    ovWrap.style.marginTop = '10px';
-    ovWrap.style.paddingTop = '10px';
-    ovWrap.style.borderTop = '1px dashed var(--line)';
-    const ovLbl = el('label', '', ar ? '👑 تجاوز استثنائي بأمر Super Manager فقط (أدخل سبب الإغلاق المبكر الإلزامي):' : '👑 Super Manager Emergency Override:');
-    ovLbl.style.fontSize = '0.8rem';
-    ovLbl.style.fontWeight = '700';
-    const ovIn = el('input', 'in');
-    ovIn.placeholder = ar ? 'مثال: صيانة طارئة للكهرباء / ظرف جوي استثنائي...' : 'Emergency reason...';
-    ovIn.style.marginTop = '6px';
-    const ovBtn = el('button', 'btn danger', ar ? '⚠️ فرض الإغلاق المبكر بأمر السوبر مانجر' : '⚠️ Force Early Close');
-    ovBtn.type = 'button';
-    ovBtn.style.width = '100%';
-    ovBtn.style.marginTop = '8px';
-    ovBtn.addEventListener('click', () => {
-      if (!ovIn.value.trim()) return ovIn.focus();
-      daySt.closedAt = nowHM;
-      daySt.closedBy = myName;
-      daySt.closedRole = roleMeta.badge;
-      daySt.extensionMins = 0;
-      daySt.earlyOverrideReason = ovIn.value.trim();
-      saveOpsDayState(S.date, daySt);
-      dlg.close();
-      FOH.edit.toast(ar ? '🔒 تم إغلاق المطعم استثنائياً بأمر السوبر مانجر' : '🔒 Restaurant closed via override');
-      FOH.app.render();
-    });
-    ovWrap.append(ovLbl, ovIn, ovBtn);
-    return ovWrap;
-  }
-
-  function renderEarlyCloseWarning(dlg, box, opts = {}) {
-    const isLegacy = typeof opts === 'object' && ('h' in opts);
-    const options = isLegacy ? opts : (opts && opts.options) || {};
-    const ar = (opts && typeof opts.ar === 'boolean') ? opts.ar : (isLegacy ? !!arguments[3] : isAr());
-    const { h, nowHM, minCloseBiz, canOverrideEarly } = options;
-
-    box.innerHTML =
-      '<div class="grab"></div>' +
-      '<div style="padding:12px;border-radius:12px;background:var(--danger-soft);border:1.5px solid var(--danger);margin-bottom:12px;">' +
-      '<h3 style="margin:0 0 6px;color:var(--danger);">⛔ ' + (ar ? 'منع الإغلاق المبكر للمطعم (الساعة الآن ' + formatTime12Ar(nowHM) + ')' : 'Early Closing Blocked (' + formatTime12Ar(nowHM) + ')') + '</h3>' +
-      '<p style="margin:0;font-size:0.84rem;line-height:1.5;">' + (ar ? 'الحد الأدنى الرسمي لإغلاق المطعم هو <b>' + formatTime12Ar(h.minCloseTime) + '</b>. حسب قوانين المطعم، <b>لا يُغلق المطعم مبكراً (مثلاً الساعة 11:30 مساءً) حتى لو كانت الصالة فارغة من الزبائن</b>.' : 'Minimum closing time is ' + formatTime12Ar(h.minCloseTime) + '. Early close is blocked.') + '</p>' +
-      '</div>';
-
-    const simHint = el('button', 'btn', ar ? '⏱ تجربة محاكاة الساعة 02:30 ص (بعد مغادرة آخر زبون)' : '⏱ Simulate 02:30 AM (Last Guest Left)');
-    simHint.type = 'button';
-    simHint.style.width = '100%';
-    simHint.style.marginBottom = '10px';
-    simHint.addEventListener('click', () => {
-      simulatedShiftTime = '02:30';
-      dlg.close();
-      renderOpsLifecycleBar();
-      openCloseRestaurantDialog('02:30', toBizMinutes('02:30'), minCloseBiz);
-    });
-    box.append(simHint);
-
-    if (canOverrideEarly) {
-      box.append(renderEmergencyOverrideSection(dlg, options, ar));
-    }
-
-    const closeDlgB = el('button', 'btn', ar ? 'إلغاء' : 'Cancel');
-    closeDlgB.type = 'button';
-    closeDlgB.style.width = '100%';
-    closeDlgB.style.marginTop = '8px';
-    closeDlgB.addEventListener('click', () => dlg.close());
-    box.append(closeDlgB);
-    dlg.append(box);
-    dlg.showModal();
-  }
-
-  function submitOfficialRestaurantClose(dlg, opts, ar) {
-    const { h, nowHM, extMins, daySt, myName, roleMeta } = opts;
-    daySt.closedAt = nowHM;
-    daySt.closedBy = myName;
-    daySt.closedRole = roleMeta.badge;
-    daySt.extensionMins = extMins;
-    if (!daySt.kitchenLastOrderAt) daySt.kitchenLastOrderAt = h.kitchenLastOrder;
-    if (!daySt.barLastOrderAt) daySt.barLastOrderAt = h.barLastOrder;
-
-    if (extMins > 0 && !daySt.overtimeCredited) {
-      const extraHours = Math.round((extMins / 60) * 10) / 10;
-      const tipsDB = loadTipsData();
-      if (tipsDB && tipsDB.staff) {
-        Object.values(tipsDB.staff).forEach((st) => {
-          st.hours = Math.round(((Number(st.hours) || 40) + extraHours) * 10) / 10;
-        });
-        saveTipsData(tipsDB);
-      }
-      daySt.overtimeCredited = true;
-    }
-    saveOpsDayState(S.date, daySt);
-    dlg.close();
-    FOH.edit.toast(ar ? '🚪 تم إغلاق المطعم رسمياً الساعة ' + formatTime12Ar(nowHM) + (extMins > 0 ? ' واحتساب +' + extMins + ' دقيقة تمديد ✓' : ' ✓') : '🚪 Closed at ' + formatTime12Ar(nowHM) + ' ✓');
-    FOH.app.render();
-  }
-
-  function renderOfficialCloseConfirmation(dlg, box, opts = {}) {
-    const isLegacy = typeof opts === 'object' && ('h' in opts);
-    const options = isLegacy ? opts : (opts && opts.options) || {};
-    const ar = (opts && typeof opts.ar === 'boolean') ? opts.ar : (isLegacy ? !!arguments[3] : isAr());
-    const { h, nowHM, extMins, doneClosingCount, allClosingLeaves, leftClosingCount } = options;
-
-    box.innerHTML =
-      '<div class="grab"></div>' +
-      '<h2>🚪 ' + (ar ? 'تأكيد إغلاق المطعم رسمياً (مع مغادرة آخر زبون)' : 'Confirm Official Restaurant Closing') + '</h2>' +
-      '<div style="padding:12px;border-radius:12px;background:var(--accent-soft);border:1px solid var(--accent);margin-bottom:12px;font-size:0.84rem;line-height:1.55;">' +
-      '<div>🕒 <b>' + (ar ? 'وقت الإغلاق الفعلي:' : 'Closing Time:') + '</b> ' + formatTime12Ar(nowHM) + (extMins > 0 ? (ar ? ' (تمديد +' + extMins + ' دقيقة بعد الـ ' + formatTime12Ar(h.minCloseTime) + ')' : ' (+' + extMins + 'm extension)') : '') + '</div>' +
-      '<div>🌙 <b>' + (ar ? 'إنجاز شيت الإغلاق:' : 'Closing Sheet:') + '</b> ' + doneClosingCount + ' / ' + allClosingLeaves.length + (leftClosingCount === 0 ? ' ✅' : (ar ? ' (متبقي ' + leftClosingCount + ' مهام)' : ' (' + leftClosingCount + ' left)')) + '</div>' +
-      '<div>💰 <b>' + (ar ? 'ربط الساعات مع Tip Manager:' : 'Tip Manager Sync:') + '</b> ' + (extMins > 0 ? (ar ? 'سيتم احتساب +' + (extMins / 60).toFixed(1) + ' س إضافية تلقائياً' : '+' + (extMins / 60).toFixed(1) + 'h overtime logged') : (ar ? 'ساعات الشفت القياسية مكتملة' : 'Standard hours')) + '</div>' +
-      '</div>';
-
-    if (leftClosingCount > 0) {
-      const openClsBtn = el('button', 'btn', ar ? '🌙 مراجعة واستكمال مهام الـ Closing Sheet المتبقية (' + leftClosingCount + ')' : '🌙 Review Remaining Items (' + leftClosingCount + ')');
-      openClsBtn.type = 'button';
-      openClsBtn.style.width = '100%';
-      openClsBtn.style.marginBottom = '10px';
-      openClsBtn.addEventListener('click', () => { dlg.close(); activateClosingSheet('all'); });
-      box.append(openClsBtn);
-    }
-
-    const confirmCloseBtn = el('button', 'btn primary', ar ? '✅ تأكيد مغادرة آخر زبون وإغلاق المطعم الآن (' + formatTime12Ar(nowHM) + ')' : '✅ Confirm Close (' + formatTime12Ar(nowHM) + ')');
-    confirmCloseBtn.type = 'button';
-    confirmCloseBtn.style.width = '100%';
-    confirmCloseBtn.addEventListener('click', () => submitOfficialRestaurantClose(dlg, options, ar));
-
-    const cancelB = el('button', 'btn', ar ? 'إلغاء' : 'Cancel');
-    cancelB.type = 'button';
-    cancelB.style.width = '100%';
-    cancelB.style.marginTop = '8px';
-    cancelB.addEventListener('click', () => dlg.close());
-
-    box.append(confirmCloseBtn, cancelB);
-    dlg.append(box);
-    dlg.showModal();
-  }
-
-  function openCloseRestaurantDialog(nowHM, nowBiz, minCloseBiz) {
-    const ar = isAr();
-    const cfg = loadOpsConfig();
-    const h = cfg.hours;
-    const daySt = loadOpsDayState(S.date);
-    const sess = getSession();
-    const myName = (sess && sess.displayName) || S.me.name || 'Supervisor';
-    const roleKey = getCurrentSuperRoleKey();
-    const roleMeta = SUPER_ROLES_META[roleKey] || SUPER_ROLES_META.staff;
-    const canClose = hasSuperPerm('canCloseRestaurant');
-    const canOverrideEarly = hasSuperPerm('canEarlyCloseOverride');
-
-    let dlg = $('closeRestaurantDialog');
-    if (!dlg) {
-      dlg = el('dialog', 'sheet');
-      dlg.id = 'closeRestaurantDialog';
-      document.body.append(dlg);
-    }
-    dlg.replaceChildren();
-
-    if (!canClose) {
-      renderClosePermissionDenied(dlg, roleMeta, ar);
-      return;
-    }
-
-    const box = el('div', '');
-    box.style.padding = '16px 18px 22px';
-
-    if (nowBiz < minCloseBiz) {
-      renderEarlyCloseWarning(dlg, box, { h, nowHM, minCloseBiz, canOverrideEarly, daySt, myName, roleMeta }, ar);
-      return;
-    }
-
-    ensureUpgradedClosingSections();
-    const closingSecs = FOH.safeJsonParse(localStorage.getItem('foh-opening.closingSections.v1'), 'null') || DEPT_CLOSING_SECTIONS;
-    const closingRun = FOH.safeJsonParse(localStorage.getItem('foh-opening.closingRun.' + S.date), '{"checked":{}}');
-    const checkedMap = (isClosingSheetActive() ? S.run.checked : closingRun.checked) || {};
-    const allClosingLeaves = closingSecs.flatMap((s) => s.items || []);
-    const doneClosingCount = allClosingLeaves.filter((it) => checkedMap[it.id]).length;
-    const leftClosingCount = allClosingLeaves.length - doneClosingCount;
-    const extMins = Math.max(0, nowBiz - minCloseBiz);
-
-    renderOfficialCloseConfirmation(dlg, box, { h, nowHM, extMins, doneClosingCount, allClosingLeaves, leftClosingCount, daySt, myName, roleMeta }, ar);
-  }
 
   FOH.opsLifecycle = {
-    defaultOpsConfig,
     loadOpsConfig,
     saveOpsConfig,
-    toBizMinutes,
-    formatTime12Ar,
     getEffectiveNowHM,
     loadOpsDayState,
     saveOpsDayState,
-    ensureUpgradedClosingSections,
-    isClosingSheetActive,
-    activateClosingSheet,
-    setActiveClosingDeptFilter: (d) => { activeClosingDeptFilter = d; },
-    getActiveClosingDeptFilter: () => activeClosingDeptFilter,
-    renderClosingDeptFilterBar,
-    SUPER_ROLES_META,
-    PERM_LABELS,
+    computeOpsPhase,
     renderOpsLifecycleBar,
     openCloseRestaurantDialog,
   };
-  FOH.SUPER_ROLES_META = SUPER_ROLES_META;
-  FOH.PERM_LABELS = PERM_LABELS;
 })(window.FOH = window.FOH || {});
 
 </script>
@@ -24792,6 +25312,206 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 </script>
 
 <script>
+// --- js/domains/academy/academy-quiz.js ---
+// foh-opening/js/domains/academy/academy-quiz.js
+// Academy Quiz & Flashcard Engine
+(function (FOH) {
+  'use strict';
+
+  const $ = (id) => document.getElementById(id);
+  const { el } = FOH.view;
+
+  function isAr() {
+    return FOH.i18n ? FOH.i18n.lang === 'ar' : false;
+  }
+
+  function buildQuizPool(targetItem, catalog, ar) {
+    if (targetItem && Array.isArray(targetItem.questions) && targetItem.questions.length) {
+      return targetItem.questions.map((q) => ({
+        ...q,
+        itemId: targetItem.id,
+        itemName: ar ? targetItem.nameAr : targetItem.nameEn,
+      }));
+    }
+    const pool = [];
+    catalog.forEach((it) => {
+      (it.questions || []).forEach((q) => {
+        pool.push({
+          ...q,
+          itemId: it.id,
+          itemName: ar ? it.nameAr : it.nameEn,
+        });
+      });
+    });
+    return pool;
+  }
+
+  function renderQuizResultScreen(opts) {
+    const { box, result, onDone, ar } = opts;
+    const { passedAll, earnedXP, correctCount, poolLength, targetItem, rec, bonusPts } = result;
+    box.innerHTML =
+      '<div style="text-align:center;padding:12px 0;">' +
+      '<div style="font-size:2.6rem;">' + (passedAll ? '🏆' : '💡') + '</div>' +
+      '<h2 style="margin:8px 0;">' +
+      (passedAll
+        ? (ar ? 'أحسنت! اجتزت الاختبار بنجاح 100%' : 'Excellent! You passed 100%!')
+        : (ar ? 'نتيجة الاختبار: ' + correctCount + ' من ' + poolLength : 'Score: ' + correctCount + ' / ' + poolLength)) +
+      '</h2>' +
+      '<p style="color:var(--ink2);font-size:0.88rem;">' +
+      (targetItem && passedAll
+        ? (ar ? 'تم اعتماد إتقانك لصنف (' + (ar ? targetItem.nameAr : targetItem.nameEn) + ') وإضافة +' + earnedXP + ' XP لرصيدك!' : 'Item marked as Mastered and +' + earnedXP + ' XP added!')
+        : (ar ? 'حصلت على +' + earnedXP + ' XP (إجمالي رصيدك: ' + rec.xp + ' XP · مكافأة التبس: +' + bonusPts + ' نقطة)' : 'Earned +' + earnedXP + ' XP (Total: ' + rec.xp + ' XP · Bonus Tip Pts: +' + bonusPts + ')')) +
+      '</p>' +
+      '</div>';
+
+    const doneB = el('button', 'btn primary', ar ? '✓ العودة للأكاديمية وتحديث الرصيد' : '✓ Back to Academy');
+    doneB.type = 'button';
+    doneB.style.width = '100%';
+    doneB.addEventListener('click', onDone);
+    box.append(doneB);
+  }
+
+  function renderQuizQuestionScreen(opts) {
+    const { box, qData, onNext, onCancel, ar } = opts;
+    const { cur, idx, total, onAnswerSelect } = qData;
+    box.innerHTML =
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
+      '<span class="dayoff-badge pending">🎯 ' + (ar ? 'سؤال ' + (idx + 1) + ' من ' + total : 'Question ' + (idx + 1) + ' of ' + total) + '</span>' +
+      '<small style="color:var(--ink2);font-weight:700;">' + cur.itemName + '</small>' +
+      '</div>' +
+      '<h3 style="margin:6px 0 12px;font-size:1.02rem;line-height:1.45;">' + (ar ? cur.qAr : cur.qEn || cur.qAr) + '</h3>';
+
+    const optsWrap = el('div', '');
+    const feedback = el('p', '');
+    feedback.style.fontWeight = '700';
+    feedback.style.fontSize = '0.84rem';
+    feedback.style.marginTop = '10px';
+    feedback.hidden = true;
+
+    const nextBtn = el(
+      'button',
+      'btn primary',
+      idx + 1 < total ? (ar ? 'السؤال التالي ←' : 'Next Question →') : (ar ? 'عرض النتيجة واعتماد النقاط 🏆' : 'See Result & Claim XP 🏆')
+    );
+    nextBtn.type = 'button';
+    nextBtn.style.width = '100%';
+    nextBtn.style.marginTop = '12px';
+    nextBtn.hidden = true;
+    nextBtn.addEventListener('click', onNext);
+
+    let answered = false;
+    (cur.options || []).slice(0, 3).forEach((optText, optIndex) => {
+      const b = el('button', 'quiz-opt-btn', (optIndex + 1) + '. ' + optText);
+      b.type = 'button';
+      b.addEventListener('click', () => {
+        if (answered) return;
+        answered = true;
+        const isRight = optIndex === cur.correct;
+        onAnswerSelect(isRight);
+        if (isRight) {
+          b.classList.add('correct');
+          feedback.style.color = 'var(--accent)';
+          feedback.textContent = ar ? '✅ إجابة صحيحة! (+15 XP)' : '✅ Correct answer! (+15 XP)';
+        } else {
+          b.classList.add('wrong');
+          const allBtns = optsWrap.querySelectorAll('.quiz-opt-btn');
+          if (allBtns[cur.correct]) allBtns[cur.correct].classList.add('correct');
+          feedback.style.color = 'var(--danger)';
+          feedback.textContent = ar ? '❌ إجابة غير دقيقة — راجع الخيار الصحيح باللون الأخضر.' : '❌ Not quite — check the highlighted correct option.';
+        }
+        feedback.hidden = false;
+        nextBtn.hidden = false;
+      });
+      optsWrap.append(b);
+    });
+
+    const cancelB = el('button', 'btn', ar ? 'إلغاء' : 'Close');
+    cancelB.type = 'button';
+    cancelB.style.width = '100%';
+    cancelB.style.marginTop = '8px';
+    cancelB.addEventListener('click', onCancel);
+
+    box.append(optsWrap, feedback, nextBtn, cancelB);
+  }
+
+  function openQuizModal(targetItem) {
+    const ar = isAr();
+    const catalog = loadAcademyCatalog();
+    const { uname, rec, all } = getMyAcadRecord();
+    const pool = buildQuizPool(targetItem, catalog, ar);
+    if (!pool.length) return;
+
+    let idx = 0;
+    let correctCount = 0;
+
+    let dlg = $('acadQuizDialog');
+    if (!dlg) {
+      dlg = el('dialog', 'sheet');
+      dlg.id = 'acadQuizDialog';
+      document.body.append(dlg);
+    }
+
+    function drawQuestion() {
+      dlg.replaceChildren();
+      const box = el('div', '');
+      box.style.padding = '16px 18px 22px';
+
+      if (idx >= pool.length) {
+        const passedAll = correctCount === pool.length;
+        const earnedXP = correctCount * 15 + (targetItem && passedAll ? 20 : 0);
+        rec.xp = (rec.xp || 0) + earnedXP;
+        rec.quizAnswered = (rec.quizAnswered || 0) + pool.length;
+        rec.quizCorrect = (rec.quizCorrect || 0) + correctCount;
+        if (targetItem && passedAll && !rec.masteredIds.includes(targetItem.id)) {
+          rec.masteredIds.push(targetItem.id);
+        }
+        saveAcadProgress(all);
+        const bonusPts = syncAcademyBonusToTips(uname, rec.xp);
+
+        renderQuizResultScreen({
+          box,
+          result: { passedAll, earnedXP, correctCount, poolLength: pool.length, targetItem, rec, bonusPts },
+          onDone: () => { dlg.close(); FOH.app.render(); },
+          ar,
+        });
+        dlg.append(box);
+        return;
+      }
+
+      renderQuizQuestionScreen({
+        box,
+        qData: {
+          cur: pool[idx],
+          idx,
+          total: pool.length,
+          onAnswerSelect: (isRight) => { if (isRight) correctCount++; },
+        },
+        onNext: () => { idx++; drawQuestion(); },
+        onCancel: () => dlg.close(),
+        ar,
+      });
+      dlg.append(box);
+      if (typeof injectNewTasksInboxIntoNotifCenter === "function") injectNewTasksInboxIntoNotifCenter();
+    }
+
+    drawQuestion();
+    dlg.showModal();
+  }
+
+  // ============================================================================
+  // Add Academy Dish / Cocktail Sub-Renderers (< 80 lines each)
+  // ============================================================================
+
+
+  FOH.academyQuiz = {
+    openQuizModal,
+    buildQuizPool
+  };
+})(window.FOH = window.FOH || {});
+
+</script>
+
+<script>
 // --- js/domains/academy/academy-view.js ---
 // foh-opening/js/domains/academy/academy-view.js
 // Menu & Beverage Training Academy, Verification Quiz & Tip Point Bonus Sync
@@ -24822,147 +25542,6 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   function saveTipsData(d) {
     if (FOH.tipsView) FOH.tipsView.saveTipsData(d);
   }
-
-  function injectNewTasksInboxIntoNotifCenter() {
-    if (FOH.taskInbox) FOH.taskInbox.injectNewTasksInboxIntoNotifCenter();
-  }
-
-  // ---- 10. Menu & Beverage Academy + 3-Choice Verification Quiz & Tip Bonus ----
-  const ACAD_KEY = 'super-employee.academy.v1';
-  const ACAD_PROG_KEY = 'super-employee.acadProgress.v1';
-
-  const DEFAULT_ACADEMY_ITEMS = [
-    {
-      id: 'dish_wagyu',
-      cat: 'food',
-      catLabelAr: '🥩 الأطباق الرئيسية',
-      catLabelEn: '🥩 Main Dishes',
-      nameAr: 'ستيك واغيو تندرلوين (Wagyu Tenderloin 250g)',
-      nameEn: 'Wagyu Tenderloin Steak (250g)',
-      descAr: 'قطعة تندرلوين واغيو أسترالي فاخرة (درجة رخامية MB7+) تُشوى على فحم السنديان وتُقدّم مع بيوريه البطاطا بالكمأة السوداء وصوص الديمي غلاس.',
-      descEn: 'Charcoal-grilled Australian Wagyu Tenderloin (MB7+), served with black truffle potato purée and rich demi-glace.',
-      ingredientsAr: 'لحم واغيو 250 غرام، زبدة الأعشاب، بيوريه بطاطا بالكمأة، فطر بري، صوص ديمي غلاس.',
-      allergensAr: '⚠️ الحليب ومشتقات الألبان (الزبدة والبيوريه)، الكرفس (في الديمي غلاس). خالٍ من المكسرات.',
-      pairingAr: '💡 اقترح معه كأس نبيذ أحمر Cabernet Sauvignon أو كوكتيل Smoky Old Fashioned، درجة الاستواء الموصى بها: Medium Rare.',
-      questions: [
-        {
-          qAr: 'ما هي درجة الاستواء الموصى بها والمكونات المرافقة لطبق الواغيو تندرلوين؟',
-          qEn: 'What is the recommended doneness and side for the Wagyu Tenderloin?',
-          options: [
-            'Medium Rare مع بيوريه البطاطا بالكمأة السوداء وصوص الديمي غلاس',
-            'Well Done مع بطاطا مقلية وصوص الفلفل الأبيض',
-            'Rare مع أرز بسمتي وصوص الليمون والزبدة',
-          ],
-          correct: 0,
-        },
-        {
-          qAr: 'ما هي مسببات الحساسية الموجودة في طبق الواغيو تندرلوين؟',
-          qEn: 'Which allergens are present in the Wagyu Tenderloin dish?',
-          options: [
-            'الفول السوداني والسمسم والسمك',
-            'مشتقات الألبان (الزبدة والبيوريه) والكرفس في صوص الديمي غلاس',
-            'البيض والمحار البحري والصويا',
-          ],
-          correct: 1,
-        },
-      ],
-    },
-    {
-      id: 'dish_burrata',
-      cat: 'food',
-      catLabelAr: '🥗 المقبلات والسلطات',
-      catLabelEn: '🥗 Starters & Salads',
-      nameAr: 'سلطة البوراتا الإيطالية مع التين والبيستو (Burrata & Fig)',
-      nameEn: 'Artisanal Burrata with Fresh Figs & Pistachio Pesto',
-      descAr: 'جبنة بوراتا إيطالية كريمية طازجة تُقدّم على طبقة من الطماطم الكرزية المشوية، التين الطازج، صوص البيستو بالفستق الحلبي، وبلسميك معتّق.',
-      descEn: 'Creamy Italian Burrata over roasted cherry tomatoes, fresh figs, pistachio basil pesto, and aged balsamic glaze.',
-      ingredientsAr: 'جبنة بوراتا 150 غ، تين طازج، طماطم كرزية، ريحان، فستق حلبي، زيت زيتون بكر، بلسميك.',
-      allergensAr: '⚠️ الألبان (جبنة البوراتا) والمكسرات (الفستق الحلبي في صوص البيستو). مناسب للنباتيين (Vegetarian).',
-      pairingAr: '💡 مثالي للمشاركة في بداية الوجبة مع نبيذ أبيض Pinot Grigio أو البروسيكو (Prosecco).',
-      questions: [
-        {
-          qAr: 'أي نوع مكسرات يدخل في تحضير صوص البيستو في سلطة البوراتا (مهم لحساسية المكسرات)؟',
-          qEn: 'Which nut is used in the Burrata salad pesto (critical for nut allergies)?',
-          options: [
-            'اللوز المحمص',
-            'الفستق الحلبي (Pistachio)',
-            'الكاجو والجوز',
-          ],
-          correct: 1,
-        },
-        {
-          qAr: 'ما هو المشروب الأنسب لاقتراحه (Pairing) مع سلطة البوراتا الإيطالية؟',
-          qEn: 'What is the best beverage pairing to recommend with the Burrata salad?',
-          options: [
-            'Pinot Grigio أو Prosecco بارد',
-            'قهوة إسبريسو داكنة',
-            'ستوت بيرة ثقيلة (Dark Stout)',
-          ],
-          correct: 0,
-        },
-      ],
-    },
-    {
-      id: 'drink_ceen_mule',
-      cat: 'drink',
-      catLabelAr: '🍸 الكوكتيلات والمشروبات',
-      catLabelEn: '🍸 Signature Cocktails & Bar',
-      nameAr: 'كوكتيل سين سيجنتشر (CEEN Mediterranean Mule)',
-      nameEn: 'CEEN Mediterranean Mule (Signature Cocktail)',
-      descAr: 'كوكتيل منعش متوازن يجمع بين الفودكا الفاخرة، شراب التين والروزماري المحضّر منزلياً، عصير اللايم الطازج، وجنجر بير فوار.',
-      descEn: 'Refreshing signature mule blending premium vodka, house-made fig & rosemary cordial, fresh lime juice, and spicy ginger beer.',
-      ingredientsAr: '50 مل فودكا Tito’s، 20 مل شراب التين والروزماري، 15 مل عصير لايم طازج، يُستكمل بـ Ginger Beer في كأس نحاسي مع ثلج مجروش.',
-      allergensAr: '⚠️ خالٍ من مسببات الحساسية الشائعة (يحتوي على كحول). متوفر بنسخة Virgin بدون كحول.',
-      pairingAr: '💡 يُقدّم في الكأس النحاسي المبرد مع غصن روزماري مدخّن وشريحة تين مجفف.',
-      questions: [
-        {
-          qAr: 'ما هي المقادير الأساسية لكوكتيل CEEN Mediterranean Mule؟',
-          qEn: 'What are the core specs for the CEEN Mediterranean Mule?',
-          options: [
-            '50 مل فودكا + 20 مل شراب التين والروزماري + 15 مل لايم + جنجر بير',
-            '60 مل جين + 30 مل فيرموث أحمر + كامباري',
-            '45 مل تيكيلا + 30 مل تريبل سيك + عصير برتقال',
-          ],
-          correct: 0,
-        },
-        {
-          qAr: 'كيف يُقدّم كوكتيل CEEN Mediterranean Mule وما هو الغارنيش المعتمد؟',
-          qEn: 'How is the CEEN Mediterranean Mule served and garnished?',
-          options: [
-            'في كأس مارتيني زجاجي مع زيتونة خضراء',
-            'في كأس نحاسي مبرد مع غصن روزماري مدخّن وشريحة تين',
-            'في كأس نبيذ أحمر كبير بدون ثلج',
-          ],
-          correct: 1,
-        },
-      ],
-    },
-    {
-      id: 'drink_smoky_negroni',
-      cat: 'drink',
-      catLabelAr: '🍸 الكوكتيلات والمشروبات',
-      catLabelEn: '🍸 Signature Cocktails & Bar',
-      nameAr: 'سموكي نيجروني المعتّق (CEEN Barrel-Aged Smoky Negroni)',
-      nameEn: 'CEEN Barrel-Aged Smoky Negroni',
-      descAr: 'نسخة CEEN الخاصة من كوكتيل النيجروني الكلاسيكي، معتّقة مع خشب البلوط المدخّن وقشر البرتقال المحروق.',
-      descEn: 'Our signature twist on the classic Negroni, infused with toasted oak smoke and flamed orange peel.',
-      ingredientsAr: '30 مل جين Hendrick’s، 30 مل Campari، 30 مل Sweet Vermouth، يُحرّك مع الثلج (Stirred) ويُقدّم فوق قالب ثلج صافي كبير (Clear Ice Cube).',
-      allergensAr: '⚠️ يحتوي على الكبريتات (Sulfites) في الفيرموث.',
-      pairingAr: '💡 مشروب مثالي قبل العشاء (Aperitif) أو بجانب أطباق اللحوم المشوية والواغيو.',
-      questions: [
-        {
-          qAr: 'ما هي النسب الصحيحة وطريقة تحضير كوكتيل Smoky Negroni؟',
-          qEn: 'What are the ratios and technique for the Smoky Negroni?',
-          options: [
-            'نسب متساوية (30 مل جين، 30 مل كامباري، 30 مل سويت فيرموث) ويُحرّك Stirred فوق ثلج صافي',
-            '50 مل جين مع 100 مل تونيك ويُرجّ بالشاكر Shaken',
-            '45 مل ويسكي مع بياض بيض وعصير ليمون',
-          ],
-          correct: 0,
-        },
-      ],
-    },
-  ];
 
   function loadAcademyCatalog() {
     try {
@@ -25207,182 +25786,12 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   // Interactive 3-Option Quiz Sub-Renderers (< 80 lines each)
   // ============================================================================
 
-  function buildQuizPool(targetItem, catalog, ar) {
-    if (targetItem && Array.isArray(targetItem.questions) && targetItem.questions.length) {
-      return targetItem.questions.map((q) => ({
-        ...q,
-        itemId: targetItem.id,
-        itemName: ar ? targetItem.nameAr : targetItem.nameEn,
-      }));
-    }
-    const pool = [];
-    catalog.forEach((it) => {
-      (it.questions || []).forEach((q) => {
-        pool.push({
-          ...q,
-          itemId: it.id,
-          itemName: ar ? it.nameAr : it.nameEn,
-        });
-      });
-    });
-    return pool;
-  }
-
-  function renderQuizResultScreen(opts) {
-    const { box, result, onDone, ar } = opts;
-    const { passedAll, earnedXP, correctCount, poolLength, targetItem, rec, bonusPts } = result;
-    box.innerHTML =
-      '<div style="text-align:center;padding:12px 0;">' +
-      '<div style="font-size:2.6rem;">' + (passedAll ? '🏆' : '💡') + '</div>' +
-      '<h2 style="margin:8px 0;">' +
-      (passedAll
-        ? (ar ? 'أحسنت! اجتزت الاختبار بنجاح 100%' : 'Excellent! You passed 100%!')
-        : (ar ? 'نتيجة الاختبار: ' + correctCount + ' من ' + poolLength : 'Score: ' + correctCount + ' / ' + poolLength)) +
-      '</h2>' +
-      '<p style="color:var(--ink2);font-size:0.88rem;">' +
-      (targetItem && passedAll
-        ? (ar ? 'تم اعتماد إتقانك لصنف (' + (ar ? targetItem.nameAr : targetItem.nameEn) + ') وإضافة +' + earnedXP + ' XP لرصيدك!' : 'Item marked as Mastered and +' + earnedXP + ' XP added!')
-        : (ar ? 'حصلت على +' + earnedXP + ' XP (إجمالي رصيدك: ' + rec.xp + ' XP · مكافأة التبس: +' + bonusPts + ' نقطة)' : 'Earned +' + earnedXP + ' XP (Total: ' + rec.xp + ' XP · Bonus Tip Pts: +' + bonusPts + ')')) +
-      '</p>' +
-      '</div>';
-
-    const doneB = el('button', 'btn primary', ar ? '✓ العودة للأكاديمية وتحديث الرصيد' : '✓ Back to Academy');
-    doneB.type = 'button';
-    doneB.style.width = '100%';
-    doneB.addEventListener('click', onDone);
-    box.append(doneB);
-  }
-
-  function renderQuizQuestionScreen(opts) {
-    const { box, qData, onNext, onCancel, ar } = opts;
-    const { cur, idx, total, onAnswerSelect } = qData;
-    box.innerHTML =
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
-      '<span class="dayoff-badge pending">🎯 ' + (ar ? 'سؤال ' + (idx + 1) + ' من ' + total : 'Question ' + (idx + 1) + ' of ' + total) + '</span>' +
-      '<small style="color:var(--ink2);font-weight:700;">' + cur.itemName + '</small>' +
-      '</div>' +
-      '<h3 style="margin:6px 0 12px;font-size:1.02rem;line-height:1.45;">' + (ar ? cur.qAr : cur.qEn || cur.qAr) + '</h3>';
-
-    const optsWrap = el('div', '');
-    const feedback = el('p', '');
-    feedback.style.fontWeight = '700';
-    feedback.style.fontSize = '0.84rem';
-    feedback.style.marginTop = '10px';
-    feedback.hidden = true;
-
-    const nextBtn = el(
-      'button',
-      'btn primary',
-      idx + 1 < total ? (ar ? 'السؤال التالي ←' : 'Next Question →') : (ar ? 'عرض النتيجة واعتماد النقاط 🏆' : 'See Result & Claim XP 🏆')
-    );
-    nextBtn.type = 'button';
-    nextBtn.style.width = '100%';
-    nextBtn.style.marginTop = '12px';
-    nextBtn.hidden = true;
-    nextBtn.addEventListener('click', onNext);
-
-    let answered = false;
-    (cur.options || []).slice(0, 3).forEach((optText, optIndex) => {
-      const b = el('button', 'quiz-opt-btn', (optIndex + 1) + '. ' + optText);
-      b.type = 'button';
-      b.addEventListener('click', () => {
-        if (answered) return;
-        answered = true;
-        const isRight = optIndex === cur.correct;
-        onAnswerSelect(isRight);
-        if (isRight) {
-          b.classList.add('correct');
-          feedback.style.color = 'var(--accent)';
-          feedback.textContent = ar ? '✅ إجابة صحيحة! (+15 XP)' : '✅ Correct answer! (+15 XP)';
-        } else {
-          b.classList.add('wrong');
-          const allBtns = optsWrap.querySelectorAll('.quiz-opt-btn');
-          if (allBtns[cur.correct]) allBtns[cur.correct].classList.add('correct');
-          feedback.style.color = 'var(--danger)';
-          feedback.textContent = ar ? '❌ إجابة غير دقيقة — راجع الخيار الصحيح باللون الأخضر.' : '❌ Not quite — check the highlighted correct option.';
-        }
-        feedback.hidden = false;
-        nextBtn.hidden = false;
-      });
-      optsWrap.append(b);
-    });
-
-    const cancelB = el('button', 'btn', ar ? 'إلغاء' : 'Close');
-    cancelB.type = 'button';
-    cancelB.style.width = '100%';
-    cancelB.style.marginTop = '8px';
-    cancelB.addEventListener('click', onCancel);
-
-    box.append(optsWrap, feedback, nextBtn, cancelB);
-  }
 
   function openQuizModal(targetItem) {
-    const ar = isAr();
-    const catalog = loadAcademyCatalog();
-    const { uname, rec, all } = getMyAcadRecord();
-    const pool = buildQuizPool(targetItem, catalog, ar);
-    if (!pool.length) return;
-
-    let idx = 0;
-    let correctCount = 0;
-
-    let dlg = $('acadQuizDialog');
-    if (!dlg) {
-      dlg = el('dialog', 'sheet');
-      dlg.id = 'acadQuizDialog';
-      document.body.append(dlg);
+    if (FOH.academyQuiz && FOH.academyQuiz.openQuizModal) {
+      return FOH.academyQuiz.openQuizModal(targetItem);
     }
-
-    function drawQuestion() {
-      dlg.replaceChildren();
-      const box = el('div', '');
-      box.style.padding = '16px 18px 22px';
-
-      if (idx >= pool.length) {
-        const passedAll = correctCount === pool.length;
-        const earnedXP = correctCount * 15 + (targetItem && passedAll ? 20 : 0);
-        rec.xp = (rec.xp || 0) + earnedXP;
-        rec.quizAnswered = (rec.quizAnswered || 0) + pool.length;
-        rec.quizCorrect = (rec.quizCorrect || 0) + correctCount;
-        if (targetItem && passedAll && !rec.masteredIds.includes(targetItem.id)) {
-          rec.masteredIds.push(targetItem.id);
-        }
-        saveAcadProgress(all);
-        const bonusPts = syncAcademyBonusToTips(uname, rec.xp);
-
-        renderQuizResultScreen({
-          box,
-          result: { passedAll, earnedXP, correctCount, poolLength: pool.length, targetItem, rec, bonusPts },
-          onDone: () => { dlg.close(); FOH.app.render(); },
-          ar,
-        });
-        dlg.append(box);
-        return;
-      }
-
-      renderQuizQuestionScreen({
-        box,
-        qData: {
-          cur: pool[idx],
-          idx,
-          total: pool.length,
-          onAnswerSelect: (isRight) => { if (isRight) correctCount++; },
-        },
-        onNext: () => { idx++; drawQuestion(); },
-        onCancel: () => dlg.close(),
-        ar,
-      });
-      dlg.append(box);
-      if (typeof injectNewTasksInboxIntoNotifCenter === "function") injectNewTasksInboxIntoNotifCenter();
-    }
-
-    drawQuestion();
-    dlg.showModal();
   }
-
-  // ============================================================================
-  // Add Academy Dish / Cocktail Sub-Renderers (< 80 lines each)
-  // ============================================================================
 
   function buildAddAcademyFormFields(ar) {
     const catSel = el('select', 'in');
