@@ -1,14 +1,13 @@
 // Inventory (blind count) data and rules. Kept apart from the checklist so
 // expected quantities are never part of the checklist export.
 //
-// item    = { id, name, nameAr, unit, location, photo, hint, hintAr, cond:{repair, writeoff},
-//             attrs:[{ id, name, nameAr, values:[{ id, label, labelAr }] }] (0-2),
-//             variants:[{ id, a:[valueId|'', valueId|''], expected, photo, archived }] }
-// Counting happens per (active) variant. A count line per variant:
-//   { good, repair, writeoff, photo, unsure }
-// weeks[countDate] = { published, assign, counts, recounts, approved }
-// repairs   = [{ id, variantId, qty, since, by }]           (in repair, still owned)
-// writeoffs = [{ id, variantId, qty, date, source, by, note }] (removed from stock)
+// An item has id, names (en/ar), unit, location, photo, hints, and condition flags.
+// Attributes (0 to 2) define variant values (such as size, type, or color).
+// Variants hold id, attribute values, expected count, photo, and archived status.
+// Counting happens per active variant, tracking good, repair, and writeoff quantities.
+// Weekly records track publication status, staff assignments, counts, recounts, and approvals.
+// Repairs track variantId, quantity, date, and logging staff member.
+// Writeoffs track variantId, quantity, date, source reason, and staff note.
 // Without a server this stays on the device; real blind counting (expected
 // quantities never sent to staff phones) comes with the database.
 (function (FOH) {
@@ -236,7 +235,11 @@
 
   // Approve a category: good becomes the new expected, repairable go to
   // "in repair", write-offs leave stock. A submitted recount wins per variant.
-  function approve(inv, key, cat, at) {
+  function approve(inv, key, opts = {}) {
+    const isLegacy = opts && typeof opts === 'object' && !('cat' in opts) && !('category' in opts);
+    const cat = isLegacy ? opts : (opts && (opts.cat || opts.category));
+    const at = isLegacy ? (arguments[3] || '') : ((opts && opts.at) || '');
+    if (!cat) return;
     const w = week(inv, key);
     if (w.approved[cat.id]) return;
     const first = w.counts[cat.id];
@@ -289,8 +292,11 @@
   // Staff who take part in counts.
   const participants = (tpl) => tpl.staff.filter((p) => p.active && p.inv);
 
-  // How many weeks ago `staffId` counted `catId` before week `key` (Infinity = never).
-  function weeksSince(inv, key, catId, staffId) {
+  // How many weeks ago staff counted category before week key (Infinity = never).
+  function weeksSince(inv, key, opts = {}) {
+    const isLegacy = typeof opts === 'string' || typeof opts !== 'object' || opts === null;
+    const catId = isLegacy ? opts : (opts && (opts.catId || opts.cat));
+    const staffId = isLegacy ? arguments[3] : (opts && opts.staffId);
     const before = Object.keys(inv.weeks)
       .filter((k) => k < key)
       .sort()
@@ -332,8 +338,12 @@
     return true;
   }
 
-  // Someone other than `exclude` for a recount, preferring who has not counted it lately.
-  function recounter(inv, tpl, key, catId, exclude) {
+  // Someone other than exclude for a recount, preferring who has not counted it lately.
+  function recounter(inv, tpl, opts = {}) {
+    const isLegacy = typeof opts === 'string' || typeof opts !== 'object' || opts === null;
+    const key = isLegacy ? opts : (opts && opts.key);
+    const catId = isLegacy ? arguments[3] : (opts && opts.catId);
+    const exclude = isLegacy ? arguments[4] : (opts && opts.exclude);
     const people = participants(tpl).filter((p) => p.id !== exclude);
     if (!people.length) return '';
     people.sort((a, b) => weeksSince(inv, key, catId, b.id) - weeksSince(inv, key, catId, a.id) || Math.random() - 0.5);
@@ -409,6 +419,7 @@
       await tx('readwrite', (s) => s.put(data, id));
       return id;
     } catch (err) {
+      /* Photo compression or storage failure fallback */
       return null;
     }
   }
@@ -445,9 +456,49 @@
     else if (dy > 0 && y > window.innerHeight - EDGE) window.scrollBy(0, 12);
   }
 
+  function createDragHandlers(list, row, opts = {}) {
+    const isLegacy = typeof opts === 'string';
+    const startOrder = isLegacy ? opts : (opts && opts.startOrder);
+    const ev = isLegacy ? arguments[3] : (opts && opts.ev);
+    const onDrop = isLegacy ? arguments[4] : (opts && opts.onDrop);
+    let finished = false;
+    let lastY = ev.clientY;
+
+    const move = (e) => {
+      if (e.pointerId !== ev.pointerId) return;
+      e.preventDefault();
+      const y = e.clientY;
+      let before = null;
+      for (const li of list.children) {
+        if (li === row) continue;
+        const r = li.getBoundingClientRect();
+        if (y < r.top + r.height / 2) {
+          before = li;
+          break;
+        }
+      }
+      if (before !== row.nextElementSibling) list.insertBefore(row, before);
+      autoScroll(y, y - lastY);
+      lastY = y;
+    };
+
+    const end = (e) => {
+      if (finished || e.pointerId !== ev.pointerId) return;
+      finished = true;
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', end);
+      window.removeEventListener('pointercancel', end);
+      row.classList.remove('dragging');
+      const ids = Array.from(list.children).map((li) => li.dataset.id);
+      if (ids.join() !== startOrder) onDrop(ids);
+    };
+
+    window.addEventListener('pointermove', move, { passive: false });
+    window.addEventListener('pointerup', end);
+    window.addEventListener('pointercancel', end);
+  }
+
   function enable(list, onDrop) {
-    // Stop the page from scrolling under the finger while a handle is dragged
-    // (touch-action alone is not honoured everywhere, e.g. older iOS Safari).
     list.addEventListener(
       'touchmove',
       (e) => {
@@ -458,49 +509,12 @@
     );
     list.addEventListener('pointerdown', (ev) => {
       const handle = ev.target.closest('.handle');
-      // Lists nest (sub-items); only react to handles that belong to this list.
       if (!handle || handle.closest('ol') !== list) return;
       const row = handle.closest('li');
       const startOrder = Array.from(list.children).map((li) => li.dataset.id).join();
       ev.preventDefault();
       row.classList.add('dragging');
-      // Listen on window, not with pointer capture: moving the row in the DOM
-      // would release the capture and end the drag after one step.
-      let finished = false;
-      let lastY = ev.clientY;
-
-      const move = (e) => {
-        if (e.pointerId !== ev.pointerId) return;
-        e.preventDefault();
-        const y = e.clientY;
-        let before = null;
-        for (const li of list.children) {
-          if (li === row) continue;
-          const r = li.getBoundingClientRect();
-          if (y < r.top + r.height / 2) {
-            before = li;
-            break;
-          }
-        }
-        if (before !== row.nextElementSibling) list.insertBefore(row, before);
-        autoScroll(y, y - lastY);
-        lastY = y;
-      };
-
-      const end = (e) => {
-        if (finished || e.pointerId !== ev.pointerId) return;
-        finished = true;
-        window.removeEventListener('pointermove', move);
-        window.removeEventListener('pointerup', end);
-        window.removeEventListener('pointercancel', end);
-        row.classList.remove('dragging');
-        const ids = Array.from(list.children).map((li) => li.dataset.id);
-        if (ids.join() !== startOrder) onDrop(ids);
-      };
-
-      window.addEventListener('pointermove', move, { passive: false });
-      window.addEventListener('pointerup', end);
-      window.addEventListener('pointercancel', end);
+      createDragHandlers(list, row, { startOrder, ev, onDrop });
     });
   }
 

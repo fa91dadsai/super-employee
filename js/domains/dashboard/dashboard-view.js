@@ -50,66 +50,29 @@
   }
 
   // ---- 6. Executive Dashboard & Analytics (#dashboardView) ----
-  function renderDashboardView(root) {
-    if (!root) return;
-    root.replaceChildren();
-    const ar = isAr();
-    const gov = loadGov();
-    const all = FOH.model.progress(FOH.model.allLeaves({ sections: S.tpl.sections }), S.run.checked);
-    const pct = all.total ? Math.round((all.done * 100) / all.total) : 0;
-    const schedStates = FOH.tasksView.todayStates();
-    const schedDone = schedStates.filter((s) => s.status === 'done').length;
-    const sugs = loadSuggestions().filter((s) => s.status === 'pending');
-    const healthAlerts = getHealthAlerts();
-    const breakageCount = (S.inv && S.inv.breakage ? S.inv.breakage.length : 0);
-    const badgeOrd = $('badgeOrders') ? Number($('badgeOrders').textContent || '0') : 0;
-
+  function renderDashboardHero(opts) {
+    const { ar, gov } = opts;
     const hero = el('div', 'ord-hero');
     hero.innerHTML =
       '<div><div class="ord-kicker">' + (ar ? gov.restaurantNameAr : gov.restaurantName) + '</div>' +
       '<h2 style="margin:2px 0;font-size:1.25rem;">📊 ' + (ar ? 'لوحة التحكم والتحليلات التشغيلية' : 'Operations Dashboard & Analytics') + '</h2>' +
       '<small style="color:var(--ink2);">' + S.date + ' · ' + (ar ? 'نظرة شاملة على الشيك ليست، الطلبيات، الجرد، التبس والشهادات الصحية' : 'Real-time overview of checklists, orders, inventory, tips & compliance') + '</small></div>';
-    root.append(hero);
+    return hero;
+  }
 
+  function renderDashboardKpis(opts) {
+    const { ar, pct, all, schedDone, schedStates, badgeOrd, healthAlerts, sugs, breakageCount } = opts;
     const kpiGrid = el('div', 'dash-kpi-grid');
-    [
-      [
-        ar ? 'جاهزية الشيك ليست (Opening)' : 'Checklist Readiness',
-        pct + '%',
-        all.done + ' / ' + all.total + ' ' + (ar ? 'مكتمل' : 'completed'),
-        'opening',
-      ],
-      [
-        ar ? 'المهام المجدولة اليوم' : 'Scheduled Tasks Today',
-        schedDone + ' / ' + schedStates.length,
-        schedStates.length - schedDone === 0 ? (ar ? '✓ مكتملة بالكامل' : '✓ All done') : (ar ? 'متبقي ' + (schedStates.length - schedDone) : (schedStates.length - schedDone) + ' remaining'),
-        'mine',
-      ],
-      [
-        ar ? 'طلبيات البار والصالة' : 'Active Order Lines',
-        String(badgeOrd),
-        ar ? 'اضغط لفتح قسم الطلبيات' : 'Tap to open Orders',
-        'orders',
-      ],
-      [
-        ar ? 'الشهادات الصحية' : 'Health Certificates',
-        healthAlerts.length ? '⚠️ ' + healthAlerts.length : '✅ 100%',
-        healthAlerts.length ? (ar ? 'شهادات تحتاج تجديد!' : 'Certificates need renewal!') : (ar ? 'جميع الشهادات سارية' : 'All certificates valid'),
-        'profile',
-      ],
-      [
-        ar ? 'اقتراحات الموظفين' : 'Staff Suggestions',
-        String(sugs.length),
-        ar ? 'اقتراحات لتعديل الـ Checklist' : 'Pending checklist edits',
-        'opening',
-      ],
-      [
-        ar ? 'بلاغات الكسر والتالف' : 'Breakage Reports',
-        String(breakageCount),
-        ar ? 'في سجل الجرد' : 'Logged in Inventory',
-        'inv',
-      ],
-    ].forEach(([lbl, val, sub, targetView]) => {
+    const cardsData = [
+      [ar ? 'جاهزية الشيك ليست (Opening)' : 'Checklist Readiness', pct + '%', all.done + ' / ' + all.total + ' ' + (ar ? 'مكتمل' : 'completed'), 'opening'],
+      [ar ? 'المهام المجدولة اليوم' : 'Scheduled Tasks Today', schedDone + ' / ' + schedStates.length, schedStates.length - schedDone === 0 ? (ar ? '✓ مكتملة بالكامل' : '✓ All done') : (ar ? 'متبقي ' + (schedStates.length - schedDone) : (schedStates.length - schedDone) + ' remaining'), 'mine'],
+      [ar ? 'طلبيات البار والصالة' : 'Active Order Lines', String(badgeOrd), ar ? 'اضغط لفتح قسم الطلبيات' : 'Tap to open Orders', 'orders'],
+      [ar ? 'الشهادات الصحية' : 'Health Certificates', healthAlerts.length ? '⚠️ ' + healthAlerts.length : '✅ 100%', healthAlerts.length ? (ar ? 'شهادات تحتاج تجديد!' : 'Certificates need renewal!') : (ar ? 'جميع الشهادات سارية' : 'All certificates valid'), 'profile'],
+      [ar ? 'اقتراحات الموظفين' : 'Staff Suggestions', String(sugs.length), ar ? 'اقتراحات لتعديل الـ Checklist' : 'Pending checklist edits', 'opening'],
+      [ar ? 'بلاغات الكسر والتالف' : 'Breakage Reports', String(breakageCount), ar ? 'في سجل الجرد' : 'Logged in Inventory', 'inv'],
+    ];
+
+    cardsData.forEach(([lbl, val, sub, targetView]) => {
       const card = el('div', 'dash-kpi-card');
       card.style.cursor = 'pointer';
       card.append(el('small', '', lbl), el('strong', '', val), el('span', '', sub));
@@ -119,10 +82,11 @@
       });
       kpiGrid.append(card);
     });
-    root.append(kpiGrid);
+    return kpiGrid;
+  }
 
-    const panels = el('div', 'dash-panels-grid');
-
+  function renderSectionReadinessPanel(opts) {
+    const { ar } = opts;
     const p1 = el('section', 'dash-panel');
     p1.append(el('h3', '', ar ? '📈 نسبة الإنجاز حسب أقسام المطعم والبار' : '📈 Readiness by Section'));
     S.tpl.sections.forEach((sec) => {
@@ -138,8 +102,11 @@
       row.append(top, track);
       p1.append(row);
     });
-    panels.append(p1);
+    return p1;
+  }
 
+  function renderHealthCertsPanel(opts) {
+    const { ar } = opts;
     const p2 = el('section', 'dash-panel');
     p2.append(el('h3', '', ar ? '🏥 حالة الشهادات الصحية وصلاحيات الموظفين' : '🏥 Staff Health Certificates & Edit Access'));
     ensureStaffHealthAndPerms();
@@ -162,12 +129,32 @@
         '<span class="dayoff-badge ' + badgeCls + '">' + badgeTxt + '</span>';
       p2.append(item);
     });
-    panels.append(p2);
-
-    root.append(panels);
+    return p2;
   }
 
+  function renderDashboardView(root) {
+    if (!root) return;
+    root.replaceChildren();
+    const ar = isAr();
+    const gov = loadGov();
+    const all = FOH.model.progress(FOH.model.allLeaves({ sections: S.tpl.sections }), S.run.checked);
+    const pct = all.total ? Math.round((all.done * 100) / all.total) : 0;
+    const schedStates = FOH.tasksView.todayStates();
+    const schedDone = schedStates.filter((s) => s.status === 'done').length;
+    const sugs = loadSuggestions().filter((s) => s.status === 'pending');
+    const healthAlerts = getHealthAlerts();
+    const breakageCount = (S.inv && S.inv.breakage ? S.inv.breakage.length : 0);
+    const badgeOrd = $('badgeOrders') ? Number($('badgeOrders').textContent || '0') : 0;
 
+    const hero = renderDashboardHero({ ar, gov });
+    const kpiGrid = renderDashboardKpis({ ar, pct, all, schedDone, schedStates, badgeOrd, healthAlerts, sugs, breakageCount });
+
+    const panels = el('div', 'dash-panels-grid');
+    panels.append(renderSectionReadinessPanel({ ar }));
+    panels.append(renderHealthCertsPanel({ ar }));
+
+    root.append(hero, kpiGrid, panels);
+  }
 
   // Security Hardening: Wrap renderDashboardView with strict Manager RBAC Check
   const origRenderDashboardView = renderDashboardView;

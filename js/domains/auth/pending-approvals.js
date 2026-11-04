@@ -17,7 +17,7 @@
   function savePendingNameChanges(list) {
     try {
       localStorage.setItem(PENDING_CHANGES_KEY, JSON.stringify(list));
-    } catch {}
+    } catch (err) { /* Storage write fallback */ }
   }
 
   function getActivePendingNameChanges() {

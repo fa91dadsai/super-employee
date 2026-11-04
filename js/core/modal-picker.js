@@ -36,40 +36,8 @@
     }
   }
 
-  /**
-   * Opens an interactive bottom sheet modal window with rich option cards
-   */
-  function open({ title, subtitle, icon, items = [], current = '', onSelect }) {
-    const ar = isAr();
-    const dlg = ensurePickerModal();
-    dlg.replaceChildren();
-
-    const box = el('div', 'modal-picker-box');
-
-    // 1. Grab Bar
-    const grab = el('div', 'grab');
-
-    // 2. Header
-    const headRow = el('div', 'modal-picker-head');
-    const titleBox = el('div', 'modal-picker-title-box');
-    const h3 = el('h3', 'modal-picker-title');
-    h3.innerHTML = (icon ? `<span class="picker-head-icon">${icon}</span> ` : '') + (title || (ar ? 'اختر من القائمة' : 'Select an Option'));
-    titleBox.append(h3);
-    if (subtitle) {
-      const sub = el('p', 'modal-picker-sub', subtitle);
-      titleBox.append(sub);
-    }
-
-    const closeBtn = el('button', 'modal-picker-close', '✕');
-    closeBtn.type = 'button';
-    closeBtn.setAttribute('aria-label', ar ? 'إغلاق' : 'Close');
-    closeBtn.addEventListener('click', () => close());
-
-    headRow.append(titleBox, closeBtn);
-    box.append(grab, headRow);
-
-    // 3. Normalize items
-    const normalizedItems = items.map((it) => {
+  function normalizePickerItems(rawItems) {
+    return (rawItems || []).map((it) => {
       if (Array.isArray(it)) {
         return { value: String(it[0]), label: String(it[1]), subtitle: '', icon: '' };
       }
@@ -86,128 +54,136 @@
       }
       return { ...it, value: String(it.value), label, icon };
     });
+  }
 
-    const listContainer = el('div', 'modal-picker-list');
+  function renderPickerHeader(opts) {
+    const { title, subtitle, icon, ar } = opts;
+    const headRow = el('div', 'modal-picker-head');
+    const titleBox = el('div', 'modal-picker-title-box');
+    const h3 = el('h3', 'modal-picker-title');
+    h3.innerHTML = (icon ? `<span class="picker-head-icon">${icon}</span> ` : '') + (title || (ar ? 'اختر من القائمة' : 'Select an Option'));
+    titleBox.append(h3);
+    if (subtitle) {
+      const sub = el('p', 'modal-picker-sub', subtitle);
+      titleBox.append(sub);
+    }
 
-    function renderList(listToRender) {
-      listContainer.replaceChildren();
-      if (!listToRender.length) {
-        const empty = el('div', 'modal-picker-empty', ar ? 'لا توجد خيارات مطابقة' : 'No matching options');
-        listContainer.append(empty);
-        return;
+    const closeBtn = el('button', 'modal-picker-close', '✕');
+    closeBtn.type = 'button';
+    closeBtn.setAttribute('aria-label', ar ? 'إغلاق' : 'Close');
+    closeBtn.addEventListener('click', () => close());
+
+    headRow.append(titleBox, closeBtn);
+    return headRow;
+  }
+
+  function renderPickerItemCard(opts) {
+    const { it, isSelected, onSelect } = opts;
+    const card = el('button', 'modal-picker-item' + (isSelected ? ' selected' : ''));
+    card.type = 'button';
+
+    const itemContent = el('div', 'modal-picker-item-content');
+    if (it.icon) {
+      itemContent.append(el('span', 'modal-picker-item-icon', it.icon));
+    }
+    const textWrapper = el('div', 'modal-picker-item-texts');
+    textWrapper.append(el('div', 'modal-picker-item-label', it.label));
+    if (it.subtitle) {
+      textWrapper.append(el('div', 'modal-picker-item-sub', it.subtitle));
+    }
+    itemContent.append(textWrapper);
+
+    const trailing = el('div', 'modal-picker-item-trailing');
+    if (it.badge) {
+      trailing.append(el('span', 'dayoff-badge ' + (it.badgeClass || 'approved'), it.badge));
+    }
+    if (isSelected) {
+      trailing.append(el('span', 'modal-picker-check', '✓'));
+    }
+
+    card.append(itemContent, trailing);
+    card.addEventListener('click', () => {
+      if (navigator.vibrate) {
+        try { navigator.vibrate(10); } catch (err) { /* Vibration not supported */ }
       }
+      close();
+      if (onSelect) onSelect(it.value, it);
+    });
+    return card;
+  }
 
-      listToRender.forEach((it) => {
-        const isSelected = String(it.value) === String(current);
-        const card = el('button', 'modal-picker-item' + (isSelected ? ' selected' : ''));
-        card.type = 'button';
-
-        const itemContent = el('div', 'modal-picker-item-content');
-        if (it.icon) {
-          const iconSpan = el('span', 'modal-picker-item-icon', it.icon);
-          itemContent.append(iconSpan);
-        }
-        const textWrapper = el('div', 'modal-picker-item-texts');
-        const mainLabel = el('div', 'modal-picker-item-label', it.label);
-        textWrapper.append(mainLabel);
-        if (it.subtitle) {
-          const subLabel = el('div', 'modal-picker-item-sub', it.subtitle);
-          textWrapper.append(subLabel);
-        }
-        itemContent.append(textWrapper);
-
-        const trailing = el('div', 'modal-picker-item-trailing');
-        if (it.badge) {
-          const b = el('span', 'dayoff-badge ' + (it.badgeClass || 'approved'), it.badge);
-          trailing.append(b);
-        }
-        if (isSelected) {
-          const check = el('span', 'modal-picker-check', '✓');
-          trailing.append(check);
-        }
-
-        card.append(itemContent, trailing);
-
-        card.addEventListener('click', () => {
-          if (navigator.vibrate) {
-            try { navigator.vibrate(10); } catch (e) {}
-          }
-          close();
-          if (onSelect) onSelect(it.value, it);
-        });
-
-        listContainer.append(card);
-      });
+  function renderPickerList(opts) {
+    const { listContainer, listToRender, current, onSelect, ar } = opts;
+    listContainer.replaceChildren();
+    if (!listToRender.length) {
+      listContainer.append(el('div', 'modal-picker-empty', ar ? 'لا توجد خيارات مطابقة' : 'No matching options'));
+      return;
     }
+    listToRender.forEach((it) => {
+      const isSelected = String(it.value) === String(current);
+      listContainer.append(renderPickerItemCard({ it, isSelected, onSelect }));
+    });
+  }
 
-    // Search bar if list is long
-    if (normalizedItems.length > 7) {
-      const searchBox = el('div', 'modal-picker-search-box');
-      const searchIn = el('input', 'in modal-picker-search-input');
-      searchIn.type = 'search';
-      searchIn.placeholder = ar ? '🔍 ابحث في الخيارات...' : '🔍 Search options...';
-      searchIn.addEventListener('input', () => {
-        const q = searchIn.value.trim().toLowerCase();
-        if (!q) {
-          renderList(normalizedItems);
-        } else {
-          const filtered = normalizedItems.filter((it) =>
+  function renderPickerSearchBox(opts) {
+    const { normalizedItems, listContainer, current, onSelect, ar } = opts;
+    const searchBox = el('div', 'modal-picker-search-box');
+    const searchIn = el('input', 'in modal-picker-search-input');
+    searchIn.type = 'search';
+    searchIn.placeholder = ar ? '🔍 ابحث في الخيارات...' : '🔍 Search options...';
+    searchIn.addEventListener('input', () => {
+      const q = searchIn.value.trim().toLowerCase();
+      const filtered = q
+        ? normalizedItems.filter((it) =>
             (it.label || '').toLowerCase().includes(q) || (it.subtitle || '').toLowerCase().includes(q)
-          );
-          renderList(filtered);
-        }
-      });
-      searchBox.append(searchIn);
-      box.append(searchBox);
-    }
+          )
+        : normalizedItems;
+      renderPickerList({ listContainer, listToRender: filtered, current, onSelect, ar });
+    });
+    searchBox.append(searchIn);
+    return searchBox;
+  }
 
-    renderList(normalizedItems);
-    box.append(listContainer);
-
-    // Cancel Button
+  function renderPickerBottom(opts) {
+    const { ar } = opts;
     const bottomRow = el('div', 'modal-picker-bottom');
     const cancelBtn = el('button', 'btn modal-picker-cancel', ar ? 'إلغاء' : 'Cancel');
     cancelBtn.type = 'button';
     cancelBtn.addEventListener('click', () => close());
     bottomRow.append(cancelBtn);
-    box.append(bottomRow);
+    return bottomRow;
+  }
+
+  /**
+   * Opens an interactive bottom sheet modal window with rich option cards
+   */
+  function open(opts) {
+    const { title, subtitle, icon, items = [], current = '', onSelect } = opts;
+    const ar = isAr();
+    const dlg = ensurePickerModal();
+    dlg.replaceChildren();
+
+    const box = el('div', 'modal-picker-box');
+    box.append(el('div', 'grab'));
+    box.append(renderPickerHeader({ title, subtitle, icon, ar }));
+
+    const normalizedItems = normalizePickerItems(items);
+    const listContainer = el('div', 'modal-picker-list');
+
+    if (normalizedItems.length > 7) {
+      box.append(renderPickerSearchBox({ normalizedItems, listContainer, current, onSelect, ar }));
+    }
+
+    renderPickerList({ listContainer, listToRender: normalizedItems, current, onSelect, ar });
+    box.append(listContainer);
+    box.append(renderPickerBottom({ ar }));
 
     dlg.append(box);
     dlg.showModal();
   }
 
-  /**
-   * Enhances any standard <select> element so clicking it opens the Modal Window Picker!
-   */
-  function enhanceSelect(selectEl, customConfig = {}) {
-    if (!selectEl) return null;
-    if (selectEl.dataset.modalPickerEnhanced) {
-      const oldTrigger = selectEl.nextElementSibling;
-      if (oldTrigger && oldTrigger.classList.contains('modal-picker-trigger')) {
-        return oldTrigger;
-      }
-    }
-    selectEl.dataset.modalPickerEnhanced = '1';
-    selectEl.style.display = 'none';
-
-    const trigger = el('button', 'in modal-picker-trigger');
-    trigger.type = 'button';
-    trigger.setAttribute('aria-haspopup', 'dialog');
-
-    const updateTriggerText = () => {
-      const selOpt = selectEl.options[selectEl.selectedIndex];
-      const text = selOpt ? selOpt.textContent : (customConfig.placeholder || 'Select...');
-      trigger.replaceChildren();
-
-      const valWrapper = el('span', 'picker-trigger-val');
-      valWrapper.textContent = text;
-
-      const arrow = el('span', 'picker-trigger-arrow', '▾');
-      trigger.append(valWrapper, arrow);
-    };
-
-    updateTriggerText();
-
+  function bindSelectTriggerClick(opts) {
+    const { trigger, selectEl, customConfig, updateTriggerText } = opts;
     trigger.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -244,15 +220,9 @@
         },
       });
     });
+  }
 
-    selectEl.addEventListener('change', updateTriggerText);
-    selectEl._updatePickerTrigger = updateTriggerText;
-
-    if (window.MutationObserver) {
-      const observer = new MutationObserver(() => updateTriggerText());
-      observer.observe(selectEl, { childList: true, subtree: true });
-    }
-
+  function insertTriggerElement(selectEl, trigger) {
     if (selectEl.parentNode) {
       selectEl.parentNode.insertBefore(trigger, selectEl.nextSibling);
     } else {
@@ -262,7 +232,47 @@
         }
       }, 0);
     }
+  }
 
+  /**
+   * Enhances any standard <select> element so clicking it opens the Modal Window Picker!
+   */
+  function enhanceSelect(selectEl, customConfig = {}) {
+    if (!selectEl) return null;
+    if (selectEl.dataset.modalPickerEnhanced) {
+      const oldTrigger = selectEl.nextElementSibling;
+      if (oldTrigger && oldTrigger.classList.contains('modal-picker-trigger')) {
+        return oldTrigger;
+      }
+    }
+    selectEl.dataset.modalPickerEnhanced = '1';
+    selectEl.style.display = 'none';
+
+    const trigger = el('button', 'in modal-picker-trigger');
+    trigger.type = 'button';
+    trigger.setAttribute('aria-haspopup', 'dialog');
+
+    const updateTriggerText = () => {
+      const selOpt = selectEl.options[selectEl.selectedIndex];
+      const text = selOpt ? selOpt.textContent : (customConfig.placeholder || 'Select...');
+      trigger.replaceChildren();
+      const valWrapper = el('span', 'picker-trigger-val', text);
+      const arrow = el('span', 'picker-trigger-arrow', '▾');
+      trigger.append(valWrapper, arrow);
+    };
+
+    updateTriggerText();
+    bindSelectTriggerClick({ trigger, selectEl, customConfig, updateTriggerText });
+
+    selectEl.addEventListener('change', updateTriggerText);
+    selectEl._updatePickerTrigger = updateTriggerText;
+
+    if (window.MutationObserver) {
+      const observer = new MutationObserver(() => updateTriggerText());
+      observer.observe(selectEl, { childList: true, subtree: true });
+    }
+
+    insertTriggerElement(selectEl, trigger);
     return trigger;
   }
 

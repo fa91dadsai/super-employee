@@ -133,7 +133,8 @@
     return li;
   }
 
-  function card(cls, icon, title, count) {
+  function card(opts) {
+    const { cls = '', icon = '', title = '', count = undefined } = opts;
     const c = el('section', 'card ' + cls);
     const h = el('div', 'head');
     const nm = el('span', 'nm');
@@ -159,7 +160,7 @@
     const bar = el('div', 'me-row');
     bar.append(el('span', '', fmtDay(S().date)), iAmButton());
     const done = states.filter((s) => s.status === 'done').length;
-    const c = card('sched', '🗓', t('todayTasks'), done + ' / ' + states.length);
+    const c = card({ cls: 'sched', icon: '🗓', title: t('todayTasks'), count: done + ' / ' + states.length });
     const list = el('ol', 'items');
     states.forEach((st) => list.append(stateRow(st, isLeader)));
     c.append(list);
@@ -178,19 +179,8 @@
     return out;
   }
 
-  // The "My tasks" tab.
-  function mine(root) {
-    root.replaceChildren();
-    const bar = el('div', 'me-row');
-    bar.append(el('span', '', fmtDay(S().date)), iAmButton());
-    root.append(bar);
-    if (!S().me.role && !S().me.staffId) return root.append(el('p', 'empty', t('pickRoleFirst')));
-    const nums = M.numbering(S().tpl);
-    const states = todayStates().filter((s) => isMine(s.task));
-    const items = myOpeningItems();
-    const c = card('sched', '👤', t('today'));
+  function renderMineOpeningItems(items, nums) {
     const list = el('ol', 'items');
-    states.forEach((st) => list.append(stateRow(st, false)));
     items.forEach((it) => {
       const stamp = S().run.checked[it.id];
       const li = el('li', 'item' + (stamp ? ' done' : ''));
@@ -210,36 +200,59 @@
       li.append(row);
       list.append(li);
     });
-    if (list.children.length) { c.append(list); root.append(c); }
-    else if (!FOH.invCount.myCounts().length) {
-      c.append(el('p', 'empty', t('nothingMine')));
-      if (S().previewEmployee) c.append(btn('btn demo-count-cta', t('countDemoButton'), 'demo-count', {}));
-      root.append(c);
-    }
-    FOH.invCount.mineCard(root); // assigned inventory counts only
-    const today = FOH.time.todayISO();
+    return list;
+  }
+
+  function renderMineUpcomingTasks(today) {
     const next = [];
     S().tpl.tasks.filter(isMine).forEach((tk) =>
       SC.upcoming(tk, S().log, S().date, today, 7, 7).forEach((d) => next.push({ d, tk }))
     );
-    if (next.length) {
-      next.sort((a, b) => a.d.localeCompare(b.d) || a.tk.time.localeCompare(b.tk.time));
-      const up = card('', '📅', t('comingUp'));
-      const ul = el('ol', 'items');
-      next.forEach(({ d, tk }) => {
-        const li = el('li', 'item up');
-        const day = el('span', 'd', dayNames()[SC.weekday(d)]);
-        day.append(el('b', '', String(Number(d.slice(8)))));
-        const tags = el('span', 'tags');
-        tags.append(el('span', 'tag time', tk.time));
-        li.append(day, el('span', 'up-t', tk.icon + ' ' + taskName(tk)), tags);
-        ul.append(li);
-      });
-      up.append(ul, el('p', 'note', t('movesNote')));
-      root.append(up);
+    if (!next.length) return null;
+    next.sort((a, b) => a.d.localeCompare(b.d) || a.tk.time.localeCompare(b.tk.time));
+    const up = card({ cls: '', icon: '📅', title: t('comingUp') });
+    const ul = el('ol', 'items');
+    next.forEach(({ d, tk }) => {
+      const li = el('li', 'item up');
+      const day = el('span', 'd', dayNames()[SC.weekday(d)]);
+      day.append(el('b', '', String(Number(d.slice(8)))));
+      const tags = el('span', 'tags');
+      tags.append(el('span', 'tag time', tk.time));
+      li.append(day, el('span', 'up-t', tk.icon + ' ' + taskName(tk)), tags);
+      ul.append(li);
+    });
+    up.append(ul, el('p', 'note', t('movesNote')));
+    return up;
+  }
+
+  // The "My tasks" tab.
+  function mine(root) {
+    root.replaceChildren();
+    const bar = el('div', 'me-row');
+    bar.append(el('span', '', fmtDay(S().date)), iAmButton());
+    root.append(bar);
+    if (!S().me.role && !S().me.staffId) return root.append(el('p', 'empty', t('pickRoleFirst')));
+
+    const nums = M.numbering(S().tpl);
+    const states = todayStates().filter((s) => isMine(s.task));
+    const items = myOpeningItems();
+    const c = card({ cls: 'sched', icon: '👤', title: t('today') });
+
+    const list = renderMineOpeningItems(items, nums);
+    states.forEach((st) => list.prepend(stateRow(st, false)));
+
+    if (list.children.length) {
+      c.append(list);
+      root.append(c);
+    } else if (!FOH.invCount.myCounts().length) {
+      c.append(el('p', 'empty', t('nothingMine')));
+      if (S().previewEmployee) c.append(btn('btn demo-count-cta', t('countDemoButton'), 'demo-count', {}));
+      root.append(c);
     }
 
-
+    FOH.invCount.mineCard(root);
+    const up = renderMineUpcomingTasks(FOH.time.todayISO());
+    if (up) root.append(up);
   }
 
   // Edit mode, "Scheduled" tab: week grid + list of tasks.
@@ -248,7 +261,7 @@
     const st = S();
     const today = FOH.time.todayISO();
     const first = SC.addDays(SC.weekStart(st.date, st.tpl.settings.weekStart), 7 * st.weekOffset);
-    const wk = card('sched', '🗓', st.weekOffset ? t('weekOf', { from: fmtDay(first), to: fmtDay(SC.addDays(first, 6)) }) : t('thisWeek'));
+    const wk = card({ cls: 'sched', icon: '🗓', title: st.weekOffset ? t('weekOf', { from: fmtDay(first), to: fmtDay(SC.addDays(first, 6)) }) : t('thisWeek') });
     wk.querySelector('.head').append(btn('link', t('addTask'), 'task-add', {}));
     wk.append(weekBar());
     SC.week(st.tpl.tasks, st.log, first, today, FOH.time.nowHM()).forEach((day) => {
@@ -265,7 +278,7 @@
       row.append(dn, cells);
       wk.append(row);
     });
-    const lc = card('', '📋', t('tabScheduled'), String(st.tpl.tasks.length));
+    const lc = card({ cls: '', icon: '📋', title: t('tabScheduled'), count: String(st.tpl.tasks.length) });
     const ul = el('ol', 'items');
     st.tpl.tasks.forEach((tk) => {
       const li = el('li', 'item');
@@ -324,7 +337,7 @@
   // Edit mode, "Roles" tab.
   function roles(root) {
     root.replaceChildren();
-    const c = card('', '👥', t('roles'));
+    const c = card({ cls: '', icon: '👥', title: t('roles') });
     c.querySelector('.head').append(btn('link', t('addRole'), 'role-add', {}));
     const ul = el('ol', 'items');
     S().tpl.roles.forEach((r) => {

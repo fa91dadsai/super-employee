@@ -1,5 +1,5 @@
 // Pure helpers over the template: locate items, progress, nesting.
-// A top-level item with sub-items is a "parent": it is never ticked itself;
+// A top-level item with sub-items is a "parent": it is never ticked itself.
 // its state comes from its sub-items. Progress counts leaves only.
 (function (FOH) {
   'use strict';

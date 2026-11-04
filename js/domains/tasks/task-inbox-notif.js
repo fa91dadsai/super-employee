@@ -55,7 +55,7 @@
   function saveTaskInbox(list) {
     try {
       localStorage.setItem(TASK_INBOX_KEY, JSON.stringify(list.slice(0, 50)));
-    } catch {}
+    } catch (err) { /* Channel postMessage or storage fallback */ }
   }
 
   function computeDelayMsForHM(hm, remindBeforeMins) {
@@ -115,7 +115,7 @@
     if (liveChannel) {
       try {
         liveChannel.postMessage({ type: 'NEW_TASK_ADDED', entry });
-      } catch {}
+      } catch (err) { /* Channel postMessage or storage fallback */ }
     }
 
     updateNotifBellUI();

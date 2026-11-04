@@ -22,7 +22,7 @@
   function saveBatches(map) {
     try {
       localStorage.setItem(BATCH_KEY, JSON.stringify(map));
-    } catch {}
+    } catch (err) { /* Batch storage quota fallback */ }
   }
 
   function injectBatchCounter() {

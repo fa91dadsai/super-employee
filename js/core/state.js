@@ -172,7 +172,7 @@
   // Simple item: one variant. [en, ar, expected, location, opts]
   const i = (name, ar, expected, location, opts) => ({ name, ar, expected, location, cond: BREAKS, ...opts });
 
-  // Item with attributes: a1/a2 = [en, ar, [[valueEn, valueAr], …]];
+  // Item with attributes: a1/a2 = [en, ar, [[valueEn, valueAr], …]]
   // v = [[index in a1, index in a2 (or -1), expected], …]
   const iv = (name, ar, location, a1, a2, v, opts) => ({ name, ar, location, a1, a2, v, cond: BREAKS, ...opts });
 

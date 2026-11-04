@@ -38,7 +38,7 @@
   function saveClaims(map) {
     try {
       localStorage.setItem(CLAIMS_KEY, JSON.stringify(map));
-    } catch {}
+    } catch (err) { /* Claims storage fallback */ }
   }
 
   function injectSectionClaims() {
@@ -106,7 +106,7 @@
   function saveSignoffs(map) {
     try {
       localStorage.setItem(SIGNOFF_KEY, JSON.stringify(map));
-    } catch {}
+    } catch (err) { /* Claims storage fallback */ }
   }
 
 

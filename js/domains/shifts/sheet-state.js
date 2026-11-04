@@ -172,7 +172,7 @@
   function saveClosingRun(date, run) {
     try {
       localStorage.setItem('foh-opening.closingRun.' + date, JSON.stringify(run));
-    } catch {}
+    } catch (err) { /* Sheet state storage fallback */ }
   }
 
   function loadMidSections() {
@@ -186,7 +186,7 @@
   function saveMidSections(secs) {
     try {
       localStorage.setItem(MID_TPL_KEY, JSON.stringify(secs));
-    } catch {}
+    } catch (err) { /* Sheet state storage fallback */ }
   }
   function loadMidRun(date) {
     try {
@@ -199,7 +199,7 @@
   function saveMidRun(date, run) {
     try {
       localStorage.setItem('foh-opening.midRun.' + date, JSON.stringify(run));
-    } catch {}
+    } catch (err) { /* Sheet state storage fallback */ }
   }
 
   function persistCurrentSheetState() {
@@ -213,7 +213,7 @@
     } else if (sheetType === 'closing') {
       try {
         localStorage.setItem(CLOSING_TPL_KEY, JSON.stringify(S.tpl.sections));
-      } catch {}
+      } catch (err) { /* Sheet state storage fallback */ }
       saveClosingRun(S.date, S.run);
     }
   }

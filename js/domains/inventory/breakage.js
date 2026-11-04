@@ -12,21 +12,33 @@
   let categoryId = '';
   let browsingItem = '';
   const searchText = (text) => String(text || '').normalize('NFD').replace(/[\u0300-\u036f\u064b-\u065f\u0670\u0640]/g, '').replace(/[أإآٱ]/g, 'ا').replace(/ى/g, 'ي').toLowerCase().trim();
-  function matches(cat, item, variant, query) {
-    const values = item.attrs.flatMap((a, k) => a.values.filter((v) => v.id === variant.a[k]).flatMap((v) => [v.label, v.labelAr]));
+  function matches(cat, item, opts = {}) {
+    const isLegacy = typeof opts === 'object' && opts !== null && !('query' in opts);
+    const variant = isLegacy ? opts : opts.variant;
+    const query = isLegacy ? arguments[3] : (opts.query || '');
+
+    const values = item.attrs.flatMap((a, k) => a.values.filter((v) => v.id === (variant ? variant.a[k] : null)).flatMap((v) => [v.label, v.labelAr]));
     const text = searchText([cat.name, cat.nameAr, item.name, item.nameAr, item.location, ...values].join(' '));
     return searchText(query).split(/\s+/).filter(Boolean).every((token) => text.includes(token));
   }
   function actionButton(cls, label, data) {
     const button = el('button', cls, label); button.type = 'button'; Object.assign(button.dataset, data); return button;
   }
-  function thumbnail(item, variant, cat, cls) {
+  function thumbnail(item, variant, opts = {}) {
+    const isLegacy = typeof opts === 'object' && opts !== null && 'icon' in opts;
+    const cat = isLegacy ? opts : (opts.cat || {});
+    const cls = isLegacy ? arguments[3] : (opts.cls || '');
+
     const box = el('span', cls, cat.icon || '📦');
     const photo = variant && variant.photo || item.photo;
     if (photo) { box.textContent = ''; const img = el('img'); img.alt = ''; FOH.photos.show(img, photo); box.append(img); }
     return box;
   }
-  function toolCard(cat, item, variant, recent) {
+  function toolCard(cat, item, opts = {}) {
+    const isLegacy = typeof opts === 'object' && opts !== null && ('id' in opts || 'a' in opts);
+    const variant = isLegacy ? opts : opts.variant;
+    const recent = isLegacy ? arguments[3] : opts.recent;
+
     const variants = FOH.invStore.active(item);
     const label = variant && FOH.invStore.variantLabel(item, variant);
     const button = actionButton('report-tool', '', variant ? { variant: variant.id } : { tool: item.id });
@@ -34,7 +46,7 @@
     copy.append(el('b', '', pick(item.name, item.nameAr) + (label ? ' · ' + label : '')));
     const other = FOH.i18n.lang === 'ar' ? item.name : item.nameAr;
     copy.append(el('small', '', [other, variant ? pick(cat.name, cat.nameAr) : variants.length > 1 ? t('typeCount', { n: variants.length }) : pick(cat.name, cat.nameAr)].filter(Boolean).join(' · ')));
-    button.append(thumbnail(item, variant, cat, 'report-tool-icon'), copy, el('span', 'tool-arrow', FOH.i18n.lang === 'ar' ? '‹' : '›'));
+    button.append(thumbnail(item, variant, { cat, cls: 'report-tool-icon' }), copy, el('span', 'tool-arrow', FOH.i18n.lang === 'ar' ? '‹' : '›'));
     return button;
   }
   function drawPicker() {

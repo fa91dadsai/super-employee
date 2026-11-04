@@ -37,7 +37,11 @@
     return { rows, mix, exp, tot };
   }
 
-  function row(name, sub, cells, cls) {
+  function row(name, sub, opts = {}) {
+    const isLegacy = Array.isArray(opts);
+    const cells = isLegacy ? opts : (opts.cells || []);
+    const cls = isLegacy ? arguments[3] : opts.cls;
+
     const r = el('div', 'rv' + (cls ? ' ' + cls : ''));
     const n = el('span', 'n', name);
     if (sub) n.append(el('small', '', sub));
@@ -52,7 +56,12 @@
   }
 
   // Table for one category; returns the flagged/mixed variant ids.
-  function categoryTable(c, cat, first, again, sums) {
+  function categoryTable(c, cat, opts = {}) {
+    const isLegacy = typeof opts === 'object' && opts !== null && !('first' in opts);
+    const first = isLegacy ? opts : opts.first;
+    const again = isLegacy ? arguments[3] : opts.again;
+    const sums = isLegacy ? arguments[4] : opts.sums;
+
     c.append(row(t('variantCol'), '', [t('exp'), '✅', '🔧', '❌', t('diff')].map((x) => el('span', '', x)), 'h'));
     const flagged = [];
     cat.items.forEach((item) => {

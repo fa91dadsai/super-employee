@@ -56,7 +56,8 @@
     try {
       const all = FOH.model.progress(FOH.model.allLeaves({ sections: FOH.preview.sections() }), S().run.checked);
       return Math.max(0, (all.total || 0) - (all.done || 0));
-    } catch {
+    } catch (err) {
+      /* Fallback for remaining task count calculation */
       return 0;
     }
   }
@@ -99,9 +100,50 @@
       // Pending blind counts
       const counts = FOH.invCount && FOH.invCount.pending ? FOH.invCount.pending() : 0;
       return counts;
-    } catch {
+    } catch (err) {
+      /* Fallback for inventory pending count */
       return 0;
     }
+  }
+
+  function renderBottomTabItem(tb, curView, ar) {
+    const isCur = curView === tb.view;
+    const btn = el('button', 'tab-item' + (tb.isCenter ? ' center-hero' : '') + (isCur ? ' on' : ''));
+    btn.type = 'button';
+    btn.dataset.view = tb.view;
+    btn.setAttribute('aria-label', ar ? tb.labelAr : tb.labelEn);
+
+    if (tb.isCenter) {
+      const bubble = el('div', 'center-hero-bubble');
+      const ico = el('span', 'hero-ico', tb.ico);
+      const b = el('b', 'tab-badge hero-badge');
+      b.id = tb.badgeId;
+      b.hidden = true;
+      bubble.append(ico, b);
+      btn.append(bubble, el('span', 'tab-label center-label', ar ? tb.labelAr : tb.labelEn));
+    } else {
+      const wrap = el('div', 'tab-icon-wrap');
+      const ico = el('span', 'tab-ico', tb.ico);
+      const b = el('b', 'tab-badge');
+      b.id = tb.badgeId;
+      b.hidden = true;
+      wrap.append(ico, b);
+      btn.append(wrap, el('span', 'tab-label', ar ? tb.labelAr : tb.labelEn), el('span', 'tab-active-dot'));
+    }
+
+    btn.addEventListener('click', () => {
+      if (navigator.vibrate) navigator.vibrate(12);
+      if (FOH.superEmployee && FOH.superEmployee.switchView) {
+        FOH.superEmployee.switchView(tb.view);
+      } else if (FOH.navigation && FOH.navigation.switchView) {
+        FOH.navigation.switchView(tb.view);
+      } else {
+        S().view = tb.view;
+        FOH.app.render();
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    return btn;
   }
 
   function buildBottomBar() {
@@ -118,51 +160,7 @@
     const curView = S().view;
 
     TABS.forEach((tb) => {
-      const isCur = curView === tb.view;
-      const btn = el('button', 'tab-item' + (tb.isCenter ? ' center-hero' : '') + (isCur ? ' on' : ''));
-      btn.type = 'button';
-      btn.dataset.view = tb.view;
-      btn.setAttribute('aria-label', ar ? tb.labelAr : tb.labelEn);
-
-      if (tb.isCenter) {
-        // Center Elevated Hero FAB
-        const bubble = el('div', 'center-hero-bubble');
-        const ico = el('span', 'hero-ico', tb.ico);
-        const b = el('b', 'tab-badge hero-badge');
-        b.id = tb.badgeId;
-        b.hidden = true;
-        bubble.append(ico, b);
-
-        const lbl = el('span', 'tab-label center-label', ar ? tb.labelAr : tb.labelEn);
-        btn.append(bubble, lbl);
-      } else {
-        // Standard Tab Item
-        const wrap = el('div', 'tab-icon-wrap');
-        const ico = el('span', 'tab-ico', tb.ico);
-        const b = el('b', 'tab-badge');
-        b.id = tb.badgeId;
-        b.hidden = true;
-        wrap.append(ico, b);
-
-        const lbl = el('span', 'tab-label', ar ? tb.labelAr : tb.labelEn);
-        const dot = el('span', 'tab-active-dot');
-        btn.append(wrap, lbl, dot);
-      }
-
-      btn.addEventListener('click', () => {
-        if (navigator.vibrate) navigator.vibrate(12);
-        if (FOH.superEmployee && FOH.superEmployee.switchView) {
-          FOH.superEmployee.switchView(tb.view);
-        } else if (FOH.navigation && FOH.navigation.switchView) {
-          FOH.navigation.switchView(tb.view);
-        } else {
-          S().view = tb.view;
-          FOH.app.render();
-        }
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      });
-
-      bar.append(btn);
+      bar.append(renderBottomTabItem(tb, curView, ar));
     });
 
     updateBadges();

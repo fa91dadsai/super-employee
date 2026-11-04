@@ -624,6 +624,62 @@ body.dark .rlh-progress-fill {
   background: linear-gradient(90deg, #10b981 0%, #34d399 100%) !important;
 }
 /* Modern Touch-First Action Grid */
+.rlh-next-task {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  margin: 10px 0 12px !important;
+  padding: 8px 12px !important;
+  border-radius: 12px !important;
+  background: rgba(16, 185, 129, 0.08) !important;
+  border: 1.5px solid #10b981 !important;
+}
+.rlh-next-ico {
+  font-size: 1.25rem !important;
+  flex-shrink: 0 !important;
+}
+.rlh-next-info {
+  display: flex !important;
+  flex-direction: column !important;
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+}
+.rlh-next-info small {
+  font-size: 0.72rem !important;
+  color: var(--ink2) !important;
+  font-weight: 700 !important;
+}
+.rlh-next-info b {
+  font-size: 0.88rem !important;
+  color: var(--ink) !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+.rlh-next-done-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 36px !important;
+  padding: 4px 14px !important;
+  border-radius: 8px !important;
+  background: #10b981 !important;
+  color: #ffffff !important;
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  border: none !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3) !important;
+  transition: transform 0.1s ease, filter 0.15s ease !important;
+}
+.rlh-next-done-btn:active {
+  transform: scale(0.96) !important;
+  filter: brightness(0.9) !important;
+}
+
 .rlh-actions {
   display: grid !important;
   grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)) !important;
@@ -2807,3 +2863,37 @@ body.dark .dept-isolated-banner .dib-txt small {
 }
 
 #chips { display: none !important; }
+
+/* =========================================================================
+   PERFORMANCE & HARDWARE ACCELERATION ENHANCEMENTS
+   (CSS Containment, Layout Boundary & Fast Scrolling)
+   ========================================================================= */
+
+body {
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Containment for checklist cards: Skips layout calculations for off-screen cards */
+#sections > section.card {
+  contain: content;
+  content-visibility: auto;
+  contain-intrinsic-size: 0 280px;
+}
+
+/* Containment for department bento tiles */
+.dept-tile {
+  contain: content;
+  content-visibility: auto;
+  contain-intrinsic-size: 0 95px;
+}
+
+/* GPU acceleration for modals and bottom sheets */
+dialog.sheet,
+#profileSheet,
+#sectionAssignModal,
+.dept-isolated-banner {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}

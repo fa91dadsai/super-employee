@@ -321,26 +321,29 @@
     try {
       const raw = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
       return raw ? JSON.parse(raw) : null;
-    } catch {
+    } catch (err) {
+      /* Session load storage fallback */
       return null;
     }
   }
 
-  function saveSession(next, remember = true) {
+  function saveSession(next, opts = {}) {
     session = next;
+    const remember = typeof opts === 'boolean' ? opts : (opts && typeof opts.remember === 'boolean' ? opts.remember : true);
     try {
       localStorage.removeItem(SESSION_KEY);
       sessionStorage.removeItem(SESSION_KEY);
       if (next) {
         (remember ? localStorage : sessionStorage).setItem(SESSION_KEY, JSON.stringify(next));
       }
-    } catch {}
+    } catch (err) { /* Session parse/storage fallback */ }
   }
 
   function loadTheme() {
     try {
       return localStorage.getItem(THEME_KEY) === 'dark' ? 'dark' : 'light';
-    } catch {
+    } catch (err) {
+      /* Theme load storage fallback */
       return 'light';
     }
   }
@@ -350,7 +353,7 @@
     document.body.classList.toggle('dark', dark);
     try {
       localStorage.setItem(THEME_KEY, dark ? 'dark' : 'light');
-    } catch {}
+    } catch (err) { /* Session parse/storage fallback */ }
     if ($('loginThemeBtn')) $('loginThemeBtn').textContent = dark ? '☀️' : '🌙';
   }
 
@@ -402,14 +405,8 @@
     FOH.store.saveRun(S.date, S.run);
   }
 
-  // Authenticate against Supabase Auth (https://jncnbwwhjmouxptqfjaz.supabase.co) or local Oasis staff account
-  async function authenticate(usernameInput, passwordInput, remember) {
-    const cleanUser = String(usernameInput || '').trim().toLowerCase();
-    const pass = String(passwordInput || '');
-    if (!cleanUser || !pass) throw new Error(t('loginInvalid'));
-
-    // 1. Try Supabase Auth if email or online
-    // 1. Fast-path: local staff / demo account instant sign-in (Zero network lag, 0 console errors)
+  function authenticateDemoAccount(opts) {
+    const { cleanUser, pass, remember } = opts;
     const demo = DEMO_ACCOUNTS.find((d) => d.username === cleanUser);
     const savedPassKey = 'foh-opening.pass.' + cleanUser;
     const customPass = localStorage.getItem(savedPassKey);
@@ -437,8 +434,41 @@
       saveSession(nextSess, remember);
       return nextSess;
     }
+    return null;
+  }
 
-    // 2. Cloud Supabase Auth if email provided
+  async function fetchCloudProfileAndMemberships(token) {
+    let profile = null;
+    let tenantId = null;
+    let branchId = null;
+    try {
+      const [profRes, memRes] = await Promise.all([
+        fetch(`${SUPABASE_URL}/functions/v1/api/v1/me/profile`, {
+          headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${token}` },
+        }),
+        fetch(`${SUPABASE_URL}/functions/v1/api/v1/me/memberships`, {
+          headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${token}` },
+        }),
+      ]);
+      if (profRes.ok) {
+        const pj = await profRes.json();
+        profile = pj.data || pj;
+      }
+      if (memRes.ok) {
+        const mj = await memRes.json();
+        const list = (mj.data && mj.data.memberships) || mj.memberships || [];
+        const oasis = list.find((m) => m.tenant_slug === TENANT_SLUG) || list[0];
+        if (oasis) {
+          tenantId = oasis.tenant_id;
+          branchId = (oasis.branches && oasis.branches[0] && oasis.branches[0].id) || oasis.branch_id || null;
+        }
+      }
+    } catch (err) { /* Session parse/storage fallback */ }
+    return { profile, tenantId, branchId };
+  }
+
+  async function authenticateSupabase(opts) {
+    const { cleanUser, pass, remember } = opts;
     const email = cleanUser.includes('@') ? cleanUser : `${cleanUser}@oasis.erp.local`;
     try {
       const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
@@ -452,33 +482,7 @@
       if (res.ok) {
         const authData = await res.json();
         const token = authData.access_token;
-        let profile = null;
-        let tenantId = null;
-        let branchId = null;
-        try {
-          const [profRes, memRes] = await Promise.all([
-            fetch(`${SUPABASE_URL}/functions/v1/api/v1/me/profile`, {
-              headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${token}` },
-            }),
-            fetch(`${SUPABASE_URL}/functions/v1/api/v1/me/memberships`, {
-              headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${token}` },
-            }),
-          ]);
-          if (profRes.ok) {
-            const pj = await profRes.json();
-            profile = pj.data || pj;
-          }
-          if (memRes.ok) {
-            const mj = await memRes.json();
-            const list = (mj.data && mj.data.memberships) || mj.memberships || [];
-            const oasis = list.find((m) => m.tenant_slug === TENANT_SLUG) || list[0];
-            if (oasis) {
-              tenantId = oasis.tenant_id;
-              branchId = (oasis.branches && oasis.branches[0] && oasis.branches[0].id) || oasis.branch_id || null;
-            }
-          }
-        } catch {}
-
+        const { profile, tenantId, branchId } = await fetchCloudProfileAndMemberships(token);
         const demoMatch = DEMO_ACCOUNTS.find((d) => d.username === cleanUser.split('@')[0]) || DEMO_ACCOUNTS[0];
         const nextSess = {
           username: cleanUser.split('@')[0],
@@ -507,6 +511,20 @@
     } catch {
       /* Fallback to local Oasis verification when offline */
     }
+    return null;
+  }
+
+  // Authenticate against Supabase Auth (https://jncnbwwhjmouxptqfjaz.supabase.co) or local Oasis staff account
+  async function authenticate(usernameInput, passwordInput, remember) {
+    const cleanUser = String(usernameInput || '').trim().toLowerCase();
+    const pass = String(passwordInput || '');
+    if (!cleanUser || !pass) throw new Error(t('loginInvalid'));
+
+    const demoSess = authenticateDemoAccount({ cleanUser, pass, remember });
+    if (demoSess) return demoSess;
+
+    const cloudSess = await authenticateSupabase({ cleanUser, pass, remember });
+    if (cloudSess) return cloudSess;
 
     throw new Error(t('loginInvalid'));
   }
@@ -529,17 +547,57 @@
     $('headerUserName').textContent = session.displayName || session.firstName;
   }
 
-  function renderLoginScreen() {
-    $('loginTitle').textContent = t('loginTitle');
-    $('loginSubtitle').textContent = t('loginSubtitle');
-    $('loginUserLbl').textContent = t('loginUserLbl');
-    $('loginPassLbl').textContent = t('loginPassLbl');
-    $('loginRememberLbl').textContent = t('loginRememberLbl');
-    $('loginSubmitBtn').textContent = t('loginSubmit');
-    $('loginDemoTitle').textContent = t('loginDemoTitle');
-    $('loginLangBtn').textContent = FOH.i18n.lang === 'ar' ? 'EN' : 'ع';
+  function handleInviteCodeActivation() {
+    const rawCode = ($('inviteCodeIn') ? $('inviteCodeIn').value : '').trim().toUpperCase();
+    if (!rawCode) {
+      alert(isAr() ? 'يرجى إدخال كود التفعيل الممنوح لك من الإدارة' : 'Please enter your invite code');
+      return;
+    }
+    if (typeof FOH.ensureStaffHealthAndPerms === 'function') FOH.ensureStaffHealthAndPerms();
+    const match = (S.tpl.staff || []).find((p) => (p.inviteCode || '').toUpperCase() === rawCode);
+    const demoMatch = DEMO_ACCOUNTS.find((d) => (d.inviteCode || '').toUpperCase() === rawCode);
+    if (!match && !demoMatch) {
+      alert(isAr() ? 'كود التفعيل غير صحيح أو غير مسجل في النظام. يرجى مراجعة إدارة المطعم.' : 'Invalid invite code. Please check with restaurant management.');
+      return;
+    }
+    const username = demoMatch ? demoMatch.username : ((match && match.name) ? match.name.toLowerCase().replace(/[^a-z0-9]/g, '') : 'staff');
+    const roleName = match ? (match.role ? (FOH.taskSheet.roleName ? FOH.taskSheet.roleName(match.role) : match.role) : 'Waiter') : (demoMatch ? demoMatch.roleName : 'Waiter');
+    const isMgr = /supervisor|manager/i.test(roleName);
+    const isCapt = /captain/i.test(roleName);
+    const nextSess = {
+      username,
+      email: (match && match.email) || (demoMatch && demoMatch.email) || '',
+      phone: (match && match.phone) || (demoMatch && demoMatch.phone) || '',
+      nickname: (match && match.nickname) || (demoMatch && demoMatch.nickname) || '',
+      inviteCode: rawCode,
+      accessToken: null,
+      cloudConnected: false,
+      firstName: (match && match.name ? match.name.split(' ')[0] : (demoMatch && demoMatch.firstName)) || 'Employee',
+      lastName: (match && match.name ? match.name.split(' ').slice(1).join(' ') : (demoMatch && demoMatch.lastName)) || '',
+      displayName: (match && match.name) || (demoMatch && demoMatch.displayName) || 'Employee',
+      roleName: demoMatch ? demoMatch.roleName : (isMgr ? '👑 Super Manager' : isCapt ? '🎖️ Super Captain' : '⭐ Super Waiter'),
+      roleAr: demoMatch ? demoMatch.roleAr : (isMgr ? '👑 سوبر مانجر' : isCapt ? '🎖️ سوبر كابتن' : '⭐ سوبر ويتر'),
+      isManager: isMgr,
+      isCaptain: isCapt,
+      shift: (demoMatch && demoMatch.shift) || '12:00 – 02:00',
+      locker: (demoMatch && demoMatch.locker) || '#Staff',
+      uniform: (demoMatch && demoMatch.uniform) || 'Standard',
+      healthCert: (match && match.healthCertExpiry) || 'Valid',
+      tenantSlug: TENANT_SLUG,
+      tenantName: TENANT_NAME,
+    };
+    bindSessionToStaff(nextSess);
+    saveSession(nextSess, true);
+    applyAuthUI();
+    if (!nextSess.isManager) S.view = 'mine';
+    FOH.app.render();
+    setTimeout(() => {
+      openProfile();
+      FOH.edit.toast(isAr() ? '🎉 مرحباً بك في CEEN! يرجى إكمال رقم هاتفك والبريد والـ Nickname المفضل' : 'Welcome to CEEN! Please complete your profile.');
+    }, 300);
+  }
 
-    // Wire invite code toggle and activation
+  function wireInviteCodeForm() {
     const codeBtn = $('loginWithCodeBtn');
     if (codeBtn && !codeBtn.dataset.wired) {
       codeBtn.dataset.wired = '1';
@@ -561,58 +619,13 @@
     const subCodeBtn = $('inviteSubmitBtn');
     if (subCodeBtn && !subCodeBtn.dataset.wired) {
       subCodeBtn.dataset.wired = '1';
-      subCodeBtn.addEventListener('click', async () => {
-        const rawCode = ($('inviteCodeIn') ? $('inviteCodeIn').value : '').trim().toUpperCase();
-        if (!rawCode) {
-          alert(isAr() ? 'يرجى إدخال كود التفعيل الممنوح لك من الإدارة' : 'Please enter your invite code');
-          return;
-        }
-        if (typeof FOH.ensureStaffHealthAndPerms === 'function') FOH.ensureStaffHealthAndPerms();
-        const match = (S.tpl.staff || []).find((p) => (p.inviteCode || '').toUpperCase() === rawCode);
-        const demoMatch = DEMO_ACCOUNTS.find((d) => (d.inviteCode || '').toUpperCase() === rawCode);
-        if (!match && !demoMatch) {
-          alert(isAr() ? 'كود التفعيل غير صحيح أو غير مسجل في النظام. يرجى مراجعة إدارة المطعم.' : 'Invalid invite code. Please check with restaurant management.');
-          return;
-        }
-        const username = demoMatch ? demoMatch.username : ((match && match.name) ? match.name.toLowerCase().replace(/[^a-z0-9]/g, '') : 'staff');
-        const roleName = match ? (match.role ? (FOH.taskSheet.roleName ? FOH.taskSheet.roleName(match.role) : match.role) : 'Waiter') : (demoMatch ? demoMatch.roleName : 'Waiter');
-        const isMgr = /supervisor|manager/i.test(roleName);
-        const isCapt = /captain/i.test(roleName);
-        const nextSess = {
-          username,
-          email: (match && match.email) || (demoMatch && demoMatch.email) || '',
-          phone: (match && match.phone) || (demoMatch && demoMatch.phone) || '',
-          nickname: (match && match.nickname) || (demoMatch && demoMatch.nickname) || '',
-          inviteCode: rawCode,
-          accessToken: null,
-          cloudConnected: false,
-          firstName: (match && match.name ? match.name.split(' ')[0] : (demoMatch && demoMatch.firstName)) || 'Employee',
-          lastName: (match && match.name ? match.name.split(' ').slice(1).join(' ') : (demoMatch && demoMatch.lastName)) || '',
-          displayName: (match && match.name) || (demoMatch && demoMatch.displayName) || 'Employee',
-          roleName: demoMatch ? demoMatch.roleName : (isMgr ? '👑 Super Manager' : isCapt ? '🎖️ Super Captain' : '⭐ Super Waiter'),
-          roleAr: demoMatch ? demoMatch.roleAr : (isMgr ? '👑 سوبر مانجر' : isCapt ? '🎖️ سوبر كابتن' : '⭐ سوبر ويتر'),
-          isManager: isMgr,
-          isCaptain: isCapt,
-          shift: (demoMatch && demoMatch.shift) || '12:00 – 02:00',
-          locker: (demoMatch && demoMatch.locker) || '#Staff',
-          uniform: (demoMatch && demoMatch.uniform) || 'Standard',
-          healthCert: (match && match.healthCertExpiry) || 'Valid',
-          tenantSlug: TENANT_SLUG,
-          tenantName: TENANT_NAME,
-        };
-        bindSessionToStaff(nextSess);
-        saveSession(nextSess, true);
-        applyAuthUI();
-        if (!nextSess.isManager) S.view = 'mine';
-        FOH.app.render();
-        setTimeout(() => {
-          openProfile();
-          FOH.edit.toast(isAr() ? '🎉 مرحباً بك في CEEN! يرجى إكمال رقم هاتفك والبريد والـ Nickname المفضل' : 'Welcome to CEEN! Please complete your profile.');
-        }, 300);
-      });
+      subCodeBtn.addEventListener('click', () => handleInviteCodeActivation());
     }
+  }
 
+  function renderLoginDemoGrid() {
     const grid = $('loginDemoGrid');
+    if (!grid) return;
     grid.replaceChildren();
     DEMO_ACCOUNTS.forEach((acc) => {
       const b = el('button', 'login-demo-btn');
@@ -631,6 +644,20 @@
       });
       grid.append(b);
     });
+  }
+
+  function renderLoginScreen() {
+    $('loginTitle').textContent = t('loginTitle');
+    $('loginSubtitle').textContent = t('loginSubtitle');
+    $('loginUserLbl').textContent = t('loginUserLbl');
+    $('loginPassLbl').textContent = t('loginPassLbl');
+    $('loginRememberLbl').textContent = t('loginRememberLbl');
+    $('loginSubmitBtn').textContent = t('loginSubmit');
+    $('loginDemoTitle').textContent = t('loginDemoTitle');
+    $('loginLangBtn').textContent = FOH.i18n.lang === 'ar' ? 'EN' : 'ع';
+
+    wireInviteCodeForm();
+    renderLoginDemoGrid();
   }
 
 
@@ -667,5 +694,5 @@
       },
       configurable: true,
     });
-  } catch {}
+  } catch (err) { /* Session parse/storage fallback */ }
 })(window.FOH = window.FOH || {});

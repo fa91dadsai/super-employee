@@ -73,38 +73,7 @@
     }
   }
 
-  // Open Section Assignment & Customization Modal
-  function openSectionModal(targetSec, isNew = false) {
-    const ar = isAr();
-    let dlg = $('sectionAssignModal');
-    if (!dlg) {
-      dlg = el('dialog', 'sheet section-assign-dialog');
-      dlg.id = 'sectionAssignModal';
-      dlg.addEventListener('click', (e) => e.target === dlg && dlg.close());
-      document.body.append(dlg);
-    }
-    dlg.replaceChildren();
-
-    const sec = targetSec || {
-      id: 'sec_' + Date.now(),
-      title: '',
-      titleAr: '',
-      icon: '🍽️',
-      dept: 'floor',
-      assignedRoleKey: 'all',
-      assignedRoleLabel: '👥 ' + (ar ? 'متاح للجميع' : 'All Staff'),
-      assignedUsername: '',
-      items: [],
-    };
-
-    let selectedIcon = sec.icon || '🍽️';
-
-    const box = el('div', 'task-asg-modal-box');
-    box.style.padding = '14px 18px 24px';
-    box.style.maxHeight = '88dvh';
-    box.style.overflowY = 'auto';
-
-    // Header
+  function renderSectionModalHeader(dlg, isNew, ar) {
     const grab = el('div', 'grab');
     const headerRow = el('div', '');
     headerRow.style.display = 'flex';
@@ -147,9 +116,12 @@
       ? 'تحكّم باسم القسم، أيقونته، والمنصب أو الموظف المكلّف به (مثل البار للبارتندر، الصالة للويتر، أو الهوست للكابتن):'
       : 'Configure section title, icon, and assigned position or staff member (e.g. Bar, Floor, Back Area, Host):';
 
-    box.append(grab, headerRow, descP);
+    const headerWrap = el('div', '');
+    headerWrap.append(grab, headerRow, descP);
+    return headerWrap;
+  }
 
-    // 1. Icon Selection Chips
+  function renderSectionIconPicker(currentIcon, onSelect, ar) {
     const iconGroup = el('div', 'task-asg-group');
     iconGroup.style.marginBottom = '12px';
     const iconLbl = el('label', '');
@@ -166,16 +138,16 @@
     iconRow.style.flexWrap = 'wrap';
 
     ICONS.forEach((ico) => {
-      const b = el('button', 'icon-chip-btn' + (ico === selectedIcon ? ' active' : ''), ico);
+      const b = el('button', 'icon-chip-btn' + (ico === currentIcon ? ' active' : ''), ico);
       b.type = 'button';
       b.style.fontSize = '1.18rem';
       b.style.padding = '5px 9px';
       b.style.borderRadius = '8px';
-      b.style.border = '1.5px solid ' + (ico === selectedIcon ? 'var(--accent)' : 'var(--line)');
-      b.style.background = ico === selectedIcon ? 'rgba(47, 107, 94, 0.12)' : 'var(--card)';
+      b.style.border = '1.5px solid ' + (ico === currentIcon ? 'var(--accent)' : 'var(--line)');
+      b.style.background = ico === currentIcon ? 'rgba(47, 107, 94, 0.12)' : 'var(--card)';
       b.style.cursor = 'pointer';
       b.addEventListener('click', () => {
-        selectedIcon = ico;
+        onSelect(ico);
         iconRow.querySelectorAll('.icon-chip-btn').forEach((btnEl) => {
           btnEl.style.borderColor = 'var(--line)';
           btnEl.style.background = 'var(--card)';
@@ -186,9 +158,10 @@
       iconRow.append(b);
     });
     iconGroup.append(iconRow);
-    box.append(iconGroup);
+    return iconGroup;
+  }
 
-    // 2. Titles (Arabic & English)
+  function renderSectionTitleInputs(sec, ar) {
     const titleArGroup = el('div', 'task-asg-group');
     titleArGroup.style.marginBottom = '10px';
     const titleArLbl = el('label', '');
@@ -221,16 +194,18 @@
     titleEnIn.style.width = '100%';
     titleEnGroup.append(titleEnLbl, titleEnIn);
 
-    box.append(titleArGroup, titleEnGroup);
+    const wrap = el('div', '');
+    wrap.append(titleArGroup, titleEnGroup);
+    return { wrap, titleArIn, titleEnIn };
+  }
 
-    // 3. Department Category & Assigned Role (2-column layout)
+  function renderSectionCategoryAndRole(sec, ar) {
     const gridRow = el('div', 'asg-grid-2col');
     gridRow.style.display = 'grid';
     gridRow.style.gridTemplateColumns = 'repeat(auto-fit, minmax(200px, 1fr))';
     gridRow.style.gap = '10px';
     gridRow.style.marginBottom = '12px';
 
-    // Department Category
     const deptBox = el('div', 'task-asg-group');
     const deptLbl = el('label', '');
     deptLbl.style.fontWeight = '700';
@@ -248,7 +223,6 @@
     });
     deptBox.append(deptLbl, deptSel);
 
-    // Assigned Role
     const roleBox = el('div', 'task-asg-group');
     const roleLbl = el('label', '');
     roleLbl.style.fontWeight = '700';
@@ -267,9 +241,10 @@
     roleBox.append(roleLbl, roleSel);
 
     gridRow.append(deptBox, roleBox);
-    box.append(gridRow);
+    return { gridRow, deptSel, roleSel };
+  }
 
-    // 4. Assigned Specific Staff (Optional)
+  function renderSectionStaffSelect(sec, ar) {
     const staffGroup = el('div', 'task-asg-group');
     staffGroup.style.marginBottom = '14px';
     const staffLbl = el('label', '');
@@ -287,9 +262,10 @@
       staffSel.append(opt);
     });
     staffGroup.append(staffLbl, staffSel);
-    box.append(staffGroup);
+    return { staffGroup, staffSel };
+  }
 
-    // 5. Cascade to Items Checkbox
+  function renderSectionCascadeToggle(ar) {
     const cascadeBox = el('label', 'tog');
     cascadeBox.style.display = 'flex';
     cascadeBox.style.alignItems = 'center';
@@ -302,32 +278,88 @@
 
     const cascadeCheck = el('input', 'sw');
     cascadeCheck.type = 'checkbox';
-    cascadeCheck.checked = true; // default true so all items match section
+    cascadeCheck.checked = true;
     cascadeBox.innerHTML =
       '<div><b>' + (ar ? '🔄 توريث التعيين لكافة بنود القسم' : '🔄 Apply to all items in this section') + '</b>' +
       '<small style="display:block;color:var(--ink2);font-size:0.72rem;">' +
       (ar ? 'تحديث كافة بنود هذا القسم تلقائياً لتتبع نفس المنصب والموظف المختار فوراً' : 'Automatically sync all items inside to match this assigned role & employee') +
       '</small></div>';
     cascadeBox.prepend(cascadeCheck);
-    box.append(cascadeBox);
+    return { cascadeBox, cascadeCheck };
+  }
 
-    // Enhance selects with modal picker
-    if (FOH.modalPicker && FOH.modalPicker.enhanceSelect) {
-      FOH.modalPicker.enhanceSelect(deptSel, {
-        title: ar ? 'نوع القسم التشغيلي' : 'Department Type',
-        icon: '📁',
-      });
-      FOH.modalPicker.enhanceSelect(roleSel, {
-        title: ar ? 'إسناد القسم لمنصب' : 'Assign to Role',
-        icon: '🎯',
-      });
-      FOH.modalPicker.enhanceSelect(staffSel, {
-        title: ar ? 'تعيين موظف محدد بالاسم' : 'Assign to Staff',
-        icon: '👤',
-      });
+  function applyRoleCascade(sec, opts = {}) {
+    const { roleKey, roleLabel, empUser } = opts;
+    if (!Array.isArray(sec.items)) return;
+    sec.items.forEach((it) => {
+      it.assignedRoleKey = roleKey;
+      it.assignedRoleLabel = roleLabel;
+      it.assignedUsername = empUser;
+      if (Array.isArray(it.children)) {
+        it.children.forEach((ch) => {
+          ch.assignedRoleKey = roleKey;
+          ch.assignedRoleLabel = roleLabel;
+          ch.assignedUsername = empUser;
+        });
+      }
+    });
+  }
+
+  function handleSectionSave(opts = {}) {
+    const { sec, isNew, fields, dlg, ar } = opts;
+    const { titleArIn, titleEnIn, roleSel, deptSel, staffSel, cascadeCheck, getSelectedIcon } = fields;
+    const tAr = titleArIn.value.trim();
+    const tEn = titleEnIn.value.trim();
+    if (!tAr && !tEn) {
+      titleArIn.focus();
+      FOH.edit.toast(ar ? '⚠️ الرجاء كتابة اسم للقسم' : '⚠️ Please enter a section name');
+      return;
     }
 
-    // 6. Action Buttons
+    const roleKey = roleSel.value;
+    const roleMeta = ROLE_OPTIONS.find((r) => r.key === roleKey) || ROLE_OPTIONS[0];
+    const roleLabel = ar ? roleMeta.labelAr : roleMeta.labelEn;
+    const empUser = staffSel.value || null;
+
+    sec.title = tEn || tAr;
+    sec.titleAr = tAr || tEn;
+    sec.icon = getSelectedIcon();
+    sec.dept = deptSel.value || 'floor';
+    sec.assignedRoleKey = roleKey;
+    sec.assignedRoleLabel = roleLabel;
+    sec.assignedUsername = empUser;
+
+    if (cascadeCheck.checked) {
+      applyRoleCascade(sec, { roleKey, roleLabel, empUser });
+    }
+
+    const st = S();
+    if (isNew) {
+      if (!Array.isArray(st.tpl.sections)) st.tpl.sections = [];
+      st.tpl.sections.push(sec);
+    }
+
+    persistCurrentSheet();
+    dlg.close();
+    FOH.app.render();
+    FOH.edit.toast(ar ? '✅ تم حفظ وتخصيص القسم بنجاح!' : '✅ Section customized & saved!');
+  }
+
+  function handleSectionDelete(sec, dlg, ar) {
+    const titleStr = pick(sec.title, sec.titleAr) || 'Section';
+    if (!confirm(ar ? `هل أنت متأكد من حذف قسم "${titleStr}" بالكامل مع بنوده؟` : `Delete section "${titleStr}" and all its items?`)) {
+      return;
+    }
+    const st = S();
+    st.tpl.sections = (st.tpl.sections || []).filter((s) => s.id !== sec.id);
+    persistCurrentSheet();
+    dlg.close();
+    FOH.app.render();
+    FOH.edit.toast(ar ? '🗑️ تم حذف القسم بنجاح' : '🗑️ Section deleted');
+  }
+
+  function renderSectionActions(opts = {}) {
+    const { sec, isNew, dlg, ar, fields } = opts;
     const acts = el('div', 'task-asg-actions');
     acts.style.display = 'flex';
     acts.style.justifyContent = 'space-between';
@@ -347,83 +379,118 @@
       const delB = el('button', 'btn danger', ar ? '🗑️ حذف القسم' : '🗑️ Delete Section');
       delB.type = 'button';
       delB.style.fontSize = '0.78rem';
-      delB.addEventListener('click', () => {
-        const titleStr = pick(sec.title, sec.titleAr) || 'Section';
-        if (!confirm(ar ? `هل أنت متأكد من حذف قسم "${titleStr}" بالكامل مع بنوده؟` : `Delete section "${titleStr}" and all its items?`)) {
-          return;
-        }
-        const st = S();
-        st.tpl.sections = (st.tpl.sections || []).filter((s) => s.id !== sec.id);
-        persistCurrentSheet();
-        dlg.close();
-        FOH.app.render();
-        FOH.edit.toast(ar ? '🗑️ تم حذف القسم بنجاح' : '🗑️ Section deleted');
-      });
+      delB.addEventListener('click', () => handleSectionDelete(sec, dlg, ar));
       leftActs.append(delB);
     }
     leftActs.append(cancelB);
 
     const saveB = el('button', 'btn primary', ar ? '💾 حفظ وتطبيق التعيين' : '💾 Save & Assign Section');
     saveB.type = 'button';
-    saveB.addEventListener('click', () => {
-      const tAr = titleArIn.value.trim();
-      const tEn = titleEnIn.value.trim();
-      if (!tAr && !tEn) {
-        titleArIn.focus();
-        FOH.edit.toast(ar ? '⚠️ الرجاء كتابة اسم للقسم' : '⚠️ Please enter a section name');
-        return;
-      }
-
-      const roleKey = roleSel.value;
-      const roleMeta = ROLE_OPTIONS.find((r) => r.key === roleKey) || ROLE_OPTIONS[0];
-      const roleLabel = ar ? roleMeta.labelAr : roleMeta.labelEn;
-      const empUser = staffSel.value || null;
-      const empLabel = empUser ? (getStaffList().find((s) => s.uname === empUser)?.label || empUser) : null;
-
-      sec.title = tEn || tAr;
-      sec.titleAr = tAr || tEn;
-      sec.icon = selectedIcon;
-      sec.dept = deptSel.value || 'floor';
-      sec.assignedRoleKey = roleKey;
-      sec.assignedRoleLabel = roleLabel;
-      sec.assignedUsername = empUser;
-
-      // Cascade to all items in section if requested
-      if (cascadeCheck.checked && Array.isArray(sec.items)) {
-        sec.items.forEach((it) => {
-          it.assignedRoleKey = roleKey;
-          it.assignedRoleLabel = roleLabel;
-          it.assignedUsername = empUser;
-          if (Array.isArray(it.children)) {
-            it.children.forEach((ch) => {
-              ch.assignedRoleKey = roleKey;
-              ch.assignedRoleLabel = roleLabel;
-              ch.assignedUsername = empUser;
-            });
-          }
-        });
-      }
-
-      const st = S();
-      if (isNew) {
-        if (!Array.isArray(st.tpl.sections)) st.tpl.sections = [];
-        st.tpl.sections.push(sec);
-      }
-
-      persistCurrentSheet();
-      dlg.close();
-      FOH.app.render();
-      FOH.edit.toast(ar ? '✅ تم حفظ وتخصيص القسم بنجاح!' : '✅ Section customized & saved!');
-    });
+    saveB.addEventListener('click', () => handleSectionSave({ sec, isNew, fields, dlg, ar }));
 
     acts.append(leftActs, saveB);
-    box.append(acts);
-    dlg.append(box);
-    dlg.showModal();
-    (ar ? titleArIn : titleEnIn).focus();
+    return acts;
   }
 
-  // Inject Role Badges & Customization Button into each Section Card Header
+  function enhanceSectionSelects(catAndRole, staff, ar) {
+    if (!FOH.modalPicker || !FOH.modalPicker.enhanceSelect) return;
+    FOH.modalPicker.enhanceSelect(catAndRole.deptSel, { title: ar ? 'نوع القسم التشغيلي' : 'Department Type', icon: '📁' });
+    FOH.modalPicker.enhanceSelect(catAndRole.roleSel, { title: ar ? 'إسناد القسم لمنصب' : 'Assign to Role', icon: '🎯' });
+    FOH.modalPicker.enhanceSelect(staff.staffSel, { title: ar ? 'تعيين موظف محدد بالاسم' : 'Assign to Staff', icon: '👤' });
+  }
+
+  function openSectionModal(targetSec, opts = {}) {
+    const isNew = typeof opts === 'boolean' ? opts : !!(opts && opts.isNew);
+    const ar = isAr();
+    let dlg = $('sectionAssignModal');
+    if (!dlg) {
+      dlg = el('dialog', 'sheet section-assign-dialog');
+      dlg.id = 'sectionAssignModal';
+      dlg.addEventListener('click', (e) => e.target === dlg && dlg.close());
+      document.body.append(dlg);
+    }
+    dlg.replaceChildren();
+
+    const sec = targetSec || {
+      id: 'sec_' + Date.now(),
+      title: '',
+      titleAr: '',
+      icon: '🍽️',
+      dept: 'floor',
+      assignedRoleKey: 'all',
+      assignedRoleLabel: '👥 ' + (ar ? 'متاح للجميع' : 'All Staff'),
+      assignedUsername: '',
+      items: [],
+    };
+
+    let selectedIcon = sec.icon || '🍽️';
+    const box = el('div', 'task-asg-modal-box');
+    box.style.padding = '14px 18px 24px';
+    box.style.maxHeight = '88dvh';
+    box.style.overflowY = 'auto';
+
+    const header = renderSectionModalHeader(dlg, isNew, ar);
+    const iconGroup = renderSectionIconPicker(selectedIcon, (ico) => { selectedIcon = ico; }, ar);
+    const titles = renderSectionTitleInputs(sec, ar);
+    const catAndRole = renderSectionCategoryAndRole(sec, ar);
+    const staff = renderSectionStaffSelect(sec, ar);
+    const cascade = renderSectionCascadeToggle(ar);
+    enhanceSectionSelects(catAndRole, staff, ar);
+
+    const fields = {
+      titleArIn: titles.titleArIn,
+      titleEnIn: titles.titleEnIn,
+      deptSel: catAndRole.deptSel,
+      roleSel: catAndRole.roleSel,
+      staffSel: staff.staffSel,
+      cascadeCheck: cascade.cascadeCheck,
+      getSelectedIcon: () => selectedIcon,
+    };
+
+    const actions = renderSectionActions({ sec, isNew, dlg, ar, fields });
+    box.append(header, iconGroup, titles.wrap, catAndRole.gridRow, staff.staffGroup, cascade.cascadeBox, actions);
+    dlg.append(box);
+    dlg.showModal();
+    (ar ? titles.titleArIn : titles.titleEnIn).focus();
+  }
+
+  function decorateSectionCard(sec, opts = {}) {
+    const { staffNameMap, canAssign, ar } = opts;
+    const card = $('sec-' + sec.id);
+    if (!card) return;
+    const head = card.querySelector('.head');
+    if (!head) return;
+    const metaRow = head.querySelector('.head-meta-row');
+    if (!metaRow) return;
+
+    let pill = metaRow.querySelector('.sec-asg-pill');
+    if (!pill) {
+      pill = el('span', 'sec-asg-pill');
+      metaRow.prepend(pill);
+    }
+
+    const roleKey = sec.assignedRoleKey || 'all';
+    const roleMeta = ROLE_OPTIONS.find((r) => r.key === roleKey);
+    const roleLabel = roleMeta ? (ar ? roleMeta.labelAr.split('(')[0].trim() : roleMeta.labelEn.split('(')[0].trim()) : (ar ? 'مشترك' : 'All');
+    const assignedPerson = sec.assignedUsername ? (staffNameMap[sec.assignedUsername] || sec.assignedUsername) : '';
+
+    pill.innerHTML = '<span>🎯</span> <b>' + roleLabel + '</b>' +
+      (assignedPerson ? '<span style="opacity:0.85;margin-inline-start:4px;">· 👤 ' + assignedPerson + '</span>' : '');
+
+    let editBtn = metaRow.querySelector('.sec-asg-btn');
+    if (!canAssign) {
+      if (editBtn) editBtn.remove();
+    } else if (!editBtn) {
+      editBtn = el('button', 'sec-asg-btn', ar ? '⚙️ تخصيص وإسناد' : '⚙️ Assign Section');
+      editBtn.type = 'button';
+      editBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openSectionModal(sec, { isNew: false });
+      });
+      metaRow.append(editBtn);
+    }
+  }
+
   function injectSectionControls() {
     const secContainer = $('sections');
     if (!secContainer || secContainer.hidden || S().view !== 'opening') return;
@@ -432,9 +499,10 @@
     const canAssign = canCurrentUserAssign();
     const staffList = getStaffList();
     const staffNameMap = {};
-    staffList.forEach((s) => { if (s.uname) staffNameMap[s.uname] = s.label.replace('👤 ', '').replace('👑 ', ''); });
+    staffList.forEach((s) => {
+      if (s.uname) staffNameMap[s.uname] = s.label.replace('👤 ', '').replace('👑 ', '');
+    });
 
-    // 1. Inject "📑 إضافة قسم جديد" into Checklist Toolbar if authorized
     const toolbar = document.querySelector('#checklistGovBar .unified-sec-toolbar');
     if (toolbar) {
       let addSecBtn = toolbar.querySelector('#toolbarAddSectionBtn');
@@ -444,132 +512,63 @@
         addSecBtn = el('button', 'u-pill sec-add-pill', ar ? '📑 إضافة قسم جديد' : '📑 + Add Section');
         addSecBtn.id = 'toolbarAddSectionBtn';
         addSecBtn.type = 'button';
-        addSecBtn.addEventListener('click', () => openSectionModal(null, true));
+        addSecBtn.addEventListener('click', () => openSectionModal(null, { isNew: true }));
         toolbar.append(addSecBtn);
       }
     }
 
-    // 2. Decorate each section card header
     (S().tpl.sections || []).forEach((sec) => {
-      const card = $('sec-' + sec.id);
-      if (!card) return;
-      const head = card.querySelector('.head');
-      if (!head) return;
-
-      const metaRow = head.querySelector('.head-meta-row');
-      if (!metaRow) return;
-
-      // Avoid duplicate pills
-      let pill = metaRow.querySelector('.sec-asg-pill');
-      if (!pill) {
-        pill = el('span', 'sec-asg-pill');
-        metaRow.prepend(pill);
-      }
-
-      const roleKey = sec.assignedRoleKey || 'all';
-      const roleMeta = ROLE_OPTIONS.find((r) => r.key === roleKey);
-      const roleLabel = roleMeta ? (ar ? roleMeta.labelAr.split('(')[0].trim() : roleMeta.labelEn.split('(')[0].trim()) : (ar ? 'مشترك' : 'All');
-      const assignedPerson = sec.assignedUsername ? (staffNameMap[sec.assignedUsername] || sec.assignedUsername) : '';
-
-      pill.innerHTML = '<span>🎯</span> <b>' + roleLabel + '</b>' +
-        (assignedPerson ? '<span style="opacity:0.85;margin-inline-start:4px;">· 👤 ' + assignedPerson + '</span>' : '');
-
-      // Assign / Customize button for leaders
-      let editBtn = metaRow.querySelector('.sec-asg-btn');
-      if (!canAssign) {
-        if (editBtn) editBtn.remove();
-      } else {
-        if (!editBtn) {
-          editBtn = el('button', 'sec-asg-btn', ar ? '⚙️ تخصيص وإسناد' : '⚙️ Assign Section');
-          editBtn.type = 'button';
-          editBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            openSectionModal(sec, false);
-          });
-          metaRow.append(editBtn);
-        }
-      }
+      decorateSectionCard(sec, { staffNameMap, canAssign, ar });
     });
   }
 
-  // Smart Migration: Upgrade legacy unorganized sections into the 5 core restaurant departments
-  function upgradeLegacySectionsOnce() {
-    const st = S();
-    if (!st || !st.tpl || !Array.isArray(st.tpl.sections)) return;
+  function getLegacyBarAndHostItems() {
+    const barItems = [
+      { id: 'sb1', text: 'Make sure the bar is clean, polished and service-ready', textAr: 'التأكد من نظافة البار ومحطات التحضير وجاهزيتها للخدمة', due: '15:30', role: '', assignedRoleKey: 'super_bartender', assignedRoleLabel: '🍸 Super Bartender', children: [] },
+      { id: 'sb2', text: 'Top up ice wells, draft lines & beverage coolers', textAr: 'تعبئة أحواض الثلج وتبريد زجاجات المشروبات والنبيذ', due: '15:40', role: '', assignedRoleKey: 'super_bartender', assignedRoleLabel: '🍸 Super Bartender', children: [] },
+      { id: 'sb3', text: 'Check espresso machine, steam wands & grinder hopper', textAr: 'فحص ماكينة الإسبريسو ومطحنة القهوة والتأكد من نقاء البن', due: '15:45', role: '', assignedRoleKey: 'super_bartender', assignedRoleLabel: '🍸 Super Bartender', children: [] },
+      { id: 'sb4', text: 'Cut fresh garnishes (lemon/lime/mint) & prep house syrups', textAr: 'تقطيع وتجهيز الغارنيش الطازج والنعناع وفحص العصائر والـ Syrups', due: '15:50', role: '', assignedRoleKey: 'super_bartender', assignedRoleLabel: '🍸 Super Bartender', children: [] },
+      { id: 'sb5', text: 'Wash, polish and inspect all cocktail and wine glasses', textAr: 'تلميع وفحص كؤوس الكوكتيل والنبيذ وكاسات التقديم', due: '15:55', role: '', assignedRoleKey: 'super_bartender', assignedRoleLabel: '🍸 Super Bartender', children: [] },
+    ];
+    const hostItems = [
+      { id: 'sh1', text: 'Inspect and clean the Host Stand & welcome entrance', textAr: 'فحص وتنظيف كاونتر الاستقبال (Host Stand) ومدخل الصالة', due: '15:30', role: '', assignedRoleKey: 'super_captain', assignedRoleLabel: '🎖️ Super Captain', children: [] },
+      { id: 'sh2', text: 'Review evening reservations, VIP notes & table plan with Floor Captain', textAr: 'مراجعة حجوزات المساء وطلبات الـ VIP وتوزيع الطاولات مع الكابتن', due: '15:45', role: '', assignedRoleKey: 'super_captain', assignedRoleLabel: '🎖️ Super Captain', children: [] },
+      { id: 'sh3', text: 'Clean and sanitize all food, wine & cocktail menus', textAr: 'تنظيف وتعقيم كافة قوائم الطعام والمشروبات والنبيذ', due: '15:50', role: '', assignedRoleKey: 'super_captain', assignedRoleLabel: '🎖️ Super Captain', children: [] },
+      { id: 'sh4', text: 'Turn on music playlist & adjust ambient lighting', textAr: 'تشغيل الموسيقى وضبط الإضاءة الترحيبية والتكييف', due: '15:50', role: '', assignedRoleKey: 'super_captain', assignedRoleLabel: '🎖️ Super Captain', children: [] },
+    ];
+    return { barItems, hostItems };
+  }
 
-    // Check if sections already have modern dept IDs
-    const hasModernDepts = st.tpl.sections.some((s) => ['sec-bar', 'sec-floor', 'sec-back', 'sec-host', 'sec-cash'].includes(s.id));
-    if (hasModernDepts) return;
-
-    // Build the 5 structured departments
+  function createDefaultLegacySections() {
+    const { barItems, hostItems } = getLegacyBarAndHostItems();
     const barSec = {
-      id: 'sec-bar',
-      dept: 'bar',
-      icon: '🍸',
-      title: 'Bar & Beverage Station',
-      titleAr: 'قسم البار والمشروبات',
-      assignedRoleKey: 'super_bartender',
-      assignedRoleLabel: '🍸 Super Bartender',
-      assignedUsername: 'maher',
-      items: [
-        { id: 'sb1', text: 'Make sure the bar is clean, polished and service-ready', textAr: 'التأكد من نظافة البار ومحطات التحضير وجاهزيتها للخدمة', due: '15:30', role: '', assignedRoleKey: 'super_bartender', assignedRoleLabel: '🍸 Super Bartender', children: [] },
-        { id: 'sb2', text: 'Top up ice wells, draft lines & beverage coolers', textAr: 'تعبئة أحواض الثلج وتبريد زجاجات المشروبات والنبيذ', due: '15:40', role: '', assignedRoleKey: 'super_bartender', assignedRoleLabel: '🍸 Super Bartender', children: [] },
-        { id: 'sb3', text: 'Check espresso machine, steam wands & grinder hopper', textAr: 'فحص ماكينة الإسبريسو ومطحنة القهوة والتأكد من نقاء البن', due: '15:45', role: '', assignedRoleKey: 'super_bartender', assignedRoleLabel: '🍸 Super Bartender', children: [] },
-        { id: 'sb4', text: 'Cut fresh garnishes (lemon/lime/mint) & prep house syrups', textAr: 'تقطيع وتجهيز الغارنيش الطازج والنعناع وفحص العصائر والـ Syrups', due: '15:50', role: '', assignedRoleKey: 'super_bartender', assignedRoleLabel: '🍸 Super Bartender', children: [] },
-        { id: 'sb5', text: 'Wash, polish and inspect all cocktail and wine glasses', textAr: 'تلميع وفحص كؤوس الكوكتيل والنبيذ وكاسات التقديم', due: '15:55', role: '', assignedRoleKey: 'super_bartender', assignedRoleLabel: '🍸 Super Bartender', children: [] },
-      ],
+      id: 'sec-bar', dept: 'bar', icon: '🍸',
+      title: 'Bar & Beverage Station', titleAr: 'قسم البار والمشروبات',
+      assignedRoleKey: 'super_bartender', assignedRoleLabel: '🍸 Super Bartender', assignedUsername: 'maher',
+      items: barItems,
     };
-
     const floorSec = {
-      id: 'sec-floor',
-      dept: 'floor',
-      icon: '🍽️',
-      title: 'Floor & Dining Tables',
-      titleAr: 'قسم الصالة والطاولات',
-      assignedRoleKey: 'super_waiter',
-      assignedRoleLabel: '⭐ Super Waiter',
-      assignedUsername: 'sara',
+      id: 'sec-floor', dept: 'floor', icon: '🍽️',
+      title: 'Floor & Dining Tables', titleAr: 'قسم الصالة والطاولات',
+      assignedRoleKey: 'super_waiter', assignedRoleLabel: '⭐ Super Waiter', assignedUsername: 'sara',
       items: [],
     };
-
     const backSec = {
-      id: 'sec-back',
-      dept: 'back',
-      icon: '🚪',
-      title: 'Back Area & Service Station',
-      titleAr: 'قسم المنطقة الخلفية والمحطات',
-      assignedRoleKey: 'super_waiter',
-      assignedRoleLabel: '⭐ Super Waiter / Runner',
-      assignedUsername: '',
+      id: 'sec-back', dept: 'back', icon: '🚪',
+      title: 'Back Area & Service Station', titleAr: 'قسم المنطقة الخلفية والمحطات',
+      assignedRoleKey: 'super_waiter', assignedRoleLabel: '⭐ Super Waiter / Runner', assignedUsername: '',
       items: [],
     };
-
     const hostSec = {
-      id: 'sec-host',
-      dept: 'host',
-      icon: '🛎️',
-      title: 'Host & Reception Desk',
-      titleAr: 'قسم الاستقبال والهوست',
-      assignedRoleKey: 'super_captain',
-      assignedRoleLabel: '🎖️ Super Captain / Host',
-      assignedUsername: 'ali',
-      items: [
-        { id: 'sh1', text: 'Inspect and clean the Host Stand & welcome entrance', textAr: 'فحص وتنظيف كاونتر الاستقبال (Host Stand) ومدخل الصالة', due: '15:30', role: '', assignedRoleKey: 'super_captain', assignedRoleLabel: '🎖️ Super Captain', children: [] },
-        { id: 'sh2', text: 'Review evening reservations, VIP notes & table plan with Floor Captain', textAr: 'مراجعة حجوزات المساء وطلبات الـ VIP وتوزيع الطاولات مع الكابتن', due: '15:45', role: '', assignedRoleKey: 'super_captain', assignedRoleLabel: '🎖️ Super Captain', children: [] },
-        { id: 'sh3', text: 'Clean and sanitize all food, wine & cocktail menus', textAr: 'تنظيف وتعقيم كافة قوائم الطعام والمشروبات والنبيذ', due: '15:50', role: '', assignedRoleKey: 'super_captain', assignedRoleLabel: '🎖️ Super Captain', children: [] },
-        { id: 'sh4', text: 'Turn on music playlist & adjust ambient lighting', textAr: 'تشغيل الموسيقى وضبط الإضاءة الترحيبية والتكييف', due: '15:50', role: '', assignedRoleKey: 'super_captain', assignedRoleLabel: '🎖️ Super Captain', children: [] },
-      ],
+      id: 'sec-host', dept: 'host', icon: '🛎️',
+      title: 'Host & Reception Desk', titleAr: 'قسم الاستقبال والهوست',
+      assignedRoleKey: 'super_captain', assignedRoleLabel: '🎖️ Super Captain / Host', assignedUsername: 'ali',
+      items: hostItems,
     };
-
     const cashSec = {
-      id: 'sec-cash',
-      dept: 'cash',
-      icon: '💳',
-      title: 'Cashier, POS & Tech',
-      titleAr: 'قسم الكاشير والأجهزة',
-      assignedRoleKey: 'super_manager',
-      assignedRoleLabel: '👑 Super Manager',
-      assignedUsername: 'fadi',
+      id: 'sec-cash', dept: 'cash', icon: '💳',
+      title: 'Cashier, POS & Tech', titleAr: 'قسم الكاشير والأجهزة',
+      assignedRoleKey: 'super_manager', assignedRoleLabel: '👑 Super Manager', assignedUsername: 'fadi',
       items: [
         { id: 'sc1', text: 'Make sure all Visa machines and ordering tablets are charged', textAr: 'التأكد من شحن جميع أجهزة الفيزا والتابلت', due: '15:30', role: '', assignedRoleKey: 'super_manager', assignedRoleLabel: '👑 Super Manager', children: [] },
         { id: 'sc2', text: 'Verify and change the cash float in till drawer', textAr: 'استلام وتبديل نقد الفكة (Cash Float) في درج الكاشير', due: '15:40', role: '', assignedRoleKey: 'super_manager', assignedRoleLabel: '👑 Super Manager', children: [] },
@@ -577,9 +576,12 @@
         { id: 'sc4', text: 'Check the safe vault and set out the daily tip sheet', textAr: 'التحقق من الخزنة ووضع ورقة التبس مع تاريخ اليوم', due: '15:50', role: '', assignedRoleKey: 'super_manager', assignedRoleLabel: '👑 Super Manager', children: [] },
       ],
     };
+    return { barSec, floorSec, backSec, hostSec, cashSec };
+  }
 
-    // Migrate existing items into Floor & Back Area
-    st.tpl.sections.forEach((oldSec) => {
+  function categorizeLegacyItems(oldSections, depts) {
+    const { barSec, floorSec, backSec, hostSec, cashSec } = depts;
+    oldSections.forEach((oldSec) => {
       (oldSec.items || []).forEach((it) => {
         const tStr = (it.text + ' ' + (it.textAr || '')).toLowerCase();
         if (tStr.includes('bar') || tStr.includes('بار')) {
@@ -595,8 +597,19 @@
         }
       });
     });
+  }
 
-    st.tpl.sections = [barSec, floorSec, backSec, hostSec, cashSec];
+  // Smart Migration: Upgrade legacy unorganized sections into the 5 core restaurant departments
+  function upgradeLegacySectionsOnce() {
+    const st = S();
+    if (!st || !st.tpl || !Array.isArray(st.tpl.sections)) return;
+
+    const hasModernDepts = st.tpl.sections.some((s) => ['sec-bar', 'sec-floor', 'sec-back', 'sec-host', 'sec-cash'].includes(s.id));
+    if (hasModernDepts) return;
+
+    const depts = createDefaultLegacySections();
+    categorizeLegacyItems(st.tpl.sections, depts);
+    st.tpl.sections = [depts.barSec, depts.floorSec, depts.backSec, depts.hostSec, depts.cashSec];
     persistCurrentSheet();
   }
 
@@ -613,4 +626,3 @@
     DEPT_OPTIONS,
   };
 })(window.FOH = window.FOH || {});
-

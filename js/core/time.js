@@ -40,7 +40,12 @@
   // State of a task on `date`: null (nothing to show) or
   // { task, occ, late, doneEntry, status } where status is
   // 'done' | 'upcoming' | 'due' | 'late'.
-  function stateOn(task, log, date, today, nowHM) {
+  function stateOn(task, log, opts = {}) {
+    const isLegacy = typeof opts === 'string';
+    const date = isLegacy ? opts : opts.date;
+    const today = isLegacy ? arguments[3] : opts.today;
+    const nowHM = isLegacy ? arguments[4] : opts.nowHM;
+
     if (task.paused) return null;
     if (task.start && date < task.start) return null;
     if (task.endDate && date > task.endDate) return null;
@@ -69,7 +74,12 @@
   }
 
   // Projected due dates after `date` (up to `count`, within `days` days).
-  function upcoming(task, log, date, today, days, count) {
+  function upcoming(task, log, opts = {}) {
+    const isLegacy = typeof opts !== 'object' || opts === null || !('date' in opts);
+    const date = isLegacy ? arguments[2] : opts.date;
+    const today = isLegacy ? arguments[3] : opts.today;
+    const days = isLegacy ? arguments[4] : opts.days;
+    const count = isLegacy ? arguments[5] : opts.count;
     if (task.paused) return [];
     if (task.endDate && date > task.endDate) return [];
     const out = [];
@@ -97,15 +107,20 @@
   }
 
   // Week grid: for each of 7 days from `weekStart`, the tasks on that day.
-  // Past days show what was done (or missed); today shows live state;
+  // Past days show what was done or missed, today shows live state,
   // later days show projected dates.
-  function week(tasks, log, weekStart, today, nowHM) {
+  function week(tasks, log, opts = {}) {
+    const isLegacy = typeof opts === 'string';
+    const weekStart = isLegacy ? opts : opts.weekStart;
+    const today = isLegacy ? arguments[3] : opts.today;
+    const nowHM = isLegacy ? arguments[4] : opts.nowHM;
+
     return Array.from({ length: 7 }, (_, i) => {
       const date = addDays(weekStart, i);
       const cells = [];
       tasks.forEach((task) => {
         if (date === today) {
-          const st = stateOn(task, log, date, today, nowHM);
+          const st = stateOn(task, log, { date, today, nowHM });
           if (st) cells.push({ task, status: st.status });
         } else if (date < today) {
           const done = entries(log, task).find((e) => e.done === date);
@@ -114,7 +129,7 @@
             const handled = entries(log, task).some((e) => e.occ === date);
             if (!handled) cells.push({ task, status: 'missed' });
           }
-        } else if (upcoming(task, log, today, today, diffDays(date, today), 99).includes(date)) {
+        } else if (upcoming(task, log, { date: today, today, days: diffDays(date, today), count: 99 }).includes(date)) {
           cells.push({ task, status: 'planned' });
         }
       });
@@ -139,12 +154,17 @@
   const weekStart = (iso, first) => addDays(iso, -((weekday(iso) - (first || 0) + 7) % 7));
 
   // Mark done / undo for `date`.
-  function toggle(log, st, date, at, by) {
+  function toggle(log, st, opts = {}) {
+    const isLegacy = typeof opts === 'string';
+    const date = isLegacy ? opts : opts.date;
+    const at = isLegacy ? arguments[3] : opts.at;
+    const by = (isLegacy ? arguments[4] : opts.by) || '';
+
     const list = Array.isArray(log[st.task.id]) ? log[st.task.id] : (log[st.task.id] = []);
     if (st.doneEntry) {
       log[st.task.id] = list.filter((e) => e !== st.doneEntry && !(e.done === date && e.occ === st.doneEntry.occ));
     } else {
-      list.push({ occ: st.occ, done: date, at, by: by || '' });
+      list.push({ occ: st.occ, done: date, at, by });
     }
   }
 

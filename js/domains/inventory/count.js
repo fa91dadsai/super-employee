@@ -126,7 +126,12 @@
     return cam;
   }
 
-  function conditionRow(icon, label, small, field, value) {
+  function conditionRow(icon, label, opts = {}) {
+    const isLegacy = typeof opts === 'string';
+    const small = isLegacy ? opts : opts.small;
+    const field = isLegacy ? arguments[3] : opts.field;
+    const value = isLegacy ? arguments[4] : opts.value;
+
     const row = el('div', 'cr');
     const l = el('span', 'l', icon + ' ' + label);
     l.append(el('small', '', small));

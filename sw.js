@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE = 'super-employee-v41-academy-clean';
+const CACHE = 'super-employee-v48-offline-precision';
 const PRECACHE = [
   './',
   './index.html',
@@ -90,7 +90,9 @@ const scheduledTimers = new Map();
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(PRECACHE)).catch(() => {})
+    caches.open(CACHE).then((cache) => cache.addAll(PRECACHE)).catch(() => {
+      /* Precache network or storage quota fallback */
+    })
   );
 });
 
@@ -129,21 +131,23 @@ self.addEventListener('fetch', (event) => {
   ) {
     event.respondWith(
       fetch(req).catch(() =>
-        caches.match(req).then((cached) => cached || new Response('{"offline":true}', { status: 503, headers: { 'Content-Type': 'application/json' } }))
+        caches.match(req, { ignoreSearch: true }).then((cached) => cached || new Response('{"offline":true}', { status: 503, headers: { 'Content-Type': 'application/json' } }))
       )
     );
     return;
   }
 
-  // Cache-first, network fallback for static assets
+  // Cache-first, network fallback for static assets (with ignoreSearch for ?v= cache busters)
   event.respondWith(
-    caches.match(req).then((cached) => {
+    caches.match(req, { ignoreSearch: true }).then((cached) => {
       if (cached) {
         fetch(req).then((resp) => {
           if (resp && resp.ok) {
             caches.open(CACHE).then((cache) => cache.put(req, resp));
           }
-        }).catch(() => {});
+        }).catch(() => {
+          /* Background cache update network fallback */
+        });
         return cached;
       }
       return fetch(req).then((resp) => {
@@ -192,7 +196,8 @@ self.addEventListener('push', (event) => {
   if (event.data) {
     try {
       data = event.data.json();
-    } catch {
+    } catch (err) {
+      /* Fallback for non-JSON push payload */
       data = { body: event.data.text() };
     }
   }
@@ -214,7 +219,7 @@ self.addEventListener('push', (event) => {
   event.waitUntil(
     Promise.all([
       self.registration.showNotification(title, options),
-      ('setAppBadge' in self.navigator) ? self.navigator.setAppBadge(data.badgeCount || 1).catch(() => {}) : Promise.resolve()
+      ('setAppBadge' in self.navigator) ? self.navigator.setAppBadge(data.badgeCount || 1).catch(() => { /* Badge count API unsupported fallback */ }) : Promise.resolve()
     ])
   );
 });
@@ -222,7 +227,7 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   if ('clearAppBadge' in self.navigator) {
-    self.navigator.clearAppBadge().catch(() => {});
+    self.navigator.clearAppBadge().catch(() => { /* Clear badge API unsupported fallback */ });
   }
   if (event.action === 'dismiss') return;
   event.waitUntil(

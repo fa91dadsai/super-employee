@@ -47,7 +47,7 @@
     try {
       const list = FOH.safeJsonParse(localStorage.getItem(SUG_KEY), 'null');
       if (Array.isArray(list)) return list;
-    } catch {}
+    } catch (err) { /* Suggestions storage read fallback */ }
     return [
       {
         id: 'sug_demo_1',
@@ -67,13 +67,14 @@
   function saveSuggestions(list) {
     try {
       localStorage.setItem(SUG_KEY, JSON.stringify(list));
-    } catch {}
+    } catch (err) { /* Suggestions storage write fallback */ }
   }
 
   function loadItemNotes() {
     try {
       return FOH.safeJsonParse(localStorage.getItem(NOTES_KEY), '{}');
-    } catch {
+    } catch (err) {
+      /* Item notes storage read fallback */
       return {};
     }
   }
@@ -81,7 +82,175 @@
   function saveItemNotes(map) {
     try {
       localStorage.setItem(NOTES_KEY, JSON.stringify(map));
-    } catch {}
+    } catch (err) { /* Notes storage quota fallback */ }
+  }
+
+  function renderGovStatusBadge(gov, canEdit, ar) {
+    const status = el('div', 'gov-status');
+    if (gov.checklistLocked) {
+      status.innerHTML = ar
+        ? '🔒 <span>الشيك ليست مقفلة من المدير (' + (gov.lockedBy || 'Supervisor') + ')</span>'
+        : '🔒 <span>Checklist Locked by Manager (' + (gov.lockedBy || 'Supervisor') + ')</span>';
+    } else if (canEdit) {
+      status.innerHTML = ar
+        ? '🔓 <span>الشيك ليست مفتوحة · لديك صلاحية التعديل المباشر</span>'
+        : '🔓 <span>Checklist Unlocked · You have edit permission</span>';
+    } else {
+      status.innerHTML = ar
+        ? '🛡️ <span>وضع التنفيذ للموظف · يمكنك إضافة ملاحظات أو اقتراح تعديل</span>'
+        : '🛡️ <span>Staff Execution Mode · Add notes or suggest edits</span>';
+    }
+    return status;
+  }
+
+  function appendManagerGovButtons(actions, opts = {}) {
+    const { gov, sess, ar } = opts;
+    const lockBtn = el(
+      'button',
+      'gov-btn' + (gov.checklistLocked ? ' warn' : ''),
+      gov.checklistLocked
+        ? (ar ? '🔓 فتح قفل الشيك ليست' : '🔓 Unlock Checklist')
+        : (ar ? '🔒 قفل الشيك ليست' : '🔒 Lock Checklist')
+    );
+    lockBtn.type = 'button';
+    lockBtn.addEventListener('click', () => {
+      gov.checklistLocked = !gov.checklistLocked;
+      gov.lockedBy = (sess && sess.displayName) || 'Supervisor';
+      gov.lockedAt = FOH.time.nowHM();
+      if (gov.checklistLocked) S.editing = false;
+      saveGov(gov);
+      FOH.edit.toast(
+        gov.checklistLocked
+          ? (ar ? 'تم قفل الشيك ليست بنجاح 🔒' : 'Checklist locked 🔒')
+          : (ar ? 'تم فتح قفل الشيك ليست 🔓' : 'Checklist unlocked 🔓')
+      );
+      FOH.app.render();
+    });
+    actions.append(lockBtn);
+
+    const permBtn = el('button', 'gov-btn', ar ? '⚙️ صلاحيات الموظفين' : '⚙️ Staff Permissions');
+    permBtn.type = 'button';
+    permBtn.addEventListener('click', () => {
+      S.view = 'settings';
+      FOH.app.render();
+    });
+    actions.append(permBtn);
+  }
+
+  function renderGovActionButtons(opts = {}) {
+    const { gov, canEdit, isMgr, sess, ar } = opts;
+    const actions = el('div', 'gov-actions');
+
+    const sugBtn = el('button', 'gov-btn primary', ar ? '💡 اقتراح تعديل / إضافة مهمة' : '💡 Suggest Checklist Edit');
+    sugBtn.type = 'button';
+    sugBtn.addEventListener('click', () => openSuggestionModal());
+    actions.append(sugBtn);
+
+    if (canEdit && !gov.checklistLocked) {
+      const editBtn = el('button', 'gov-btn', ar ? '✎ تعديل بنود الشيك ليست' : '✎ Edit Checklist');
+      editBtn.type = 'button';
+      editBtn.addEventListener('click', () => {
+        S.editing = true;
+        FOH.app.render();
+      });
+      actions.append(editBtn);
+    }
+
+    if (isMgr) {
+      appendManagerGovButtons(actions, { gov, sess, ar });
+    }
+    return actions;
+  }
+
+  function handleApproveSuggestion(sg, secTitle, ar) {
+    const targetSec = S.tpl.sections.find((s) => s.id === sg.sectionId) || S.tpl.sections[0];
+    if (targetSec) {
+      targetSec.items.push({
+        id: FOH.store.uid(),
+        text: sg.text || sg.textAr,
+        textAr: sg.textAr || sg.text,
+        due: '',
+        remindBefore: null,
+        role: '',
+        children: [],
+      });
+      FOH.store.saveTemplate(S.tpl);
+      if (typeof notifyMobileOnNewTaskAdded === 'function') {
+        notifyMobileOnNewTaskAdded({
+          titleEn: sg.text || sg.textAr,
+          titleAr: sg.textAr || sg.text,
+          sectionLabel: secTitle,
+          roleLabel: sg.by,
+        });
+      }
+    }
+    const allSugs = loadSuggestions();
+    const found = allSugs.find((x) => x.id === sg.id);
+    if (found) found.status = 'approved';
+    saveSuggestions(allSugs);
+    FOH.edit.toast(ar ? 'تمت الموافقة وإضافة المهمة إلى الشيك ليست ✓' : 'Suggestion approved and added to checklist ✓');
+    FOH.app.render();
+  }
+
+  function renderSuggestionRow(sg, ar) {
+    const row = el('div', 'sug-item');
+    const info = el('div', '');
+    info.style.flex = '1';
+    const secObj = S.tpl.sections.find((s) => s.id === sg.sectionId) || S.tpl.sections[0];
+    const secTitle = secObj ? FOH.view.sectionName(secObj) : '';
+    info.innerHTML =
+      '<b>' + (sg.kind === 'add' ? '➕ ' : '✏️ ') + (ar ? sg.textAr || sg.text : sg.text || sg.textAr) + '</b>' +
+      '<small style="display:block;color:var(--ink2);margin-top:2px;">👤 ' + sg.by + ' · 📂 ' + secTitle + ' · 🕒 ' + sg.at + (sg.note ? ' · 💬 ' + sg.note : '') + '</small>';
+
+    const btns = el('div', 'gov-actions');
+    const appBtn = el('button', 'gov-btn primary', ar ? '✓ موافقة وإضافة للقائمة' : '✓ Approve & Add');
+    appBtn.type = 'button';
+    appBtn.addEventListener('click', () => handleApproveSuggestion(sg, secTitle, ar));
+
+    const rejBtn = el('button', 'gov-btn', ar ? '✕ رفض' : '✕ Reject');
+    rejBtn.type = 'button';
+    rejBtn.addEventListener('click', () => {
+      const allSugs = loadSuggestions();
+      const found = allSugs.find((x) => x.id === sg.id);
+      if (found) found.status = 'rejected';
+      saveSuggestions(allSugs);
+      FOH.app.render();
+    });
+
+    btns.append(appBtn, rejBtn);
+    row.append(info, btns);
+    return row;
+  }
+
+  function renderSuggestionsAccordion(sugs, ar) {
+    const qBox = el('details', 'sug-card sug-accordion');
+    qBox.style.width = '100%';
+    qBox.style.marginTop = '8px';
+    qBox.style.marginBottom = '0';
+
+    const summary = el('summary', 'sug-summary');
+    summary.style.display = 'flex';
+    summary.style.alignItems = 'center';
+    summary.style.justifyContent = 'space-between';
+    summary.style.cursor = 'pointer';
+    summary.style.padding = '4px 0';
+    summary.style.fontWeight = '700';
+    summary.style.fontSize = '0.84rem';
+    summary.innerHTML =
+      '<span style="display:inline-flex;align-items:center;gap:6px;">' +
+      '<span>💡</span>' +
+      '<b>' + (ar ? 'اقتراحات وملاحظات الموظفين المعلقة (' + sugs.length + ')' : 'Pending Staff Suggestions (' + sugs.length + ')') + '</b>' +
+      '</span>' +
+      '<span style="font-size:0.75rem;padding:2px 8px;border-radius:12px;background:var(--accent);color:#fff;">' + (ar ? 'مراجعة ▾' : 'Review ▾') + '</span>';
+    qBox.append(summary);
+
+    const itemsWrap = el('div', 'sug-items-wrap');
+    itemsWrap.style.marginTop = '8px';
+    sugs.forEach((sg) => {
+      itemsWrap.append(renderSuggestionRow(sg, ar));
+    });
+    qBox.append(itemsWrap);
+    return qBox;
   }
 
   function renderChecklistGovBar() {
@@ -109,166 +278,17 @@
     topWrap.style.flexWrap = 'wrap';
     topWrap.style.gap = '8px';
 
-    const status = el('div', 'gov-status');
-    if (gov.checklistLocked) {
-      status.innerHTML = ar
-        ? '🔒 <span>الشيك ليست مقفلة من المدير (' + (gov.lockedBy || 'Supervisor') + ')</span>'
-        : '🔒 <span>Checklist Locked by Manager (' + (gov.lockedBy || 'Supervisor') + ')</span>';
-    } else if (canEdit) {
-      status.innerHTML = ar
-        ? '🔓 <span>الشيك ليست مفتوحة · لديك صلاحية التعديل المباشر</span>'
-        : '🔓 <span>Checklist Unlocked · You have edit permission</span>';
-    } else {
-      status.innerHTML = ar
-        ? '🛡️ <span>وضع التنفيذ للموظف · يمكنك إضافة ملاحظات أو اقتراح تعديل</span>'
-        : '🛡️ <span>Staff Execution Mode · Add notes or suggest edits</span>';
-    }
-
-    const actions = el('div', 'gov-actions');
-
-    const sugBtn = el('button', 'gov-btn primary', ar ? '💡 اقتراح تعديل / إضافة مهمة' : '💡 Suggest Checklist Edit');
-    sugBtn.type = 'button';
-    sugBtn.addEventListener('click', () => openSuggestionModal());
-    actions.append(sugBtn);
-
-    if (canEdit && !gov.checklistLocked) {
-      const editBtn = el('button', 'gov-btn', ar ? '✎ تعديل بنود الشيك ليست' : '✎ Edit Checklist');
-      editBtn.type = 'button';
-      editBtn.addEventListener('click', () => {
-        S.editing = true;
-        FOH.app.render();
-      });
-      actions.append(editBtn);
-    }
-
-    if (isMgr) {
-      const lockBtn = el(
-        'button',
-        'gov-btn' + (gov.checklistLocked ? ' warn' : ''),
-        gov.checklistLocked
-          ? (ar ? '🔓 فتح قفل الشيك ليست' : '🔓 Unlock Checklist')
-          : (ar ? '🔒 قفل الشيك ليست' : '🔒 Lock Checklist')
-      );
-      lockBtn.type = 'button';
-      lockBtn.addEventListener('click', () => {
-        gov.checklistLocked = !gov.checklistLocked;
-        gov.lockedBy = (sess && sess.displayName) || 'Supervisor';
-        gov.lockedAt = FOH.time.nowHM();
-        if (gov.checklistLocked) S.editing = false;
-        saveGov(gov);
-        FOH.edit.toast(
-          gov.checklistLocked
-            ? (ar ? 'تم قفل الشيك ليست بنجاح 🔒' : 'Checklist locked 🔒')
-            : (ar ? 'تم فتح قفل الشيك ليست 🔓' : 'Checklist unlocked 🔓')
-        );
-        FOH.app.render();
-      });
-      actions.append(lockBtn);
-
-      const permBtn = el('button', 'gov-btn', ar ? '⚙️ صلاحيات الموظفين' : '⚙️ Staff Permissions');
-      permBtn.type = 'button';
-      permBtn.addEventListener('click', () => {
-        S.view = 'settings';
-        FOH.app.render();
-      });
-      actions.append(permBtn);
-    }
-
+    const status = renderGovStatusBadge(gov, canEdit, ar);
+    const actions = renderGovActionButtons({ gov, canEdit, isMgr, sess, ar });
     topWrap.append(status, actions);
     bar.append(topWrap);
 
     if (sugs.length > 0 && isMgr) {
-      const qBox = el('details', 'sug-card sug-accordion');
-      qBox.style.width = '100%';
-      qBox.style.marginTop = '8px';
-      qBox.style.marginBottom = '0';
-      const summary = el('summary', 'sug-summary');
-      summary.style.display = 'flex';
-      summary.style.alignItems = 'center';
-      summary.style.justifyContent = 'space-between';
-      summary.style.cursor = 'pointer';
-      summary.style.padding = '4px 0';
-      summary.style.fontWeight = '700';
-      summary.style.fontSize = '0.84rem';
-      summary.innerHTML =
-        '<span style="display:inline-flex;align-items:center;gap:6px;">' +
-        '<span>💡</span>' +
-        '<b>' + (ar ? 'اقتراحات وملاحظات الموظفين المعلقة (' + sugs.length + ')' : 'Pending Staff Suggestions (' + sugs.length + ')') + '</b>' +
-        '</span>' +
-        '<span style="font-size:0.75rem;padding:2px 8px;border-radius:12px;background:var(--accent);color:#fff;">' + (ar ? 'مراجعة ▾' : 'Review ▾') + '</span>';
-      qBox.append(summary);
-
-      const itemsWrap = el('div', 'sug-items-wrap');
-      itemsWrap.style.marginTop = '8px';
-      sugs.forEach((sg) => {
-        const row = el('div', 'sug-item');
-        const info = el('div', '');
-        info.style.flex = '1';
-        const secObj = S.tpl.sections.find((s) => s.id === sg.sectionId) || S.tpl.sections[0];
-        const secTitle = secObj ? FOH.view.sectionName(secObj) : '';
-        info.innerHTML =
-          '<b>' + (sg.kind === 'add' ? '➕ ' : '✏️ ') + (ar ? sg.textAr || sg.text : sg.text || sg.textAr) + '</b>' +
-          '<small style="display:block;color:var(--ink2);margin-top:2px;">👤 ' + sg.by + ' · 📂 ' + secTitle + ' · 🕒 ' + sg.at + (sg.note ? ' · 💬 ' + sg.note : '') + '</small>';
-        const btns = el('div', 'gov-actions');
-        const appBtn = el('button', 'gov-btn primary', ar ? '✓ موافقة وإضافة للقائمة' : '✓ Approve & Add');
-        appBtn.type = 'button';
-        appBtn.addEventListener('click', () => {
-          const targetSec = S.tpl.sections.find((s) => s.id === sg.sectionId) || S.tpl.sections[0];
-          if (targetSec) {
-            targetSec.items.push({
-              id: FOH.store.uid(),
-              text: sg.text || sg.textAr,
-              textAr: sg.textAr || sg.text,
-              due: '',
-              remindBefore: null,
-              role: '',
-              children: [],
-            });
-            FOH.store.saveTemplate(S.tpl);
-            if (typeof notifyMobileOnNewTaskAdded === "function") notifyMobileOnNewTaskAdded({ titleEn: sg.text || sg.textAr, titleAr: sg.textAr || sg.text, sectionLabel: secTitle, roleLabel: sg.by });
-          }
-          const allSugs = loadSuggestions();
-          const found = allSugs.find((x) => x.id === sg.id);
-          if (found) found.status = 'approved';
-          saveSuggestions(allSugs);
-          FOH.edit.toast(ar ? 'تمت الموافقة وإضافة المهمة إلى الشيك ليست ✓' : 'Suggestion approved and added to checklist ✓');
-          FOH.app.render();
-        });
-        const rejBtn = el('button', 'gov-btn', ar ? '✕ رفض' : '✕ Reject');
-        rejBtn.type = 'button';
-        rejBtn.addEventListener('click', () => {
-          const allSugs = loadSuggestions();
-          const found = allSugs.find((x) => x.id === sg.id);
-          if (found) found.status = 'rejected';
-          saveSuggestions(allSugs);
-          FOH.app.render();
-        });
-        btns.append(appBtn, rejBtn);
-        row.append(info, btns);
-        itemsWrap.append(row);
-      });
-      qBox.append(itemsWrap);
-      bar.append(qBox);
+      bar.append(renderSuggestionsAccordion(sugs, ar));
     }
   }
 
-  function openSuggestionModal() {
-    const ar = isAr();
-    const sess = getSession();
-    let dlg = $('suggestDialog');
-    if (!dlg) {
-      dlg = el('dialog', 'sheet');
-      dlg.id = 'suggestDialog';
-      document.body.append(dlg);
-    }
-    dlg.replaceChildren();
-    const form = el('form', '');
-    form.method = 'dialog';
-    form.append(
-      el('div', 'grab'),
-      el('h2', '', ar ? '💡 اقتراح تعديل أو إضافة ملاحظة للشيك ليست' : '💡 Suggest Checklist Change or Note')
-    );
-
+  function buildSuggestionInputs(ar) {
     const secLbl = el('label', '', ar ? 'القسم (Section)' : 'Section');
     const secSel = el('select', 'in');
     S.tpl.sections.forEach((s) => {
@@ -313,6 +333,51 @@
     noteIn.placeholder = ar ? 'لماذا تقترح هذا التعديل؟' : 'Why is this helpful?';
     noteLbl.append(noteIn);
 
+    return { secLbl, secSel, kindLbl, kindSel, txtArLbl, txtArIn, noteLbl, noteIn };
+  }
+
+  function handleSuggestionSubmit(opts = {}) {
+    const { dlg, sess, ar, secSel, kindSel, txtArIn, noteIn } = opts;
+    const val = txtArIn.value.trim();
+    if (!val) return txtArIn.focus();
+    const list = loadSuggestions();
+    list.unshift({
+      id: 'sug_' + Date.now(),
+      by: (sess && sess.displayName) || S.me.name || 'Staff',
+      role: (sess && sess.roleName) || 'Staff',
+      kind: kindSel.value,
+      sectionId: secSel.value,
+      text: val,
+      textAr: val,
+      note: noteIn.value.trim(),
+      at: FOH.time.todayISO() + ' ' + FOH.time.nowHM(),
+      status: 'pending',
+    });
+    saveSuggestions(list);
+    dlg.close();
+    FOH.edit.toast(ar ? 'تم إرسال اقتراحك للمدير للمراجعة والاعتماد ✓' : 'Suggestion sent to Manager for review ✓');
+    FOH.app.render();
+  }
+
+  function openSuggestionModal() {
+    const ar = isAr();
+    const sess = getSession();
+    let dlg = $('suggestDialog');
+    if (!dlg) {
+      dlg = el('dialog', 'sheet');
+      dlg.id = 'suggestDialog';
+      document.body.append(dlg);
+    }
+    dlg.replaceChildren();
+    const form = el('form', '');
+    form.method = 'dialog';
+    form.append(
+      el('div', 'grab'),
+      el('h2', '', ar ? '💡 اقتراح تعديل أو إضافة ملاحظة للشيك ليست' : '💡 Suggest Checklist Change or Note')
+    );
+
+    const inputs = buildSuggestionInputs(ar);
+
     const actions = el('div', 'sheet-actions');
     const cancelB = el('button', 'btn', ar ? 'إلغاء' : 'Cancel');
     cancelB.type = 'button';
@@ -320,32 +385,59 @@
 
     const submitB = el('button', 'btn primary', ar ? '📤 إرسال الاقتراح للمدير' : '📤 Submit Suggestion');
     submitB.type = 'button';
-    submitB.addEventListener('click', () => {
-      const val = txtArIn.value.trim();
-      if (!val) return txtArIn.focus();
-      const list = loadSuggestions();
-      list.unshift({
-        id: 'sug_' + Date.now(),
-        by: (sess && sess.displayName) || S.me.name || 'Staff',
-        role: (sess && sess.roleName) || 'Staff',
-        kind: kindSel.value,
-        sectionId: secSel.value,
-        text: val,
-        textAr: val,
-        note: noteIn.value.trim(),
-        at: FOH.time.todayISO() + ' ' + FOH.time.nowHM(),
-        status: 'pending',
-      });
-      saveSuggestions(list);
-      dlg.close();
-      FOH.edit.toast(ar ? 'تم إرسال اقتراحك للمدير للمراجعة والاعتماد ✓' : 'Suggestion sent to Manager for review ✓');
-      FOH.app.render();
-    });
+    submitB.addEventListener('click', () => handleSuggestionSubmit({
+      dlg,
+      sess,
+      ar,
+      secSel: inputs.secSel,
+      kindSel: inputs.kindSel,
+      txtArIn: inputs.txtArIn,
+      noteIn: inputs.noteIn,
+    }));
 
     actions.append(cancelB, submitB);
-    form.append(secLbl, kindLbl, txtArLbl, noteLbl, actions);
+    form.append(inputs.secLbl, inputs.kindLbl, inputs.txtArLbl, inputs.noteLbl, actions);
     dlg.append(form);
     dlg.showModal();
+  }
+
+  function attachItemNoteChip(tx, opts = {}) {
+    const { noteKey, existing, notesMap, ar, sess } = opts;
+    let chip = tx.querySelector('.item-note-chip');
+    if (!chip) {
+      chip = el('button', 'item-note-chip' + (existing ? ' has-note' : ''), existing ? (ar ? '💬 تعديل الملاحظة' : '💬 Edit note') : (ar ? '💬 +ملاحظة' : '💬 +Note'));
+      chip.type = 'button';
+      chip.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const currentTxt = (notesMap[noteKey] && notesMap[noteKey].text) || '';
+        const input = prompt(ar ? 'أضف ملاحظة ميدانية على هذه المهمة (اتركها فارغة للمسح):' : 'Add a shift note for this task (leave empty to clear):', currentTxt);
+        if (input === null) return;
+        if (!input.trim()) {
+          delete notesMap[noteKey];
+        } else {
+          notesMap[noteKey] = {
+            text: input.trim(),
+            by: (sess && sess.displayName) || S.me.name || 'Staff',
+            at: FOH.time.nowHM(),
+          };
+        }
+        saveItemNotes(notesMap);
+        FOH.app.render();
+      });
+      tx.append(chip);
+    }
+
+    let disp = tx.querySelector('.item-note-display');
+    if (existing && existing.text) {
+      if (!disp) {
+        disp = el('span', 'item-note-display');
+        tx.append(disp);
+      }
+      disp.textContent = '💬 ' + existing.text + ' — (' + existing.by + ' · ' + existing.at + ')';
+    } else if (disp) {
+      disp.remove();
+    }
   }
 
   function injectChecklistItemNotes() {
@@ -362,46 +454,9 @@
       const itemId = cb.dataset.id;
       const noteKey = dateKey + '|' + itemId;
       const existing = notesMap[noteKey];
-
-      let chip = tx.querySelector('.item-note-chip');
-      if (!chip) {
-        chip = el('button', 'item-note-chip' + (existing ? ' has-note' : ''), existing ? (ar ? '💬 تعديل الملاحظة' : '💬 Edit note') : (ar ? '💬 +ملاحظة' : '💬 +Note'));
-        chip.type = 'button';
-        chip.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          const currentTxt = (notesMap[noteKey] && notesMap[noteKey].text) || '';
-          const input = prompt(ar ? 'أضف ملاحظة ميدانية على هذه المهمة (اتركها فارغة للمسح):' : 'Add a shift note for this task (leave empty to clear):', currentTxt);
-          if (input === null) return;
-          if (!input.trim()) {
-            delete notesMap[noteKey];
-          } else {
-            notesMap[noteKey] = {
-              text: input.trim(),
-              by: (sess && sess.displayName) || S.me.name || 'Staff',
-              at: FOH.time.nowHM(),
-            };
-          }
-          saveItemNotes(notesMap);
-          FOH.app.render();
-        });
-        tx.append(chip);
-      }
-
-      let disp = tx.querySelector('.item-note-display');
-      if (existing && existing.text) {
-        if (!disp) {
-          disp = el('span', 'item-note-display');
-          tx.append(disp);
-        }
-        disp.textContent = '💬 ' + existing.text + ' — (' + existing.by + ' · ' + existing.at + ')';
-      } else if (disp) {
-        disp.remove();
-      }
+      attachItemNoteChip(tx, { noteKey, existing, notesMap, ar, sess });
     });
   }
-
-
 
   FOH.suggestions = {
     loadSuggestions,

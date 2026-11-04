@@ -7,7 +7,6 @@
   const S = FOH.state;
   const { t } = FOH.i18n;
   const { el } = FOH.view;
-  const SESSION_KEY = 'foh-opening.erpSession.v1';
 
   const PERM_LABELS = (FOH.opsLifecycle && FOH.opsLifecycle.PERM_LABELS) || (FOH.PERM_LABELS || []);
   const SUPER_ROLES_META = new Proxy({}, {
@@ -40,14 +39,18 @@
     return FOH.taskSheet && FOH.taskSheet.roleName ? FOH.taskSheet.roleName(id) : 'Staff';
   }
 
-  // ---- Inject Operational Hours & Super Roles Matrix into Settings (#settingsView) ----
-  function appendHoursAndSuperRolesSettings(root) {
-    if (!root || root.querySelector('#opsHoursSettingsCard')) return;
-    const ar = isAr();
-    const cfg = loadOpsConfig();
-    const h = cfg.hours;
+  function makeTimeField(lblTxt, val) {
+    const l = el('label', 'ops-time-field');
+    const sp = el('span', '', lblTxt);
+    const inp = el('input', 'in');
+    inp.type = 'time';
+    inp.value = val;
+    l.append(sp, inp);
+    return { l, inp };
+  }
 
-    // Card 1: Restaurant Operational Hours, Prep Start, Kitchen/Bar Last Order & Last Guest Close
+  function renderHoursSettingsCard(cfg, ar) {
+    const h = cfg.hours || {};
     const hoursCard = el('section', 'card');
     hoursCard.id = 'opsHoursSettingsCard';
     hoursCard.style.padding = '16px';
@@ -65,23 +68,11 @@
       '</p>';
 
     const grid = el('div', 'ops-hours-grid');
-
-    const makeTimeField = (lblTxt, val) => {
-      const l = el('label', 'ops-time-field');
-      const sp = el('span', '', lblTxt);
-      const inp = el('input', 'in');
-      inp.type = 'time';
-      inp.value = val;
-      l.append(sp, inp);
-      return { l, inp };
-    };
-
     const fPrep = makeTimeField(ar ? '☀️ بداية دوام التحضير (قبل الفتح)' : '☀️ Staff Shift & Prep Start', h.prepStart);
     const fOpen = makeTimeField(ar ? '🍽️ ساعة فتح المطعم للزبائن' : '🍽️ Restaurant Opens for Guests', h.doorsOpen);
     const fKitchenLO = makeTimeField(ar ? '🍳 آخر طلب للمطبخ (Kitchen LO)' : '🍳 Kitchen Last Order', h.kitchenLastOrder);
     const fBarLO = makeTimeField(ar ? '🍸 آخر طلب للبار (Bar LO)' : '🍸 Bar Last Order', h.barLastOrder);
     const fMinClose = makeTimeField(ar ? '🚪 الحد الأدنى لوقت إغلاق المطعم' : '🚪 Minimum Official Closing Time', h.minCloseTime);
-
     grid.append(fPrep.l, fOpen.l, fKitchenLO.l, fBarLO.l, fMinClose.l);
     hoursCard.append(grid);
 
@@ -122,8 +113,79 @@
       FOH.app.render();
     });
     hoursCard.append(saveHoursBtn);
+    return hoursCard;
+  }
 
-    // Card 2: Super Roles Hierarchy & Permission Matrix
+  function renderStaffRoleRow(opts = {}) {
+    const { uname, fullLabel, cfg, ar } = opts;
+    const row = el('div', '');
+    row.style.display = 'flex';
+    row.style.justifyContent = 'space-between';
+    row.style.alignItems = 'center';
+    row.style.gap = '8px';
+    row.style.padding = '8px 0';
+    row.style.borderBottom = '1px dashed var(--line)';
+
+    const curRole = (cfg.staffSuperRoles && cfg.staffSuperRoles[uname]) || 'staff';
+    const sel = el('select', 'in');
+    sel.style.width = 'auto';
+    sel.style.minHeight = '36px';
+    Object.values(SUPER_ROLES_META).forEach((rm) => {
+      const o = el('option', '', ar ? rm.labelAr : rm.labelEn);
+      o.value = rm.id;
+      o.selected = rm.id === curRole;
+      sel.append(o);
+    });
+    sel.addEventListener('change', () => {
+      cfg.staffSuperRoles[uname] = sel.value;
+      saveOpsConfig(cfg);
+      FOH.edit.toast(ar ? 'تم تحديث منصب ' + fullLabel + ' إلى ' + SUPER_ROLES_META[sel.value].badge + ' ✓' : 'Updated role for ' + fullLabel + ' ✓');
+      FOH.app.render();
+    });
+
+    row.append(el('b', '', '👤 ' + fullLabel), sel);
+    if (FOH.modalPicker && FOH.modalPicker.enhanceSelect) {
+      FOH.modalPicker.enhanceSelect(sel, {
+        title: ar ? 'تغيير منصب الموظف' : 'Change Staff Role',
+        subtitle: ar ? ('اختر المنصب الجديد لـ ' + fullLabel) : ('Select role for ' + fullLabel),
+        icon: '👑',
+      });
+    }
+    return row;
+  }
+
+  function renderRolePermissionCard(rKey, cfg, ar) {
+    const rm = SUPER_ROLES_META[rKey];
+    const rPerms = cfg.rolePermissions[rKey] || {};
+    const rCard = el('div', 'super-role-card');
+    rCard.innerHTML =
+      '<div class="super-role-card-head">' +
+      '<b>' + (ar ? rm.labelAr : rm.labelEn) + '</b>' +
+      '<span class="super-role-pill ' + rKey + '">' + rm.badge + '</span>' +
+      '</div>';
+
+    const pGrid = el('div', 'super-perm-grid');
+    PERM_LABELS.forEach(([pKey, lblAr, lblEn]) => {
+      const item = el('label', 'super-perm-item');
+      const txt = el('span', '', ar ? lblAr : lblEn);
+      const cb = el('input', 'sw');
+      cb.type = 'checkbox';
+      cb.checked = !!rPerms[pKey];
+      cb.addEventListener('change', () => {
+        if (!cfg.rolePermissions[rKey]) cfg.rolePermissions[rKey] = {};
+        cfg.rolePermissions[rKey][pKey] = cb.checked;
+        saveOpsConfig(cfg);
+        FOH.edit.toast(ar ? 'تم تحديث صلاحيات ' + rm.badge + ' ✓' : 'Updated permissions for ' + rm.badge + ' ✓');
+        FOH.app.render();
+      });
+      item.append(txt, cb);
+      pGrid.append(item);
+    });
+    rCard.append(pGrid);
+    return rCard;
+  }
+
+  function renderSuperRolesSettingsCard(cfg, ar) {
     const rolesCard = el('section', 'card');
     rolesCard.id = 'superRolesSettingsCard';
     rolesCard.style.padding = '16px';
@@ -139,7 +201,6 @@
         : 'Assign each employee a Super Role and customize the exact permissions granted to each role:') +
       '</p>';
 
-    // Staff Super Role Assignment Box
     const assignBox = el('div', 'super-role-card');
     assignBox.innerHTML = '<div class="super-role-card-head"><b>👥 ' + (ar ? 'تعيين المناصب (Super Roles) للموظفين' : 'Assign Super Roles to Staff') + '</b></div>';
     const staffAccounts = [
@@ -149,112 +210,55 @@
       ['sara', 'Sara Khoury (سارة)'],
     ];
     staffAccounts.forEach(([uname, fullLabel]) => {
-      const row = el('div', '');
-      row.style.display = 'flex';
-      row.style.justifyContent = 'space-between';
-      row.style.alignItems = 'center';
-      row.style.gap = '8px';
-      row.style.padding = '8px 0';
-      row.style.borderBottom = '1px dashed var(--line)';
-
-      const curRole = (cfg.staffSuperRoles && cfg.staffSuperRoles[uname]) || 'staff';
-      const sel = el('select', 'in');
-      sel.style.width = 'auto';
-      sel.style.minHeight = '36px';
-      Object.values(SUPER_ROLES_META).forEach((rm) => {
-        const o = el('option', '', ar ? rm.labelAr : rm.labelEn);
-        o.value = rm.id;
-        o.selected = rm.id === curRole;
-        sel.append(o);
-      });
-      sel.addEventListener('change', () => {
-        cfg.staffSuperRoles[uname] = sel.value;
-        saveOpsConfig(cfg);
-        FOH.edit.toast(ar ? 'تم تحديث منصب ' + fullLabel + ' إلى ' + SUPER_ROLES_META[sel.value].badge + ' ✓' : 'Updated role for ' + fullLabel + ' ✓');
-        FOH.app.render();
-      });
-
-      row.append(el('b', '', '👤 ' + fullLabel), sel);
-      if (FOH.modalPicker && FOH.modalPicker.enhanceSelect) {
-        FOH.modalPicker.enhanceSelect(sel, {
-          title: ar ? 'تغيير منصب الموظف' : 'Change Staff Role',
-          subtitle: ar ? ('اختر المنصب الجديد لـ ' + fullLabel) : ('Select role for ' + fullLabel),
-          icon: '👑',
-        });
-      }
-      assignBox.append(row);
+      assignBox.append(renderStaffRoleRow({ uname, fullLabel, cfg, ar }));
     });
     rolesCard.append(assignBox);
 
-    // Role Permissions Matrix Cards
     ['super_manager', 'super_captain', 'super_bartender', 'super_waiter'].forEach((rKey) => {
-      const rm = SUPER_ROLES_META[rKey];
-      const rPerms = cfg.rolePermissions[rKey] || {};
-      const rCard = el('div', 'super-role-card');
-      rCard.innerHTML =
-        '<div class="super-role-card-head">' +
-        '<b>' + (ar ? rm.labelAr : rm.labelEn) + '</b>' +
-        '<span class="super-role-pill ' + rKey + '">' + rm.badge + '</span>' +
-        '</div>';
-
-      const pGrid = el('div', 'super-perm-grid');
-      PERM_LABELS.forEach(([pKey, lblAr, lblEn]) => {
-        const item = el('label', 'super-perm-item');
-        const txt = el('span', '', ar ? lblAr : lblEn);
-        const cb = el('input', 'sw');
-        cb.type = 'checkbox';
-        cb.checked = !!rPerms[pKey];
-        cb.addEventListener('change', () => {
-          if (!cfg.rolePermissions[rKey]) cfg.rolePermissions[rKey] = {};
-          cfg.rolePermissions[rKey][pKey] = cb.checked;
-          saveOpsConfig(cfg);
-          FOH.edit.toast(ar ? 'تم تحديث صلاحيات ' + rm.badge + ' ✓' : 'Updated permissions for ' + rm.badge + ' ✓');
-          FOH.app.render();
-        });
-        item.append(txt, cb);
-        pGrid.append(item);
-      });
-      rCard.append(pGrid);
-      rolesCard.append(rCard);
+      rolesCard.append(renderRolePermissionCard(rKey, cfg, ar));
     });
+    return rolesCard;
+  }
 
-    // Card 3: Warehouse & Bar Ordering Authority & Delegation (#orderingDelegationCard)
-    const ordCard = el('section', 'card');
-    ordCard.id = 'orderingDelegationSettingsCard';
-    ordCard.style.padding = '16px';
-    ordCard.style.border = '1.5px solid #10b981';
-    ordCard.innerHTML =
-      '<h3>🛒 ' +
-      (ar
-        ? 'تفويض وإدارة صلاحيات طلبيات المستودع والبار (Ordering Delegation & Missions)'
-        : 'Warehouse & Bar Ordering Authority & Delegation') +
-      '</h3>' +
-      '<p class="setting-note">' +
-      (ar
-        ? 'تحكّم بدقة بمن يرى قسم الطلبيات ويحق له إرسال طلبات المستودع والبار. يمكنك توجيه الطلبية لمنصب بالكامل (مثل البارتندر)، أو تخصيص ويتر أو كابتن محدد بالاسم دون فتحها لبقية الفريق منعاً للتشتت:'
-        : 'Control who sees the Orders section and submits warehouse requisitions. Grant access to an entire role (e.g. Bartenders) or designate specific staff members by name:') +
-      '</p>';
+  function getOperationalStaffList(ar) {
+    const staffList = [
+      ['sara', ar ? 'سارة خوري (سوبر ويتر)' : 'Sara Khoury (Super Waiter)', '⭐ Waiter'],
+      ['ali', ar ? 'علي حسن (سوبر كابتن)' : 'Ali Hassan (Super Captain)', '🎖️ Captain'],
+      ['maher', ar ? 'ماهر زيد (سوبر بارتندر)' : 'Maher Zaid (Super Bartender)', '🍸 Bartender'],
+      ['fadi', ar ? 'فادي المصري (سوبر مانجر)' : 'Fadi Al-Masri (Super Manager)', '👑 Manager'],
+    ];
+    const seenU = new Set(staffList.map((s) => s[0]));
+    (S.tpl.staff || []).forEach((st) => {
+      const u = (st.username || (st.name || '').split(' ')[0] || st.id || '').toLowerCase().trim();
+      if (u && !seenU.has(u)) {
+        seenU.add(u);
+        const rName = roleName(st.role) || 'Staff';
+        const disp = st.name + (st.nickname ? ' (' + st.nickname + ')' : '');
+        staffList.push([u, disp, rName]);
+      }
+    });
+    return staffList;
+  }
 
-    // Section A: By Role
+  function renderOrderingRoleBox(cfg, ar) {
     const roleBox = el('div', 'super-role-card');
     roleBox.style.marginBottom = '12px';
     roleBox.innerHTML =
       '<div class="super-role-card-head">' +
       '<b>🏷️ ' + (ar ? '1. التوجيه حسب المنصب القيادي (Role / Position)' : '1. Authorize Entire Role / Position') + '</b>' +
-      '</div>' +
-      '<p style="font-size:0.75rem;color:var(--ink2);margin:4px 0 10px;">' +
-      (ar ? 'أي موظف يحمل المنصب المفعّل سيتمكن تلقائياً من فتح قسم الطلبيات (مثلاً: كافة البارتندرية الأربعة لمستلزمات البار).' : 'Any employee in an active role can access the Orders section (e.g. all 4 bartenders for bar supply).') +
-      '</p>';
+      '</div>';
 
     const delRoles = (cfg.orderingDelegation && Array.isArray(cfg.orderingDelegation.roles))
       ? cfg.orderingDelegation.roles
       : ['super_manager', 'super_bartender'];
 
-    [
+    const roleDefs = [
       ['super_bartender', ar ? '🍸 سوبر بارتندر (Super Bartender)' : '🍸 Super Bartender', ar ? 'تمكين كافة البارتندرية الأربعة من طلب بضاعة ومستلزمات البار' : 'Allow all bartenders to place bar beverage orders'],
       ['super_captain', ar ? '🎖️ سوبر كابتن (Super Captain)' : '🎖️ Super Captain', ar ? 'تمكين كافة الكباتن من إنشاء وإرسال الطلبيات' : 'Allow all captains to create orders'],
       ['super_waiter', ar ? '⭐ سوبر ويتر (Super Waiter)' : '⭐ Super Waiter', ar ? 'تمكين كافة الويترية من قسم الطلبيات (غير موصى به لكثرة العدد)' : 'Allow all waiters to create orders (not recommended)'],
-    ].forEach(([rk, rkLabel, rkSub]) => {
+    ];
+
+    roleDefs.forEach(([rk, rkLabel, rkSub]) => {
       const row = el('label', 'tog');
       row.style.display = 'flex';
       row.style.justifyContent = 'space-between';
@@ -262,7 +266,6 @@
       row.style.padding = '8px 0';
       row.style.borderBottom = '1px dashed var(--line)';
       row.style.cursor = 'pointer';
-
       row.innerHTML = '<div><b>' + rkLabel + '</b><small style="display:block;color:var(--ink2);font-size:0.72rem;">' + rkSub + '</small></div>';
       const cb = el('input', 'sw');
       cb.type = 'checkbox';
@@ -283,40 +286,21 @@
       row.append(cb);
       roleBox.append(row);
     });
-    ordCard.append(roleBox);
+    return roleBox;
+  }
 
-    // Section B: By Specific Staff Member by Name
+  function renderOrderingStaffBox(cfg, ar, staffList) {
     const staffBox = el('div', 'super-role-card');
     staffBox.innerHTML =
       '<div class="super-role-card-head">' +
       '<b>👤 ' + (ar ? '2. التخصيص بالاسم لموظف محدد (Specific Staff Delegation)' : '2. Specific Staff Member Delegation') + '</b>' +
-      '</div>' +
-      '<p style="font-size:0.75rem;color:var(--ink2);margin:4px 0 10px;">' +
-      (ar ? 'إذا كان لديك موظف معين (مثل سارة) مكلّف بالطلبيات، يمكنك تفعيل الصلاحية لها بالاسم دون إظهارها لبقية الويترية أو الكباتن:' : 'Designate a specific staff member (e.g. Sara) for orders without granting access to other waiters or captains:') +
-      '</p>';
+      '</div>';
 
     const delStaff = (cfg.orderingDelegation && Array.isArray(cfg.orderingDelegation.staffUsernames))
       ? cfg.orderingDelegation.staffUsernames
       : ['sara'];
 
-    const staffList = [
-      ['sara', ar ? 'سارة خوري (سوبر ويتر)' : 'Sara Khoury (Super Waiter)', '⭐ Waiter'],
-      ['ali', ar ? 'علي حسن (سوبر كابتن)' : 'Ali Hassan (Super Captain)', '🎖️ Captain'],
-      ['maher', ar ? 'ماهر زيد (سوبر بارتندر)' : 'Maher Zaid (Super Bartender)', '🍸 Bartender'],
-      ['fadi', ar ? 'فادي المصري (سوبر مانجر)' : 'Fadi Al-Masri (Super Manager)', '👑 Manager'],
-    ];
-    const seenU = new Set(staffList.map((s) => s[0]));
-    (S.tpl.staff || []).forEach((st) => {
-      const u = (st.username || (st.name || '').split(' ')[0] || st.id || '').toLowerCase().trim();
-      if (u && !seenU.has(u)) {
-        seenU.add(u);
-        const rName = roleName(st.role) || 'Staff';
-        const disp = st.name + (st.nickname ? ' (' + st.nickname + ')' : '');
-        staffList.push([u, disp, rName]);
-      }
-    });
-
-    staffList.forEach(([uname, fullName, roleTag]) => {
+    staffList.forEach(([uname, fullName]) => {
       const row = el('label', 'tog');
       row.style.display = 'flex';
       row.style.justifyContent = 'space-between';
@@ -324,7 +308,6 @@
       row.style.padding = '8px 0';
       row.style.borderBottom = '1px dashed var(--line)';
       row.style.cursor = uname === 'fadi' ? 'default' : 'pointer';
-
       row.innerHTML = '<div><b>👤 ' + fullName + '</b><small style="display:block;color:var(--ink2);font-size:0.72rem;">' + (uname === 'fadi' ? (ar ? '👑 المدير العام (مفعل دائماً)' : '👑 General Manager (Always Active)') : (ar ? 'مهمة إدارة طلبيات الصالة والمستودع' : 'Floor & warehouse order mission')) + '</small></div>';
 
       if (uname === 'fadi') {
@@ -351,45 +334,50 @@
       }
       staffBox.append(row);
     });
-    ordCard.append(staffBox);
+    return staffBox;
+  }
 
-    // Card 4: Task Assignment Delegation (#taskDelegationSettingsCard)
-    const taskAsgCard = el('section', 'card');
-    taskAsgCard.id = 'taskDelegationSettingsCard';
-    taskAsgCard.style.padding = '16px';
-    taskAsgCard.style.border = '1.5px solid var(--accent)';
-    taskAsgCard.innerHTML =
-      '<h3>🎯 ' +
+  function renderOrderingDelegationCard(cfg, ar, staffList) {
+    const ordCard = el('section', 'card');
+    ordCard.id = 'orderingDelegationSettingsCard';
+    ordCard.style.padding = '16px';
+    ordCard.style.border = '1.5px solid #10b981';
+    ordCard.innerHTML =
+      '<h3>🛒 ' +
       (ar
-        ? 'تفويض وإدارة صلاحيات تعيين المهام (Task Assignment Delegation)'
-        : 'Task Assignment Authority & Delegation') +
+        ? 'تفويض وإدارة صلاحيات طلبيات المستودع والبار (Ordering Delegation & Missions)'
+        : 'Warehouse & Bar Ordering Authority & Delegation') +
       '</h3>' +
       '<p class="setting-note">' +
       (ar
-        ? 'تحكّم بدقة بمن يحق له تعيين مهام تشغيلية جديدة وتوجيهها للموظفين أو الأدوار. افتراضياً: الصلاحية ممنوحة للمدير والمشرف (الكابتن). يمكنك تفويض أي دور أو موظف بالاسم للتعيين منعاً للعشوائية:'
-        : 'Control who can assign operational tasks to employees or roles. By default: Managers & Supervisors (Captains). You can delegate to any role or specific staff member:') +
+        ? 'تحكّم بدقة بمن يرى قسم الطلبيات ويحق له إرسال طلبات المستودع والبار. يمكنك توجيه الطلبية لمنصب بالكامل (مثل البارتندر)، أو تخصيص ويتر أو كابتن محدد بالاسم دون فتحها لبقية الفريق منعاً للتشتت:'
+        : 'Control who sees the Orders section and submits warehouse requisitions. Grant access to an entire role (e.g. Bartenders) or designate specific staff members by name:') +
       '</p>';
 
-    // Section A: By Role
+    ordCard.append(renderOrderingRoleBox(cfg, ar));
+    ordCard.append(renderOrderingStaffBox(cfg, ar, staffList));
+    return ordCard;
+  }
+
+  function renderTaskAsgRoleBox(cfg, ar) {
     const asgRoleBox = el('div', 'super-role-card');
     asgRoleBox.style.marginBottom = '12px';
     asgRoleBox.innerHTML =
       '<div class="super-role-card-head">' +
       '<b>🏷️ ' + (ar ? '1. التوجيه حسب المنصب القيادي (Role / Position)' : '1. Authorize Entire Role / Position') + '</b>' +
-      '</div>' +
-      '<p style="font-size:0.75rem;color:var(--ink2);margin:4px 0 10px;">' +
-      (ar ? 'أي موظف يحمل المنصب المفعّل سيتمكن تلقائياً من تعيين المهام وتوجيهها للموظفين.' : 'Any employee in an active role can create and assign tasks.') +
-      '</p>';
+      '</div>';
 
     const delAsgRoles = (cfg.taskAssignmentDelegation && Array.isArray(cfg.taskAssignmentDelegation.roles))
       ? cfg.taskAssignmentDelegation.roles
       : ['super_manager', 'super_captain'];
 
-    [
+    const roleDefs = [
       ['super_captain', ar ? '🎖️ سوبر كابتن (Super Captain)' : '🎖️ Super Captain', ar ? 'تمكين المشرفين والكباتن من تعيين المهام للويترية والبار (موصى به)' : 'Allow supervisors and captains to assign tasks (Recommended)'],
       ['super_bartender', ar ? '🍸 سوبر بارتندر (Super Bartender)' : '🍸 Super Bartender', ar ? 'تمكين البارتندرية من تعيين مهام للبار' : 'Allow bartenders to assign tasks'],
       ['super_waiter', ar ? '⭐ سوبر ويتر (Super Waiter)' : '⭐ Super Waiter', ar ? 'تمكين كافة الويترية من تعيين مهام (غير موصى به لكافة الفريق)' : 'Allow all waiters to assign tasks (Not recommended for whole team)'],
-    ].forEach(([rk, rkLabel, rkSub]) => {
+    ];
+
+    roleDefs.forEach(([rk, rkLabel, rkSub]) => {
       const row = el('label', 'tog');
       row.style.display = 'flex';
       row.style.justifyContent = 'space-between';
@@ -397,7 +385,6 @@
       row.style.padding = '8px 0';
       row.style.borderBottom = '1px dashed var(--line)';
       row.style.cursor = 'pointer';
-
       row.innerHTML = '<div><b>' + rkLabel + '</b><small style="display:block;color:var(--ink2);font-size:0.72rem;">' + rkSub + '</small></div>';
       const cb = el('input', 'sw');
       cb.type = 'checkbox';
@@ -418,23 +405,21 @@
       row.append(cb);
       asgRoleBox.append(row);
     });
-    taskAsgCard.append(asgRoleBox);
+    return asgRoleBox;
+  }
 
-    // Section B: By Specific Staff Member by Name
+  function renderTaskAsgStaffBox(cfg, ar, staffList) {
     const asgStaffBox = el('div', 'super-role-card');
     asgStaffBox.innerHTML =
       '<div class="super-role-card-head">' +
       '<b>👤 ' + (ar ? '2. التخصيص بالاسم لموظف محدد (Specific Staff Delegation)' : '2. Specific Staff Member Delegation') + '</b>' +
-      '</div>' +
-      '<p style="font-size:0.75rem;color:var(--ink2);margin:4px 0 10px;">' +
-      (ar ? 'إذا أردت السماح لموظف محدد (مثل سارة) بتعيين المهام، يمكنك تفعيل الصلاحية لها بالاسم دون فتحها لبقية الويترية:' : 'Designate a specific staff member (e.g. Sara) to assign tasks without allowing other waiters:') +
-      '</p>';
+      '</div>';
 
     const delAsgStaff = (cfg.taskAssignmentDelegation && Array.isArray(cfg.taskAssignmentDelegation.staffUsernames))
       ? cfg.taskAssignmentDelegation.staffUsernames
       : ['ali'];
 
-    staffList.forEach(([uname, fullName, roleTag]) => {
+    staffList.forEach(([uname, fullName]) => {
       const row = el('label', 'tog');
       row.style.display = 'flex';
       row.style.justifyContent = 'space-between';
@@ -442,7 +427,6 @@
       row.style.padding = '8px 0';
       row.style.borderBottom = '1px dashed var(--line)';
       row.style.cursor = uname === 'fadi' ? 'default' : 'pointer';
-
       row.innerHTML = '<div><b>👤 ' + fullName + '</b><small style="display:block;color:var(--ink2);font-size:0.72rem;">' + (uname === 'fadi' ? (ar ? '👑 المدير العام (مفعل دائماً)' : '👑 General Manager (Always Active)') : (ar ? 'صلاحية تعيين وتوجيه المهام' : 'Task assignment mission')) + '</small></div>';
 
       if (uname === 'fadi') {
@@ -469,10 +453,43 @@
       }
       asgStaffBox.append(row);
     });
-    taskAsgCard.append(asgStaffBox);
+    return asgStaffBox;
+  }
 
+  function renderTaskDelegationCard(cfg, ar, staffList) {
+    const taskAsgCard = el('section', 'card');
+    taskAsgCard.id = 'taskDelegationSettingsCard';
+    taskAsgCard.style.padding = '16px';
+    taskAsgCard.style.border = '1.5px solid var(--accent)';
+    taskAsgCard.innerHTML =
+      '<h3>🎯 ' +
+      (ar
+        ? 'تفويض وإدارة صلاحيات تعيين المهام (Task Assignment Delegation)'
+        : 'Task Assignment Authority & Delegation') +
+      '</h3>' +
+      '<p class="setting-note">' +
+      (ar
+        ? 'تحكّم بدقة بمن يحق له تعيين مهام تشغيلية جديدة وتوجيهها للموظفين أو الأدوار. افتراضياً: الصلاحية ممنوحة للمدير والمشرف (الكابتن). يمكنك تفويض أي دور أو موظف بالاسم للتعيين منعاً للعشوائية:'
+        : 'Control who can assign operational tasks to employees or roles. By default: Managers & Supervisors (Captains). You can delegate to any role or specific staff member:') +
+      '</p>';
 
-    // Insert at the top of #settingsView right after the Brand card
+    taskAsgCard.append(renderTaskAsgRoleBox(cfg, ar));
+    taskAsgCard.append(renderTaskAsgStaffBox(cfg, ar, staffList));
+    return taskAsgCard;
+  }
+
+  // ---- Inject Operational Hours & Super Roles Matrix into Settings (#settingsView) ----
+  function appendHoursAndSuperRolesSettings(root) {
+    if (!root || root.querySelector('#opsHoursSettingsCard')) return;
+    const ar = isAr();
+    const cfg = loadOpsConfig();
+    const staffList = getOperationalStaffList(ar);
+
+    const hoursCard = renderHoursSettingsCard(cfg, ar);
+    const rolesCard = renderSuperRolesSettingsCard(cfg, ar);
+    const ordCard = renderOrderingDelegationCard(cfg, ar, staffList);
+    const taskAsgCard = renderTaskDelegationCard(cfg, ar, staffList);
+
     const firstCard = root.querySelector('section.card');
     if (firstCard && firstCard.nextSibling) {
       root.insertBefore(hoursCard, firstCard.nextSibling);
@@ -483,9 +500,6 @@
       root.append(hoursCard, rolesCard, ordCard, taskAsgCard);
     }
   }
-
-
-
 
   FOH.hoursSettings = {
     appendHoursAndSuperRolesSettings,

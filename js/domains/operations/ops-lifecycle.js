@@ -104,82 +104,43 @@
     ['canViewTeamTips', '💰 الاطلاع على جدول التبس الكامل للفريق', '💰 View Full Team Tip Pool & Shares'],
   ];
 
+  const DEFAULT_OPS_HOURS = {
+    prepStart: '12:00',
+    doorsOpen: '13:00',
+    kitchenLastOrder: '00:00',
+    barLastOrder: '01:00',
+    minCloseTime: '02:00',
+    closeWithLastGuest: true,
+  };
+  const DEFAULT_STAFF_SUPER_ROLES = {
+    fadi: 'super_manager',
+    ali: 'super_captain',
+    maher: 'super_bartender',
+    sara: 'super_waiter',
+  };
+  const DEFAULT_ORDERING_DELEGATION = {
+    roles: ['super_manager', 'super_bartender'],
+    staffUsernames: ['sara'],
+  };
+  const DEFAULT_TASK_DELEGATION = {
+    roles: ['super_manager', 'super_captain'],
+    staffUsernames: ['ali'],
+  };
+  const DEFAULT_ROLE_PERMISSIONS = {
+    super_manager: { canCloseRestaurant: true, canEarlyCloseOverride: true, canTriggerLastOrder: true, canSignoffDeptClosing: true, canEditChecklist: true, canSubmitOrders: true, canManageAcademy: true, canViewTeamTips: true },
+    super_captain: { canCloseRestaurant: true, canEarlyCloseOverride: false, canTriggerLastOrder: true, canSignoffDeptClosing: true, canEditChecklist: true, canSubmitOrders: true, canManageAcademy: true, canViewTeamTips: true },
+    super_bartender: { canCloseRestaurant: false, canEarlyCloseOverride: false, canTriggerLastOrder: true, canSignoffDeptClosing: true, canEditChecklist: true, canSubmitOrders: true, canManageAcademy: true, canViewTeamTips: false },
+    super_waiter: { canCloseRestaurant: false, canEarlyCloseOverride: false, canTriggerLastOrder: true, canSignoffDeptClosing: true, canEditChecklist: true, canSubmitOrders: true, canManageAcademy: false, canViewTeamTips: false },
+    staff: { canCloseRestaurant: false, canEarlyCloseOverride: false, canTriggerLastOrder: false, canSignoffDeptClosing: false, canEditChecklist: false, canSubmitOrders: false, canManageAcademy: false, canViewTeamTips: false },
+  };
+
   function defaultOpsConfig() {
     return {
-      hours: {
-        prepStart: '12:00',        // 12:00 PM Staff shift & prep start (1h before opening)
-        doorsOpen: '13:00',        // 1:00 PM Restaurant opens for guests
-        kitchenLastOrder: '00:00', // 12:00 Midnight Kitchen Last Order
-        barLastOrder: '01:00',     // 1:00 AM Bar Last Order
-        minCloseTime: '02:00',     // 2:00 AM Minimum official closing time
-        closeWithLastGuest: true,  // Close with last guest (never early even if empty at 11:30 PM)
-      },
-      staffSuperRoles: {
-        fadi: 'super_manager',
-        ali: 'super_captain',
-        maher: 'super_bartender',
-        sara: 'super_waiter',
-      },
-      orderingDelegation: {
-        roles: ['super_manager', 'super_bartender'],
-        staffUsernames: ['sara'],
-      },
-      taskAssignmentDelegation: {
-        roles: ['super_manager', 'super_captain'],
-        staffUsernames: ['ali'],
-      },
-      rolePermissions: {
-        super_manager: {
-          canCloseRestaurant: true,
-          canEarlyCloseOverride: true,
-          canTriggerLastOrder: true,
-          canSignoffDeptClosing: true,
-          canEditChecklist: true,
-          canSubmitOrders: true,
-          canManageAcademy: true,
-          canViewTeamTips: true,
-        },
-        super_captain: {
-          canCloseRestaurant: true,
-          canEarlyCloseOverride: false,
-          canTriggerLastOrder: true,
-          canSignoffDeptClosing: true,
-          canEditChecklist: true,
-          canSubmitOrders: true,
-          canManageAcademy: true,
-          canViewTeamTips: true,
-        },
-        super_bartender: {
-          canCloseRestaurant: false,
-          canEarlyCloseOverride: false,
-          canTriggerLastOrder: true,
-          canSignoffDeptClosing: true,
-          canEditChecklist: true,
-          canSubmitOrders: true,
-          canManageAcademy: true,
-          canViewTeamTips: false,
-        },
-        super_waiter: {
-          canCloseRestaurant: false,
-          canEarlyCloseOverride: false,
-          canTriggerLastOrder: true,
-          canSignoffDeptClosing: true,
-          canEditChecklist: true,
-          canSubmitOrders: true,
-          canManageAcademy: false,
-          canViewTeamTips: false,
-        },
-        staff: {
-          canCloseRestaurant: false,
-          canEarlyCloseOverride: false,
-          canTriggerLastOrder: false,
-          canSignoffDeptClosing: false,
-          canEditChecklist: false,
-          canSubmitOrders: false,
-          canManageAcademy: false,
-          canViewTeamTips: false,
-        },
-      },
+      hours: { ...DEFAULT_OPS_HOURS },
+      staffSuperRoles: { ...DEFAULT_STAFF_SUPER_ROLES },
+      orderingDelegation: { roles: [...DEFAULT_ORDERING_DELEGATION.roles], staffUsernames: [...DEFAULT_ORDERING_DELEGATION.staffUsernames] },
+      taskAssignmentDelegation: { roles: [...DEFAULT_TASK_DELEGATION.roles], staffUsernames: [...DEFAULT_TASK_DELEGATION.staffUsernames] },
+      rolePermissions: JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS)),
     };
   }
 
@@ -471,7 +432,10 @@
     };
   }
 
-  function renderOpsTopRow(phase, roleKey, roleMeta, ar) {
+  function renderOpsTopRow(phase, roleKey, opts = {}) {
+    const isLegacy = typeof opts === 'object' && !('roleMeta' in opts) && !('badge' in opts);
+    const roleMeta = (opts && opts.roleMeta) || (isLegacy ? opts : (SUPER_ROLES_META[roleKey] || SUPER_ROLES_META.staff));
+    const ar = (opts && typeof opts.ar === 'boolean') ? opts.ar : (isLegacy ? !!arguments[3] : isAr());
     const topRow = el('div', 'ops-top-row');
     const leftBox = el('div', '');
     leftBox.innerHTML =
@@ -509,7 +473,10 @@
     return topRow;
   }
 
-  function renderOpsTimelineGrid(h, daySt, times, ar) {
+  function renderOpsTimelineGrid(h, daySt, opts = {}) {
+    const isLegacy = opts && typeof opts === 'object' && ('nowBiz' in opts);
+    const times = isLegacy ? opts : ((opts && opts.times) || {});
+    const ar = (opts && typeof opts.ar === 'boolean') ? opts.ar : (isLegacy ? !!arguments[3] : isAr());
     const { nowBiz, openBiz, prepBiz, kLastBiz, bLastBiz, minCloseBiz } = times;
     const timeline = el('div', 'ops-timeline-grid');
     const stages = [
@@ -527,14 +494,9 @@
     return timeline;
   }
 
-  function renderOpsActionButtons(opts) {
-    const { daySt, h, nowHM, nowBiz, minCloseBiz, ar } = opts;
-    const actRow = el('div', 'ops-actions-row');
-    const leftBtns = el('div', 'gov-actions');
-    const sess = getSession();
-    const myName = (sess && sess.displayName) || S.me.name || 'Supervisor';
-    const canLO = hasSuperPerm('canTriggerLastOrder');
-    const canCloseRest = hasSuperPerm('canCloseRestaurant');
+  function createLastOrderButtons(opts) {
+    const { daySt, h, nowHM, ar, myName, canLO } = opts;
+    const btns = el('div', 'gov-actions');
 
     const kBtn = el('button', 'gov-btn' + (daySt.kitchenLastOrderAt ? '' : ' primary'), daySt.kitchenLastOrderAt ? (ar ? '🍳 Last Order المطبخ (' + daySt.kitchenLastOrderAt + ')' : '🍳 Kitchen L.O. (' + daySt.kitchenLastOrderAt + ')') : (ar ? '🍳 إعلان Last Order المطبخ (' + formatTime12Ar(h.kitchenLastOrder) + ')' : '🍳 Trigger Kitchen LO'));
     kBtn.type = 'button';
@@ -547,7 +509,7 @@
       FOH.edit.toast(ar ? '🍳 تم إعلان Last Order المطبخ الساعة ' + nowHM + ' وفتح شيت إغلاق الصالة ✓' : '🍳 Kitchen LO logged ✓');
       activateClosingSheet('floor');
     });
-    leftBtns.append(kBtn);
+    btns.append(kBtn);
 
     const bBtn = el('button', 'gov-btn' + (daySt.barLastOrderAt ? '' : ' primary'), daySt.barLastOrderAt ? (ar ? '🍸 Last Order البار (' + daySt.barLastOrderAt + ')' : '🍸 Bar L.O. (' + daySt.barLastOrderAt + ')') : (ar ? '🍸 إعلان Last Order البار (' + formatTime12Ar(h.barLastOrder) + ')' : '🍸 Trigger Bar LO'));
     bBtn.type = 'button';
@@ -560,7 +522,19 @@
       FOH.edit.toast(ar ? '🍸 تم إعلان Last Order البار الساعة ' + nowHM + ' وفتح شيت إغلاق البار ✓' : '🍸 Bar LO logged ✓');
       activateClosingSheet('bar');
     });
-    leftBtns.append(bBtn);
+    btns.append(bBtn);
+    return btns;
+  }
+
+  function renderOpsActionButtons(opts) {
+    const { daySt, h, nowHM, nowBiz, minCloseBiz, ar } = opts;
+    const actRow = el('div', 'ops-actions-row');
+    const sess = getSession();
+    const myName = (sess && sess.displayName) || S.me.name || 'Supervisor';
+    const canLO = hasSuperPerm('canTriggerLastOrder');
+    const canCloseRest = hasSuperPerm('canCloseRestaurant');
+
+    const leftBtns = createLastOrderButtons({ daySt, h, nowHM, ar, myName, canLO });
     actRow.append(leftBtns);
 
     if (daySt.closedAt && canCloseRest) {
@@ -645,8 +619,44 @@
     dlg.showModal();
   }
 
-  function renderEarlyCloseWarning(dlg, box, opts, ar) {
-    const { h, nowHM, minCloseBiz, canOverrideEarly, daySt, myName, roleMeta } = opts;
+  function renderEmergencyOverrideSection(dlg, opts, ar) {
+    const { nowHM, daySt, myName, roleMeta } = opts;
+    const ovWrap = el('div', '');
+    ovWrap.style.marginTop = '10px';
+    ovWrap.style.paddingTop = '10px';
+    ovWrap.style.borderTop = '1px dashed var(--line)';
+    const ovLbl = el('label', '', ar ? '👑 تجاوز استثنائي بأمر Super Manager فقط (أدخل سبب الإغلاق المبكر الإلزامي):' : '👑 Super Manager Emergency Override:');
+    ovLbl.style.fontSize = '0.8rem';
+    ovLbl.style.fontWeight = '700';
+    const ovIn = el('input', 'in');
+    ovIn.placeholder = ar ? 'مثال: صيانة طارئة للكهرباء / ظرف جوي استثنائي...' : 'Emergency reason...';
+    ovIn.style.marginTop = '6px';
+    const ovBtn = el('button', 'btn danger', ar ? '⚠️ فرض الإغلاق المبكر بأمر السوبر مانجر' : '⚠️ Force Early Close');
+    ovBtn.type = 'button';
+    ovBtn.style.width = '100%';
+    ovBtn.style.marginTop = '8px';
+    ovBtn.addEventListener('click', () => {
+      if (!ovIn.value.trim()) return ovIn.focus();
+      daySt.closedAt = nowHM;
+      daySt.closedBy = myName;
+      daySt.closedRole = roleMeta.badge;
+      daySt.extensionMins = 0;
+      daySt.earlyOverrideReason = ovIn.value.trim();
+      saveOpsDayState(S.date, daySt);
+      dlg.close();
+      FOH.edit.toast(ar ? '🔒 تم إغلاق المطعم استثنائياً بأمر السوبر مانجر' : '🔒 Restaurant closed via override');
+      FOH.app.render();
+    });
+    ovWrap.append(ovLbl, ovIn, ovBtn);
+    return ovWrap;
+  }
+
+  function renderEarlyCloseWarning(dlg, box, opts = {}) {
+    const isLegacy = typeof opts === 'object' && ('h' in opts);
+    const options = isLegacy ? opts : (opts && opts.options) || {};
+    const ar = (opts && typeof opts.ar === 'boolean') ? opts.ar : (isLegacy ? !!arguments[3] : isAr());
+    const { h, nowHM, minCloseBiz, canOverrideEarly } = options;
+
     box.innerHTML =
       '<div class="grab"></div>' +
       '<div style="padding:12px;border-radius:12px;background:var(--danger-soft);border:1.5px solid var(--danger);margin-bottom:12px;">' +
@@ -667,34 +677,7 @@
     box.append(simHint);
 
     if (canOverrideEarly) {
-      const ovWrap = el('div', '');
-      ovWrap.style.marginTop = '10px';
-      ovWrap.style.paddingTop = '10px';
-      ovWrap.style.borderTop = '1px dashed var(--line)';
-      const ovLbl = el('label', '', ar ? '👑 تجاوز استثنائي بأمر Super Manager فقط (أدخل سبب الإغلاق المبكر الإلزامي):' : '👑 Super Manager Emergency Override:');
-      ovLbl.style.fontSize = '0.8rem';
-      ovLbl.style.fontWeight = '700';
-      const ovIn = el('input', 'in');
-      ovIn.placeholder = ar ? 'مثال: صيانة طارئة للكهرباء / ظرف جوي استثنائي...' : 'Emergency reason...';
-      ovIn.style.marginTop = '6px';
-      const ovBtn = el('button', 'btn danger', ar ? '⚠️ فرض الإغلاق المبكر بأمر السوبر مانجر' : '⚠️ Force Early Close');
-      ovBtn.type = 'button';
-      ovBtn.style.width = '100%';
-      ovBtn.style.marginTop = '8px';
-      ovBtn.addEventListener('click', () => {
-        if (!ovIn.value.trim()) return ovIn.focus();
-        daySt.closedAt = nowHM;
-        daySt.closedBy = myName;
-        daySt.closedRole = roleMeta.badge;
-        daySt.extensionMins = 0;
-        daySt.earlyOverrideReason = ovIn.value.trim();
-        saveOpsDayState(S.date, daySt);
-        dlg.close();
-        FOH.edit.toast(ar ? '🔒 تم إغلاق المطعم استثنائياً بأمر السوبر مانجر' : '🔒 Restaurant closed via override');
-        FOH.app.render();
-      });
-      ovWrap.append(ovLbl, ovIn, ovBtn);
-      box.append(ovWrap);
+      box.append(renderEmergencyOverrideSection(dlg, options, ar));
     }
 
     const closeDlgB = el('button', 'btn', ar ? 'إلغاء' : 'Cancel');
@@ -707,8 +690,38 @@
     dlg.showModal();
   }
 
-  function renderOfficialCloseConfirmation(dlg, box, opts, ar) {
-    const { h, nowHM, extMins, doneClosingCount, allClosingLeaves, leftClosingCount, daySt, myName, roleMeta } = opts;
+  function submitOfficialRestaurantClose(dlg, opts, ar) {
+    const { h, nowHM, extMins, daySt, myName, roleMeta } = opts;
+    daySt.closedAt = nowHM;
+    daySt.closedBy = myName;
+    daySt.closedRole = roleMeta.badge;
+    daySt.extensionMins = extMins;
+    if (!daySt.kitchenLastOrderAt) daySt.kitchenLastOrderAt = h.kitchenLastOrder;
+    if (!daySt.barLastOrderAt) daySt.barLastOrderAt = h.barLastOrder;
+
+    if (extMins > 0 && !daySt.overtimeCredited) {
+      const extraHours = Math.round((extMins / 60) * 10) / 10;
+      const tipsDB = loadTipsData();
+      if (tipsDB && tipsDB.staff) {
+        Object.values(tipsDB.staff).forEach((st) => {
+          st.hours = Math.round(((Number(st.hours) || 40) + extraHours) * 10) / 10;
+        });
+        saveTipsData(tipsDB);
+      }
+      daySt.overtimeCredited = true;
+    }
+    saveOpsDayState(S.date, daySt);
+    dlg.close();
+    FOH.edit.toast(ar ? '🚪 تم إغلاق المطعم رسمياً الساعة ' + formatTime12Ar(nowHM) + (extMins > 0 ? ' واحتساب +' + extMins + ' دقيقة تمديد ✓' : ' ✓') : '🚪 Closed at ' + formatTime12Ar(nowHM) + ' ✓');
+    FOH.app.render();
+  }
+
+  function renderOfficialCloseConfirmation(dlg, box, opts = {}) {
+    const isLegacy = typeof opts === 'object' && ('h' in opts);
+    const options = isLegacy ? opts : (opts && opts.options) || {};
+    const ar = (opts && typeof opts.ar === 'boolean') ? opts.ar : (isLegacy ? !!arguments[3] : isAr());
+    const { h, nowHM, extMins, doneClosingCount, allClosingLeaves, leftClosingCount } = options;
+
     box.innerHTML =
       '<div class="grab"></div>' +
       '<h2>🚪 ' + (ar ? 'تأكيد إغلاق المطعم رسمياً (مع مغادرة آخر زبون)' : 'Confirm Official Restaurant Closing') + '</h2>' +
@@ -730,30 +743,7 @@
     const confirmCloseBtn = el('button', 'btn primary', ar ? '✅ تأكيد مغادرة آخر زبون وإغلاق المطعم الآن (' + formatTime12Ar(nowHM) + ')' : '✅ Confirm Close (' + formatTime12Ar(nowHM) + ')');
     confirmCloseBtn.type = 'button';
     confirmCloseBtn.style.width = '100%';
-    confirmCloseBtn.addEventListener('click', () => {
-      daySt.closedAt = nowHM;
-      daySt.closedBy = myName;
-      daySt.closedRole = roleMeta.badge;
-      daySt.extensionMins = extMins;
-      if (!daySt.kitchenLastOrderAt) daySt.kitchenLastOrderAt = h.kitchenLastOrder;
-      if (!daySt.barLastOrderAt) daySt.barLastOrderAt = h.barLastOrder;
-
-      if (extMins > 0 && !daySt.overtimeCredited) {
-        const extraHours = Math.round((extMins / 60) * 10) / 10;
-        const tipsDB = loadTipsData();
-        if (tipsDB && tipsDB.staff) {
-          Object.values(tipsDB.staff).forEach((st) => {
-            st.hours = Math.round(((Number(st.hours) || 40) + extraHours) * 10) / 10;
-          });
-          saveTipsData(tipsDB);
-        }
-        daySt.overtimeCredited = true;
-      }
-      saveOpsDayState(S.date, daySt);
-      dlg.close();
-      FOH.edit.toast(ar ? '🚪 تم إغلاق المطعم رسمياً الساعة ' + formatTime12Ar(nowHM) + (extMins > 0 ? ' واحتساب +' + extMins + ' دقيقة تمديد ✓' : ' ✓') : '🚪 Closed at ' + formatTime12Ar(nowHM) + ' ✓');
-      FOH.app.render();
-    });
+    confirmCloseBtn.addEventListener('click', () => submitOfficialRestaurantClose(dlg, options, ar));
 
     const cancelB = el('button', 'btn', ar ? 'إلغاء' : 'Cancel');
     cancelB.type = 'button';

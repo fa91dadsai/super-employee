@@ -1,5 +1,5 @@
 // Edit mode: item and section actions, the edit sheet (with its sub-items),
-// import/export. Every change can be undone once from the toast.
+// Data synchronization and exchange. Every change can be undone once from the toast.
 (function (FOH) {
   'use strict';
 

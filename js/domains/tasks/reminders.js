@@ -3,6 +3,7 @@
   const { t } = FOH.i18n;
   const normalize = FOH.store.cleanReminder;
   const presets = [0, 5, 10, 15, 30, 60, 120];
+
   function control(owner) {
     owner.remindBefore = normalize(owner.remindBefore);
     const { el } = FOH.view;
@@ -37,26 +38,35 @@
     root.append(label, customLabel, el('p', 'setting-note', t('reminderHelp')));
     return root;
   }
+
   const SNOOZE_KEY = 'foh-opening.snoozes.v1';
   function loadSnoozes() {
     try {
       return JSON.parse(localStorage.getItem(SNOOZE_KEY) || '{}');
-    } catch {
+    } catch (err) {
+      /* Snooze data read storage fallback */
       return {};
     }
   }
+
   function saveSnoozes(map) {
     try {
       localStorage.setItem(SNOOZE_KEY, JSON.stringify(map));
-    } catch {}
+    } catch (err) { /* Storage write fallback */ }
   }
+
   function isSnoozed(id, date, nowMin) {
     const map = loadSnoozes();
     const entry = map[date + '|' + id];
     if (!entry) return false;
     return entry.untilMin > nowMin;
   }
-  function snoozeItems(ids, date, nowHM, addMin) {
+
+  function snoozeItems(ids, date, opts = {}) {
+    const isLegacy = typeof opts === 'string';
+    const nowHM = isLegacy ? opts : opts.nowHM;
+    const addMin = isLegacy ? arguments[3] : opts.addMin;
+
     const nowMin = Number(nowHM.slice(0, 2)) * 60 + Number(nowHM.slice(3));
     const untilMin = addMin >= 1440 ? 24 * 60 + 1 : nowMin + addMin;
     const map = loadSnoozes();
@@ -65,6 +75,7 @@
     });
     saveSnoozes(map);
   }
+
   function clearSnoozesForDate(date) {
     const map = loadSnoozes();
     Object.keys(map).forEach((k) => {
@@ -72,29 +83,46 @@
     });
     saveSnoozes(map);
   }
+
   function activeSnoozeCount(date, nowHM) {
     const nowMin = Number(nowHM.slice(0, 2)) * 60 + Number(nowHM.slice(3));
     const map = loadSnoozes();
     return Object.entries(map).filter(([k, v]) => k.startsWith(date + '|') && v && v.untilMin > nowMin).length;
   }
 
-  function next(sections, checked, states, date, nowHM) {
+  function next(sections, checked, opts = {}) {
+    const isLegacy = Array.isArray(opts);
+    const states = isLegacy ? opts : (opts.states || []);
+    const date = isLegacy ? arguments[3] : opts.date;
+    const nowHM = isLegacy ? arguments[4] : opts.nowHM;
+
     const minutes = (hm) => Number(hm.slice(0, 2)) * 60 + Number(hm.slice(3));
     const nowMin = minutes(nowHM);
     const pending = [];
-    const add = (item, due, status, kind) => {
+
+    const add = (item, opt = {}) => {
+      const { due, status, kind = 'item' } = opt;
       if (isSnoozed(item.id, date, nowMin)) return;
       const lead = normalize(item.remindBefore);
       if (lead === null || !FOH.store.TIME_RE.test(due)) return;
       const delta = minutes(due) - nowMin;
       if (delta > lead) return;
-      pending.push({ item, due, delta, min: status === 'due' ? 0 : delta, kind: kind || 'item' });
+      pending.push({ item, due, delta, min: status === 'due' ? 0 : delta, kind });
     };
+
     sections.forEach((section) => section.items.forEach((item) => {
-      if (!FOH.model.progress(FOH.model.leaves(item), checked).complete) add(item, item.due, undefined, 'item');
-      FOH.model.kids(item).forEach((child) => { if (!checked[child.id]) add(child, child.due, undefined, 'item'); });
+      if (!FOH.model.progress(FOH.model.leaves(item), checked).complete) {
+        add(item, { due: item.due, kind: 'item' });
+      }
+      FOH.model.kids(item).forEach((child) => {
+        if (!checked[child.id]) add(child, { due: child.due, kind: 'item' });
+      });
     }));
-    states.filter((st) => st.status !== 'done' && st.occ === date).forEach((st) => add(st.task, st.task.time, st.status, 'task'));
+
+    states.filter((st) => st.status !== 'done' && st.occ === date).forEach((st) => {
+      add(st.task, { due: st.task.time, status: st.status, kind: 'task' });
+    });
+
     if (!pending.length) return null;
     pending.sort((a, b) => a.delta - b.delta);
     const first = pending[0];
@@ -108,5 +136,6 @@
       min: first.min,
     };
   }
+
   FOH.reminders = { control, next, snoozeItems, clearSnoozesForDate, activeSnoozeCount, isSnoozed };
 })(window.FOH = window.FOH || {});

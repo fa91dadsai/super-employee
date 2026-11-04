@@ -10,7 +10,7 @@
   const { t, pick } = FOH.i18n;
   const MAX = 300;
 
-  // { id|null, sid, parentId|null, children: [], openSub: id|null }
+  // Draft tracks id, section id, parentId, children list, and openSub
   let draft = null;
 
   const clean = (v) => v.trim().slice(0, MAX);
@@ -43,7 +43,11 @@
     $('subCount').textContent = draft.children.length ? ' (' + draft.children.length + ')' : '';
   }
 
-  function input(child, field, dir, lang, placeholder) {
+  function input(child, field, opts = {}) {
+    const isLegacy = typeof opts === 'string';
+    const dir = isLegacy ? opts : ((opts && opts.dir) || 'ltr');
+    const lang = isLegacy ? (arguments[3] || 'en') : ((opts && opts.lang) || 'en');
+    const placeholder = isLegacy ? (arguments[4] || '') : ((opts && opts.placeholder) || '');
     const box = document.createElement('input');
     box.className = 'in';
     box.value = child[field];

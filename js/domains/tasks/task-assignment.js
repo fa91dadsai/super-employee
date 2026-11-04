@@ -400,25 +400,7 @@
     return { panelRecurring, stepper, recurTimeIn, startDateIn: range.startDateIn, endDateIn: range.endDateIn, openEndedCheck: range.openEndedCheck };
   }
 
-  function createRecurrenceCard(ar, today, nowHM) {
-    const recurCard = el('div', 'task-asg-card');
-    recurCard.style.background = 'var(--bg2, rgba(0,0,0,0.03))';
-    recurCard.style.border = '1px solid var(--line)';
-    recurCard.style.borderRadius = '16px';
-    recurCard.style.padding = '12px 14px';
-    recurCard.style.marginBottom = '12px';
-
-    const recurTitleRow = el('div', '');
-    recurTitleRow.style.display = 'flex';
-    recurTitleRow.style.justifyContent = 'space-between';
-    recurTitleRow.style.alignItems = 'center';
-    recurTitleRow.style.marginBottom = '8px';
-    recurTitleRow.innerHTML =
-      '<span style="font-weight:700;font-size:0.82rem;display:flex;align-items:center;gap:6px;"><span>🗓️</span><span>' +
-      (ar ? 'طبيعة التكرار والجدولة:' : 'Recurrence & Schedule:') +
-      '</span></span>';
-    recurCard.append(recurTitleRow);
-
+  function createRecurrenceSegment(ar, once, recur) {
     let recurType = 'once';
     const recurSeg = el('div', 'seg wide');
     recurSeg.style.display = 'flex';
@@ -445,12 +427,6 @@
     btnRecur.style.border = 'none';
     btnRecur.style.cursor = 'pointer';
 
-    recurSeg.append(btnOnce, btnRecur);
-    recurCard.append(recurSeg);
-
-    const once = createOncePanel(ar, today, nowHM);
-    const recur = createRecurringPanel(ar, today, nowHM);
-
     btnOnce.addEventListener('click', () => {
       recurType = 'once';
       btnOnce.classList.add('on');
@@ -467,12 +443,39 @@
       recur.panelRecurring.style.display = 'block';
     });
 
-    recurCard.append(once.panelOnce, recur.panelRecurring);
+    recurSeg.append(btnOnce, btnRecur);
+    return { recurSeg, getRecurType: () => recurType };
+  }
+
+  function createRecurrenceCard(ar, today, nowHM) {
+    const recurCard = el('div', 'task-asg-card');
+    recurCard.style.background = 'var(--bg2, rgba(0,0,0,0.03))';
+    recurCard.style.border = '1px solid var(--line)';
+    recurCard.style.borderRadius = '16px';
+    recurCard.style.padding = '12px 14px';
+    recurCard.style.marginBottom = '12px';
+
+    const recurTitleRow = el('div', '');
+    recurTitleRow.style.display = 'flex';
+    recurTitleRow.style.justifyContent = 'space-between';
+    recurTitleRow.style.alignItems = 'center';
+    recurTitleRow.style.marginBottom = '8px';
+    recurTitleRow.innerHTML =
+      '<span style="font-weight:700;font-size:0.82rem;display:flex;align-items:center;gap:6px;"><span>🗓️</span><span>' +
+      (ar ? 'طبيعة التكرار والجدولة:' : 'Recurrence & Schedule:') +
+      '</span></span>';
+    recurCard.append(recurTitleRow);
+
+    const once = createOncePanel(ar, today, nowHM);
+    const recur = createRecurringPanel(ar, today, nowHM);
+    const seg = createRecurrenceSegment(ar, once, recur);
+
+    recurCard.append(seg.recurSeg, once.panelOnce, recur.panelRecurring);
 
     return {
       recurCard,
       getRecurData: () => ({
-        recurType,
+        recurType: seg.getRecurType(),
         currentEvery: recur.stepper.getEvery(),
         recurTimeHM: recur.recurTimeIn.value || '12:00',
         startDate: recur.startDateIn.value || S.date || today,
@@ -630,7 +633,10 @@
     return { rowAssign, roleSel, empSel };
   }
 
-  function buildTaskRuleAndBadge(recurData, rKey, empUser, ar) {
+  function buildTaskRuleAndBadge(recurData, rKey, opts = {}) {
+    const isLegacy = typeof opts === 'string';
+    const empUser = isLegacy ? opts : ((opts && opts.empUser) || '');
+    const ar = isLegacy ? !!arguments[3] : (opts && typeof opts.ar === 'boolean' ? opts.ar : isAr());
     const roleBadgeMap = {
       super_waiter: '⭐ Super Waiter',
       super_bartender: '🍸 Super Bartender',
@@ -692,11 +698,8 @@
     };
   }
 
-  function saveAndNotifyTask(params) {
-    const { textVal, targetSheet, targetSecId, rKey, empUser, recurData, ar, dlg } = params;
-    const sess = getSession();
-    const meta = buildTaskRuleAndBadge(recurData, rKey, empUser, ar);
-
+  function assembleNewTaskItems(params, meta) {
+    const { textVal, targetSheet, rKey, empUser, recurData } = params;
     const newItem = {
       id: 'asg_' + Date.now(),
       text: textVal,
@@ -717,17 +720,7 @@
       } : null,
       children: [],
     };
-
-    if (targetSheet !== getActiveSheetType() && FOH.erpPwa && FOH.erpPwa.switchSheetType) {
-      manualSheetOverride = targetSheet !== getScheduledSheetForNow();
-      FOH.erpPwa.switchSheetType(targetSheet);
-    }
-
-    const secObj = (S.tpl.sections || []).find((s) => s.id === targetSecId) || S.tpl.sections[0];
-    if (secObj) secObj.items.unshift(newItem);
-    if (FOH.erpPwa && FOH.erpPwa.persistCurrentSheetState) FOH.erpPwa.persistCurrentSheetState();
-
-    S.tpl.tasks.unshift({
+    const templateTask = {
       id: newItem.id,
       text: textVal,
       textAr: textVal,
@@ -745,19 +738,15 @@
       assignedSheet: targetSheet,
       carry: true,
       paused: false,
-    });
-    FOH.store.saveTemplate(S.tpl);
-    dlg.close();
+    };
+    return { newItem, templateTask };
+  }
 
-    notifyMobileOnNewTaskAdded({
-      titleEn: textVal,
-      titleAr: textVal,
-      dueHM: meta.dueHM,
-      sectionLabel: (secObj ? (ar ? secObj.titleAr || secObj.title : secObj.title) : targetSheet),
-      roleLabel: meta.fullBadgeLabel,
-      remindBefore: 0,
-    });
-
+  function broadcastAssignedTask(sess, targetSheet, opts = {}) {
+    const isLegacy = typeof opts === 'object' && !('meta' in opts);
+    const meta = isLegacy ? opts : (opts && opts.meta);
+    const newItem = isLegacy ? arguments[3] : (opts && opts.newItem);
+    const recurData = isLegacy ? arguments[4] : (opts && opts.recurData);
     if (FOH.cloudRealtime && FOH.cloudRealtime.broadcast) {
       FOH.cloudRealtime.broadcast('TASK_ASSIGNED', {
         senderName: (sess && sess.displayName) || 'Manager',
@@ -773,50 +762,47 @@
         },
       });
     }
+  }
 
+  function saveAndNotifyTask(params) {
+    const { textVal, targetSheet, targetSecId, rKey, empUser, recurData, ar, dlg } = params;
+    const sess = getSession();
+    const meta = buildTaskRuleAndBadge(recurData, rKey, empUser, ar);
+    const { newItem, templateTask } = assembleNewTaskItems(params, meta);
+
+    if (targetSheet !== getActiveSheetType() && FOH.erpPwa && FOH.erpPwa.switchSheetType) {
+      manualSheetOverride = targetSheet !== getScheduledSheetForNow();
+      FOH.erpPwa.switchSheetType(targetSheet);
+    }
+
+    const secObj = (S.tpl.sections || []).find((s) => s.id === targetSecId) || S.tpl.sections[0];
+    if (secObj) secObj.items.unshift(newItem);
+    if (FOH.erpPwa && FOH.erpPwa.persistCurrentSheetState) FOH.erpPwa.persistCurrentSheetState();
+
+    S.tpl.tasks.unshift(templateTask);
+    FOH.store.saveTemplate(S.tpl);
+    dlg.close();
+
+    notifyMobileOnNewTaskAdded({
+      titleEn: textVal,
+      titleAr: textVal,
+      dueHM: meta.dueHM,
+      sectionLabel: (secObj ? (ar ? secObj.titleAr || secObj.title : secObj.title) : targetSheet),
+      roleLabel: meta.fullBadgeLabel,
+      remindBefore: 0,
+    });
+
+    broadcastAssignedTask(sess, targetSheet, { meta, newItem, recurData });
     FOH.edit.toast(ar ? '✅ تم حفظ المهمة وتعيينها لـ (' + meta.assignedRoleLabel + ')!' : '✅ Task assigned to ' + meta.assignedRoleLabel + ' & saved!');
     FOH.app.render();
   }
 
-  function openAssignTaskToStaffOrRoleModal(defaultTargetSheet) {
-    const ar = isAr();
-    if (!canCurrentUserAssignTasks()) {
-      if (FOH.edit && FOH.edit.toast) {
-        FOH.edit.toast(ar ? '⚠️ صلاحية تعيين المهام مخصصة للمدير والمشرفين فقط أو لمن تم تفويضه بالإعدادات' : '⚠️ Task assignment is restricted to managers & authorized staff');
-      }
-      return;
-    }
-    let dlg = $('assignTaskDialog');
-    if (!dlg) {
-      dlg = el('dialog', 'sheet');
-      dlg.id = 'assignTaskDialog';
-      dlg.addEventListener('click', (e) => e.target === dlg && dlg.close());
-      document.body.append(dlg);
-    }
-    dlg.replaceChildren();
-
-    const curSheet = defaultTargetSheet || getActiveSheetType();
-    const today = (FOH.time && FOH.time.todayISO) ? FOH.time.todayISO() : (S.date || new Date().toISOString().slice(0, 10));
-    const nowHM = (FOH.time && FOH.time.nowHM) ? FOH.time.nowHM() : '12:00';
-
-    const box = el('div', 'task-asg-modal-box');
-    box.style.padding = '14px 18px 24px';
-    box.style.maxHeight = '88dvh';
-    box.style.overflowY = 'auto';
-
-    const header = createAssignModalHeader(dlg, ar);
-    const title = createTaskTitleInput(ar);
-    const recur = createRecurrenceCard(ar, today, nowHM);
-    const sheetSec = createSheetAndSectionCard(ar, curSheet);
-    const assignee = createAssigneeCard(ar);
-
-    if (FOH.modalPicker && FOH.modalPicker.enhanceSelect) {
-      FOH.modalPicker.enhanceSelect(sheetSec.sheetSel, { title: ar ? 'الشيت المستهدف' : 'Target Shift Sheet', icon: '📋' });
-      FOH.modalPicker.enhanceSelect(sheetSec.secSel, { title: ar ? 'القسم الفرعي' : 'Target Section', icon: '📂' });
-      FOH.modalPicker.enhanceSelect(assignee.roleSel, { title: ar ? 'المنصب التشغيلي (Position)' : 'Position (Role)', icon: '🪪' });
-      FOH.modalPicker.enhanceSelect(assignee.empSel, { title: ar ? 'الموظف المسؤول' : 'Assignee Staff', icon: '👤' });
-    }
-
+  function renderAssignModalActionButtons(dlg, title, opts = {}) {
+    const isLegacy = typeof opts === 'object' && !('sheetSec' in opts);
+    const sheetSec = isLegacy ? opts : (opts && opts.sheetSec);
+    const assignee = isLegacy ? arguments[3] : (opts && opts.assignee);
+    const recur = isLegacy ? arguments[4] : (opts && opts.recur);
+    const ar = isLegacy ? arguments[5] : (opts && typeof opts.ar === 'boolean' ? opts.ar : isAr());
     const acts = el('div', 'sheet-actions');
     acts.style.marginTop = '16px';
     acts.style.display = 'flex';
@@ -860,6 +846,51 @@
     });
 
     acts.append(cancelB, saveB);
+    return acts;
+  }
+
+  function openAssignTaskToStaffOrRoleModal(defaultTargetSheet) {
+    const ar = isAr();
+    if (!canCurrentUserAssignTasks()) {
+      if (FOH.edit && FOH.edit.toast) {
+        FOH.edit.toast(ar ? '⚠️ صلاحية تعيين المهام مخصصة للمدير والمشرفين فقط أو لمن تم تفويضه بالإعدادات' : '⚠️ Task assignment is restricted to managers & authorized staff');
+      }
+      return;
+    }
+    let dlg = $('assignTaskDialog');
+    if (!dlg) {
+      dlg = el('dialog', 'sheet');
+      dlg.id = 'assignTaskDialog';
+      dlg.addEventListener('click', (e) => e.target === dlg && dlg.close());
+      document.body.append(dlg);
+    }
+    dlg.replaceChildren();
+
+    const curSheet = defaultTargetSheet || getActiveSheetType();
+    const today = (FOH.time && FOH.time.todayISO) ? FOH.time.todayISO() : (S.date || new Date().toISOString().slice(0, 10));
+    const nowHM = (FOH.time && FOH.time.nowHM) ? FOH.time.nowHM() : '12:00';
+
+    const box = el('div', 'task-asg-modal-box');
+    box.style.padding = '14px 18px 24px';
+    box.style.maxHeight = '88dvh';
+    box.style.overflowY = 'auto';
+
+    const header = createAssignModalHeader(dlg, ar);
+    const title = createTaskTitleInput(ar);
+    const recur = createRecurrenceCard(ar, today, nowHM);
+    const sheetSec = createSheetAndSectionCard(ar, curSheet);
+    const assignee = createAssigneeCard(ar);
+
+    if (FOH.modalPicker && FOH.modalPicker.enhanceSelect) {
+      FOH.modalPicker.enhanceSelect(sheetSec.sheetSel, { title: ar ? 'الشيت المستهدف' : 'Target Shift Sheet', icon: '📋' });
+      FOH.modalPicker.enhanceSelect(sheetSec.secSel, { title: ar ? 'القسم الفرعي' : 'Target Section', icon: '📂' });
+      FOH.modalPicker.enhanceSelect(assignee.roleSel, { title: ar ? 'المنصب التشغيلي (Position)' : 'Position (Role)', icon: '🪪' });
+      FOH.modalPicker.enhanceSelect(assignee.empSel, { title: ar ? 'الموظف المسؤول' : 'Assignee Staff', icon: '👤' });
+    }
+
+
+
+    const acts = renderAssignModalActionButtons(dlg, title, { sheetSec, assignee, recur, ar });
     box.append(header.grab, header.headerRow, header.descP, title.titleGroup, recur.recurCard, sheetSec.rowSheet, assignee.rowAssign, acts);
     dlg.append(box);
     dlg.showModal();
@@ -891,7 +922,11 @@
     });
   }
 
-  function applyItemBadgesAndScope(flatItems, curUser, curRole, isLeader, sess) {
+  function applyItemBadgesAndScope(flatItems, curUser, opts = {}) {
+    const isLegacy = typeof opts === 'string';
+    const curRole = isLegacy ? opts : ((opts && opts.curRole) || '');
+    const isLeader = isLegacy ? !!arguments[3] : !!(opts && opts.isLeader);
+    const sess = isLegacy ? arguments[4] : (opts && opts.sess);
     document.querySelectorAll('#sections li.item, #sections li.kid').forEach((li) => {
       const cb = li.querySelector('input.ck[data-id]');
       if (!cb) return;

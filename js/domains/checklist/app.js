@@ -276,29 +276,7 @@
     });
   }
 
-  function init() {
-    FOH.i18n.apply();
-    $('sections').addEventListener('click', onClick);
-    $('sections').addEventListener('change', onCheck);
-    $('chips').addEventListener('click', onClick);
-    ['today', 'mine'].forEach((id) => $(id).addEventListener('change', onCheck)); // opening items in "My tasks"
-    FOH.taskActions.init(['today', 'mine', 'sched', 'rolesView'].map($));
-    document.querySelectorAll('[data-view]').forEach((b) =>
-      b.addEventListener('click', () => {
-        S.view = b.dataset.view;
-        window.scrollTo(0, 0);
-        render();
-      })
-    );
-    document.querySelectorAll('[data-etab]').forEach((b) =>
-      b.addEventListener('click', () => {
-        S.editTab = b.dataset.etab;
-        S.tray = null;
-        window.scrollTo(0, 0);
-        render();
-      })
-    );
-    window.addEventListener('scroll', onScroll, { passive: true });
+  function wireTopBarAndHeaderEvents() {
     $('modeBtn').addEventListener('click', () => {
       if (S.previewEmployee) return;
       S.editing = !S.editing;
@@ -313,12 +291,6 @@
       $('metaPanel').hidden = !$('metaPanel').hidden;
       render();
     });
-    document.querySelectorAll('[data-filter]').forEach((b) =>
-      b.addEventListener('click', () => {
-        S.filter = b.dataset.filter;
-        render();
-      })
-    );
     $('date').addEventListener('change', (e) => loadDate(e.target.value));
     ['supervisor', 'captain', 'assistant'].forEach((k) =>
       $(k).addEventListener('input', (e) => {
@@ -341,6 +313,42 @@
       saveRun();
       render();
     });
+  }
+
+  function wireNavigationAndTabEvents() {
+    document.querySelectorAll('[data-view]').forEach((b) =>
+      b.addEventListener('click', () => {
+        S.view = b.dataset.view;
+        window.scrollTo(0, 0);
+        render();
+      })
+    );
+    document.querySelectorAll('[data-etab]').forEach((b) =>
+      b.addEventListener('click', () => {
+        S.editTab = b.dataset.etab;
+        S.tray = null;
+        window.scrollTo(0, 0);
+        render();
+      })
+    );
+    document.querySelectorAll('[data-filter]').forEach((b) =>
+      b.addEventListener('click', () => {
+        S.filter = b.dataset.filter;
+        render();
+      })
+    );
+  }
+
+  function init() {
+    FOH.i18n.apply();
+    $('sections').addEventListener('click', onClick);
+    $('sections').addEventListener('change', onCheck);
+    $('chips').addEventListener('click', onClick);
+    ['today', 'mine'].forEach((id) => $(id).addEventListener('change', onCheck));
+    FOH.taskActions.init(['today', 'mine', 'sched', 'rolesView'].map($));
+    wireNavigationAndTabEvents();
+    wireTopBarAndHeaderEvents();
+    window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', render);
     FOH.edit.init();
     FOH.taskSheet.init();
@@ -352,7 +360,6 @@
     $('inv').addEventListener('change', FOH.invManage.onChange);
     loadDate(time.todayISO());
     if ($('metaPanel')) $('metaPanel').hidden = true;
-    // Refresh the due banner and late items once a minute.
     setInterval(() => {
       if (!S.editing && !document.querySelector('dialog[open]')) render();
     }, 60000);

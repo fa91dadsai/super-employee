@@ -118,110 +118,20 @@
     if (FOH.headerSubbars) FOH.headerSubbars.renderCleanHeaderText();
   }
 
-  // ---- Contextual Checklist Bar (Date, Shift Leaders, Progress %, Lock & Edit) + Role Scope ----
+  // ---- Role-Scoped Checklist Filtering (Super Waiter / Super Bartender Scope) ----
   function enhanceChecklistContextAndRoleScope() {
-    const govBar = $('checklistGovBar');
-    if (!govBar || S.editing || S.view !== 'opening') return;
+    if (S.editing || S.view !== 'opening') return;
 
-    const ar = isAr();
     const ident = getAppRoleIdentity();
     const rKey = getCurrentSuperRoleKey();
-    const sess = getSession();
-    const curUser = (sess && sess.username ? sess.username.toLowerCase() : 'fadi');
 
-    // 1. Prepend Role Workspace Bar & Quick Role Switcher at top of #checklistGovBar
-    if (!govBar.querySelector('.role-workspace-bar')) {
-      const roleBar = el('div', 'role-workspace-bar');
-      roleBar.style.width = '100%';
-
-      const leftInfo = el('div', '');
-      leftInfo.innerHTML =
-        '<b>' + (ar ? ident.titleAr : ident.titleEn) + '</b>' +
-        '<span style="display:block;font-size:0.72rem;color:var(--ink2);">' +
-        (ar ? ident.subAr : ident.subEn) +
-        '</span>';
-
-      const rightControls = el('div', 'role-switch-pills');
-      if (ident.openingKeywords && !isClosingSheetActive()) {
-        const scopeBtn = el(
-          'button',
-          'role-switch-pill' + (roleScopeOnly ? ' on' : ''),
-          roleScopeOnly
-            ? (ar ? '🎯 مهام قسمي فقط ✓' : '🎯 My Role Only ✓')
-            : (ar ? '👁 كل أقسام المطعم' : '👁 All Sections')
-        );
-        scopeBtn.type = 'button';
-        scopeBtn.addEventListener('click', () => {
-          roleScopeOnly = !roleScopeOnly;
-          FOH.app.render();
-        });
-        rightControls.append(scopeBtn);
-      }
-
-      // Quick Role Switcher pills so user can test Super Waiter / Bartender / Captain / Manager
-      [
-        ['sara', '⭐ Super Waiter'],
-        ['maher', '🍸 Super Bartender'],
-        ['ali', '🎖️ Super Captain'],
-        ['fadi', '👑 Super Manager'],
-      ].forEach(([uname, label]) => {
-        const pill = el('button', 'role-switch-pill' + (curUser === uname ? ' on' : ''), label);
-        pill.type = 'button';
-        pill.title = ar ? 'معاينة التطبيق بهذا المنصب' : 'Switch to this role view';
-        pill.addEventListener('click', () => quickSwitchEmployeeAccount(uname));
-        rightControls.append(pill);
-      });
-
-      roleBar.append(leftInfo, rightControls);
-      govBar.prepend(roleBar);
-    }
-
-    // 2. Inject Contextual Date / Supervisor / Progress % Bar inside #checklistGovBar (replacing top header clutter)
-    if (!govBar.querySelector('.sec-context-bar')) {
-      const all = FOH.model.progress(FOH.model.allLeaves({ sections: FOH.preview.sections() }), S.run.checked);
-      const pct = all.total ? Math.round((all.done * 100) / all.total) : 0;
-      const names = [S.run.supervisor, S.run.captain, S.run.assistant].filter(Boolean);
-      const day = new Date(S.date + 'T00:00:00');
-      const dateLabel = isNaN(day)
-        ? S.date
-        : day.toLocaleDateString(FOH.i18n.locale, { weekday: 'short', day: 'numeric', month: 'short' });
-
-      const ctxBar = el('div', 'sec-context-bar');
-      ctxBar.style.width = '100%';
-
-      const left = el('div', 'sec-ctx-left');
-      const progPill = el('span', 'sec-progress-pill', '📊 ' + pct + '% (' + all.done + '/' + all.total + ')');
-      const metaToggleBtn = el(
-        'button',
-        'sec-meta-btn',
-        '📅 ' + dateLabel + ' · ' + (names.length ? names.slice(0, 2).join(' · ') : (ar ? 'تحديد المشرف والكابتن' : 'Set Shift Leaders')) + ' ▾'
-      );
-      metaToggleBtn.type = 'button';
-      metaToggleBtn.addEventListener('click', () => {
-        if ($('metaPanel')) $('metaPanel').hidden = !$('metaPanel').hidden;
-      });
-      left.append(progPill, metaToggleBtn);
-
-      const right = el('div', 'gov-actions');
-      const breakBtn = el('button', 'gov-btn', ar ? '🔧 تسجيل كسر / صيانة' : '🔧 Report Damage / Repair');
-      breakBtn.type = 'button';
-      breakBtn.addEventListener('click', () => {
-        if (FOH.invBreak && FOH.invBreak.open) FOH.invBreak.open();
-      });
-      right.append(breakBtn);
-
-      ctxBar.append(left, right);
-      govBar.insertBefore(ctxBar, govBar.firstChild ? govBar.firstChild.nextSibling : null);
-    }
-
-    // 3. Filter Opening Checklist Sections & Chips when roleScopeOnly is active for Super Waiter / Super Bartender
+    // Filter Opening Checklist Sections & Chips when roleScopeOnly is active for Super Waiter / Super Bartender
     if (!isClosingSheetActive() && ident.openingKeywords && roleScopeOnly) {
       const kwList = ident.openingKeywords;
       document.querySelectorAll('#sections > section.card').forEach((card) => {
         const sid = (card.id || '').replace(/^sec-/, '');
         const secObj = (S.tpl.sections || []).find((x) => x.id === sid);
         const titleCombo = ((secObj && (secObj.title + ' ' + secObj.titleAr)) || card.textContent || '').toLowerCase();
-        // Waiter excludes Bar-only & Tech/Cash vault sections; Bartender focuses on Bar & Stations
         let match = kwList.some((kw) => titleCombo.includes(kw));
         if (rKey === 'super_waiter' && (titleCombo.includes('stations & bar') || titleCombo.includes('tech & cash') || titleCombo.includes('الكاشير'))) {
           match = false;
@@ -243,40 +153,11 @@
     }
   }
 
-  // ---- Enhance Sidebar with Language Toggle, Report Damage Button & Role-Scoped Navigation ----
-  function enhanceSidebarAndInventory() {
-    const ar = isAr();
-    const ident = getAppRoleIdentity();
-
-    // Update Sidebar Brand Title to match Employee's Super Role
+  function enhanceSidebarBrandAndLang(ar, ident) {
     const sbBrandStrong = document.querySelector('#appSidebar .sb-brand-txt strong');
     if (sbBrandStrong) {
       sbBrandStrong.textContent = ar ? ident.titleAr : ident.titleEn;
     }
-
-    // Filter Sidebar nav buttons to only those allowed for this role
-    const nav = $('sbNavList');
-    if (nav && !nav.dataset.v10Scoped) {
-      nav.dataset.v10Scoped = '1';
-      // Add Quick Damage / Repair button inside Sidebar
-      const dmgBtn = el('button', 'sb-nav-btn');
-      dmgBtn.type = 'button';
-      dmgBtn.append(
-        el('span', 'sb-nav-ico', '🔧'),
-        Object.assign(el('span', 'sb-nav-txt'), {
-          innerHTML:
-            '<b>' + (ar ? 'تسجيل كسر أو طلب صيانة' : 'Report Damage / Repair') + '</b>' +
-            '<small>' + (ar ? 'تبليغ فوري عن كسر أو عطل بالمعدات' : 'Log broken glassware or equipment repair') + '</small>',
-        })
-      );
-      dmgBtn.addEventListener('click', () => {
-        closeSidebar();
-        if (FOH.invBreak && FOH.invBreak.open) FOH.invBreak.open();
-      });
-      nav.append(dmgBtn);
-    }
-
-    // Add Language Switcher button inside Sidebar Footer (#sbFoot)
     const sbFoot = document.querySelector('#appSidebar .sb-foot');
     if (sbFoot && !$('sbLangToggle')) {
       const langBtn = el('button', 'btn sb-foot-btn', ar ? '🌐 EN' : '🌐 عربي');
@@ -291,8 +172,29 @@
     } else if ($('sbLangToggle')) {
       $('sbLangToggle').textContent = ar ? '🌐 EN' : '🌐 عربي';
     }
+  }
 
-    // Inject prominent "Report Damage / Request Repair" card at the top of #inv (Inventory section)
+  function injectSidebarDamageButton(nav, ar) {
+    if (!nav || nav.dataset.v10Scoped) return;
+    nav.dataset.v10Scoped = '1';
+    const dmgBtn = el('button', 'sb-nav-btn');
+    dmgBtn.type = 'button';
+    dmgBtn.append(
+      el('span', 'sb-nav-ico', '🔧'),
+      Object.assign(el('span', 'sb-nav-txt'), {
+        innerHTML:
+          '<b>' + (ar ? 'تسجيل كسر أو طلب صيانة' : 'Report Damage / Repair') + '</b>' +
+          '<small>' + (ar ? 'تبليغ فوري عن كسر أو عطل بالمعدات' : 'Log broken glassware or equipment repair') + '</small>',
+      })
+    );
+    dmgBtn.addEventListener('click', () => {
+      closeSidebar();
+      if (FOH.invBreak && FOH.invBreak.open) FOH.invBreak.open();
+    });
+    nav.append(dmgBtn);
+  }
+
+  function injectInventoryDamageCard(ar) {
     const invRoot = $('inv');
     if (invRoot && !invRoot.hidden && !invRoot.querySelector('#invDamageReportCard')) {
       const dmgCard = el('div', 'sec-context-bar');
@@ -309,6 +211,15 @@
       dmgCard.append(openBrkBtn);
       invRoot.prepend(dmgCard);
     }
+  }
+
+  // ---- Enhance Sidebar with Language Toggle, Report Damage Button & Role-Scoped Navigation ----
+  function enhanceSidebarAndInventory() {
+    const ar = isAr();
+    const ident = getAppRoleIdentity();
+    enhanceSidebarBrandAndLang(ar, ident);
+    injectSidebarDamageButton($('sbNavList'), ar);
+    injectInventoryDamageCard(ar);
   }
 
 
@@ -356,6 +267,99 @@
     return map[view] || map.opening;
   }
 
+  function renderSidebarProfileCard(profBox, sess, ar) {
+    profBox.replaceChildren();
+    const dispName = (sess && (ar ? sess.displayNameAr || sess.displayName : sess.displayName)) || S.me.name || 'Fadi (Supervisor)';
+    const srKey = getCurrentSuperRoleKey();
+    const srMeta = SUPER_ROLES_META[srKey] || SUPER_ROLES_META.staff;
+    const roleLbl = srMeta.badge;
+    const initials = dispName.slice(0, 2).toUpperCase();
+
+    const staffRec = (S.tpl.staff || []).find(
+      (p) => (sess && p.id === sess.staffId) || (p.name || '').toLowerCase().startsWith((sess && sess.username ? sess.username : 'fadi').toLowerCase())
+    );
+    const hcDays = staffRec ? calcDaysLeft(staffRec.healthCertExpiry) : null;
+    const hcTxt = hcDays === null
+      ? '🏥 —'
+      : hcDays < 0
+      ? (ar ? '🏥 🚨 منتهية' : '🏥 🚨 Expired')
+      : hcDays <= 30
+      ? (ar ? '🏥 ⚠️ باقي ' + hcDays + 'ي' : '🏥 ⚠️ ' + hcDays + 'd left')
+      : (ar ? '🏥 ✓ صالحة' : '🏥 ✓ Valid');
+
+    const top = el('div', 'sb-prof-top');
+    top.append(
+      el('div', 'sb-prof-av', initials),
+      Object.assign(el('div', 'sb-prof-meta'), {
+        innerHTML: '<b>' + dispName + '</b><small>🪪 ' + roleLbl + ' · ' + hcTxt + '</small>',
+      })
+    );
+    profBox.append(top);
+    profBox.onclick = () => switchView('profile');
+  }
+
+  function createSidebarNavItem(v, badge, ar) {
+    const isClosingNav = v === 'closing_sheet';
+    const meta = isClosingNav
+      ? {
+          ico: '🌙',
+          title: ar ? 'شيت الإغلاق و Last Order' : 'Closing Sheet & Last Order',
+          sub: ar ? 'إغلاق البار والصالة والكاشير مع آخر زبون' : 'Dept closing & last-guest lockup',
+        }
+      : getSectionMeta(v);
+    const isActive = isClosingNav
+      ? (!S.editing && S.view === 'opening' && isClosingSheetActive())
+      : (v === 'opening' ? (!S.editing && S.view === 'opening' && !isClosingSheetActive()) : (!S.editing && S.view === v));
+    const b = el('button', 'sb-nav-btn' + (isActive ? ' on' : ''));
+    b.type = 'button';
+    b.append(
+      el('span', 'sb-nav-ico', meta.ico),
+      Object.assign(el('span', 'sb-nav-txt'), {
+        innerHTML: '<b>' + meta.title + '</b><small>' + meta.sub + '</small>',
+      })
+    );
+    if (badge) b.append(el('span', 'sb-nav-badge', badge));
+    b.addEventListener('click', () => {
+      if (isClosingNav) {
+        closeSidebar();
+        activateClosingSheet('all');
+      } else if (v === 'opening') {
+        if (isClosingSheetActive() && FOH.erpPwa && FOH.erpPwa.switchSheetType) {
+          FOH.erpPwa.switchSheetType('opening');
+        }
+        switchView('opening');
+      } else {
+        switchView(v);
+      }
+    });
+    return b;
+  }
+
+  function renderSidebarNavList(nav, isMgr, ar) {
+    nav.replaceChildren();
+    const all = FOH.model.progress(FOH.model.allLeaves({ sections: FOH.preview.sections() }), S.run.checked);
+    const openLeft = all.total - all.done;
+    const ordCount = $('badgeOrders') ? Number($('badgeOrders').textContent || '0') : 0;
+
+    const items = [
+      ['opening', openLeft > 0 ? String(openLeft) : '✓'],
+      ['orders', ordCount > 0 ? String(ordCount) : ''],
+      ['dayoff', '🏖️'],
+      ['profile', '🏥'],
+      ['dashboard', '📊'],
+    ];
+    if (isMgr) items.push(['settings', '⚙️']);
+
+    const allowedViews = getAppRoleIdentity().allowedViews || [];
+    items.forEach(([v, badge]) => {
+      if (v === 'inv' && S.previewEmployee) return;
+      if (allowedViews.length && !allowedViews.includes(v)) return;
+      nav.append(createSidebarNavItem(v, badge, ar));
+    });
+    delete nav.dataset.v10Scoped;
+    enhanceSidebarAndInventory();
+  }
+
   function renderSidebarContent() {
     const ar = isAr();
     const gov = loadGov();
@@ -370,110 +374,10 @@
     }
 
     const profBox = $('sbProfileCard');
-    if (profBox) {
-      profBox.replaceChildren();
-      const dispName = (sess && (ar ? sess.displayNameAr || sess.displayName : sess.displayName)) || S.me.name || 'Fadi (Supervisor)';
-      const srKey = getCurrentSuperRoleKey();
-      const srMeta = SUPER_ROLES_META[srKey] || SUPER_ROLES_META.staff;
-      const roleLbl = srMeta.badge;
-      const initials = dispName.slice(0, 2).toUpperCase();
-
-      const staffRec = (S.tpl.staff || []).find(
-        (p) => (sess && p.id === sess.staffId) || (p.name || '').toLowerCase().startsWith((sess && sess.username ? sess.username : 'fadi').toLowerCase())
-      );
-      const hcDays = staffRec ? calcDaysLeft(staffRec.healthCertExpiry) : null;
-      const hcTxt = hcDays === null
-        ? '🏥 —'
-        : hcDays < 0
-        ? (ar ? '🏥 🚨 منتهية' : '🏥 🚨 Expired')
-        : hcDays <= 30
-        ? (ar ? '🏥 ⚠️ باقي ' + hcDays + 'ي' : '🏥 ⚠️ ' + hcDays + 'd left')
-        : (ar ? '🏥 ✓ صالحة' : '🏥 ✓ Valid');
-
-      const top = el('div', 'sb-prof-top');
-      top.append(
-        el('div', 'sb-prof-av', initials),
-        Object.assign(el('div', 'sb-prof-meta'), {
-          innerHTML: '<b>' + dispName + '</b><small>🪪 ' + roleLbl + ' · ' + hcTxt + '</small>',
-        })
-      );
-      profBox.append(top);
-      profBox.onclick = () => switchView('profile');
-    }
+    if (profBox) renderSidebarProfileCard(profBox, sess, ar);
 
     const nav = $('sbNavList');
-    if (nav) {
-      nav.replaceChildren();
-      const all = FOH.model.progress(FOH.model.allLeaves({ sections: FOH.preview.sections() }), S.run.checked);
-      const openLeft = all.total - all.done;
-      const mineLeft = $('badgeMine') ? Number($('badgeMine').textContent || '0') : 0;
-      const ordCount = $('badgeOrders') ? Number($('badgeOrders').textContent || '0') : 0;
-
-      const items = [
-        ['opening', openLeft > 0 ? String(openLeft) : '✓'],
-        ['orders', ordCount > 0 ? String(ordCount) : ''],
-        ['dayoff', '🏖️'],
-        ['profile', '🏥'],
-        ['dashboard', '📊'],
-      ];
-      if (isMgr) items.push(['settings', '⚙️']);
-
-      const allowedViews = getAppRoleIdentity().allowedViews || [];
-      items.forEach(([v, badge]) => {
-        if (v === 'inv' && S.previewEmployee) return;
-        if (allowedViews.length && !allowedViews.includes(v)) return;
-        const isClosingNav = v === 'closing_sheet';
-        const meta = isClosingNav
-          ? {
-              ico: '🌙',
-              title: ar ? 'شيت الإغلاق و Last Order' : 'Closing Sheet & Last Order',
-              sub: ar ? 'إغلاق البار والصالة والكاشير مع آخر زبون' : 'Dept closing & last-guest lockup',
-            }
-          : getSectionMeta(v);
-        const isActive = isClosingNav
-          ? (!S.editing && S.view === 'opening' && isClosingSheetActive())
-          : (v === 'opening' ? (!S.editing && S.view === 'opening' && !isClosingSheetActive()) : (!S.editing && S.view === v));
-        const b = el('button', 'sb-nav-btn' + (isActive ? ' on' : ''));
-        b.type = 'button';
-        b.append(
-          el('span', 'sb-nav-ico', meta.ico),
-          Object.assign(el('span', 'sb-nav-txt'), {
-            innerHTML: '<b>' + meta.title + '</b><small>' + meta.sub + '</small>',
-          })
-        );
-        if (badge) b.append(el('span', 'sb-nav-badge', badge));
-        b.addEventListener('click', () => {
-          if (isClosingNav) {
-            closeSidebar();
-            activateClosingSheet('all');
-          } else if (v === 'opening') {
-            if (isClosingSheetActive() && FOH.erpPwa && FOH.erpPwa.switchSheetType) {
-              FOH.erpPwa.switchSheetType('opening');
-            }
-            switchView('opening');
-          } else {
-            switchView(v);
-          }
-        });
-        nav.append(b);
-      });
-      delete nav.dataset.v10Scoped;
-      enhanceSidebarAndInventory();
-      injectRoleSwitcherInSidebar();
-    wireAutomaticTaskCreationNotifications();
-    enforceTimeBasedSheetSchedule();
-    renderUnifiedThreeSheetNav();
-    renderAssignedTaskBadgesAndFilter();
-    injectAssignTaskBtnIntoToolbarAndMine();
-    relocateHeaderSubbarsToMain();
-    renderCleanHeaderText();
-    collapseOpsLifecycleBarToOneLine();
-    renderUnifiedSingleRowChecklistBar();
-    injectRoleSwitcherInSidebar();
-    if (FOH.sectionAssignment && FOH.sectionAssignment.injectSectionControls) {
-      FOH.sectionAssignment.injectSectionControls();
-    }
-    }
+    if (nav) renderSidebarNavList(nav, isMgr, ar);
   }
 
 

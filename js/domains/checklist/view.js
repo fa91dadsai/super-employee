@@ -32,11 +32,14 @@
     return node;
   }
 
-  function btn(cls, label, act, data) {
+  function btn(cls, label, opts = {}) {
+    const isLegacy = typeof opts === 'string';
+    const act = isLegacy ? opts : ((opts && opts.act) || '');
+    const data = isLegacy ? arguments[3] : ((opts && opts.data) || {});
     const b = el('button', cls, label);
     b.type = 'button';
-    b.dataset.act = act;
-    Object.assign(b.dataset, data);
+    if (act) b.dataset.act = act;
+    if (data && typeof data === 'object') Object.assign(b.dataset, data);
     return b;
   }
 

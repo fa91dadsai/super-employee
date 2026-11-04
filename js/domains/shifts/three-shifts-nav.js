@@ -78,27 +78,8 @@
     }
   }
 
-  function renderUnifiedThreeSheetNav() {
-    const bar = $('sheetTypeBar');
-    const mainEl = $('appMain');
-    const govBar = $('checklistGovBar');
-    if (!bar || !mainEl) return;
-
-    // Place #sheetTypeBar right at the top of the checklist section (above #checklistGovBar)
-    if (govBar && bar.nextElementSibling !== govBar) {
-      mainEl.insertBefore(bar, govBar);
-    }
-
-    bar.hidden = S.editing || S.view !== 'opening';
-    if (bar.hidden) return;
-    bar.replaceChildren();
-
-    const ar = isAr();
-    const curType = getActiveSheetType();
-    const scheduledType = getScheduledSheetForNow();
-    const nowHM = getEffectiveNowHM();
-
-    // 1. Sleek Modern Header (Live Clock Chip + Current Window Status Pill)
+  function renderShiftNavHeader(opts) {
+    const { ar, curType, scheduledType, nowHM } = opts;
     const head = el('div', 'shift-nav-head');
     head.style.display = 'flex';
     head.style.alignItems = 'center';
@@ -143,37 +124,18 @@
       });
       head.append(autoBtn);
     }
-    bar.append(head);
+    return head;
+  }
 
-    // 2. High-Precision Segmented Control Grid
+  function renderShiftNavGrid(opts) {
+    const { ar, curType, scheduledType } = opts;
     const grid = el('nav', 'shift-nav-grid');
     grid.setAttribute('aria-label', 'Shift Sheets Navigation');
 
     const tabs = [
-      {
-        id: 'opening',
-        icon: '☀️',
-        titleAr: 'الافتتاح',
-        titleEn: 'Opening',
-        windowAr: '12 – 3 م',
-        windowEn: '12 – 3 PM',
-      },
-      {
-        id: 'mid',
-        icon: '🌤️',
-        titleAr: 'المنتصف',
-        titleEn: 'Mid-Shift',
-        windowAr: '3 – 11 م',
-        windowEn: '3 – 11 PM',
-      },
-      {
-        id: 'closing',
-        icon: '🌙',
-        titleAr: 'الإغلاق',
-        titleEn: 'Closing',
-        windowAr: '11 م – الإغلاق',
-        windowEn: '11 PM – Late',
-      },
+      { id: 'opening', icon: '☀️', titleAr: 'الافتتاح', titleEn: 'Opening', windowAr: '12 – 3 م', windowEn: '12 – 3 PM' },
+      { id: 'mid', icon: '🌤️', titleAr: 'المنتصف', titleEn: 'Mid-Shift', windowAr: '3 – 11 م', windowEn: '3 – 11 PM' },
+      { id: 'closing', icon: '🌙', titleAr: 'الإغلاق', titleEn: 'Closing', windowAr: '11 م – الإغلاق', windowEn: '11 PM – Late' },
     ];
 
     tabs.forEach((tb) => {
@@ -197,8 +159,32 @@
       });
       grid.append(btn);
     });
+    return grid;
+  }
 
-    bar.append(grid);
+  function renderUnifiedThreeSheetNav() {
+    const bar = $('sheetTypeBar');
+    const mainEl = $('appMain');
+    const govBar = $('checklistGovBar');
+    if (!bar || !mainEl) return;
+
+    if (govBar && bar.nextElementSibling !== govBar) {
+      mainEl.insertBefore(bar, govBar);
+    }
+
+    bar.hidden = S.editing || S.view !== 'opening';
+    if (bar.hidden) return;
+    bar.replaceChildren();
+
+    const ar = isAr();
+    const curType = getActiveSheetType();
+    const scheduledType = getScheduledSheetForNow();
+    const nowHM = getEffectiveNowHM();
+
+    const head = renderShiftNavHeader({ ar, curType, scheduledType, nowHM });
+    const grid = renderShiftNavGrid({ ar, curType, scheduledType });
+
+    bar.append(head, grid);
   }
 
   FOH.threeShifts = {

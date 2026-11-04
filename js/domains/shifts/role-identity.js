@@ -141,73 +141,32 @@
   }
 
   // Switch active employee account in 1 tap (for testing & quick terminal handoff)
+  function getQuickSwitchAccounts(ar) {
+    return {
+      fadi: { username: 'fadi', firstName: 'Fadi', lastName: 'Al-Masri', nickname: 'Fadi', phone: '+962 7 9000 1001', email: 'fadi.m@ceenlounge.com', inviteCode: 'CEEN-1001', displayName: ar ? 'فادي (سوبر مانجر)' : 'Fadi (Super Manager)', roleName: '👑 Super Manager', roleAr: '👑 سوبر مانجر', isManager: true, shift: '12:00 – 02:00 · Restaurant Manager' },
+      ali: { username: 'ali', firstName: 'Ali', lastName: 'Hassan', nickname: 'Ali', phone: '+962 7 9000 2002', email: 'ali.h@ceenlounge.com', inviteCode: 'CEEN-2002', displayName: ar ? 'علي (سوبر كابتن)' : 'Ali (Super Captain)', roleName: '🎖️ Super Captain', roleAr: '🎖️ سوبر كابتن', isManager: false, isCaptain: true, shift: '12:00 – 02:00 · Floor Captain' },
+      maher: { username: 'maher', firstName: 'Maher', lastName: 'Zaid', nickname: 'Leo', phone: '+962 7 9000 4004', email: 'maher.z@ceenlounge.com', inviteCode: 'CEEN-4004', displayName: ar ? 'ماهر (سوبر بارتندر)' : 'Maher (Super Bartender)', roleName: '🍸 Super Bartender', roleAr: '🍸 سوبر بارتندر', isManager: false, shift: '12:00 – 02:00 · Main Bar Lead' },
+      sara: { username: 'sara', firstName: 'Sara', lastName: 'Khoury', nickname: 'Sara', phone: '+962 7 9000 3003', email: 'sara.k@ceenlounge.com', inviteCode: 'CEEN-3003', displayName: ar ? 'سارة (سوبر ويتر)' : 'Sara (Super Waiter)', roleName: '⭐ Super Waiter', roleAr: '⭐ سوبر ويتر', isManager: false, shift: '12:00 – 02:00 · Indoor & Terrace Waiter' },
+    };
+  }
+
+  function bindStaffAndRoleToTemplate(username) {
+    const targetRoleName = username === 'fadi' ? 'Supervisor' : username === 'ali' ? 'Captain' : username === 'maher' ? 'Bartender' : 'Waiter';
+    const roleObj = (S.tpl.roles || []).find((r) => (r.name || '').toLowerCase().includes(targetRoleName.toLowerCase())) || S.tpl.roles[0];
+    const person = (S.tpl.staff || []).find((p) => (p.name || '').toLowerCase().startsWith(username));
+    if (person && roleObj) {
+      person.role = roleObj.id;
+      S.me = { staffId: person.id, role: roleObj.id, name: person.name };
+      FOH.store.saveMe(S.me);
+    }
+  }
+
   function quickSwitchEmployeeAccount(username) {
     const ar = isAr();
-    const accounts = {
-      fadi: {
-        username: 'fadi',
-        firstName: 'Fadi',
-        lastName: 'Al-Masri',
-        nickname: 'Fadi',
-        phone: '+962 7 9000 1001',
-        email: 'fadi.m@ceenlounge.com',
-        inviteCode: 'CEEN-1001',
-        displayName: ar ? 'فادي (سوبر مانجر)' : 'Fadi (Super Manager)',
-        roleName: '👑 Super Manager',
-        roleAr: '👑 سوبر مانجر',
-        isManager: true,
-        shift: '12:00 – 02:00 · Restaurant Manager',
-      },
-      ali: {
-        username: 'ali',
-        firstName: 'Ali',
-        lastName: 'Hassan',
-        nickname: 'Ali',
-        phone: '+962 7 9000 2002',
-        email: 'ali.h@ceenlounge.com',
-        inviteCode: 'CEEN-2002',
-        displayName: ar ? 'علي (سوبر كابتن)' : 'Ali (Super Captain)',
-        roleName: '🎖️ Super Captain',
-        roleAr: '🎖️ سوبر كابتن',
-        isManager: false,
-        isCaptain: true,
-        shift: '12:00 – 02:00 · Floor Captain',
-      },
-      maher: {
-        username: 'maher',
-        firstName: 'Maher',
-        lastName: 'Zaid',
-        nickname: 'Leo',
-        phone: '+962 7 9000 4004',
-        email: 'maher.z@ceenlounge.com',
-        inviteCode: 'CEEN-4004',
-        displayName: ar ? 'ماهر (سوبر بارتندر)' : 'Maher (Super Bartender)',
-        roleName: '🍸 Super Bartender',
-        roleAr: '🍸 سوبر بارتندر',
-        isManager: false,
-        shift: '12:00 – 02:00 · Main Bar Lead',
-      },
-      sara: {
-        username: 'sara',
-        firstName: 'Sara',
-        lastName: 'Khoury',
-        nickname: 'Sara',
-        phone: '+962 7 9000 3003',
-        email: 'sara.k@ceenlounge.com',
-        inviteCode: 'CEEN-3003',
-        displayName: ar ? 'سارة (سوبر ويتر)' : 'Sara (Super Waiter)',
-        roleName: '⭐ Super Waiter',
-        roleAr: '⭐ سوبر ويتر',
-        isManager: false,
-        shift: '12:00 – 02:00 · Indoor & Terrace Waiter',
-      },
-    };
+    const accounts = getQuickSwitchAccounts(ar);
     const target = accounts[username] || accounts.fadi;
     const prevSess = getSession() || {};
-    const nextSess = {
-      ...prevSess,
-      ...target,
-    };
+    const nextSess = { ...prevSess, ...target };
     try {
       localStorage.setItem(SESSION_KEY, JSON.stringify(nextSess));
       sessionStorage.removeItem(SESSION_KEY);
@@ -215,15 +174,7 @@
       /* Storage quota exceeded or disabled in private browsing */
     }
 
-    // Bind S.me to the matching staff & role in S.tpl
-    const targetRoleName = username === 'fadi' ? 'Supervisor' : username === 'ali' ? 'Captain' : username === 'maher' ? 'Bartender' : 'Waiter';
-    let roleObj = (S.tpl.roles || []).find((r) => (r.name || '').toLowerCase().includes(targetRoleName.toLowerCase())) || S.tpl.roles[0];
-    let person = (S.tpl.staff || []).find((p) => (p.name || '').toLowerCase().startsWith(username));
-    if (person && roleObj) {
-      person.role = roleObj.id;
-      S.me = { staffId: person.id, role: roleObj.id, name: person.name };
-      FOH.store.saveMe(S.me);
-    }
+    bindStaffAndRoleToTemplate(username);
 
     roleScopeOnly = username === 'sara' || username === 'maher';
     const ident = ROLE_APP_IDENTITY[getCurrentSuperRoleKey()] || ROLE_APP_IDENTITY.super_waiter;

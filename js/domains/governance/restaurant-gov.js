@@ -74,7 +74,7 @@
   function saveGov(gov) {
     try {
       localStorage.setItem(GOV_KEY, JSON.stringify(gov));
-    } catch {}
+    } catch (err) { /* Gov storage quota fallback */ }
   }
 
   // ---- 2. Seed Default Health Certificates & Permissions on Staff ----
@@ -169,11 +169,69 @@
     return alerts;
   }
 
+  function createHealthBannerActionBtn(top, alerts, opts = {}) {
+    const isLegacy = typeof opts === 'object' && !('sess' in opts);
+    const sess = isLegacy ? opts : ((opts && opts.sess) || getSession());
+    const isMgr = isLegacy ? !!arguments[3] : !!(opts && opts.isMgr);
+    const ar = isLegacy ? !!arguments[4] : (opts && typeof opts.ar === 'boolean' ? opts.ar : isAr());
+    if (isMgr) {
+      const targetName = (top.staff && top.staff.name) || '';
+      const actionBtn = el(
+        'button',
+        'snooze-btn done-now',
+        ar ? (targetName ? '📅 تحديث شهادة (' + targetName + ')' : '📅 تحديث الشهادة (مدير)') : (targetName ? '📅 Update (' + targetName + ')' : '📅 Update Expiry (Manager)')
+      );
+      actionBtn.type = 'button';
+      actionBtn.addEventListener('click', () => {
+        if (top.staff && top.staff.id) S.selectedHealthStaffId = top.staff.id;
+        S.view = 'profile';
+        FOH.app.render();
+      });
+      return actionBtn;
+    }
+    const notifyBtn = el('button', 'snooze-btn done-now', ar ? '🏥 إشعار الإدارة بالتجديد' : '🏥 Notify Manager');
+    notifyBtn.type = 'button';
+    notifyBtn.addEventListener('click', () => {
+      if (FOH.cloudRealtime && FOH.cloudRealtime.broadcast) {
+        FOH.cloudRealtime.broadcast('HEALTH_CERT_RENEWAL_REQUEST', {
+          by: (sess && sess.displayName) || S.me.name || 'Staff',
+          at: FOH.time.nowHM(),
+        });
+      }
+      FOH.edit.toast(ar ? 'تم إرسال إشعار لإدارة المطعم لمراجعة وتحديث الشهادة الصحية ✓' : 'Management notified of renewal request ✓');
+      if (FOH.reminders && FOH.reminders.snoozeItems) {
+        FOH.reminders.snoozeItems(alerts.map((a) => a.snoozeId), FOH.time.todayISO(), FOH.time.nowHM(), 1440);
+      }
+      renderHealthBanner();
+    });
+    return notifyBtn;
+  }
+
+  function createHealthBannerSnoozeBtns(alerts, ar) {
+    const snz1h = el('button', 'snooze-btn', ar ? '💤 تأجيل ١س' : '💤 +1h');
+    snz1h.type = 'button';
+    snz1h.addEventListener('click', () => {
+      if (FOH.reminders && FOH.reminders.snoozeItems) {
+        FOH.reminders.snoozeItems(alerts.map((a) => a.snoozeId), FOH.time.todayISO(), FOH.time.nowHM(), 60);
+      }
+      renderHealthBanner();
+    });
+
+    const snzDay = el('button', 'snooze-btn', ar ? '🔕 كتم اليوم' : '🔕 Mute Today');
+    snzDay.type = 'button';
+    snzDay.addEventListener('click', () => {
+      if (FOH.reminders && FOH.reminders.snoozeItems) {
+        FOH.reminders.snoozeItems(alerts.map((a) => a.snoozeId), FOH.time.todayISO(), FOH.time.nowHM(), 1440);
+      }
+      renderHealthBanner();
+    });
+    return [snz1h, snzDay];
+  }
+
   function renderHealthBanner() {
     const box = $('healthAlertBanner');
-    if (!box) return;
-    if (S.editing) {
-      box.hidden = true;
+    if (!box || S.editing) {
+      if (box) box.hidden = true;
       return;
     }
     const alerts = getHealthAlerts();
@@ -196,59 +254,10 @@
     const acts = el('div', 'health-banner-actions');
     const sess = getSession();
     const isMgr = !!(sess && sess.isManager);
-    let actionBtn;
-    if (isMgr) {
-      const targetName = (top.staff && top.staff.name) || '';
-      actionBtn = el(
-        'button',
-        'snooze-btn done-now',
-        ar ? (targetName ? '📅 تحديث شهادة (' + targetName + ')' : '📅 تحديث الشهادة (مدير)') : (targetName ? '📅 Update (' + targetName + ')' : '📅 Update Expiry (Manager)')
-      );
-      actionBtn.type = 'button';
-      actionBtn.addEventListener('click', () => {
-        if (top.staff && top.staff.id) {
-          S.selectedHealthStaffId = top.staff.id;
-        }
-        S.view = 'profile';
-        FOH.app.render();
-      });
-    } else {
-      actionBtn = el('button', 'snooze-btn done-now', ar ? '🏥 إشعار الإدارة بالتجديد' : '🏥 Notify Manager');
-      actionBtn.type = 'button';
-      actionBtn.addEventListener('click', () => {
-        if (FOH.cloudRealtime && FOH.cloudRealtime.broadcast) {
-          FOH.cloudRealtime.broadcast('HEALTH_CERT_RENEWAL_REQUEST', {
-            by: (sess && sess.displayName) || S.me.name || 'Staff',
-            at: FOH.time.nowHM(),
-          });
-        }
-        FOH.edit.toast(ar ? 'تم إرسال إشعار لإدارة المطعم لمراجعة وتحديث الشهادة الصحية ✓' : 'Management notified of renewal request ✓');
-        if (FOH.reminders && FOH.reminders.snoozeItems) {
-          FOH.reminders.snoozeItems(alerts.map((a) => a.snoozeId), FOH.time.todayISO(), FOH.time.nowHM(), 1440);
-        }
-        renderHealthBanner();
-      });
-    }
+    const actionBtn = createHealthBannerActionBtn(top, alerts, { sess, isMgr, ar });
+    const snoozeBtns = createHealthBannerSnoozeBtns(alerts, ar);
 
-    const snz1h = el('button', 'snooze-btn', ar ? '💤 تأجيل ١س' : '💤 +1h');
-    snz1h.type = 'button';
-    snz1h.addEventListener('click', () => {
-      if (FOH.reminders && FOH.reminders.snoozeItems) {
-        FOH.reminders.snoozeItems(alerts.map((a) => a.snoozeId), FOH.time.todayISO(), FOH.time.nowHM(), 60);
-      }
-      renderHealthBanner();
-    });
-
-    const snzDay = el('button', 'snooze-btn', ar ? '🔕 كتم اليوم' : '🔕 Mute Today');
-    snzDay.type = 'button';
-    snzDay.addEventListener('click', () => {
-      if (FOH.reminders && FOH.reminders.snoozeItems) {
-        FOH.reminders.snoozeItems(alerts.map((a) => a.snoozeId), FOH.time.todayISO(), FOH.time.nowHM(), 1440);
-      }
-      renderHealthBanner();
-    });
-
-    acts.append(actionBtn, snz1h, snzDay);
+    acts.append(actionBtn, ...snoozeBtns);
     box.append(msg, acts);
   }
 
