@@ -9881,7 +9881,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   'use strict';
 
   const $ = (id) => document.getElementById(id);
-  const S = FOH.state;
+  const getState = () => FOH.state || {};
   const { el } = FOH.view;
 
   function isAr() {
@@ -9956,6 +9956,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     const sectionsEl = $('sections');
     if (!mainEl || !sectionsEl) return;
 
+    const S = getState();
     if (S.editing || S.view !== 'opening') {
       const existing = $('checklistSearchBar');
       if (existing) existing.hidden = true;
@@ -13847,8 +13848,6 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     },
   ];
 
-  let session = loadSession();
-
   FOH.authAccountsData = DEMO_ACCOUNTS;
 })(window.FOH = window.FOH || {});
 
@@ -13922,6 +13921,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
   const DEMO_ACCOUNTS = FOH.authAccountsData || [];
   let showPreviewBar = false;
+  let session = null;
 
   function loadSession() {
     try {
@@ -13932,6 +13932,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       return null;
     }
   }
+
+  session = loadSession();
 
   function saveSession(next, opts = {}) {
     session = next;
