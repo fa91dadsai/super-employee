@@ -7241,7 +7241,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   // Simple item: one variant. [en, ar, expected, location, opts]
   const i = (name, ar, expected, location, opts) => ({ name, ar, expected, location, cond: BREAKS, ...opts });
 
-  // Item with attributes: a1/a2 = [en, ar, [[valueEn, valueAr], …]];
+  // Item with attributes: a1/a2 = [en, ar, [[valueEn, valueAr], …]]
   // v = [[index in a1, index in a2 (or -1), expected], …]
   const iv = (name, ar, location, a1, a2, v, opts) => ({ name, ar, location, a1, a2, v, cond: BREAKS, ...opts });
 
@@ -7705,7 +7705,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 <script>
 // --- js/domains/checklist/model.js ---
 // Pure helpers over the template: locate items, progress, nesting.
-// A top-level item with sub-items is a "parent": it is never ticked itself;
+// A top-level item with sub-items is a "parent": it is never ticked itself.
 // its state comes from its sub-items. Progress counts leaves only.
 (function (FOH) {
   'use strict';
@@ -7855,7 +7855,12 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   // State of a task on `date`: null (nothing to show) or
   // { task, occ, late, doneEntry, status } where status is
   // 'done' | 'upcoming' | 'due' | 'late'.
-  function stateOn(task, log, date, today, nowHM) {
+  function stateOn(task, log, opts = {}) {
+    const isLegacy = typeof opts === 'string';
+    const date = isLegacy ? opts : opts.date;
+    const today = isLegacy ? arguments[3] : opts.today;
+    const nowHM = isLegacy ? arguments[4] : opts.nowHM;
+
     if (task.paused) return null;
     if (task.start && date < task.start) return null;
     if (task.endDate && date > task.endDate) return null;
@@ -7917,15 +7922,20 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   }
 
   // Week grid: for each of 7 days from `weekStart`, the tasks on that day.
-  // Past days show what was done (or missed); today shows live state;
+  // Past days show what was done or missed, today shows live state,
   // later days show projected dates.
-  function week(tasks, log, weekStart, today, nowHM) {
+  function week(tasks, log, opts = {}) {
+    const isLegacy = typeof opts === 'string';
+    const weekStart = isLegacy ? opts : opts.weekStart;
+    const today = isLegacy ? arguments[3] : opts.today;
+    const nowHM = isLegacy ? arguments[4] : opts.nowHM;
+
     return Array.from({ length: 7 }, (_, i) => {
       const date = addDays(weekStart, i);
       const cells = [];
       tasks.forEach((task) => {
         if (date === today) {
-          const st = stateOn(task, log, date, today, nowHM);
+          const st = stateOn(task, log, { date, today, nowHM });
           if (st) cells.push({ task, status: st.status });
         } else if (date < today) {
           const done = entries(log, task).find((e) => e.done === date);
@@ -7934,7 +7944,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
             const handled = entries(log, task).some((e) => e.occ === date);
             if (!handled) cells.push({ task, status: 'missed' });
           }
-        } else if (upcoming(task, log, today, today, diffDays(date, today), 99).includes(date)) {
+        } else if (upcoming(task, log, { date: today, today, days: diffDays(date, today), count: 99 }).includes(date)) {
           cells.push({ task, status: 'planned' });
         }
       });
@@ -7959,12 +7969,17 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   const weekStart = (iso, first) => addDays(iso, -((weekday(iso) - (first || 0) + 7) % 7));
 
   // Mark done / undo for `date`.
-  function toggle(log, st, date, at, by) {
+  function toggle(log, st, opts = {}) {
+    const isLegacy = typeof opts === 'string';
+    const date = isLegacy ? opts : opts.date;
+    const at = isLegacy ? arguments[3] : opts.at;
+    const by = (isLegacy ? arguments[4] : opts.by) || '';
+
     const list = Array.isArray(log[st.task.id]) ? log[st.task.id] : (log[st.task.id] = []);
     if (st.doneEntry) {
       log[st.task.id] = list.filter((e) => e !== st.doneEntry && !(e.done === date && e.occ === st.doneEntry.occ));
     } else {
-      list.push({ occ: st.occ, done: date, at, by: by || '' });
+      list.push({ occ: st.occ, done: date, at, by });
     }
   }
 
@@ -8267,14 +8282,13 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 // Inventory (blind count) data and rules. Kept apart from the checklist so
 // expected quantities are never part of the checklist export.
 //
-// item    = { id, name, nameAr, unit, location, photo, hint, hintAr, cond:{repair, writeoff},
-//             attrs:[{ id, name, nameAr, values:[{ id, label, labelAr }] }] (0-2),
-//             variants:[{ id, a:[valueId|'', valueId|''], expected, photo, archived }] }
-// Counting happens per (active) variant. A count line per variant:
-//   { good, repair, writeoff, photo, unsure }
-// weeks[countDate] = { published, assign, counts, recounts, approved }
-// repairs   = [{ id, variantId, qty, since, by }]           (in repair, still owned)
-// writeoffs = [{ id, variantId, qty, date, source, by, note }] (removed from stock)
+// An item has id, names (en/ar), unit, location, photo, hints, and condition flags.
+// Attributes (0 to 2) define variant values (such as size, type, or color).
+// Variants hold id, attribute values, expected count, photo, and archived status.
+// Counting happens per active variant, tracking good, repair, and writeoff quantities.
+// Weekly records track publication status, staff assignments, counts, recounts, and approvals.
+// Repairs track variantId, quantity, date, and logging staff member.
+// Writeoffs track variantId, quantity, date, source reason, and staff note.
 // Without a server this stays on the device; real blind counting (expected
 // quantities never sent to staff phones) comes with the database.
 (function (FOH) {
@@ -8502,7 +8516,11 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
   // Approve a category: good becomes the new expected, repairable go to
   // "in repair", write-offs leave stock. A submitted recount wins per variant.
-  function approve(inv, key, cat, at) {
+  function approve(inv, key, opts = {}) {
+    const isLegacy = opts && typeof opts === 'object' && !('cat' in opts) && !('category' in opts);
+    const cat = isLegacy ? opts : (opts && (opts.cat || opts.category));
+    const at = isLegacy ? (arguments[3] || '') : ((opts && opts.at) || '');
+    if (!cat) return;
     const w = week(inv, key);
     if (w.approved[cat.id]) return;
     const first = w.counts[cat.id];
@@ -8555,8 +8573,11 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   // Staff who take part in counts.
   const participants = (tpl) => tpl.staff.filter((p) => p.active && p.inv);
 
-  // How many weeks ago `staffId` counted `catId` before week `key` (Infinity = never).
-  function weeksSince(inv, key, catId, staffId) {
+  // How many weeks ago staff counted category before week key (Infinity = never).
+  function weeksSince(inv, key, opts = {}) {
+    const isLegacy = typeof opts === 'string' || typeof opts !== 'object' || opts === null;
+    const catId = isLegacy ? opts : (opts && (opts.catId || opts.cat));
+    const staffId = isLegacy ? arguments[3] : (opts && opts.staffId);
     const before = Object.keys(inv.weeks)
       .filter((k) => k < key)
       .sort()
@@ -8598,8 +8619,12 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     return true;
   }
 
-  // Someone other than `exclude` for a recount, preferring who has not counted it lately.
-  function recounter(inv, tpl, key, catId, exclude) {
+  // Someone other than exclude for a recount, preferring who has not counted it lately.
+  function recounter(inv, tpl, opts = {}) {
+    const isLegacy = typeof opts === 'string' || typeof opts !== 'object' || opts === null;
+    const key = isLegacy ? opts : (opts && opts.key);
+    const catId = isLegacy ? arguments[3] : (opts && opts.catId);
+    const exclude = isLegacy ? arguments[4] : (opts && opts.exclude);
     const people = participants(tpl).filter((p) => p.id !== exclude);
     if (!people.length) return '';
     people.sort((a, b) => weeksSince(inv, key, catId, b.id) - weeksSince(inv, key, catId, a.id) || Math.random() - 0.5);
@@ -8675,6 +8700,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       await tx('readwrite', (s) => s.put(data, id));
       return id;
     } catch (err) {
+      /* Photo compression or storage failure fallback */
       return null;
     }
   }
@@ -8711,9 +8737,49 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     else if (dy > 0 && y > window.innerHeight - EDGE) window.scrollBy(0, 12);
   }
 
+  function createDragHandlers(list, row, opts = {}) {
+    const isLegacy = typeof opts === 'string';
+    const startOrder = isLegacy ? opts : (opts && opts.startOrder);
+    const ev = isLegacy ? arguments[3] : (opts && opts.ev);
+    const onDrop = isLegacy ? arguments[4] : (opts && opts.onDrop);
+    let finished = false;
+    let lastY = ev.clientY;
+
+    const move = (e) => {
+      if (e.pointerId !== ev.pointerId) return;
+      e.preventDefault();
+      const y = e.clientY;
+      let before = null;
+      for (const li of list.children) {
+        if (li === row) continue;
+        const r = li.getBoundingClientRect();
+        if (y < r.top + r.height / 2) {
+          before = li;
+          break;
+        }
+      }
+      if (before !== row.nextElementSibling) list.insertBefore(row, before);
+      autoScroll(y, y - lastY);
+      lastY = y;
+    };
+
+    const end = (e) => {
+      if (finished || e.pointerId !== ev.pointerId) return;
+      finished = true;
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', end);
+      window.removeEventListener('pointercancel', end);
+      row.classList.remove('dragging');
+      const ids = Array.from(list.children).map((li) => li.dataset.id);
+      if (ids.join() !== startOrder) onDrop(ids);
+    };
+
+    window.addEventListener('pointermove', move, { passive: false });
+    window.addEventListener('pointerup', end);
+    window.addEventListener('pointercancel', end);
+  }
+
   function enable(list, onDrop) {
-    // Stop the page from scrolling under the finger while a handle is dragged
-    // (touch-action alone is not honoured everywhere, e.g. older iOS Safari).
     list.addEventListener(
       'touchmove',
       (e) => {
@@ -8724,49 +8790,12 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     );
     list.addEventListener('pointerdown', (ev) => {
       const handle = ev.target.closest('.handle');
-      // Lists nest (sub-items); only react to handles that belong to this list.
       if (!handle || handle.closest('ol') !== list) return;
       const row = handle.closest('li');
       const startOrder = Array.from(list.children).map((li) => li.dataset.id).join();
       ev.preventDefault();
       row.classList.add('dragging');
-      // Listen on window, not with pointer capture: moving the row in the DOM
-      // would release the capture and end the drag after one step.
-      let finished = false;
-      let lastY = ev.clientY;
-
-      const move = (e) => {
-        if (e.pointerId !== ev.pointerId) return;
-        e.preventDefault();
-        const y = e.clientY;
-        let before = null;
-        for (const li of list.children) {
-          if (li === row) continue;
-          const r = li.getBoundingClientRect();
-          if (y < r.top + r.height / 2) {
-            before = li;
-            break;
-          }
-        }
-        if (before !== row.nextElementSibling) list.insertBefore(row, before);
-        autoScroll(y, y - lastY);
-        lastY = y;
-      };
-
-      const end = (e) => {
-        if (finished || e.pointerId !== ev.pointerId) return;
-        finished = true;
-        window.removeEventListener('pointermove', move);
-        window.removeEventListener('pointerup', end);
-        window.removeEventListener('pointercancel', end);
-        row.classList.remove('dragging');
-        const ids = Array.from(list.children).map((li) => li.dataset.id);
-        if (ids.join() !== startOrder) onDrop(ids);
-      };
-
-      window.addEventListener('pointermove', move, { passive: false });
-      window.addEventListener('pointerup', end);
-      window.addEventListener('pointercancel', end);
+      createDragHandlers(list, row, { startOrder, ev, onDrop });
     });
   }
 
@@ -8811,11 +8840,14 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     return node;
   }
 
-  function btn(cls, label, act, data) {
+  function btn(cls, label, opts = {}) {
+    const isLegacy = typeof opts === 'string';
+    const act = isLegacy ? opts : ((opts && opts.act) || '');
+    const data = isLegacy ? arguments[3] : ((opts && opts.data) || {});
     const b = el('button', cls, label);
     b.type = 'button';
-    b.dataset.act = act;
-    Object.assign(b.dataset, data);
+    if (act) b.dataset.act = act;
+    if (data && typeof data === 'object') Object.assign(b.dataset, data);
     return b;
   }
 
@@ -9403,6 +9435,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   const { t } = FOH.i18n;
   const normalize = FOH.store.cleanReminder;
   const presets = [0, 5, 10, 15, 30, 60, 120];
+
   function control(owner) {
     owner.remindBefore = normalize(owner.remindBefore);
     const { el } = FOH.view;
@@ -9437,26 +9470,35 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     root.append(label, customLabel, el('p', 'setting-note', t('reminderHelp')));
     return root;
   }
+
   const SNOOZE_KEY = 'foh-opening.snoozes.v1';
   function loadSnoozes() {
     try {
       return JSON.parse(localStorage.getItem(SNOOZE_KEY) || '{}');
-    } catch {
+    } catch (err) {
+      /* Snooze data read storage fallback */
       return {};
     }
   }
+
   function saveSnoozes(map) {
     try {
       localStorage.setItem(SNOOZE_KEY, JSON.stringify(map));
     } catch (err) { /* Storage write fallback */ }
   }
+
   function isSnoozed(id, date, nowMin) {
     const map = loadSnoozes();
     const entry = map[date + '|' + id];
     if (!entry) return false;
     return entry.untilMin > nowMin;
   }
-  function snoozeItems(ids, date, nowHM, addMin) {
+
+  function snoozeItems(ids, date, opts = {}) {
+    const isLegacy = typeof opts === 'string';
+    const nowHM = isLegacy ? opts : opts.nowHM;
+    const addMin = isLegacy ? arguments[3] : opts.addMin;
+
     const nowMin = Number(nowHM.slice(0, 2)) * 60 + Number(nowHM.slice(3));
     const untilMin = addMin >= 1440 ? 24 * 60 + 1 : nowMin + addMin;
     const map = loadSnoozes();
@@ -9465,6 +9507,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     });
     saveSnoozes(map);
   }
+
   function clearSnoozesForDate(date) {
     const map = loadSnoozes();
     Object.keys(map).forEach((k) => {
@@ -9472,29 +9515,46 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     });
     saveSnoozes(map);
   }
+
   function activeSnoozeCount(date, nowHM) {
     const nowMin = Number(nowHM.slice(0, 2)) * 60 + Number(nowHM.slice(3));
     const map = loadSnoozes();
     return Object.entries(map).filter(([k, v]) => k.startsWith(date + '|') && v && v.untilMin > nowMin).length;
   }
 
-  function next(sections, checked, states, date, nowHM) {
+  function next(sections, checked, opts = {}) {
+    const isLegacy = Array.isArray(opts);
+    const states = isLegacy ? opts : (opts.states || []);
+    const date = isLegacy ? arguments[3] : opts.date;
+    const nowHM = isLegacy ? arguments[4] : opts.nowHM;
+
     const minutes = (hm) => Number(hm.slice(0, 2)) * 60 + Number(hm.slice(3));
     const nowMin = minutes(nowHM);
     const pending = [];
-    const add = (item, due, status, kind) => {
+
+    const add = (item, opt = {}) => {
+      const { due, status, kind = 'item' } = opt;
       if (isSnoozed(item.id, date, nowMin)) return;
       const lead = normalize(item.remindBefore);
       if (lead === null || !FOH.store.TIME_RE.test(due)) return;
       const delta = minutes(due) - nowMin;
       if (delta > lead) return;
-      pending.push({ item, due, delta, min: status === 'due' ? 0 : delta, kind: kind || 'item' });
+      pending.push({ item, due, delta, min: status === 'due' ? 0 : delta, kind });
     };
+
     sections.forEach((section) => section.items.forEach((item) => {
-      if (!FOH.model.progress(FOH.model.leaves(item), checked).complete) add(item, item.due, undefined, 'item');
-      FOH.model.kids(item).forEach((child) => { if (!checked[child.id]) add(child, child.due, undefined, 'item'); });
+      if (!FOH.model.progress(FOH.model.leaves(item), checked).complete) {
+        add(item, { due: item.due, kind: 'item' });
+      }
+      FOH.model.kids(item).forEach((child) => {
+        if (!checked[child.id]) add(child, { due: child.due, kind: 'item' });
+      });
     }));
-    states.filter((st) => st.status !== 'done' && st.occ === date).forEach((st) => add(st.task, st.task.time, st.status, 'task'));
+
+    states.filter((st) => st.status !== 'done' && st.occ === date).forEach((st) => {
+      add(st.task, { due: st.task.time, status: st.status, kind: 'task' });
+    });
+
     if (!pending.length) return null;
     pending.sort((a, b) => a.delta - b.delta);
     const first = pending[0];
@@ -9508,6 +9568,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       min: first.min,
     };
   }
+
   FOH.reminders = { control, next, snoozeItems, clearSnoozesForDate, activeSnoozeCount, isSnoozed };
 })(window.FOH = window.FOH || {});
 
@@ -9895,7 +9956,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   const { t, pick } = FOH.i18n;
   const MAX = 300;
 
-  // { id|null, sid, parentId|null, children: [], openSub: id|null }
+  // Draft tracks id, section id, parentId, children list, and openSub
   let draft = null;
 
   const clean = (v) => v.trim().slice(0, MAX);
@@ -9928,7 +9989,11 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     $('subCount').textContent = draft.children.length ? ' (' + draft.children.length + ')' : '';
   }
 
-  function input(child, field, dir, lang, placeholder) {
+  function input(child, field, opts = {}) {
+    const isLegacy = typeof opts === 'string';
+    const dir = isLegacy ? opts : ((opts && opts.dir) || 'ltr');
+    const lang = isLegacy ? (arguments[3] || 'en') : ((opts && opts.lang) || 'en');
+    const placeholder = isLegacy ? (arguments[4] || '') : ((opts && opts.placeholder) || '');
     const box = document.createElement('input');
     box.className = 'in';
     box.value = child[field];
@@ -10601,21 +10666,33 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   let categoryId = '';
   let browsingItem = '';
   const searchText = (text) => String(text || '').normalize('NFD').replace(/[\u0300-\u036f\u064b-\u065f\u0670\u0640]/g, '').replace(/[أإآٱ]/g, 'ا').replace(/ى/g, 'ي').toLowerCase().trim();
-  function matches(cat, item, variant, query) {
-    const values = item.attrs.flatMap((a, k) => a.values.filter((v) => v.id === variant.a[k]).flatMap((v) => [v.label, v.labelAr]));
+  function matches(cat, item, opts = {}) {
+    const isLegacy = typeof opts === 'object' && opts !== null && !('query' in opts);
+    const variant = isLegacy ? opts : opts.variant;
+    const query = isLegacy ? arguments[3] : (opts.query || '');
+
+    const values = item.attrs.flatMap((a, k) => a.values.filter((v) => v.id === (variant ? variant.a[k] : null)).flatMap((v) => [v.label, v.labelAr]));
     const text = searchText([cat.name, cat.nameAr, item.name, item.nameAr, item.location, ...values].join(' '));
     return searchText(query).split(/\s+/).filter(Boolean).every((token) => text.includes(token));
   }
   function actionButton(cls, label, data) {
     const button = el('button', cls, label); button.type = 'button'; Object.assign(button.dataset, data); return button;
   }
-  function thumbnail(item, variant, cat, cls) {
+  function thumbnail(item, variant, opts = {}) {
+    const isLegacy = typeof opts === 'object' && opts !== null && 'icon' in opts;
+    const cat = isLegacy ? opts : (opts.cat || {});
+    const cls = isLegacy ? arguments[3] : (opts.cls || '');
+
     const box = el('span', cls, cat.icon || '📦');
     const photo = variant && variant.photo || item.photo;
     if (photo) { box.textContent = ''; const img = el('img'); img.alt = ''; FOH.photos.show(img, photo); box.append(img); }
     return box;
   }
-  function toolCard(cat, item, variant, recent) {
+  function toolCard(cat, item, opts = {}) {
+    const isLegacy = typeof opts === 'object' && opts !== null && ('id' in opts || 'a' in opts);
+    const variant = isLegacy ? opts : opts.variant;
+    const recent = isLegacy ? arguments[3] : opts.recent;
+
     const variants = FOH.invStore.active(item);
     const label = variant && FOH.invStore.variantLabel(item, variant);
     const button = actionButton('report-tool', '', variant ? { variant: variant.id } : { tool: item.id });
@@ -10623,7 +10700,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     copy.append(el('b', '', pick(item.name, item.nameAr) + (label ? ' · ' + label : '')));
     const other = FOH.i18n.lang === 'ar' ? item.name : item.nameAr;
     copy.append(el('small', '', [other, variant ? pick(cat.name, cat.nameAr) : variants.length > 1 ? t('typeCount', { n: variants.length }) : pick(cat.name, cat.nameAr)].filter(Boolean).join(' · ')));
-    button.append(thumbnail(item, variant, cat, 'report-tool-icon'), copy, el('span', 'tool-arrow', FOH.i18n.lang === 'ar' ? '‹' : '›'));
+    button.append(thumbnail(item, variant, { cat, cls: 'report-tool-icon' }), copy, el('span', 'tool-arrow', FOH.i18n.lang === 'ar' ? '‹' : '›'));
     return button;
   }
   function drawPicker() {
@@ -10972,7 +11049,12 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     return cam;
   }
 
-  function conditionRow(icon, label, small, field, value) {
+  function conditionRow(icon, label, opts = {}) {
+    const isLegacy = typeof opts === 'string';
+    const small = isLegacy ? opts : opts.small;
+    const field = isLegacy ? arguments[3] : opts.field;
+    const value = isLegacy ? arguments[4] : opts.value;
+
     const row = el('div', 'cr');
     const l = el('span', 'l', icon + ' ' + label);
     l.append(el('small', '', small));
@@ -11620,7 +11702,11 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     return { rows, mix, exp, tot };
   }
 
-  function row(name, sub, cells, cls) {
+  function row(name, sub, opts = {}) {
+    const isLegacy = Array.isArray(opts);
+    const cells = isLegacy ? opts : (opts.cells || []);
+    const cls = isLegacy ? arguments[3] : opts.cls;
+
     const r = el('div', 'rv' + (cls ? ' ' + cls : ''));
     const n = el('span', 'n', name);
     if (sub) n.append(el('small', '', sub));
@@ -11635,7 +11721,12 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   }
 
   // Table for one category; returns the flagged/mixed variant ids.
-  function categoryTable(c, cat, first, again, sums) {
+  function categoryTable(c, cat, opts = {}) {
+    const isLegacy = typeof opts === 'object' && opts !== null && !('first' in opts);
+    const first = isLegacy ? opts : opts.first;
+    const again = isLegacy ? arguments[3] : opts.again;
+    const sums = isLegacy ? arguments[4] : opts.sums;
+
     c.append(row(t('variantCol'), '', [t('exp'), '✅', '🔧', '❌', t('diff')].map((x) => el('span', '', x)), 'h'));
     const flagged = [];
     cat.items.forEach((item) => {
@@ -12033,7 +12124,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 <script>
 // --- js/domains/checklist/edit-actions.js ---
 // Edit mode: item and section actions, the edit sheet (with its sub-items),
-// import/export. Every change can be undone once from the toast.
+// Data synchronization and exchange. Every change can be undone once from the toast.
 (function (FOH) {
   'use strict';
 
@@ -12806,13 +12897,15 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     try {
       const raw = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
       return raw ? JSON.parse(raw) : null;
-    } catch {
+    } catch (err) {
+      /* Session load storage fallback */
       return null;
     }
   }
 
-  function saveSession(next, remember = true) {
+  function saveSession(next, opts = {}) {
     session = next;
+    const remember = typeof opts === 'boolean' ? opts : (opts && typeof opts.remember === 'boolean' ? opts.remember : true);
     try {
       localStorage.removeItem(SESSION_KEY);
       sessionStorage.removeItem(SESSION_KEY);
@@ -12825,7 +12918,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   function loadTheme() {
     try {
       return localStorage.getItem(THEME_KEY) === 'dark' ? 'dark' : 'light';
-    } catch {
+    } catch (err) {
+      /* Theme load storage fallback */
       return 'light';
     }
   }
@@ -13185,7 +13279,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 // --- js/domains/auth/profile-dialog.js ---
 // foh-opening/js/domains/auth/profile-dialog.js
 // Employee Profile Sheet Dialog (PROF-01, Contact Info, Floor Nickname, 3-Tab System)
-// Clean Code Architecture: Decomposed into single-responsibility renderers (< 80 lines each)
+// Clean Code Architecture: Decomposed into single-responsibility renderers (< 50 lines each)
 (function (FOH) {
   'use strict';
 
@@ -13215,7 +13309,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     if (FOH.pendingApprovals) FOH.pendingApprovals.savePendingNameChanges(list);
   }
 
-  function saveSession(next, remember = true) {
+  function saveSession(next, opts = {}) {
+    const remember = opts.remember !== false;
     if (FOH.sessionAuth) FOH.sessionAuth.saveSession(next, remember);
   }
 
@@ -13225,14 +13320,6 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
   function setTheme(mode) {
     if (FOH.sessionAuth) FOH.sessionAuth.setTheme(mode);
-  }
-
-  function getShowPreviewBar() {
-    return FOH.sessionAuth && FOH.sessionAuth.getShowPreviewBar ? FOH.sessionAuth.getShowPreviewBar() : false;
-  }
-
-  function setShowPreviewBar(v) {
-    if (FOH.sessionAuth && FOH.sessionAuth.setShowPreviewBar) FOH.sessionAuth.setShowPreviewBar(v);
   }
 
   function getStaffRecord(session) {
@@ -13283,7 +13370,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   }
 
   // ---- Sub-Renderer 1: Hero Pass Card ----
-  function renderProfileHero(container, session, staffRec, hcMeta, ar) {
+  function renderProfileHero(container, opts = {}) {
+    const { session, staffRec, hcMeta, ar } = opts;
     const initials = ((session.firstName || session.displayName || 'U')[0] + ((session.lastName || '')[0] || '')).toUpperCase();
     const hero = el('div', 'prof-hero');
     const av = el('div', 'prof-avatar-lg', initials);
@@ -13306,7 +13394,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   }
 
   // ---- Sub-Renderer 2: 3-Tab Segmented Controller ----
-  function renderProfileTabBar(container, activeTab, onSwitchTab, ar) {
+  function renderProfileTabBar(container, opts = {}) {
+    const { activeTab, onSwitchTab, ar } = opts;
     const tabBar = el('div', 'prof-tab-bar');
     const tabs = [
       { id: 'shift', icon: '🪪', label: ar ? 'شفتي وهويتي' : 'My Shift' },
@@ -13325,27 +13414,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     container.append(tabBar);
   }
 
-  // ---- Sub-Renderer 3: Tab 1 (Shift & Duty) ----
-  function renderShiftTab(container, session, staffRec, hcMeta, ar) {
-    // 1. Bento Personal Stats
-    const myDoneOpening = FOH.tasksView ? FOH.tasksView.myOpeningItems().filter((it) => S.run.checked[it.id]).length : 0;
-    const myDoneSched = FOH.tasksView ? FOH.tasksView.todayStates().filter((st) => FOH.tasksView.isMine(st.task) && st.status === 'done').length : 0;
-    const myCountsTotal = FOH.invCount ? FOH.invCount.myCounts().length : 0;
-    const myBreakage = (S.inv && S.inv.breakage) ? S.inv.breakage.filter((b) => (b.by || '').toLowerCase() === (session.displayName || '').toLowerCase()).length : 0;
-
-    const stats = el('div', 'prof-stats');
-    [
-      [String(myDoneOpening + myDoneSched), t('profTasksDone')],
-      [String(myCountsTotal), t('profAssignedCounts')],
-      [String(myBreakage), t('profReportedBreak')],
-    ].forEach(([num, lbl]) => {
-      const box = el('div', 'prof-stat');
-      box.append(el('b', '', num), el('small', '', lbl));
-      stats.append(box);
-    });
-    container.append(stats);
-
-    // 2. Shift & Station Bento Card
+  function renderShiftBentoCard(opts = {}) {
+    const { session, staffRec, hcMeta, ar } = opts;
     const secSched = el('section', 'prof-section');
     secSched.append(el('h4', '', '🗓 ' + t('profScheduleHead')));
     const kv = el('div', 'prof-kv');
@@ -13364,19 +13434,10 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       kv.append(cell);
     });
     secSched.append(kv);
-    container.append(secSched);
+    return secSched;
+  }
 
-    // 3. Health Certificate Expiry Warning Banner (if expiring or expired)
-    if (hcMeta.hcDays !== null && hcMeta.hcDays <= 30) {
-      const warnCard = el('div', 'prof-hc-banner ' + (hcMeta.hcDays < 0 ? 'critical' : 'warning'));
-      const expiryDateSafe = FOH.escapeHtml(staffRec.healthCertExpiry || '');
-      warnCard.innerHTML =
-        '<b>' + (hcMeta.hcDays < 0 ? '🚨 ' + (ar ? 'الشهادة الصحية منتهية الصلاحية!' : 'Health Certificate Expired!') : '⚠️ ' + (ar ? 'تنبيه: الشهادة الصحية تقترب من الانتهاء' : 'Health Certificate Expiring Soon')) + '</b>' +
-        '<p>' + (ar ? ('شهادتك الصحية تنتهي في تاريخ (' + expiryDateSafe + '). يرجى مراجعة إدارة المطعم لتجديد الشهادة فوراً.') : ('Your certificate expires on ' + expiryDateSafe + '. Please renew with HR immediately.')) + '</p>';
-      container.append(warnCard);
-    }
-
-    // 4. Quick Action Shortcuts
+  function renderShiftShortcuts(ar) {
     const secActs = el('section', 'prof-section');
     secActs.append(el('h4', '', ar ? '⚡ اختصارات سريعة للموظف' : '⚡ Quick Shortcuts'));
     const actsGrid = el('div', 'prof-shortcuts-grid');
@@ -13405,11 +13466,43 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
     actsGrid.append(dayOffBtn, dmgBtn);
     secActs.append(actsGrid);
-    container.append(secActs);
+    return secActs;
   }
 
-  // ---- Sub-Renderer 4: Tab 2 (Tips & Wallet) ----
-  function renderTipsTab(container, session, ar) {
+  // ---- Sub-Renderer 3: Tab 1 (Shift & Duty) ----
+  function renderShiftTab(container, opts = {}) {
+    const { session, staffRec, hcMeta, ar } = opts;
+    const myDoneOpening = FOH.tasksView ? FOH.tasksView.myOpeningItems().filter((it) => S.run.checked[it.id]).length : 0;
+    const myDoneSched = FOH.tasksView ? FOH.tasksView.todayStates().filter((st) => FOH.tasksView.isMine(st.task) && st.status === 'done').length : 0;
+    const myCountsTotal = FOH.invCount ? FOH.invCount.myCounts().length : 0;
+    const myBreakage = (S.inv && S.inv.breakage) ? S.inv.breakage.filter((b) => (b.by || '').toLowerCase() === (session.displayName || '').toLowerCase()).length : 0;
+
+    const stats = el('div', 'prof-stats');
+    [
+      [String(myDoneOpening + myDoneSched), t('profTasksDone')],
+      [String(myCountsTotal), t('profAssignedCounts')],
+      [String(myBreakage), t('profReportedBreak')],
+    ].forEach(([num, lbl]) => {
+      const box = el('div', 'prof-stat');
+      box.append(el('b', '', num), el('small', '', lbl));
+      stats.append(box);
+    });
+    container.append(stats);
+    container.append(renderShiftBentoCard({ session, staffRec, hcMeta, ar }));
+
+    if (hcMeta.hcDays !== null && hcMeta.hcDays <= 30) {
+      const warnCard = el('div', 'prof-hc-banner ' + (hcMeta.hcDays < 0 ? 'critical' : 'warning'));
+      const expiryDateSafe = FOH.escapeHtml(staffRec.healthCertExpiry || '');
+      warnCard.innerHTML =
+        '<b>' + (hcMeta.hcDays < 0 ? '🚨 ' + (ar ? 'الشهادة الصحية منتهية الصلاحية!' : 'Health Certificate Expired!') : '⚠️ ' + (ar ? 'تنبيه: الشهادة الصحية تقترب من الانتهاء' : 'Health Certificate Expiring Soon')) + '</b>' +
+        '<p>' + (ar ? ('شهادتك الصحية تنتهي في تاريخ (' + expiryDateSafe + '). يرجى مراجعة إدارة المطعم لتجديد الشهادة فوراً.') : ('Your certificate expires on ' + expiryDateSafe + '. Please renew with HR immediately.')) + '</p>';
+      container.append(warnCard);
+    }
+
+    container.append(renderShiftShortcuts(ar));
+  }
+
+  function computeTipsMetrics(session) {
     const tipsDB = FOH.tipsView && FOH.tipsView.loadTipsData ? FOH.tipsView.loadTipsData() : null;
     const myKey = (session.username || '').toLowerCase();
     const emp = (tipsDB && tipsDB.staff && (tipsDB.staff[myKey] || tipsDB.staff.sara)) || {
@@ -13431,20 +13524,26 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     const withdrawnTotal = ((emp.withdrawals || []).reduce((s, w) => s + Number(w.amountJOD || 0), 0)).toFixed(3);
     const netPayout = Math.max(0, grossShare - withdrawnTotal).toFixed(3);
 
-    // Bento Tip Cards (2x2 Grid)
+    return { multVal, pointsVal, workedDaysCount, withdrawnTotal, netPayout };
+  }
+
+  // ---- Sub-Renderer 4: Tab 2 (Tips & Wallet) ----
+  function renderTipsTab(container, opts = {}) {
+    const { session, ar } = opts;
+    const m = computeTipsMetrics(session);
+
     const bento = el('div', 'prof-bento-grid');
     const b1 = el('div', 'prof-bento-card');
-    b1.append(el('small', '', ar ? '⭐ نقاط التبس (Points Multiplier)' : '⭐ Tip Multiplier'), el('b', '', multVal + ' (' + pointsVal + ' pts)'));
+    b1.append(el('small', '', ar ? '⭐ نقاط التبس (Points Multiplier)' : '⭐ Tip Multiplier'), el('b', '', m.multVal + ' (' + m.pointsVal + ' pts)'));
     const b2 = el('div', 'prof-bento-card');
-    b2.append(el('small', '', ar ? '📅 أيام العمل بالشفت' : '📅 Worked Days'), el('b', '', workedDaysCount + ' / 7 ' + (ar ? 'أيام' : 'days')));
+    b2.append(el('small', '', ar ? '📅 أيام العمل بالشفت' : '📅 Worked Days'), el('b', '', m.workedDaysCount + ' / 7 ' + (ar ? 'أيام' : 'days')));
     const b3 = el('div', 'prof-bento-card');
-    b3.append(el('small', '', ar ? '💵 السلف والمسحوبات' : '💵 Advances'), el('b', '', withdrawnTotal + ' JOD'));
+    b3.append(el('small', '', ar ? '💵 السلف والمسحوبات' : '💵 Advances'), el('b', '', m.withdrawnTotal + ' JOD'));
     const b4 = el('div', 'prof-bento-card highlight');
-    b4.append(el('small', '', ar ? '💰 الصافي المقدر للمغلف' : '💰 Net Estimated'), el('b', '', netPayout + ' JOD'));
+    b4.append(el('small', '', ar ? '💰 الصافي المقدر للمغلف' : '💰 Net Estimated'), el('b', '', m.netPayout + ' JOD'));
     bento.append(b1, b2, b3, b4);
     container.append(bento);
 
-    // Info Banner
     const infoCard = el('div', 'prof-info-banner');
     infoCard.innerHTML =
       '<div class="pib-head">⚖️ <b>' + (ar ? 'شفافية احتساب التبس في CEEN Lounge:' : 'Tip Distribution Governance:') + '</b></div>' +
@@ -13455,7 +13554,6 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       '</div>';
     container.append(infoCard);
 
-    // Action Button to Open Full Tip Manager
     const openTipsBtn = el('button', 'btn primary prof-action-btn');
     openTipsBtn.type = 'button';
     openTipsBtn.innerHTML = '<span>💰 ' + (ar ? 'فتح شاشة التبس والمغلفات الكاملة (Tip Manager)' : 'Open Full Tip Manager Wallet') + '</span> <span>' + (ar ? '←' : '→') + '</span>';
@@ -13466,7 +13564,6 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     container.append(openTipsBtn);
   }
 
-    // ---- Sub-Renderer 5A: Helper - Activation Code Box ----
   function createActivationCodeBox(curCode, ar) {
     const codeBox = el('div', 'st-invite-box');
     codeBox.style.marginTop = '10px';
@@ -13491,8 +13588,56 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     return codeBox;
   }
 
+  function applyManagerDirectSave({ newFn, newLn, newNick, newFullName }, { session, staffRec }) {
+    session.firstName = newFn;
+    session.lastName = newLn;
+    session.nickname = newNick || session.nickname;
+    session.displayName = newFullName || session.displayName;
+    if (staffRec.id) {
+      staffRec.name = session.displayName;
+      staffRec.nickname = session.nickname;
+      delete staffRec.pendingNameChange;
+    }
+    FOH.store.saveTemplate(S.tpl);
+    saveSession(session, { remember: true });
+    applyAuthUI();
+    FOH.app.render();
+    renderProfileBody();
+    FOH.edit.toast(t('profSavedMsg'));
+  }
+
+  function submitStaffNameChangeRequest({ newFn, newLn, newNick, newFullName, curLegalFull, curNick }, { session, staffRec, ar }) {
+    const reqObj = {
+      id: 'pnc_' + Date.now(),
+      staffId: staffRec.id || ('staff_' + session.username),
+      staffUsername: session.username,
+      currentName: staffRec.name || curLegalFull,
+      currentNickname: curNick,
+      reqFirstName: newFn,
+      reqLastName: newLn,
+      reqFullName: newFullName,
+      reqNickname: newNick,
+      status: 'pending',
+      requestedAt: new Date().toISOString(),
+    };
+    staffRec.pendingNameChange = reqObj;
+    const pList = loadPendingNameChanges().filter((r) => r.staffId !== staffRec.id && r.staffUsername !== session.username);
+    pList.push(reqObj);
+    savePendingNameChanges(pList);
+    FOH.store.saveTemplate(S.tpl);
+    if (FOH.cloudRealtime && FOH.cloudRealtime.broadcast) {
+      FOH.cloudRealtime.broadcast('STAFF_NAME_CHANGE_REQUEST', reqObj);
+    }
+    saveSession(session, { remember: true });
+    FOH.app.render();
+    renderProfileBody();
+    FOH.edit.toast(ar ? '⏳ تم حفظ جهات الاتصال وإرسال طلب تعديل الاسم/اللقب للمدير العام للاعتماد ✓' : '⏳ Contact info saved. Name change submitted for Manager approval ✓');
+  }
+
   // ---- Sub-Renderer 5A: Helper - Save Profile Logic ----
-  function handleProfileSave({ newEmail, newPhone, newFn, newLn, newNick }, { session, staffRec, isMgr, ar }) {
+  function handleProfileSave(newVals, opts = {}) {
+    const { newEmail, newPhone, newFn, newLn, newNick } = newVals;
+    const { session, staffRec, isMgr, ar } = opts;
     const newFullName = (newFn + ' ' + newLn).trim();
     session.email = newEmail;
     session.phone = newPhone;
@@ -13503,50 +13648,12 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     const nameChanged = (newFullName !== curLegalFull) || (newNick && newNick !== curNick);
 
     if (isMgr) {
-      session.firstName = newFn;
-      session.lastName = newLn;
-      session.nickname = newNick || session.nickname;
-      session.displayName = newFullName || session.displayName;
-      if (staffRec.id) {
-        staffRec.name = session.displayName;
-        staffRec.nickname = session.nickname;
-        delete staffRec.pendingNameChange;
-      }
-      FOH.store.saveTemplate(S.tpl);
-      saveSession(session, true);
-      applyAuthUI();
-      FOH.app.render();
-      renderProfileBody();
-      FOH.edit.toast(t('profSavedMsg'));
+      applyManagerDirectSave({ newFn, newLn, newNick, newFullName }, { session, staffRec });
     } else if (nameChanged) {
-      const reqObj = {
-        id: 'pnc_' + Date.now(),
-        staffId: staffRec.id || ('staff_' + session.username),
-        staffUsername: session.username,
-        currentName: staffRec.name || curLegalFull,
-        currentNickname: curNick,
-        reqFirstName: newFn,
-        reqLastName: newLn,
-        reqFullName: newFullName,
-        reqNickname: newNick,
-        status: 'pending',
-        requestedAt: new Date().toISOString(),
-      };
-      staffRec.pendingNameChange = reqObj;
-      const pList = loadPendingNameChanges().filter((r) => r.staffId !== staffRec.id && r.staffUsername !== session.username);
-      pList.push(reqObj);
-      savePendingNameChanges(pList);
-      FOH.store.saveTemplate(S.tpl);
-      if (FOH.cloudRealtime && FOH.cloudRealtime.broadcast) {
-        FOH.cloudRealtime.broadcast('STAFF_NAME_CHANGE_REQUEST', reqObj);
-      }
-      saveSession(session, true);
-      FOH.app.render();
-      renderProfileBody();
-      FOH.edit.toast(ar ? '⏳ تم حفظ جهات الاتصال وإرسال طلب تعديل الاسم/اللقب للمدير العام للاعتماد ✓' : '⏳ Contact info saved. Name change submitted for Manager approval ✓');
+      submitStaffNameChangeRequest({ newFn, newLn, newNick, newFullName, curLegalFull, curNick }, { session, staffRec, ar });
     } else {
       FOH.store.saveTemplate(S.tpl);
-      saveSession(session, true);
+      saveSession(session, { remember: true });
       FOH.app.render();
       renderProfileBody();
       FOH.edit.toast(ar ? '✓ تم حفظ رقم الهاتف والبريد الإلكتروني بنجاح' : '✓ Contact info updated successfully');
@@ -13554,7 +13661,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   }
 
   // ---- Sub-Renderer 5A: Identity Form ----
-  function renderIdentityForm(container, session, staffRec, isMgr, ar) {
+  function renderIdentityForm(container, opts = {}) {
+    const { session, staffRec, isMgr, ar } = opts;
     const secProf = el('section', 'prof-section');
     secProf.append(el('h4', '', '👤 ' + (ar ? 'البيانات الشخصية وهوية الموظف في النظام (ERP Profile)' : 'Personal Identity & ERP Profile')));
 
@@ -13618,8 +13726,44 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     container.append(secProf);
   }
 
+  function renderPasswordChangeBox(session) {
+    const passWrap = el('div', '');
+    passWrap.style.marginTop = '10px';
+    const passIn = el('input', 'in');
+    passIn.type = 'password';
+    passIn.placeholder = t('profNewPass');
+    const passBtn = el('button', 'btn', t('profUpdatePass'));
+    passBtn.type = 'button';
+    passBtn.style.cssText = 'margin-top:8px;width:100%;';
+    passBtn.addEventListener('click', async () => {
+      const np = passIn.value.trim();
+      if (np.length < 4) return;
+      localStorage.setItem('foh-opening.pass.' + session.username, np);
+      if (session.accessToken) {
+        try {
+          await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+            method: 'PUT',
+            headers: {
+              apikey: SUPABASE_ANON_KEY,
+              Authorization: `Bearer ${session.accessToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ password: np }),
+          });
+        } catch (err) {
+          /* Supabase password sync fallback */
+        }
+      }
+      passIn.value = '';
+      FOH.edit.toast(t('profPassChanged'));
+    });
+    passWrap.append(passIn, passBtn);
+    return passWrap;
+  }
+
   // ---- Sub-Renderer 5B: System Preferences & Security ----
-  function renderSystemPreferences(container, session, isMgr, ar) {
+  function renderSystemPreferences(container, opts = {}) {
+    const { session } = opts;
     const secSet = el('section', 'prof-section');
     secSet.append(el('h4', '', '⚙️ ' + t('profSettingsHead')));
 
@@ -13656,54 +13800,23 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       renderProfileBody();
     });
     secSet.append(pushBtn);
-
-    const passWrap = el('div', '');
-    passWrap.style.marginTop = '10px';
-    const passIn = el('input', 'in');
-    passIn.type = 'password';
-    passIn.placeholder = t('profNewPass');
-    const passBtn = el('button', 'btn', t('profUpdatePass'));
-    passBtn.type = 'button';
-    passBtn.style.cssText = 'margin-top:8px;width:100%;';
-    passBtn.addEventListener('click', async () => {
-      const np = passIn.value.trim();
-      if (np.length < 4) return;
-      localStorage.setItem('foh-opening.pass.' + session.username, np);
-      if (session.accessToken) {
-        try {
-          await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-            method: 'PUT',
-            headers: {
-              apikey: SUPABASE_ANON_KEY,
-              Authorization: `Bearer ${session.accessToken}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ password: np }),
-          });
-        } catch (err) {
-          console.warn('Supabase password sync bypassed offline:', err);
-        }
-      }
-      passIn.value = '';
-      FOH.edit.toast(t('profPassChanged'));
-    });
-    passWrap.append(passIn, passBtn);
-    secSet.append(passWrap);
-    container.append(secSet);
+    secSet.append(renderPasswordChangeBox(session));
 
     const outBtn = el('button', 'btn danger', '🚪 ' + t('profLogout'));
     outBtn.type = 'button';
     outBtn.style.cssText = 'width:100%;margin-top:8px;';
     outBtn.addEventListener('click', () => {
       $('profileSheet').close();
-      saveSession(null);
+      saveSession(null, { remember: false });
       applyAuthUI();
     });
-    container.append(outBtn);
+    secSet.append(outBtn);
+    container.append(secSet);
   }
 
   // ---- Sub-Renderer 5: Tab 3 Coordinator ----
-  function renderSettingsTab(container, session, staffRec, isMgr, ar) {
+  function renderSettingsTab(container, opts = {}) {
+    const { session, staffRec, isMgr, ar } = opts;
     if (staffRec.pendingNameChange && staffRec.pendingNameChange.status === 'pending') {
       const pnc = staffRec.pendingNameChange;
       const banner = el('div', 'pending-approval-banner');
@@ -13715,8 +13828,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
         '</div>';
       container.append(banner);
     }
-    renderIdentityForm(container, session, staffRec, isMgr, ar);
-    renderSystemPreferences(container, session, isMgr, ar);
+    renderIdentityForm(container, { session, staffRec, isMgr, ar });
+    renderSystemPreferences(container, { session, isMgr, ar });
   }
 
   // ---- Main Profile Sheet Coordinator ----
@@ -13733,25 +13846,26 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     const staffRec = getStaffRecord(session);
     const hcMeta = computeHealthCertMeta(staffRec, ar);
 
-    // 1. Hero Pass Card
-    renderProfileHero(body, session, staffRec, hcMeta, ar);
+    renderProfileHero(body, { session, staffRec, hcMeta, ar });
 
-    // 2. Segmented 3-Tab Bar
-    renderProfileTabBar(body, activeProfileTab, (nextTab) => {
-      activeProfileTab = nextTab;
-      renderProfileBody();
-    }, ar);
+    renderProfileTabBar(body, {
+      activeTab: activeProfileTab,
+      onSwitchTab: (nextTab) => {
+        activeProfileTab = nextTab;
+        renderProfileBody();
+      },
+      ar,
+    });
 
-    // 3. Tab Pane
     const tabPane = el('div', 'prof-tab-pane');
     body.append(tabPane);
 
     if (activeProfileTab === 'shift') {
-      renderShiftTab(tabPane, session, staffRec, hcMeta, ar);
+      renderShiftTab(tabPane, { session, staffRec, hcMeta, ar });
     } else if (activeProfileTab === 'tips') {
-      renderTipsTab(tabPane, session, ar);
+      renderTipsTab(tabPane, { session, ar });
     } else if (activeProfileTab === 'settings') {
-      renderSettingsTab(tabPane, session, staffRec, isMgr, ar);
+      renderSettingsTab(tabPane, { session, staffRec, isMgr, ar });
     }
   }
 
@@ -16609,7 +16723,10 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     return { rowAssign, roleSel, empSel };
   }
 
-  function buildTaskRuleAndBadge(recurData, rKey, empUser, ar) {
+  function buildTaskRuleAndBadge(recurData, rKey, opts = {}) {
+    const isLegacy = typeof opts === 'string';
+    const empUser = isLegacy ? opts : ((opts && opts.empUser) || '');
+    const ar = isLegacy ? !!arguments[3] : (opts && typeof opts.ar === 'boolean' ? opts.ar : isAr());
     const roleBadgeMap = {
       super_waiter: '⭐ Super Waiter',
       super_bartender: '🍸 Super Bartender',
@@ -16870,7 +16987,11 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     });
   }
 
-  function applyItemBadgesAndScope(flatItems, curUser, curRole, isLeader, sess) {
+  function applyItemBadgesAndScope(flatItems, curUser, opts = {}) {
+    const isLegacy = typeof opts === 'string';
+    const curRole = isLegacy ? opts : ((opts && opts.curRole) || '');
+    const isLeader = isLegacy ? !!arguments[3] : !!(opts && opts.isLeader);
+    const sess = isLegacy ? arguments[4] : (opts && opts.sess);
     document.querySelectorAll('#sections li.item, #sections li.kid').forEach((li) => {
       const cb = li.querySelector('input.ck[data-id]');
       if (!cb) return;
@@ -17691,7 +17812,10 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     }
   }
 
-  function renderStepModeList(root, c, items, ar) {
+  function renderStepModeList(root, c, opts = {}) {
+    const isLegacy = Array.isArray(opts);
+    const items = isLegacy ? opts : ((opts && opts.items) || store().ordCatItems(c.id));
+    const ar = isLegacy ? !!arguments[3] : (opts && typeof opts.ar === 'boolean' ? opts.ar : isAr());
     const db = store().getDB();
     const listWrap = el('div', 'ord-step-list');
     items.forEach((i, idx) => {
@@ -17716,7 +17840,10 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     appendGeneralBottomBar(root);
   }
 
-  function renderQuickListMode(root, c, items, ar) {
+  function renderQuickListMode(root, c, opts = {}) {
+    const isLegacy = Array.isArray(opts);
+    const items = isLegacy ? opts : ((opts && opts.items) || store().ordCatItems(c.id));
+    const ar = isLegacy ? !!arguments[3] : (opts && typeof opts.ar === 'boolean' ? opts.ar : isAr());
     const db = store().getDB();
     const units = (FOH.ordersCatalog && FOH.ordersCatalog.ORD_UNITS) || {};
     const toolbar = el('div', 'ord-toolbar');
@@ -17802,7 +17929,10 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   }
 
   // ---- Page 4: Single Item Stepper Card ----
-  function buildItemStepperControls(card, i, line, root) {
+  function buildItemStepperControls(card, i, opts = {}) {
+    const isLegacy = typeof opts === 'object' && ('qty' in opts);
+    const line = isLegacy ? opts : ((opts && opts.line) || store().ordLine(i.id));
+    const root = isLegacy ? arguments[3] : (opts && opts.root);
     const ar = isAr();
     const db = store().getDB();
     const qtyRow = el('div', 'ord-qty-row');
@@ -19298,82 +19428,43 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     ['canViewTeamTips', '💰 الاطلاع على جدول التبس الكامل للفريق', '💰 View Full Team Tip Pool & Shares'],
   ];
 
+  const DEFAULT_OPS_HOURS = {
+    prepStart: '12:00',
+    doorsOpen: '13:00',
+    kitchenLastOrder: '00:00',
+    barLastOrder: '01:00',
+    minCloseTime: '02:00',
+    closeWithLastGuest: true,
+  };
+  const DEFAULT_STAFF_SUPER_ROLES = {
+    fadi: 'super_manager',
+    ali: 'super_captain',
+    maher: 'super_bartender',
+    sara: 'super_waiter',
+  };
+  const DEFAULT_ORDERING_DELEGATION = {
+    roles: ['super_manager', 'super_bartender'],
+    staffUsernames: ['sara'],
+  };
+  const DEFAULT_TASK_DELEGATION = {
+    roles: ['super_manager', 'super_captain'],
+    staffUsernames: ['ali'],
+  };
+  const DEFAULT_ROLE_PERMISSIONS = {
+    super_manager: { canCloseRestaurant: true, canEarlyCloseOverride: true, canTriggerLastOrder: true, canSignoffDeptClosing: true, canEditChecklist: true, canSubmitOrders: true, canManageAcademy: true, canViewTeamTips: true },
+    super_captain: { canCloseRestaurant: true, canEarlyCloseOverride: false, canTriggerLastOrder: true, canSignoffDeptClosing: true, canEditChecklist: true, canSubmitOrders: true, canManageAcademy: true, canViewTeamTips: true },
+    super_bartender: { canCloseRestaurant: false, canEarlyCloseOverride: false, canTriggerLastOrder: true, canSignoffDeptClosing: true, canEditChecklist: true, canSubmitOrders: true, canManageAcademy: true, canViewTeamTips: false },
+    super_waiter: { canCloseRestaurant: false, canEarlyCloseOverride: false, canTriggerLastOrder: true, canSignoffDeptClosing: true, canEditChecklist: true, canSubmitOrders: true, canManageAcademy: false, canViewTeamTips: false },
+    staff: { canCloseRestaurant: false, canEarlyCloseOverride: false, canTriggerLastOrder: false, canSignoffDeptClosing: false, canEditChecklist: false, canSubmitOrders: false, canManageAcademy: false, canViewTeamTips: false },
+  };
+
   function defaultOpsConfig() {
     return {
-      hours: {
-        prepStart: '12:00',        // 12:00 PM Staff shift & prep start (1h before opening)
-        doorsOpen: '13:00',        // 1:00 PM Restaurant opens for guests
-        kitchenLastOrder: '00:00', // 12:00 Midnight Kitchen Last Order
-        barLastOrder: '01:00',     // 1:00 AM Bar Last Order
-        minCloseTime: '02:00',     // 2:00 AM Minimum official closing time
-        closeWithLastGuest: true,  // Close with last guest (never early even if empty at 11:30 PM)
-      },
-      staffSuperRoles: {
-        fadi: 'super_manager',
-        ali: 'super_captain',
-        maher: 'super_bartender',
-        sara: 'super_waiter',
-      },
-      orderingDelegation: {
-        roles: ['super_manager', 'super_bartender'],
-        staffUsernames: ['sara'],
-      },
-      taskAssignmentDelegation: {
-        roles: ['super_manager', 'super_captain'],
-        staffUsernames: ['ali'],
-      },
-      rolePermissions: {
-        super_manager: {
-          canCloseRestaurant: true,
-          canEarlyCloseOverride: true,
-          canTriggerLastOrder: true,
-          canSignoffDeptClosing: true,
-          canEditChecklist: true,
-          canSubmitOrders: true,
-          canManageAcademy: true,
-          canViewTeamTips: true,
-        },
-        super_captain: {
-          canCloseRestaurant: true,
-          canEarlyCloseOverride: false,
-          canTriggerLastOrder: true,
-          canSignoffDeptClosing: true,
-          canEditChecklist: true,
-          canSubmitOrders: true,
-          canManageAcademy: true,
-          canViewTeamTips: true,
-        },
-        super_bartender: {
-          canCloseRestaurant: false,
-          canEarlyCloseOverride: false,
-          canTriggerLastOrder: true,
-          canSignoffDeptClosing: true,
-          canEditChecklist: true,
-          canSubmitOrders: true,
-          canManageAcademy: true,
-          canViewTeamTips: false,
-        },
-        super_waiter: {
-          canCloseRestaurant: false,
-          canEarlyCloseOverride: false,
-          canTriggerLastOrder: true,
-          canSignoffDeptClosing: true,
-          canEditChecklist: true,
-          canSubmitOrders: true,
-          canManageAcademy: false,
-          canViewTeamTips: false,
-        },
-        staff: {
-          canCloseRestaurant: false,
-          canEarlyCloseOverride: false,
-          canTriggerLastOrder: false,
-          canSignoffDeptClosing: false,
-          canEditChecklist: false,
-          canSubmitOrders: false,
-          canManageAcademy: false,
-          canViewTeamTips: false,
-        },
-      },
+      hours: { ...DEFAULT_OPS_HOURS },
+      staffSuperRoles: { ...DEFAULT_STAFF_SUPER_ROLES },
+      orderingDelegation: { roles: [...DEFAULT_ORDERING_DELEGATION.roles], staffUsernames: [...DEFAULT_ORDERING_DELEGATION.staffUsernames] },
+      taskAssignmentDelegation: { roles: [...DEFAULT_TASK_DELEGATION.roles], staffUsernames: [...DEFAULT_TASK_DELEGATION.staffUsernames] },
+      rolePermissions: JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS)),
     };
   }
 
@@ -19665,7 +19756,10 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     };
   }
 
-  function renderOpsTopRow(phase, roleKey, roleMeta, ar) {
+  function renderOpsTopRow(phase, roleKey, opts = {}) {
+    const isLegacy = typeof opts === 'object' && !('roleMeta' in opts) && !('badge' in opts);
+    const roleMeta = (opts && opts.roleMeta) || (isLegacy ? opts : (SUPER_ROLES_META[roleKey] || SUPER_ROLES_META.staff));
+    const ar = (opts && typeof opts.ar === 'boolean') ? opts.ar : (isLegacy ? !!arguments[3] : isAr());
     const topRow = el('div', 'ops-top-row');
     const leftBox = el('div', '');
     leftBox.innerHTML =
@@ -19703,7 +19797,10 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     return topRow;
   }
 
-  function renderOpsTimelineGrid(h, daySt, times, ar) {
+  function renderOpsTimelineGrid(h, daySt, opts = {}) {
+    const isLegacy = opts && typeof opts === 'object' && ('nowBiz' in opts);
+    const times = isLegacy ? opts : ((opts && opts.times) || {});
+    const ar = (opts && typeof opts.ar === 'boolean') ? opts.ar : (isLegacy ? !!arguments[3] : isAr());
     const { nowBiz, openBiz, prepBiz, kLastBiz, bLastBiz, minCloseBiz } = times;
     const timeline = el('div', 'ops-timeline-grid');
     const stages = [
@@ -19721,14 +19818,9 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     return timeline;
   }
 
-  function renderOpsActionButtons(opts) {
-    const { daySt, h, nowHM, nowBiz, minCloseBiz, ar } = opts;
-    const actRow = el('div', 'ops-actions-row');
-    const leftBtns = el('div', 'gov-actions');
-    const sess = getSession();
-    const myName = (sess && sess.displayName) || S.me.name || 'Supervisor';
-    const canLO = hasSuperPerm('canTriggerLastOrder');
-    const canCloseRest = hasSuperPerm('canCloseRestaurant');
+  function createLastOrderButtons(opts) {
+    const { daySt, h, nowHM, ar, myName, canLO } = opts;
+    const btns = el('div', 'gov-actions');
 
     const kBtn = el('button', 'gov-btn' + (daySt.kitchenLastOrderAt ? '' : ' primary'), daySt.kitchenLastOrderAt ? (ar ? '🍳 Last Order المطبخ (' + daySt.kitchenLastOrderAt + ')' : '🍳 Kitchen L.O. (' + daySt.kitchenLastOrderAt + ')') : (ar ? '🍳 إعلان Last Order المطبخ (' + formatTime12Ar(h.kitchenLastOrder) + ')' : '🍳 Trigger Kitchen LO'));
     kBtn.type = 'button';
@@ -19741,7 +19833,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       FOH.edit.toast(ar ? '🍳 تم إعلان Last Order المطبخ الساعة ' + nowHM + ' وفتح شيت إغلاق الصالة ✓' : '🍳 Kitchen LO logged ✓');
       activateClosingSheet('floor');
     });
-    leftBtns.append(kBtn);
+    btns.append(kBtn);
 
     const bBtn = el('button', 'gov-btn' + (daySt.barLastOrderAt ? '' : ' primary'), daySt.barLastOrderAt ? (ar ? '🍸 Last Order البار (' + daySt.barLastOrderAt + ')' : '🍸 Bar L.O. (' + daySt.barLastOrderAt + ')') : (ar ? '🍸 إعلان Last Order البار (' + formatTime12Ar(h.barLastOrder) + ')' : '🍸 Trigger Bar LO'));
     bBtn.type = 'button';
@@ -19754,7 +19846,19 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       FOH.edit.toast(ar ? '🍸 تم إعلان Last Order البار الساعة ' + nowHM + ' وفتح شيت إغلاق البار ✓' : '🍸 Bar LO logged ✓');
       activateClosingSheet('bar');
     });
-    leftBtns.append(bBtn);
+    btns.append(bBtn);
+    return btns;
+  }
+
+  function renderOpsActionButtons(opts) {
+    const { daySt, h, nowHM, nowBiz, minCloseBiz, ar } = opts;
+    const actRow = el('div', 'ops-actions-row');
+    const sess = getSession();
+    const myName = (sess && sess.displayName) || S.me.name || 'Supervisor';
+    const canLO = hasSuperPerm('canTriggerLastOrder');
+    const canCloseRest = hasSuperPerm('canCloseRestaurant');
+
+    const leftBtns = createLastOrderButtons({ daySt, h, nowHM, ar, myName, canLO });
     actRow.append(leftBtns);
 
     if (daySt.closedAt && canCloseRest) {
@@ -19839,8 +19943,44 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     dlg.showModal();
   }
 
-  function renderEarlyCloseWarning(dlg, box, opts, ar) {
-    const { h, nowHM, minCloseBiz, canOverrideEarly, daySt, myName, roleMeta } = opts;
+  function renderEmergencyOverrideSection(dlg, opts, ar) {
+    const { nowHM, daySt, myName, roleMeta } = opts;
+    const ovWrap = el('div', '');
+    ovWrap.style.marginTop = '10px';
+    ovWrap.style.paddingTop = '10px';
+    ovWrap.style.borderTop = '1px dashed var(--line)';
+    const ovLbl = el('label', '', ar ? '👑 تجاوز استثنائي بأمر Super Manager فقط (أدخل سبب الإغلاق المبكر الإلزامي):' : '👑 Super Manager Emergency Override:');
+    ovLbl.style.fontSize = '0.8rem';
+    ovLbl.style.fontWeight = '700';
+    const ovIn = el('input', 'in');
+    ovIn.placeholder = ar ? 'مثال: صيانة طارئة للكهرباء / ظرف جوي استثنائي...' : 'Emergency reason...';
+    ovIn.style.marginTop = '6px';
+    const ovBtn = el('button', 'btn danger', ar ? '⚠️ فرض الإغلاق المبكر بأمر السوبر مانجر' : '⚠️ Force Early Close');
+    ovBtn.type = 'button';
+    ovBtn.style.width = '100%';
+    ovBtn.style.marginTop = '8px';
+    ovBtn.addEventListener('click', () => {
+      if (!ovIn.value.trim()) return ovIn.focus();
+      daySt.closedAt = nowHM;
+      daySt.closedBy = myName;
+      daySt.closedRole = roleMeta.badge;
+      daySt.extensionMins = 0;
+      daySt.earlyOverrideReason = ovIn.value.trim();
+      saveOpsDayState(S.date, daySt);
+      dlg.close();
+      FOH.edit.toast(ar ? '🔒 تم إغلاق المطعم استثنائياً بأمر السوبر مانجر' : '🔒 Restaurant closed via override');
+      FOH.app.render();
+    });
+    ovWrap.append(ovLbl, ovIn, ovBtn);
+    return ovWrap;
+  }
+
+  function renderEarlyCloseWarning(dlg, box, opts = {}) {
+    const isLegacy = typeof opts === 'object' && ('h' in opts);
+    const options = isLegacy ? opts : (opts && opts.options) || {};
+    const ar = (opts && typeof opts.ar === 'boolean') ? opts.ar : (isLegacy ? !!arguments[3] : isAr());
+    const { h, nowHM, minCloseBiz, canOverrideEarly } = options;
+
     box.innerHTML =
       '<div class="grab"></div>' +
       '<div style="padding:12px;border-radius:12px;background:var(--danger-soft);border:1.5px solid var(--danger);margin-bottom:12px;">' +
@@ -19861,34 +20001,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     box.append(simHint);
 
     if (canOverrideEarly) {
-      const ovWrap = el('div', '');
-      ovWrap.style.marginTop = '10px';
-      ovWrap.style.paddingTop = '10px';
-      ovWrap.style.borderTop = '1px dashed var(--line)';
-      const ovLbl = el('label', '', ar ? '👑 تجاوز استثنائي بأمر Super Manager فقط (أدخل سبب الإغلاق المبكر الإلزامي):' : '👑 Super Manager Emergency Override:');
-      ovLbl.style.fontSize = '0.8rem';
-      ovLbl.style.fontWeight = '700';
-      const ovIn = el('input', 'in');
-      ovIn.placeholder = ar ? 'مثال: صيانة طارئة للكهرباء / ظرف جوي استثنائي...' : 'Emergency reason...';
-      ovIn.style.marginTop = '6px';
-      const ovBtn = el('button', 'btn danger', ar ? '⚠️ فرض الإغلاق المبكر بأمر السوبر مانجر' : '⚠️ Force Early Close');
-      ovBtn.type = 'button';
-      ovBtn.style.width = '100%';
-      ovBtn.style.marginTop = '8px';
-      ovBtn.addEventListener('click', () => {
-        if (!ovIn.value.trim()) return ovIn.focus();
-        daySt.closedAt = nowHM;
-        daySt.closedBy = myName;
-        daySt.closedRole = roleMeta.badge;
-        daySt.extensionMins = 0;
-        daySt.earlyOverrideReason = ovIn.value.trim();
-        saveOpsDayState(S.date, daySt);
-        dlg.close();
-        FOH.edit.toast(ar ? '🔒 تم إغلاق المطعم استثنائياً بأمر السوبر مانجر' : '🔒 Restaurant closed via override');
-        FOH.app.render();
-      });
-      ovWrap.append(ovLbl, ovIn, ovBtn);
-      box.append(ovWrap);
+      box.append(renderEmergencyOverrideSection(dlg, options, ar));
     }
 
     const closeDlgB = el('button', 'btn', ar ? 'إلغاء' : 'Cancel');
@@ -19901,8 +20014,38 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     dlg.showModal();
   }
 
-  function renderOfficialCloseConfirmation(dlg, box, opts, ar) {
-    const { h, nowHM, extMins, doneClosingCount, allClosingLeaves, leftClosingCount, daySt, myName, roleMeta } = opts;
+  function submitOfficialRestaurantClose(dlg, opts, ar) {
+    const { h, nowHM, extMins, daySt, myName, roleMeta } = opts;
+    daySt.closedAt = nowHM;
+    daySt.closedBy = myName;
+    daySt.closedRole = roleMeta.badge;
+    daySt.extensionMins = extMins;
+    if (!daySt.kitchenLastOrderAt) daySt.kitchenLastOrderAt = h.kitchenLastOrder;
+    if (!daySt.barLastOrderAt) daySt.barLastOrderAt = h.barLastOrder;
+
+    if (extMins > 0 && !daySt.overtimeCredited) {
+      const extraHours = Math.round((extMins / 60) * 10) / 10;
+      const tipsDB = loadTipsData();
+      if (tipsDB && tipsDB.staff) {
+        Object.values(tipsDB.staff).forEach((st) => {
+          st.hours = Math.round(((Number(st.hours) || 40) + extraHours) * 10) / 10;
+        });
+        saveTipsData(tipsDB);
+      }
+      daySt.overtimeCredited = true;
+    }
+    saveOpsDayState(S.date, daySt);
+    dlg.close();
+    FOH.edit.toast(ar ? '🚪 تم إغلاق المطعم رسمياً الساعة ' + formatTime12Ar(nowHM) + (extMins > 0 ? ' واحتساب +' + extMins + ' دقيقة تمديد ✓' : ' ✓') : '🚪 Closed at ' + formatTime12Ar(nowHM) + ' ✓');
+    FOH.app.render();
+  }
+
+  function renderOfficialCloseConfirmation(dlg, box, opts = {}) {
+    const isLegacy = typeof opts === 'object' && ('h' in opts);
+    const options = isLegacy ? opts : (opts && opts.options) || {};
+    const ar = (opts && typeof opts.ar === 'boolean') ? opts.ar : (isLegacy ? !!arguments[3] : isAr());
+    const { h, nowHM, extMins, doneClosingCount, allClosingLeaves, leftClosingCount } = options;
+
     box.innerHTML =
       '<div class="grab"></div>' +
       '<h2>🚪 ' + (ar ? 'تأكيد إغلاق المطعم رسمياً (مع مغادرة آخر زبون)' : 'Confirm Official Restaurant Closing') + '</h2>' +
@@ -19924,30 +20067,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     const confirmCloseBtn = el('button', 'btn primary', ar ? '✅ تأكيد مغادرة آخر زبون وإغلاق المطعم الآن (' + formatTime12Ar(nowHM) + ')' : '✅ Confirm Close (' + formatTime12Ar(nowHM) + ')');
     confirmCloseBtn.type = 'button';
     confirmCloseBtn.style.width = '100%';
-    confirmCloseBtn.addEventListener('click', () => {
-      daySt.closedAt = nowHM;
-      daySt.closedBy = myName;
-      daySt.closedRole = roleMeta.badge;
-      daySt.extensionMins = extMins;
-      if (!daySt.kitchenLastOrderAt) daySt.kitchenLastOrderAt = h.kitchenLastOrder;
-      if (!daySt.barLastOrderAt) daySt.barLastOrderAt = h.barLastOrder;
-
-      if (extMins > 0 && !daySt.overtimeCredited) {
-        const extraHours = Math.round((extMins / 60) * 10) / 10;
-        const tipsDB = loadTipsData();
-        if (tipsDB && tipsDB.staff) {
-          Object.values(tipsDB.staff).forEach((st) => {
-            st.hours = Math.round(((Number(st.hours) || 40) + extraHours) * 10) / 10;
-          });
-          saveTipsData(tipsDB);
-        }
-        daySt.overtimeCredited = true;
-      }
-      saveOpsDayState(S.date, daySt);
-      dlg.close();
-      FOH.edit.toast(ar ? '🚪 تم إغلاق المطعم رسمياً الساعة ' + formatTime12Ar(nowHM) + (extMins > 0 ? ' واحتساب +' + extMins + ' دقيقة تمديد ✓' : ' ✓') : '🚪 Closed at ' + formatTime12Ar(nowHM) + ' ✓');
-      FOH.app.render();
-    });
+    confirmCloseBtn.addEventListener('click', () => submitOfficialRestaurantClose(dlg, options, ar));
 
     const cancelB = el('button', 'btn', ar ? 'إلغاء' : 'Cancel');
     cancelB.type = 'button';
@@ -23508,40 +23628,11 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     }
   }
 
-  // ---- Enhance Sidebar with Language Toggle, Report Damage Button & Role-Scoped Navigation ----
-  function enhanceSidebarAndInventory() {
-    const ar = isAr();
-    const ident = getAppRoleIdentity();
-
-    // Update Sidebar Brand Title to match Employee's Super Role
+  function enhanceSidebarBrandAndLang(ar, ident) {
     const sbBrandStrong = document.querySelector('#appSidebar .sb-brand-txt strong');
     if (sbBrandStrong) {
       sbBrandStrong.textContent = ar ? ident.titleAr : ident.titleEn;
     }
-
-    // Filter Sidebar nav buttons to only those allowed for this role
-    const nav = $('sbNavList');
-    if (nav && !nav.dataset.v10Scoped) {
-      nav.dataset.v10Scoped = '1';
-      // Add Quick Damage / Repair button inside Sidebar
-      const dmgBtn = el('button', 'sb-nav-btn');
-      dmgBtn.type = 'button';
-      dmgBtn.append(
-        el('span', 'sb-nav-ico', '🔧'),
-        Object.assign(el('span', 'sb-nav-txt'), {
-          innerHTML:
-            '<b>' + (ar ? 'تسجيل كسر أو طلب صيانة' : 'Report Damage / Repair') + '</b>' +
-            '<small>' + (ar ? 'تبليغ فوري عن كسر أو عطل بالمعدات' : 'Log broken glassware or equipment repair') + '</small>',
-        })
-      );
-      dmgBtn.addEventListener('click', () => {
-        closeSidebar();
-        if (FOH.invBreak && FOH.invBreak.open) FOH.invBreak.open();
-      });
-      nav.append(dmgBtn);
-    }
-
-    // Add Language Switcher button inside Sidebar Footer (#sbFoot)
     const sbFoot = document.querySelector('#appSidebar .sb-foot');
     if (sbFoot && !$('sbLangToggle')) {
       const langBtn = el('button', 'btn sb-foot-btn', ar ? '🌐 EN' : '🌐 عربي');
@@ -23556,8 +23647,29 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     } else if ($('sbLangToggle')) {
       $('sbLangToggle').textContent = ar ? '🌐 EN' : '🌐 عربي';
     }
+  }
 
-    // Inject prominent "Report Damage / Request Repair" card at the top of #inv (Inventory section)
+  function injectSidebarDamageButton(nav, ar) {
+    if (!nav || nav.dataset.v10Scoped) return;
+    nav.dataset.v10Scoped = '1';
+    const dmgBtn = el('button', 'sb-nav-btn');
+    dmgBtn.type = 'button';
+    dmgBtn.append(
+      el('span', 'sb-nav-ico', '🔧'),
+      Object.assign(el('span', 'sb-nav-txt'), {
+        innerHTML:
+          '<b>' + (ar ? 'تسجيل كسر أو طلب صيانة' : 'Report Damage / Repair') + '</b>' +
+          '<small>' + (ar ? 'تبليغ فوري عن كسر أو عطل بالمعدات' : 'Log broken glassware or equipment repair') + '</small>',
+      })
+    );
+    dmgBtn.addEventListener('click', () => {
+      closeSidebar();
+      if (FOH.invBreak && FOH.invBreak.open) FOH.invBreak.open();
+    });
+    nav.append(dmgBtn);
+  }
+
+  function injectInventoryDamageCard(ar) {
     const invRoot = $('inv');
     if (invRoot && !invRoot.hidden && !invRoot.querySelector('#invDamageReportCard')) {
       const dmgCard = el('div', 'sec-context-bar');
@@ -23574,6 +23686,15 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       dmgCard.append(openBrkBtn);
       invRoot.prepend(dmgCard);
     }
+  }
+
+  // ---- Enhance Sidebar with Language Toggle, Report Damage Button & Role-Scoped Navigation ----
+  function enhanceSidebarAndInventory() {
+    const ar = isAr();
+    const ident = getAppRoleIdentity();
+    enhanceSidebarBrandAndLang(ar, ident);
+    injectSidebarDamageButton($('sbNavList'), ar);
+    injectInventoryDamageCard(ar);
   }
 
 
@@ -23652,11 +23773,47 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     profBox.onclick = () => switchView('profile');
   }
 
+  function createSidebarNavItem(v, badge, ar) {
+    const isClosingNav = v === 'closing_sheet';
+    const meta = isClosingNav
+      ? {
+          ico: '🌙',
+          title: ar ? 'شيت الإغلاق و Last Order' : 'Closing Sheet & Last Order',
+          sub: ar ? 'إغلاق البار والصالة والكاشير مع آخر زبون' : 'Dept closing & last-guest lockup',
+        }
+      : getSectionMeta(v);
+    const isActive = isClosingNav
+      ? (!S.editing && S.view === 'opening' && isClosingSheetActive())
+      : (v === 'opening' ? (!S.editing && S.view === 'opening' && !isClosingSheetActive()) : (!S.editing && S.view === v));
+    const b = el('button', 'sb-nav-btn' + (isActive ? ' on' : ''));
+    b.type = 'button';
+    b.append(
+      el('span', 'sb-nav-ico', meta.ico),
+      Object.assign(el('span', 'sb-nav-txt'), {
+        innerHTML: '<b>' + meta.title + '</b><small>' + meta.sub + '</small>',
+      })
+    );
+    if (badge) b.append(el('span', 'sb-nav-badge', badge));
+    b.addEventListener('click', () => {
+      if (isClosingNav) {
+        closeSidebar();
+        activateClosingSheet('all');
+      } else if (v === 'opening') {
+        if (isClosingSheetActive() && FOH.erpPwa && FOH.erpPwa.switchSheetType) {
+          FOH.erpPwa.switchSheetType('opening');
+        }
+        switchView('opening');
+      } else {
+        switchView(v);
+      }
+    });
+    return b;
+  }
+
   function renderSidebarNavList(nav, isMgr, ar) {
     nav.replaceChildren();
     const all = FOH.model.progress(FOH.model.allLeaves({ sections: FOH.preview.sections() }), S.run.checked);
     const openLeft = all.total - all.done;
-    const mineLeft = $('badgeMine') ? Number($('badgeMine').textContent || '0') : 0;
     const ordCount = $('badgeOrders') ? Number($('badgeOrders').textContent || '0') : 0;
 
     const items = [
@@ -23672,40 +23829,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     items.forEach(([v, badge]) => {
       if (v === 'inv' && S.previewEmployee) return;
       if (allowedViews.length && !allowedViews.includes(v)) return;
-      const isClosingNav = v === 'closing_sheet';
-      const meta = isClosingNav
-        ? {
-            ico: '🌙',
-            title: ar ? 'شيت الإغلاق و Last Order' : 'Closing Sheet & Last Order',
-            sub: ar ? 'إغلاق البار والصالة والكاشير مع آخر زبون' : 'Dept closing & last-guest lockup',
-          }
-        : getSectionMeta(v);
-      const isActive = isClosingNav
-        ? (!S.editing && S.view === 'opening' && isClosingSheetActive())
-        : (v === 'opening' ? (!S.editing && S.view === 'opening' && !isClosingSheetActive()) : (!S.editing && S.view === v));
-      const b = el('button', 'sb-nav-btn' + (isActive ? ' on' : ''));
-      b.type = 'button';
-      b.append(
-        el('span', 'sb-nav-ico', meta.ico),
-        Object.assign(el('span', 'sb-nav-txt'), {
-          innerHTML: '<b>' + meta.title + '</b><small>' + meta.sub + '</small>',
-        })
-      );
-      if (badge) b.append(el('span', 'sb-nav-badge', badge));
-      b.addEventListener('click', () => {
-        if (isClosingNav) {
-          closeSidebar();
-          activateClosingSheet('all');
-        } else if (v === 'opening') {
-          if (isClosingSheetActive() && FOH.erpPwa && FOH.erpPwa.switchSheetType) {
-            FOH.erpPwa.switchSheetType('opening');
-          }
-          switchView('opening');
-        } else {
-          switchView(v);
-        }
-      });
-      nav.append(b);
+      nav.append(createSidebarNavItem(v, badge, ar));
     });
     delete nav.dataset.v10Scoped;
     enhanceSidebarAndInventory();
@@ -23825,7 +23949,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     try {
       const all = FOH.model.progress(FOH.model.allLeaves({ sections: FOH.preview.sections() }), S().run.checked);
       return Math.max(0, (all.total || 0) - (all.done || 0));
-    } catch {
+    } catch (err) {
+      /* Fallback for remaining task count calculation */
       return 0;
     }
   }
@@ -23868,9 +23993,50 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       // Pending blind counts
       const counts = FOH.invCount && FOH.invCount.pending ? FOH.invCount.pending() : 0;
       return counts;
-    } catch {
+    } catch (err) {
+      /* Fallback for inventory pending count */
       return 0;
     }
+  }
+
+  function renderBottomTabItem(tb, curView, ar) {
+    const isCur = curView === tb.view;
+    const btn = el('button', 'tab-item' + (tb.isCenter ? ' center-hero' : '') + (isCur ? ' on' : ''));
+    btn.type = 'button';
+    btn.dataset.view = tb.view;
+    btn.setAttribute('aria-label', ar ? tb.labelAr : tb.labelEn);
+
+    if (tb.isCenter) {
+      const bubble = el('div', 'center-hero-bubble');
+      const ico = el('span', 'hero-ico', tb.ico);
+      const b = el('b', 'tab-badge hero-badge');
+      b.id = tb.badgeId;
+      b.hidden = true;
+      bubble.append(ico, b);
+      btn.append(bubble, el('span', 'tab-label center-label', ar ? tb.labelAr : tb.labelEn));
+    } else {
+      const wrap = el('div', 'tab-icon-wrap');
+      const ico = el('span', 'tab-ico', tb.ico);
+      const b = el('b', 'tab-badge');
+      b.id = tb.badgeId;
+      b.hidden = true;
+      wrap.append(ico, b);
+      btn.append(wrap, el('span', 'tab-label', ar ? tb.labelAr : tb.labelEn), el('span', 'tab-active-dot'));
+    }
+
+    btn.addEventListener('click', () => {
+      if (navigator.vibrate) navigator.vibrate(12);
+      if (FOH.superEmployee && FOH.superEmployee.switchView) {
+        FOH.superEmployee.switchView(tb.view);
+      } else if (FOH.navigation && FOH.navigation.switchView) {
+        FOH.navigation.switchView(tb.view);
+      } else {
+        S().view = tb.view;
+        FOH.app.render();
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    return btn;
   }
 
   function buildBottomBar() {
@@ -23887,51 +24053,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     const curView = S().view;
 
     TABS.forEach((tb) => {
-      const isCur = curView === tb.view;
-      const btn = el('button', 'tab-item' + (tb.isCenter ? ' center-hero' : '') + (isCur ? ' on' : ''));
-      btn.type = 'button';
-      btn.dataset.view = tb.view;
-      btn.setAttribute('aria-label', ar ? tb.labelAr : tb.labelEn);
-
-      if (tb.isCenter) {
-        // Center Elevated Hero FAB
-        const bubble = el('div', 'center-hero-bubble');
-        const ico = el('span', 'hero-ico', tb.ico);
-        const b = el('b', 'tab-badge hero-badge');
-        b.id = tb.badgeId;
-        b.hidden = true;
-        bubble.append(ico, b);
-
-        const lbl = el('span', 'tab-label center-label', ar ? tb.labelAr : tb.labelEn);
-        btn.append(bubble, lbl);
-      } else {
-        // Standard Tab Item
-        const wrap = el('div', 'tab-icon-wrap');
-        const ico = el('span', 'tab-ico', tb.ico);
-        const b = el('b', 'tab-badge');
-        b.id = tb.badgeId;
-        b.hidden = true;
-        wrap.append(ico, b);
-
-        const lbl = el('span', 'tab-label', ar ? tb.labelAr : tb.labelEn);
-        const dot = el('span', 'tab-active-dot');
-        btn.append(wrap, lbl, dot);
-      }
-
-      btn.addEventListener('click', () => {
-        if (navigator.vibrate) navigator.vibrate(12);
-        if (FOH.superEmployee && FOH.superEmployee.switchView) {
-          FOH.superEmployee.switchView(tb.view);
-        } else if (FOH.navigation && FOH.navigation.switchView) {
-          FOH.navigation.switchView(tb.view);
-        } else {
-          S().view = tb.view;
-          FOH.app.render();
-        }
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      });
-
-      bar.append(btn);
+      bar.append(renderBottomTabItem(tb, curView, ar));
     });
 
     updateBadges();
@@ -24056,6 +24178,40 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     }
   }
 
+  function createChecklistModeTab(isChecklist, ckStats, ar) {
+    const ckBtn = el('button', 'shift-nav-tab' + (isChecklist ? ' on' : ''));
+    ckBtn.type = 'button';
+    ckBtn.innerHTML =
+      '<div class="shift-tab-top"><span class="shift-tab-ico">📋</span>' +
+      '<b class="shift-tab-title">' + (ar ? 'الشيك ليست التشغيلي' : 'Shift Checklist') + '</b>' +
+      (isChecklist ? '<span class="shift-now-dot-micro"></span>' : '') + '</div>' +
+      '<div class="shift-tab-time-pill">' + (ar ? (ckStats.done + '/' + ckStats.total + ' منجز · ' + ckStats.left + ' متبقي') : (ckStats.done + '/' + ckStats.total + ' done · ' + ckStats.left + ' left')) + '</div>';
+    ckBtn.addEventListener('click', () => {
+      if (navigator.vibrate) navigator.vibrate(10);
+      if (FOH.superEmployee && FOH.superEmployee.switchView) FOH.superEmployee.switchView('opening');
+      else if (FOH.navigation && FOH.navigation.switchView) FOH.navigation.switchView('opening');
+      else { S().view = 'opening'; FOH.app.render(); }
+    });
+    return ckBtn;
+  }
+
+  function createTasksModeTab(isTasks, tkStats, ar) {
+    const tkBtn = el('button', 'shift-nav-tab' + (isTasks ? ' on' : ''));
+    tkBtn.type = 'button';
+    tkBtn.innerHTML =
+      '<div class="shift-tab-top"><span class="shift-tab-ico">🎯</span>' +
+      '<b class="shift-tab-title">' + (ar ? 'المهام والتكليفات' : 'Assigned Tasks') + '</b>' +
+      (isTasks ? '<span class="shift-now-dot-micro"></span>' : '') + '</div>' +
+      '<div class="shift-tab-time-pill">' + (ar ? (tkStats.pending + ' مهمة مطلوبة اليوم') : (tkStats.pending + ' tasks due today')) + '</div>';
+    tkBtn.addEventListener('click', () => {
+      if (navigator.vibrate) navigator.vibrate(10);
+      if (FOH.superEmployee && FOH.superEmployee.switchView) FOH.superEmployee.switchView('mine');
+      else if (FOH.navigation && FOH.navigation.switchView) FOH.navigation.switchView('mine');
+      else { S().view = 'mine'; FOH.app.render(); }
+    });
+    return tkBtn;
+  }
+
   // ---- 1. Mode Switcher (Checklist vs Tasks) ----
   function renderModeSwitcher() {
     const mainEl = $('appMain');
@@ -24095,36 +24251,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
     const grid = el('nav', 'shift-nav-grid ops-mode-grid');
     grid.setAttribute('aria-label', 'Switch Mode: Checklist vs Tasks');
-
-    const ckBtn = el('button', 'shift-nav-tab' + (isChecklist ? ' on' : ''));
-    ckBtn.type = 'button';
-    ckBtn.innerHTML =
-      '<div class="shift-tab-top"><span class="shift-tab-ico">📋</span>' +
-      '<b class="shift-tab-title">' + (ar ? 'الشيك ليست التشغيلي' : 'Shift Checklist') + '</b>' +
-      (isChecklist ? '<span class="shift-now-dot-micro"></span>' : '') + '</div>' +
-      '<div class="shift-tab-time-pill">' + (ar ? (ckStats.done + '/' + ckStats.total + ' منجز · ' + ckStats.left + ' متبقي') : (ckStats.done + '/' + ckStats.total + ' done · ' + ckStats.left + ' left')) + '</div>';
-    ckBtn.addEventListener('click', () => {
-      if (navigator.vibrate) navigator.vibrate(10);
-      if (FOH.superEmployee && FOH.superEmployee.switchView) FOH.superEmployee.switchView('opening');
-      else if (FOH.navigation && FOH.navigation.switchView) FOH.navigation.switchView('opening');
-      else { S().view = 'opening'; FOH.app.render(); }
-    });
-
-    const tkBtn = el('button', 'shift-nav-tab' + (isTasks ? ' on' : ''));
-    tkBtn.type = 'button';
-    tkBtn.innerHTML =
-      '<div class="shift-tab-top"><span class="shift-tab-ico">🎯</span>' +
-      '<b class="shift-tab-title">' + (ar ? 'المهام والتكليفات' : 'Assigned Tasks') + '</b>' +
-      (isTasks ? '<span class="shift-now-dot-micro"></span>' : '') + '</div>' +
-      '<div class="shift-tab-time-pill">' + (ar ? (tkStats.pending + ' مهمة مطلوبة اليوم') : (tkStats.pending + ' tasks due today')) + '</div>';
-    tkBtn.addEventListener('click', () => {
-      if (navigator.vibrate) navigator.vibrate(10);
-      if (FOH.superEmployee && FOH.superEmployee.switchView) FOH.superEmployee.switchView('mine');
-      else if (FOH.navigation && FOH.navigation.switchView) FOH.navigation.switchView('mine');
-      else { S().view = 'mine'; FOH.app.render(); }
-    });
-
-    grid.append(ckBtn, tkBtn);
+    grid.append(createChecklistModeTab(isChecklist, ckStats, ar), createTasksModeTab(isTasks, tkStats, ar));
     panel.append(grid);
   }
 
@@ -24148,6 +24275,22 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       setActiveDept('all');
     });
     return tile;
+  }
+
+  function renderSectionGearButton(sec, ar) {
+    const gearBtn = el('button', 'dept-tile-gear');
+    gearBtn.type = 'button';
+    gearBtn.title = ar ? 'تخصيص وإسناد الصلاحيات للقسم' : 'Customize & Assign Section Permissions';
+    gearBtn.setAttribute('aria-label', ar ? 'إعدادات القسم' : 'Section Settings');
+    gearBtn.innerHTML = '⚙️';
+    gearBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      if (FOH.sectionAssignment && FOH.sectionAssignment.openSectionModal) {
+        FOH.sectionAssignment.openSectionModal(sec, false);
+      }
+    });
+    return gearBtn;
   }
 
   function createSectionTile(sec, currentActive, ar) {
@@ -24174,20 +24317,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       })
     );
 
-    const gearBtn = el('button', 'dept-tile-gear');
-    gearBtn.type = 'button';
-    gearBtn.title = ar ? 'تخصيص وإسناد الصلاحيات للقسم' : 'Customize & Assign Section Permissions';
-    gearBtn.setAttribute('aria-label', ar ? 'إعدادات القسم' : 'Section Settings');
-    gearBtn.innerHTML = '⚙️';
-    gearBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      if (FOH.sectionAssignment && FOH.sectionAssignment.openSectionModal) {
-        FOH.sectionAssignment.openSectionModal(sec, false);
-      }
-    });
-
-    topRow.append(leftBox, gearBtn);
+    topRow.append(leftBox, renderSectionGearButton(sec, ar));
 
     const botRow = el('div', 'dept-tile-bottom');
     botRow.append(
@@ -24203,33 +24333,10 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     return tile;
   }
 
-  // ---- 3. Render Department Bento Hub ----
-  function renderDeptSegmentPanel() {
-    const mainEl = $('appMain');
-    const sectionsEl = $('sections');
-    if (!mainEl || !sectionsEl) return;
-
-    let panel = $('deptSegmentPanel');
-    if (!panel) {
-      panel = el('div', 'dept-segment-panel run-only');
-      panel.id = 'deptSegmentPanel';
-      mainEl.insertBefore(panel, sectionsEl);
-    }
-
-    const isChecklistView = S().view === 'opening' && !S().editing;
-    panel.hidden = !isChecklistView;
-    if (panel.hidden) return;
-
-    const chipsEl = $('chips');
-    if (chipsEl) chipsEl.style.display = 'none';
-
-    panel.replaceChildren();
-
-    const ar = isAr();
-    const secs = (S().tpl && Array.isArray(S().tpl.sections)) ? S().tpl.sections : [];
-    const sess = FOH.sessionAuth ? FOH.sessionAuth.getSession() : null;
-    const isMgr = !!(sess && (sess.isManager || sess.roleId === 'manager'));
-
+  function renderDeptSegmentHeader(activeDept, secs, opts = {}) {
+    const isLegacy = typeof opts === 'boolean';
+    const isMgr = isLegacy ? opts : !!(opts && opts.isMgr);
+    const ar = isLegacy ? !!arguments[3] : (opts && typeof opts.ar === 'boolean' ? opts.ar : isAr());
     let activeTitle = ar ? 'الكل' : 'All';
     let activeStatsText = '';
     if (activeDept !== 'all') {
@@ -24264,7 +24371,37 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       });
       head.append(addDeptBtn);
     }
-    panel.append(head);
+    return head;
+  }
+
+  // ---- 3. Render Department Bento Hub ----
+  function renderDeptSegmentPanel() {
+    const mainEl = $('appMain');
+    const sectionsEl = $('sections');
+    if (!mainEl || !sectionsEl) return;
+
+    let panel = $('deptSegmentPanel');
+    if (!panel) {
+      panel = el('div', 'dept-segment-panel run-only');
+      panel.id = 'deptSegmentPanel';
+      mainEl.insertBefore(panel, sectionsEl);
+    }
+
+    const isChecklistView = S().view === 'opening' && !S().editing;
+    panel.hidden = !isChecklistView;
+    if (panel.hidden) return;
+
+    const chipsEl = $('chips');
+    if (chipsEl) chipsEl.style.display = 'none';
+
+    panel.replaceChildren();
+
+    const ar = isAr();
+    const secs = (S().tpl && Array.isArray(S().tpl.sections)) ? S().tpl.sections : [];
+    const sess = FOH.sessionAuth ? FOH.sessionAuth.getSession() : null;
+    const isMgr = !!(sess && (sess.isManager || sess.roleId === 'manager'));
+
+    panel.append(renderDeptSegmentHeader(activeDept, secs, { isMgr, ar }));
 
     const grid = el('div', 'dept-bento-grid');
     grid.append(createAllTile(getChecklistRemaining(), activeDept === 'all', ar));
@@ -24272,6 +24409,37 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       grid.append(createSectionTile(sec, activeDept, ar));
     });
     panel.append(grid);
+  }
+
+  function renderDeptIsolatedBanner(secEl, activeDept, opts = {}) {
+    const isLegacy = Array.isArray(opts);
+    const secs = isLegacy ? opts : ((opts && opts.secs) || []);
+    const ar = isLegacy ? !!arguments[3] : (opts && typeof opts.ar === 'boolean' ? opts.ar : isAr());
+    let banner = $('deptIsolatedBanner');
+    if (activeDept !== 'all') {
+      const curSec = secs.find((s) => s.id === activeDept || s.dept === activeDept || ('sec-' + s.dept) === activeDept);
+      const sTitle = curSec ? (ar ? (curSec.titleAr || curSec.title) : (curSec.title || curSec.titleAr)) : activeDept;
+      const sIco = curSec ? (curSec.icon || '📌') : '📌';
+
+      if (!banner) {
+        banner = el('div', 'dept-isolated-banner');
+        banner.id = 'deptIsolatedBanner';
+        secEl.prepend(banner);
+      }
+      banner.style.display = 'flex';
+      banner.innerHTML =
+        '<div class="dib-txt">' +
+        '<span>' + FOH.escapeHtml(sIco) + ' <b>' + (ar ? 'عرض شيك ليست: ' : 'Focused Checklist: ') + FOH.escapeHtml(sTitle) + '</b></span>' +
+        '<small>' + (ar ? 'يتم الآن عرض بنود هذا القسم فقط دون بقية الأقسام' : 'Showing items for this station only') + '</small>' +
+        '</div>';
+
+      const resetBtn = el('button', 'btn sm', ar ? '✨ عرض جميع الأقسام' : '✨ Show All');
+      resetBtn.type = 'button';
+      resetBtn.addEventListener('click', () => setActiveDept('all'));
+      banner.append(resetBtn);
+    } else if (banner) {
+      banner.style.display = 'none';
+    }
   }
 
   // ---- 4. Apply Department Filter to Section Cards ----
@@ -24300,33 +24468,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       }
     });
 
-    let banner = $('deptIsolatedBanner');
-    if (activeDept !== 'all') {
-      const secs = (S().tpl && Array.isArray(S().tpl.sections)) ? S().tpl.sections : [];
-      const curSec = secs.find((s) => s.id === activeDept || s.dept === activeDept || ('sec-' + s.dept) === activeDept);
-      const ar = isAr();
-      const sTitle = curSec ? (ar ? (curSec.titleAr || curSec.title) : (curSec.title || curSec.titleAr)) : activeDept;
-      const sIco = curSec ? (curSec.icon || '📌') : '📌';
-
-      if (!banner) {
-        banner = el('div', 'dept-isolated-banner');
-        banner.id = 'deptIsolatedBanner';
-        secEl.prepend(banner);
-      }
-      banner.style.display = 'flex';
-      banner.innerHTML =
-        '<div class="dib-txt">' +
-        '<span>' + FOH.escapeHtml(sIco) + ' <b>' + (ar ? 'عرض شيك ليست: ' : 'Focused Checklist: ') + FOH.escapeHtml(sTitle) + '</b></span>' +
-        '<small>' + (ar ? 'يتم الآن عرض بنود هذا القسم فقط دون بقية الأقسام' : 'Showing items for this station only') + '</small>' +
-        '</div>';
-
-      const resetBtn = el('button', 'btn sm', ar ? '✨ عرض جميع الأقسام' : '✨ Show All');
-      resetBtn.type = 'button';
-      resetBtn.addEventListener('click', () => setActiveDept('all'));
-      banner.append(resetBtn);
-    } else if (banner) {
-      banner.style.display = 'none';
-    }
+    const secs = (S().tpl && Array.isArray(S().tpl.sections)) ? S().tpl.sections : [];
+    renderDeptIsolatedBanner(secEl, activeDept, { secs, ar: isAr() });
   }
 
   function setActiveDept(deptKey) {
