@@ -5856,6 +5856,48 @@ dialog.sheet,
   transform: translateZ(0);
 }
 
+/* Manager Top Segmented Filter Bar */
+.mgr-filter-bar {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 4px 2px 8px;
+  margin-bottom: 6px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.mgr-filter-bar::-webkit-scrollbar {
+  display: none;
+}
+.mgr-filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--card, #ffffff);
+  border: 1px solid var(--line, #e2e8e2);
+  color: var(--ink, #1f2937);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+}
+.mgr-filter-pill:hover {
+  background: var(--bg-hover, rgba(47, 107, 94, 0.06));
+}
+.mgr-filter-pill.active {
+  background: var(--accent, #2f6b5e);
+  color: #ffffff;
+  border-color: var(--accent, #2f6b5e);
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(47, 107, 94, 0.25);
+}
+
 </style>
   </head>
   <body>
@@ -12455,14 +12497,53 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   let originalDate = null;
   let originalRun = null;
   const staff = () => S.tpl.staff.filter((p) => p.active);
+  function isSectionAllowedForRole(sec, opts = {}) {
+    const isObj = typeof opts === 'object' && opts !== null;
+    const roleKey = isObj ? (opts.roleKey || 'staff') : (opts || 'staff');
+    const isMgr = isObj ? !!opts.isMgr : !!arguments[2];
+    const username = isObj ? (opts.username || '') : (arguments[3] || '');
+    if (isMgr) return true;
+    if (sec && Array.isArray(sec.allowedRoles) && sec.allowedRoles.length > 0) {
+      if (sec.allowedRoles.includes('all')) return true;
+      return sec.allowedRoles.includes(roleKey);
+    }
+    const sid = (sec.id || '').toLowerCase();
+    const dept = (sec.dept || '').toLowerCase();
+    const asgRole = (sec.assignedRoleKey || '').toLowerCase();
+    const asgUser = (sec.assignedUsername || '').toLowerCase();
+    const curUser = (username || '').toLowerCase();
+    if (asgUser && curUser && asgUser === curUser) return true;
+
+    if (roleKey === 'super_captain') {
+      if (sid.includes('bar') || dept === 'bar' || sid.includes('cash') || dept === 'cash' || asgRole === 'super_bartender' || asgRole === 'super_manager') {
+        return false;
+      }
+      return true;
+    }
+    if (roleKey === 'super_bartender') {
+      return sid.includes('bar') || dept === 'bar' || asgRole === 'super_bartender';
+    }
+    if (roleKey === 'super_waiter' || roleKey === 'staff') {
+      if (sid.includes('bar') || dept === 'bar' || sid.includes('cash') || dept === 'cash' || sid.includes('host') || dept === 'host' || asgRole === 'super_bartender' || asgRole === 'super_manager') {
+        return false;
+      }
+      return sid.includes('floor') || dept === 'floor' || sid.includes('back') || dept === 'back' || asgRole === 'super_waiter' || asgRole === 'runner' || asgRole === 'all';
+    }
+    return true;
+  }
+
   function sections() {
-    if (!S.previewEmployee) return S.tpl.sections;
-    const allowed = (role) => !role || role === S.me.role;
-    return S.tpl.sections.map((sec) => ({ ...sec, items: sec.items.flatMap((it) => {
-      if (!FOH.model.kids(it).length) return allowed(it.role) ? [it] : [];
-      const children = it.children.filter((c) => allowed(c.role || it.role));
-      return children.length ? [{ ...it, children }] : [];
-    }) })).filter((sec) => sec.items.length);
+    const allSecs = (S.tpl && S.tpl.sections) ? S.tpl.sections : [];
+    if (S.editing) return allSecs;
+
+    const sess = FOH.sessionAuth ? FOH.sessionAuth.getSession() : null;
+    const isMgr = !sess || !!(sess.isManager || sess.roleId === 'manager');
+    if (isMgr && !S.previewEmployee) return allSecs;
+
+    const roleKey = FOH.roleIdentity ? FOH.roleIdentity.getCurrentSuperRoleKey() : (S.me ? S.me.role : 'staff');
+    const uname = (sess && sess.username) || (S.me ? S.me.name : '');
+
+    return allSecs.filter((sec) => isSectionAllowedForRole(sec, roleKey, false, uname));
   }
   function choose(id) {
     const person = staff().find((p) => p.id === id);
@@ -12545,7 +12626,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     $('previewToggle').addEventListener('click', () => S.previewEmployee ? leave() : enter());
     $('previewPerson').addEventListener('change', (event) => choose(event.target.value));
   }
-  FOH.preview = { init, render, sections, enter, leave, choose, startCountDemo, stopCountDemo };
+  FOH.isSectionAllowedForRole = isSectionAllowedForRole;
+  FOH.preview = { init, render, sections, enter, leave, choose, startCountDemo, stopCountDemo, isSectionAllowedForRole };
 })(window.FOH = window.FOH || {});
 
 </script>
@@ -14453,6 +14535,14 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     { key: 'runner', labelEn: '🏃 Runner / Support', labelAr: '🏃 رانر ومساعد (Runner)' },
   ];
 
+  const SCOPE_ROLES = [
+    { key: 'all', labelEn: 'All Positions', labelAr: 'الجميع (مشترك)' },
+    { key: 'super_captain', labelEn: 'Super Captain', labelAr: 'سوبر كابتن' },
+    { key: 'super_waiter', labelEn: 'Super Waiter', labelAr: 'سوبر ويتر' },
+    { key: 'super_bartender', labelEn: 'Super Bartender', labelAr: 'سوبر بارتندر' },
+    { key: 'super_manager', labelEn: 'Super Manager', labelAr: 'سوبر مانجر' },
+  ];
+
   const DEPT_OPTIONS = [
     { key: 'bar', labelEn: '🍸 Bar Department', labelAr: '🍸 قسم البار والمشروبات' },
     { key: 'floor', labelEn: '🍽️ Floor & Dining Area', labelAr: '🍽️ قسم الصالة والطاولات' },
@@ -14676,6 +14766,68 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     return { gridRow, deptSel, roleSel };
   }
 
+  function toggleScopeRole(currentRoles, roleKey) {
+    if (roleKey === 'all') {
+      currentRoles.clear();
+      currentRoles.add('all');
+      return;
+    }
+    currentRoles.delete('all');
+    if (currentRoles.has(roleKey)) currentRoles.delete(roleKey);
+    else currentRoles.add(roleKey);
+    if (currentRoles.size === 0) currentRoles.add('all');
+  }
+
+  function updateRoleChipsUI(buttons, currentRoles, ar) {
+    buttons.forEach(({ btnEl, roleItem }) => {
+      const act = currentRoles.has(roleItem.key);
+      btnEl.className = 'btn sm role-chip-btn' + (act ? ' primary' : '');
+      btnEl.textContent = (act ? '✓ ' : '') + (ar ? roleItem.labelAr : roleItem.labelEn);
+    });
+  }
+
+  function renderSectionAllowedRolesCheckboxes(sec, ar) {
+    const group = el('div', 'task-asg-group');
+    group.style.marginBottom = '12px';
+    const lbl = el('label', '');
+    lbl.style.fontWeight = '700';
+    lbl.style.fontSize = '0.82rem';
+    lbl.style.display = 'block';
+    lbl.style.marginBottom = '6px';
+    lbl.textContent = ar ? '🔐 صلاحيات الرؤية (من يرى هذا القسم):' : '🔐 Section Visibility (Allowed Roles):';
+    group.append(lbl);
+
+    const row = el('div', 'allowed-roles-row');
+    row.style.display = 'flex';
+    row.style.flexWrap = 'wrap';
+    row.style.gap = '6px';
+
+    const currentRoles = new Set(
+      Array.isArray(sec.allowedRoles) && sec.allowedRoles.length
+        ? sec.allowedRoles
+        : (sec.assignedRoleKey ? [sec.assignedRoleKey] : ['all'])
+    );
+
+    const buttons = [];
+    SCOPE_ROLES.forEach((r) => {
+      const isSel = currentRoles.has(r.key);
+      const b = el('button', 'btn sm role-chip-btn' + (isSel ? ' primary' : ''));
+      b.type = 'button';
+      b.style.fontSize = '0.74rem';
+      b.style.padding = '4px 8px';
+      b.style.borderRadius = '6px';
+      b.textContent = (isSel ? '✓ ' : '') + (ar ? r.labelAr : r.labelEn);
+      b.addEventListener('click', () => {
+        toggleScopeRole(currentRoles, r.key);
+        updateRoleChipsUI(buttons, currentRoles, ar);
+      });
+      buttons.push({ btnEl: b, roleItem: r });
+      row.append(b);
+    });
+    group.append(row);
+    return { group, getAllowedRoles: () => Array.from(currentRoles) };
+  }
+
   function renderSectionStaffSelect(sec, ar) {
     const staffGroup = el('div', 'task-asg-group');
     staffGroup.style.marginBottom = '14px';
@@ -14760,6 +14912,9 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     sec.assignedRoleKey = roleKey;
     sec.assignedRoleLabel = roleLabel;
     sec.assignedUsername = empUser;
+    if (typeof fields.getAllowedRoles === 'function') {
+      sec.allowedRoles = fields.getAllowedRoles();
+    }
 
     if (cascadeCheck.checked) {
       applyRoleCascade(sec, { roleKey, roleLabel, empUser });
@@ -14865,6 +15020,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     const iconGroup = renderSectionIconPicker(selectedIcon, (ico) => { selectedIcon = ico; }, ar);
     const titles = renderSectionTitleInputs(sec, ar);
     const catAndRole = renderSectionCategoryAndRole(sec, ar);
+    const rolesVis = renderSectionAllowedRolesCheckboxes(sec, ar);
     const staff = renderSectionStaffSelect(sec, ar);
     const cascade = renderSectionCascadeToggle(ar);
     enhanceSectionSelects(catAndRole, staff, ar);
@@ -14877,10 +15033,11 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       staffSel: staff.staffSel,
       cascadeCheck: cascade.cascadeCheck,
       getSelectedIcon: () => selectedIcon,
+      getAllowedRoles: rolesVis.getAllowedRoles,
     };
 
     const actions = renderSectionActions({ sec, isNew, dlg, ar, fields });
-    box.append(header, iconGroup, titles.wrap, catAndRole.gridRow, staff.staffGroup, cascade.cascadeBox, actions);
+    box.append(header, iconGroup, titles.wrap, catAndRole.gridRow, rolesVis.group, staff.staffGroup, cascade.cascadeBox, actions);
     dlg.append(box);
     dlg.showModal();
     (ar ? titles.titleArIn : titles.titleEnIn).focus();
@@ -19363,7 +19520,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       titleAr: '🎖️ Super Captain · سوبر كابتن',
       subEn: 'Floor Leadership, Last Order & Closing Sign-off',
       subAr: 'قيادة الصالة، إعلان الـ Last Order واعتماد الإغلاق',
-      allowedViews: ['opening', 'closing_sheet', 'mine', 'dayoff', 'orders', 'inv', 'academy', 'tips', 'profile'],
+      allowedViews: ['opening', 'closing_sheet', 'mine', 'dayoff', 'orders', 'academy', 'tips', 'profile'],
       openingKeywords: null, // all floor & station sections
       closingDept: 'all',
     },
@@ -20925,6 +21082,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   };
 })(window.FOH = window.FOH || {});
 
+
 </script>
 
 <script>
@@ -21098,6 +21256,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     updateTotalPool,
   };
 })(window.FOH = window.FOH || {});
+
 
 </script>
 
@@ -24358,7 +24517,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     const items = [
       ['opening', openLeft > 0 ? String(openLeft) : '✓'],
       ['orders', ordCount > 0 ? String(ordCount) : ''],
-      ['dayoff', '🏖️'],
+      ['inv', '📦'],
       ['profile', '🏥'],
       ['dashboard', '📊'],
     ];
@@ -24450,12 +24609,12 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       badgeId: 'botBadgeMine',
     },
     {
-      id: 'inv',
-      view: 'inv',
-      ico: '📦',
-      labelAr: 'الكسر والجرد',
-      labelEn: 'Inventory',
-      badgeId: 'botBadgeInv',
+      id: 'dayoff',
+      view: 'dayoff',
+      ico: '📅',
+      labelAr: 'الدوام',
+      labelEn: 'Schedule',
+      badgeId: 'botBadgeDayoff',
     },
     {
       id: 'opening',
@@ -24527,13 +24686,19 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     }
   }
 
-  function getInventoryDamageBadgeCount() {
+  function getDayOffBadgeCount() {
     try {
-      // Pending blind counts
-      const counts = FOH.invCount && FOH.invCount.pending ? FOH.invCount.pending() : 0;
-      return counts;
+      if (!FOH.dayOff || !FOH.dayOff.loadDayOffList) return 0;
+      const list = FOH.dayOff.loadDayOffList() || [];
+      const sess = FOH.sessionAuth ? FOH.sessionAuth.getSession() : null;
+      const isMgr = !sess || !!sess.isManager;
+      if (isMgr) {
+        return list.filter((r) => r.status === 'pending').length;
+      }
+      const myName = (sess && sess.displayName) || (FOH.state && FOH.state.me && FOH.state.me.name) || '';
+      return list.filter((r) => r.status === 'pending' && (!myName || (r.staffName || '').toLowerCase().includes(myName.toLowerCase()))).length;
     } catch (err) {
-      /* Fallback for inventory pending count */
+      /* Fallback for day-off pending badge calculation */
       return 0;
     }
   }
@@ -24618,12 +24783,12 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       bOpen.hidden = left <= 0;
     }
 
-    // 3. Inventory / Breakage badge
-    const bInv = $('botBadgeInv');
-    if (bInv) {
-      const cnt = getInventoryDamageBadgeCount();
-      bInv.textContent = String(cnt);
-      bInv.hidden = cnt <= 0;
+    // 3. Schedule & Day-Off badge
+    const bDayoff = $('botBadgeDayoff');
+    if (bDayoff) {
+      const cnt = getDayOffBadgeCount();
+      bDayoff.textContent = String(cnt);
+      bDayoff.hidden = cnt <= 0;
     }
   }
 
@@ -24913,7 +25078,33 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     return head;
   }
 
-  // ---- 3. Render Department Bento Hub ----
+  // ---- Helper: Manager Top Segmented Filter Pills ----
+  function createFilterPill(opts = {}) {
+    const { label, icon, key, isActive } = opts;
+    const pill = el('button', 'mgr-filter-pill' + (isActive ? ' active' : ''));
+    pill.type = 'button';
+    pill.append(el('span', '', icon + ' ' + label));
+    pill.addEventListener('click', () => {
+      if (navigator.vibrate) navigator.vibrate(8);
+      setActiveDept(key);
+    });
+    return pill;
+  }
+
+  function renderManagerTopFilterBar(curActive, secs, ar) {
+    const wrap = el('div', 'mgr-filter-bar');
+    wrap.setAttribute('aria-label', ar ? 'تصفية سريعة للأقسام' : 'Quick Department Filter');
+    wrap.append(createFilterPill({ label: ar ? 'الكل' : 'All', icon: '✨', key: 'all', isActive: curActive === 'all' }));
+    secs.forEach((sec) => {
+      const sTitle = ar ? (sec.titleAr || sec.title) : (sec.title || sec.titleAr);
+      const sIco = sec.icon || '📌';
+      const isSecActive = (curActive === sec.id) || (curActive === sec.dept) || (('sec-' + curActive) === sec.id);
+      wrap.append(createFilterPill({ label: sTitle, icon: sIco, key: sec.id, isActive: isSecActive }));
+    });
+    return wrap;
+  }
+
+  // ---- 3. Render Department Bento Hub & Manager Filter Bar ----
   function renderDeptSegmentPanel() {
     const mainEl = $('appMain');
     const sectionsEl = $('sections');
@@ -24936,15 +25127,24 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     panel.replaceChildren();
 
     const ar = isAr();
-    const secs = (S().tpl && Array.isArray(S().tpl.sections)) ? S().tpl.sections : [];
+    const allSecs = (S().tpl && Array.isArray(S().tpl.sections)) ? S().tpl.sections : [];
     const sess = FOH.sessionAuth ? FOH.sessionAuth.getSession() : null;
     const isMgr = !!(sess && (sess.isManager || sess.roleId === 'manager'));
+    const roleKey = FOH.roleIdentity ? FOH.roleIdentity.getCurrentSuperRoleKey() : 'staff';
+    const uname = (sess && sess.username) || '';
+    const isAllowed = FOH.isSectionAllowedForRole || ((s) => true);
 
-    panel.append(renderDeptSegmentHeader(activeDept, secs, { isMgr, ar }));
+    const visibleSecs = isMgr ? allSecs : allSecs.filter((s) => isAllowed(s, roleKey, false, uname));
+
+    if (isMgr) {
+      panel.append(renderManagerTopFilterBar(activeDept, allSecs, ar));
+    }
+
+    panel.append(renderDeptSegmentHeader(activeDept, visibleSecs, { isMgr, ar }));
 
     const grid = el('div', 'dept-bento-grid');
     grid.append(createAllTile(getChecklistRemaining(), activeDept === 'all', ar));
-    secs.forEach((sec) => {
+    visibleSecs.forEach((sec) => {
       grid.append(createSectionTile(sec, activeDept, ar));
     });
     panel.append(grid);
@@ -24981,7 +25181,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     }
   }
 
-  // ---- 4. Apply Department Filter to Section Cards ----
+  // ---- 4. Apply Department Filter to Section Cards with Strict Scoping ----
   function applyDeptFilter() {
     const secEl = $('sections');
     if (!secEl || S().view !== 'opening' || S().editing) return;
@@ -24989,10 +25189,23 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     const chipsEl = $('chips');
     if (chipsEl) chipsEl.style.display = 'none';
 
+    const sess = FOH.sessionAuth ? FOH.sessionAuth.getSession() : null;
+    const isMgr = !!(sess && (sess.isManager || sess.roleId === 'manager'));
+    const roleKey = FOH.roleIdentity ? FOH.roleIdentity.getCurrentSuperRoleKey() : 'staff';
+    const uname = (sess && sess.username) || '';
+    const isAllowed = FOH.isSectionAllowedForRole || ((s) => true);
+
     const cards = document.querySelectorAll('#sections > section.card');
     cards.forEach((card) => {
       const sid = (card.id || '').replace(/^sec-/, '');
       const secObj = (S().tpl && S().tpl.sections ? S().tpl.sections : []).find((x) => x.id === card.id || x.id === ('sec-' + sid) || x.id === sid);
+
+      // Strict Scoping: If user is not manager and section is not allowed, unconditionally hide!
+      if (!isMgr && secObj && !isAllowed(secObj, roleKey, false, uname)) {
+        card.style.display = 'none';
+        return;
+      }
+
       const sDept = (secObj && secObj.dept ? secObj.dept : sid).toLowerCase();
 
       if (activeDept === 'all') {
@@ -26426,6 +26639,11 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     if (S.view === 'tips' && $('tipsView')) renderTipsView($('tipsView'));
     if (S.view === 'dashboard' && $('dashboardView')) renderDashboardView($('dashboardView'));
     if (S.view === 'profile' && $('profilePageView')) renderProfilePageView($('profilePageView'));
+    if (S.view === 'dayoff' && $('dayoffView') && FOH.dayOff && FOH.dayOff.buildDayOffSection) {
+      $('dayoffView').replaceChildren();
+      const sec = FOH.dayOff.buildDayOffSection(false);
+      if (sec) $('dayoffView').append(sec);
+    }
     if (S.view === 'settings' && $('settingsView')) {
       renderSettingsView($('settingsView'));
       appendHoursAndSuperRolesSettings($('settingsView'));
