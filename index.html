@@ -9854,29 +9854,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     });
   }
 
-  function init() {
-    FOH.i18n.apply();
-    $('sections').addEventListener('click', onClick);
-    $('sections').addEventListener('change', onCheck);
-    $('chips').addEventListener('click', onClick);
-    ['today', 'mine'].forEach((id) => $(id).addEventListener('change', onCheck)); // opening items in "My tasks"
-    FOH.taskActions.init(['today', 'mine', 'sched', 'rolesView'].map($));
-    document.querySelectorAll('[data-view]').forEach((b) =>
-      b.addEventListener('click', () => {
-        S.view = b.dataset.view;
-        window.scrollTo(0, 0);
-        render();
-      })
-    );
-    document.querySelectorAll('[data-etab]').forEach((b) =>
-      b.addEventListener('click', () => {
-        S.editTab = b.dataset.etab;
-        S.tray = null;
-        window.scrollTo(0, 0);
-        render();
-      })
-    );
-    window.addEventListener('scroll', onScroll, { passive: true });
+  function wireTopBarAndHeaderEvents() {
     $('modeBtn').addEventListener('click', () => {
       if (S.previewEmployee) return;
       S.editing = !S.editing;
@@ -9891,12 +9869,6 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       $('metaPanel').hidden = !$('metaPanel').hidden;
       render();
     });
-    document.querySelectorAll('[data-filter]').forEach((b) =>
-      b.addEventListener('click', () => {
-        S.filter = b.dataset.filter;
-        render();
-      })
-    );
     $('date').addEventListener('change', (e) => loadDate(e.target.value));
     ['supervisor', 'captain', 'assistant'].forEach((k) =>
       $(k).addEventListener('input', (e) => {
@@ -9919,6 +9891,42 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       saveRun();
       render();
     });
+  }
+
+  function wireNavigationAndTabEvents() {
+    document.querySelectorAll('[data-view]').forEach((b) =>
+      b.addEventListener('click', () => {
+        S.view = b.dataset.view;
+        window.scrollTo(0, 0);
+        render();
+      })
+    );
+    document.querySelectorAll('[data-etab]').forEach((b) =>
+      b.addEventListener('click', () => {
+        S.editTab = b.dataset.etab;
+        S.tray = null;
+        window.scrollTo(0, 0);
+        render();
+      })
+    );
+    document.querySelectorAll('[data-filter]').forEach((b) =>
+      b.addEventListener('click', () => {
+        S.filter = b.dataset.filter;
+        render();
+      })
+    );
+  }
+
+  function init() {
+    FOH.i18n.apply();
+    $('sections').addEventListener('click', onClick);
+    $('sections').addEventListener('change', onCheck);
+    $('chips').addEventListener('click', onClick);
+    ['today', 'mine'].forEach((id) => $(id).addEventListener('change', onCheck));
+    FOH.taskActions.init(['today', 'mine', 'sched', 'rolesView'].map($));
+    wireNavigationAndTabEvents();
+    wireTopBarAndHeaderEvents();
+    window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', render);
     FOH.edit.init();
     FOH.taskSheet.init();
@@ -9930,7 +9938,6 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     $('inv').addEventListener('change', FOH.invManage.onChange);
     loadDate(time.todayISO());
     if ($('metaPanel')) $('metaPanel').hidden = true;
-    // Refresh the due banner and late items once a minute.
     setInterval(() => {
       if (!S.editing && !document.querySelector('dialog[open]')) render();
     }, 60000);
@@ -16493,25 +16500,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     return { panelRecurring, stepper, recurTimeIn, startDateIn: range.startDateIn, endDateIn: range.endDateIn, openEndedCheck: range.openEndedCheck };
   }
 
-  function createRecurrenceCard(ar, today, nowHM) {
-    const recurCard = el('div', 'task-asg-card');
-    recurCard.style.background = 'var(--bg2, rgba(0,0,0,0.03))';
-    recurCard.style.border = '1px solid var(--line)';
-    recurCard.style.borderRadius = '16px';
-    recurCard.style.padding = '12px 14px';
-    recurCard.style.marginBottom = '12px';
-
-    const recurTitleRow = el('div', '');
-    recurTitleRow.style.display = 'flex';
-    recurTitleRow.style.justifyContent = 'space-between';
-    recurTitleRow.style.alignItems = 'center';
-    recurTitleRow.style.marginBottom = '8px';
-    recurTitleRow.innerHTML =
-      '<span style="font-weight:700;font-size:0.82rem;display:flex;align-items:center;gap:6px;"><span>🗓️</span><span>' +
-      (ar ? 'طبيعة التكرار والجدولة:' : 'Recurrence & Schedule:') +
-      '</span></span>';
-    recurCard.append(recurTitleRow);
-
+  function createRecurrenceSegment(ar, once, recur) {
     let recurType = 'once';
     const recurSeg = el('div', 'seg wide');
     recurSeg.style.display = 'flex';
@@ -16538,12 +16527,6 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     btnRecur.style.border = 'none';
     btnRecur.style.cursor = 'pointer';
 
-    recurSeg.append(btnOnce, btnRecur);
-    recurCard.append(recurSeg);
-
-    const once = createOncePanel(ar, today, nowHM);
-    const recur = createRecurringPanel(ar, today, nowHM);
-
     btnOnce.addEventListener('click', () => {
       recurType = 'once';
       btnOnce.classList.add('on');
@@ -16560,12 +16543,39 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       recur.panelRecurring.style.display = 'block';
     });
 
-    recurCard.append(once.panelOnce, recur.panelRecurring);
+    recurSeg.append(btnOnce, btnRecur);
+    return { recurSeg, getRecurType: () => recurType };
+  }
+
+  function createRecurrenceCard(ar, today, nowHM) {
+    const recurCard = el('div', 'task-asg-card');
+    recurCard.style.background = 'var(--bg2, rgba(0,0,0,0.03))';
+    recurCard.style.border = '1px solid var(--line)';
+    recurCard.style.borderRadius = '16px';
+    recurCard.style.padding = '12px 14px';
+    recurCard.style.marginBottom = '12px';
+
+    const recurTitleRow = el('div', '');
+    recurTitleRow.style.display = 'flex';
+    recurTitleRow.style.justifyContent = 'space-between';
+    recurTitleRow.style.alignItems = 'center';
+    recurTitleRow.style.marginBottom = '8px';
+    recurTitleRow.innerHTML =
+      '<span style="font-weight:700;font-size:0.82rem;display:flex;align-items:center;gap:6px;"><span>🗓️</span><span>' +
+      (ar ? 'طبيعة التكرار والجدولة:' : 'Recurrence & Schedule:') +
+      '</span></span>';
+    recurCard.append(recurTitleRow);
+
+    const once = createOncePanel(ar, today, nowHM);
+    const recur = createRecurringPanel(ar, today, nowHM);
+    const seg = createRecurrenceSegment(ar, once, recur);
+
+    recurCard.append(seg.recurSeg, once.panelOnce, recur.panelRecurring);
 
     return {
       recurCard,
       getRecurData: () => ({
-        recurType,
+        recurType: seg.getRecurType(),
         currentEvery: recur.stepper.getEvery(),
         recurTimeHM: recur.recurTimeIn.value || '12:00',
         startDate: recur.startDateIn.value || S.date || today,
@@ -16788,11 +16798,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     };
   }
 
-  function saveAndNotifyTask(params) {
-    const { textVal, targetSheet, targetSecId, rKey, empUser, recurData, ar, dlg } = params;
-    const sess = getSession();
-    const meta = buildTaskRuleAndBadge(recurData, rKey, empUser, ar);
-
+  function assembleNewTaskItems(params, meta) {
+    const { textVal, targetSheet, rKey, empUser, recurData } = params;
     const newItem = {
       id: 'asg_' + Date.now(),
       text: textVal,
@@ -16813,17 +16820,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       } : null,
       children: [],
     };
-
-    if (targetSheet !== getActiveSheetType() && FOH.erpPwa && FOH.erpPwa.switchSheetType) {
-      manualSheetOverride = targetSheet !== getScheduledSheetForNow();
-      FOH.erpPwa.switchSheetType(targetSheet);
-    }
-
-    const secObj = (S.tpl.sections || []).find((s) => s.id === targetSecId) || S.tpl.sections[0];
-    if (secObj) secObj.items.unshift(newItem);
-    if (FOH.erpPwa && FOH.erpPwa.persistCurrentSheetState) FOH.erpPwa.persistCurrentSheetState();
-
-    S.tpl.tasks.unshift({
+    const templateTask = {
       id: newItem.id,
       text: textVal,
       textAr: textVal,
@@ -16841,19 +16838,15 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       assignedSheet: targetSheet,
       carry: true,
       paused: false,
-    });
-    FOH.store.saveTemplate(S.tpl);
-    dlg.close();
+    };
+    return { newItem, templateTask };
+  }
 
-    notifyMobileOnNewTaskAdded({
-      titleEn: textVal,
-      titleAr: textVal,
-      dueHM: meta.dueHM,
-      sectionLabel: (secObj ? (ar ? secObj.titleAr || secObj.title : secObj.title) : targetSheet),
-      roleLabel: meta.fullBadgeLabel,
-      remindBefore: 0,
-    });
-
+  function broadcastAssignedTask(sess, targetSheet, opts = {}) {
+    const isLegacy = typeof opts === 'object' && !('meta' in opts);
+    const meta = isLegacy ? opts : (opts && opts.meta);
+    const newItem = isLegacy ? arguments[3] : (opts && opts.newItem);
+    const recurData = isLegacy ? arguments[4] : (opts && opts.recurData);
     if (FOH.cloudRealtime && FOH.cloudRealtime.broadcast) {
       FOH.cloudRealtime.broadcast('TASK_ASSIGNED', {
         senderName: (sess && sess.displayName) || 'Manager',
@@ -16869,50 +16862,47 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
         },
       });
     }
+  }
 
+  function saveAndNotifyTask(params) {
+    const { textVal, targetSheet, targetSecId, rKey, empUser, recurData, ar, dlg } = params;
+    const sess = getSession();
+    const meta = buildTaskRuleAndBadge(recurData, rKey, empUser, ar);
+    const { newItem, templateTask } = assembleNewTaskItems(params, meta);
+
+    if (targetSheet !== getActiveSheetType() && FOH.erpPwa && FOH.erpPwa.switchSheetType) {
+      manualSheetOverride = targetSheet !== getScheduledSheetForNow();
+      FOH.erpPwa.switchSheetType(targetSheet);
+    }
+
+    const secObj = (S.tpl.sections || []).find((s) => s.id === targetSecId) || S.tpl.sections[0];
+    if (secObj) secObj.items.unshift(newItem);
+    if (FOH.erpPwa && FOH.erpPwa.persistCurrentSheetState) FOH.erpPwa.persistCurrentSheetState();
+
+    S.tpl.tasks.unshift(templateTask);
+    FOH.store.saveTemplate(S.tpl);
+    dlg.close();
+
+    notifyMobileOnNewTaskAdded({
+      titleEn: textVal,
+      titleAr: textVal,
+      dueHM: meta.dueHM,
+      sectionLabel: (secObj ? (ar ? secObj.titleAr || secObj.title : secObj.title) : targetSheet),
+      roleLabel: meta.fullBadgeLabel,
+      remindBefore: 0,
+    });
+
+    broadcastAssignedTask(sess, targetSheet, { meta, newItem, recurData });
     FOH.edit.toast(ar ? '✅ تم حفظ المهمة وتعيينها لـ (' + meta.assignedRoleLabel + ')!' : '✅ Task assigned to ' + meta.assignedRoleLabel + ' & saved!');
     FOH.app.render();
   }
 
-  function openAssignTaskToStaffOrRoleModal(defaultTargetSheet) {
-    const ar = isAr();
-    if (!canCurrentUserAssignTasks()) {
-      if (FOH.edit && FOH.edit.toast) {
-        FOH.edit.toast(ar ? '⚠️ صلاحية تعيين المهام مخصصة للمدير والمشرفين فقط أو لمن تم تفويضه بالإعدادات' : '⚠️ Task assignment is restricted to managers & authorized staff');
-      }
-      return;
-    }
-    let dlg = $('assignTaskDialog');
-    if (!dlg) {
-      dlg = el('dialog', 'sheet');
-      dlg.id = 'assignTaskDialog';
-      dlg.addEventListener('click', (e) => e.target === dlg && dlg.close());
-      document.body.append(dlg);
-    }
-    dlg.replaceChildren();
-
-    const curSheet = defaultTargetSheet || getActiveSheetType();
-    const today = (FOH.time && FOH.time.todayISO) ? FOH.time.todayISO() : (S.date || new Date().toISOString().slice(0, 10));
-    const nowHM = (FOH.time && FOH.time.nowHM) ? FOH.time.nowHM() : '12:00';
-
-    const box = el('div', 'task-asg-modal-box');
-    box.style.padding = '14px 18px 24px';
-    box.style.maxHeight = '88dvh';
-    box.style.overflowY = 'auto';
-
-    const header = createAssignModalHeader(dlg, ar);
-    const title = createTaskTitleInput(ar);
-    const recur = createRecurrenceCard(ar, today, nowHM);
-    const sheetSec = createSheetAndSectionCard(ar, curSheet);
-    const assignee = createAssigneeCard(ar);
-
-    if (FOH.modalPicker && FOH.modalPicker.enhanceSelect) {
-      FOH.modalPicker.enhanceSelect(sheetSec.sheetSel, { title: ar ? 'الشيت المستهدف' : 'Target Shift Sheet', icon: '📋' });
-      FOH.modalPicker.enhanceSelect(sheetSec.secSel, { title: ar ? 'القسم الفرعي' : 'Target Section', icon: '📂' });
-      FOH.modalPicker.enhanceSelect(assignee.roleSel, { title: ar ? 'المنصب التشغيلي (Position)' : 'Position (Role)', icon: '🪪' });
-      FOH.modalPicker.enhanceSelect(assignee.empSel, { title: ar ? 'الموظف المسؤول' : 'Assignee Staff', icon: '👤' });
-    }
-
+  function renderAssignModalActionButtons(dlg, title, opts = {}) {
+    const isLegacy = typeof opts === 'object' && !('sheetSec' in opts);
+    const sheetSec = isLegacy ? opts : (opts && opts.sheetSec);
+    const assignee = isLegacy ? arguments[3] : (opts && opts.assignee);
+    const recur = isLegacy ? arguments[4] : (opts && opts.recur);
+    const ar = isLegacy ? arguments[5] : (opts && typeof opts.ar === 'boolean' ? opts.ar : isAr());
     const acts = el('div', 'sheet-actions');
     acts.style.marginTop = '16px';
     acts.style.display = 'flex';
@@ -16956,6 +16946,51 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     });
 
     acts.append(cancelB, saveB);
+    return acts;
+  }
+
+  function openAssignTaskToStaffOrRoleModal(defaultTargetSheet) {
+    const ar = isAr();
+    if (!canCurrentUserAssignTasks()) {
+      if (FOH.edit && FOH.edit.toast) {
+        FOH.edit.toast(ar ? '⚠️ صلاحية تعيين المهام مخصصة للمدير والمشرفين فقط أو لمن تم تفويضه بالإعدادات' : '⚠️ Task assignment is restricted to managers & authorized staff');
+      }
+      return;
+    }
+    let dlg = $('assignTaskDialog');
+    if (!dlg) {
+      dlg = el('dialog', 'sheet');
+      dlg.id = 'assignTaskDialog';
+      dlg.addEventListener('click', (e) => e.target === dlg && dlg.close());
+      document.body.append(dlg);
+    }
+    dlg.replaceChildren();
+
+    const curSheet = defaultTargetSheet || getActiveSheetType();
+    const today = (FOH.time && FOH.time.todayISO) ? FOH.time.todayISO() : (S.date || new Date().toISOString().slice(0, 10));
+    const nowHM = (FOH.time && FOH.time.nowHM) ? FOH.time.nowHM() : '12:00';
+
+    const box = el('div', 'task-asg-modal-box');
+    box.style.padding = '14px 18px 24px';
+    box.style.maxHeight = '88dvh';
+    box.style.overflowY = 'auto';
+
+    const header = createAssignModalHeader(dlg, ar);
+    const title = createTaskTitleInput(ar);
+    const recur = createRecurrenceCard(ar, today, nowHM);
+    const sheetSec = createSheetAndSectionCard(ar, curSheet);
+    const assignee = createAssigneeCard(ar);
+
+    if (FOH.modalPicker && FOH.modalPicker.enhanceSelect) {
+      FOH.modalPicker.enhanceSelect(sheetSec.sheetSel, { title: ar ? 'الشيت المستهدف' : 'Target Shift Sheet', icon: '📋' });
+      FOH.modalPicker.enhanceSelect(sheetSec.secSel, { title: ar ? 'القسم الفرعي' : 'Target Section', icon: '📂' });
+      FOH.modalPicker.enhanceSelect(assignee.roleSel, { title: ar ? 'المنصب التشغيلي (Position)' : 'Position (Role)', icon: '🪪' });
+      FOH.modalPicker.enhanceSelect(assignee.empSel, { title: ar ? 'الموظف المسؤول' : 'Assignee Staff', icon: '👤' });
+    }
+
+
+
+    const acts = renderAssignModalActionButtons(dlg, title, { sheetSec, assignee, recur, ar });
     box.append(header.grab, header.headerRow, header.descP, title.titleGroup, recur.recurCard, sheetSec.rowSheet, assignee.rowAssign, acts);
     dlg.append(box);
     dlg.showModal();
@@ -17840,12 +17875,54 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     appendGeneralBottomBar(root);
   }
 
+  function createQuickItemCard(i, db, ar) {
+    const line = store().ordLine(i.id);
+    const card = el('div', 'ord-quick-card' + (line.qty > 0 ? ' ordered' : ''));
+
+    const head = el('div', 'ord-quick-head');
+    head.append(
+      Object.assign(el('div', ''), {
+        innerHTML: '<b>' + FOH.escapeHtml(ar && i.ar ? i.ar + ' · ' + i.name : i.name) + '</b>' +
+          '<small style="display:block;color:var(--ink2);">' + (ar ? 'المخزون: ' : 'Stock: ') + store().ordStockLabel(i) + '</small>',
+      })
+    );
+
+    const stepper = el('div', 'ord-stepper-sm');
+    const minus = el('button', '', '−');
+    minus.type = 'button';
+    const inVal = el('input', '');
+    inVal.type = 'number';
+    inVal.min = '0';
+    inVal.max = '9999';
+    inVal.value = String(line.qty || 0);
+
+    const plus = el('button', '', '+');
+    plus.type = 'button';
+
+    const updateQty = (delta, direct) => {
+      const cur = direct !== undefined ? Math.max(0, direct) : Math.max(0, Number(inVal.value || 0) + delta);
+      inVal.value = String(cur);
+      db.order.lines[i.id] = { ...line, qty: cur };
+      db.order.visited[i.id] = true;
+      store().saveOrdersDB();
+      card.classList.toggle('ordered', cur > 0);
+    };
+
+    minus.addEventListener('click', () => updateQty(-1));
+    plus.addEventListener('click', () => updateQty(1));
+    inVal.addEventListener('change', () => updateQty(0, Number(inVal.value || 0)));
+
+    stepper.append(minus, inVal, plus);
+    card.append(head, stepper);
+    return card;
+  }
+
   function renderQuickListMode(root, c, opts = {}) {
     const isLegacy = Array.isArray(opts);
     const items = isLegacy ? opts : ((opts && opts.items) || store().ordCatItems(c.id));
     const ar = isLegacy ? !!arguments[3] : (opts && typeof opts.ar === 'boolean' ? opts.ar : isAr());
     const db = store().getDB();
-    const units = (FOH.ordersCatalog && FOH.ordersCatalog.ORD_UNITS) || {};
+
     const toolbar = el('div', 'ord-toolbar');
     const qSearch = el('input', 'in ord-search-in');
     qSearch.placeholder = ar ? '🔍 تصفية في هذا التصنيف...' : '🔍 Search in this category...';
@@ -17869,61 +17946,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     const visible = items.filter((i) => !qFilter || (i.name + ' ' + (i.ar || '')).toLowerCase().includes(qFilter));
 
     const grid = el('div', 'ord-quick-grid');
-    visible.forEach((i) => {
-      const line = store().ordLine(i.id);
-      const card = el('div', 'ord-quick-card' + (line.qty > 0 ? ' ordered' : ''));
-
-      const head = el('div', 'ord-quick-head');
-      head.append(
-        Object.assign(el('div', ''), {
-          innerHTML: '<b>' + FOH.escapeHtml(ar && i.ar ? i.ar + ' · ' + i.name : i.name) + '</b>' +
-            '<small style="display:block;color:var(--ink2);">' + (ar ? 'المخزون: ' : 'Stock: ') + store().ordStockLabel(i) + '</small>',
-        })
-      );
-
-      const stepper = el('div', 'ord-stepper-sm');
-      const minus = el('button', '', '−');
-      minus.type = 'button';
-      const inVal = el('input', '');
-      inVal.type = 'number';
-      inVal.min = '0';
-      inVal.max = '9999';
-      inVal.value = String(line.qty || 0);
-
-      const plus = el('button', '', '+');
-      plus.type = 'button';
-
-      minus.addEventListener('click', () => {
-        const cur = Math.max(0, Number(inVal.value || 0) - 1);
-        inVal.value = String(cur);
-        db.order.lines[i.id] = { ...line, qty: cur };
-        db.order.visited[i.id] = true;
-        store().saveOrdersDB();
-        card.classList.toggle('ordered', cur > 0);
-      });
-
-      plus.addEventListener('click', () => {
-        const cur = Number(inVal.value || 0) + 1;
-        inVal.value = String(cur);
-        db.order.lines[i.id] = { ...line, qty: cur };
-        db.order.visited[i.id] = true;
-        store().saveOrdersDB();
-        card.classList.toggle('ordered', cur > 0);
-      });
-
-      inVal.addEventListener('change', () => {
-        const cur = Math.max(0, Number(inVal.value || 0));
-        db.order.lines[i.id] = { ...line, qty: cur };
-        db.order.visited[i.id] = true;
-        store().saveOrdersDB();
-        card.classList.toggle('ordered', cur > 0);
-      });
-
-      stepper.append(minus, inVal, plus);
-      card.append(head, stepper);
-      grid.append(card);
-    });
-
+    visible.forEach((i) => grid.append(createQuickItemCard(i, db, ar)));
     root.append(grid);
     appendGeneralBottomBar(root);
   }
@@ -18473,11 +18496,69 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     return alerts;
   }
 
+  function createHealthBannerActionBtn(top, alerts, opts = {}) {
+    const isLegacy = typeof opts === 'object' && !('sess' in opts);
+    const sess = isLegacy ? opts : ((opts && opts.sess) || getSession());
+    const isMgr = isLegacy ? !!arguments[3] : !!(opts && opts.isMgr);
+    const ar = isLegacy ? !!arguments[4] : (opts && typeof opts.ar === 'boolean' ? opts.ar : isAr());
+    if (isMgr) {
+      const targetName = (top.staff && top.staff.name) || '';
+      const actionBtn = el(
+        'button',
+        'snooze-btn done-now',
+        ar ? (targetName ? '📅 تحديث شهادة (' + targetName + ')' : '📅 تحديث الشهادة (مدير)') : (targetName ? '📅 Update (' + targetName + ')' : '📅 Update Expiry (Manager)')
+      );
+      actionBtn.type = 'button';
+      actionBtn.addEventListener('click', () => {
+        if (top.staff && top.staff.id) S.selectedHealthStaffId = top.staff.id;
+        S.view = 'profile';
+        FOH.app.render();
+      });
+      return actionBtn;
+    }
+    const notifyBtn = el('button', 'snooze-btn done-now', ar ? '🏥 إشعار الإدارة بالتجديد' : '🏥 Notify Manager');
+    notifyBtn.type = 'button';
+    notifyBtn.addEventListener('click', () => {
+      if (FOH.cloudRealtime && FOH.cloudRealtime.broadcast) {
+        FOH.cloudRealtime.broadcast('HEALTH_CERT_RENEWAL_REQUEST', {
+          by: (sess && sess.displayName) || S.me.name || 'Staff',
+          at: FOH.time.nowHM(),
+        });
+      }
+      FOH.edit.toast(ar ? 'تم إرسال إشعار لإدارة المطعم لمراجعة وتحديث الشهادة الصحية ✓' : 'Management notified of renewal request ✓');
+      if (FOH.reminders && FOH.reminders.snoozeItems) {
+        FOH.reminders.snoozeItems(alerts.map((a) => a.snoozeId), FOH.time.todayISO(), FOH.time.nowHM(), 1440);
+      }
+      renderHealthBanner();
+    });
+    return notifyBtn;
+  }
+
+  function createHealthBannerSnoozeBtns(alerts, ar) {
+    const snz1h = el('button', 'snooze-btn', ar ? '💤 تأجيل ١س' : '💤 +1h');
+    snz1h.type = 'button';
+    snz1h.addEventListener('click', () => {
+      if (FOH.reminders && FOH.reminders.snoozeItems) {
+        FOH.reminders.snoozeItems(alerts.map((a) => a.snoozeId), FOH.time.todayISO(), FOH.time.nowHM(), 60);
+      }
+      renderHealthBanner();
+    });
+
+    const snzDay = el('button', 'snooze-btn', ar ? '🔕 كتم اليوم' : '🔕 Mute Today');
+    snzDay.type = 'button';
+    snzDay.addEventListener('click', () => {
+      if (FOH.reminders && FOH.reminders.snoozeItems) {
+        FOH.reminders.snoozeItems(alerts.map((a) => a.snoozeId), FOH.time.todayISO(), FOH.time.nowHM(), 1440);
+      }
+      renderHealthBanner();
+    });
+    return [snz1h, snzDay];
+  }
+
   function renderHealthBanner() {
     const box = $('healthAlertBanner');
-    if (!box) return;
-    if (S.editing) {
-      box.hidden = true;
+    if (!box || S.editing) {
+      if (box) box.hidden = true;
       return;
     }
     const alerts = getHealthAlerts();
@@ -18500,59 +18581,10 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     const acts = el('div', 'health-banner-actions');
     const sess = getSession();
     const isMgr = !!(sess && sess.isManager);
-    let actionBtn;
-    if (isMgr) {
-      const targetName = (top.staff && top.staff.name) || '';
-      actionBtn = el(
-        'button',
-        'snooze-btn done-now',
-        ar ? (targetName ? '📅 تحديث شهادة (' + targetName + ')' : '📅 تحديث الشهادة (مدير)') : (targetName ? '📅 Update (' + targetName + ')' : '📅 Update Expiry (Manager)')
-      );
-      actionBtn.type = 'button';
-      actionBtn.addEventListener('click', () => {
-        if (top.staff && top.staff.id) {
-          S.selectedHealthStaffId = top.staff.id;
-        }
-        S.view = 'profile';
-        FOH.app.render();
-      });
-    } else {
-      actionBtn = el('button', 'snooze-btn done-now', ar ? '🏥 إشعار الإدارة بالتجديد' : '🏥 Notify Manager');
-      actionBtn.type = 'button';
-      actionBtn.addEventListener('click', () => {
-        if (FOH.cloudRealtime && FOH.cloudRealtime.broadcast) {
-          FOH.cloudRealtime.broadcast('HEALTH_CERT_RENEWAL_REQUEST', {
-            by: (sess && sess.displayName) || S.me.name || 'Staff',
-            at: FOH.time.nowHM(),
-          });
-        }
-        FOH.edit.toast(ar ? 'تم إرسال إشعار لإدارة المطعم لمراجعة وتحديث الشهادة الصحية ✓' : 'Management notified of renewal request ✓');
-        if (FOH.reminders && FOH.reminders.snoozeItems) {
-          FOH.reminders.snoozeItems(alerts.map((a) => a.snoozeId), FOH.time.todayISO(), FOH.time.nowHM(), 1440);
-        }
-        renderHealthBanner();
-      });
-    }
+    const actionBtn = createHealthBannerActionBtn(top, alerts, { sess, isMgr, ar });
+    const snoozeBtns = createHealthBannerSnoozeBtns(alerts, ar);
 
-    const snz1h = el('button', 'snooze-btn', ar ? '💤 تأجيل ١س' : '💤 +1h');
-    snz1h.type = 'button';
-    snz1h.addEventListener('click', () => {
-      if (FOH.reminders && FOH.reminders.snoozeItems) {
-        FOH.reminders.snoozeItems(alerts.map((a) => a.snoozeId), FOH.time.todayISO(), FOH.time.nowHM(), 60);
-      }
-      renderHealthBanner();
-    });
-
-    const snzDay = el('button', 'snooze-btn', ar ? '🔕 كتم اليوم' : '🔕 Mute Today');
-    snzDay.type = 'button';
-    snzDay.addEventListener('click', () => {
-      if (FOH.reminders && FOH.reminders.snoozeItems) {
-        FOH.reminders.snoozeItems(alerts.map((a) => a.snoozeId), FOH.time.todayISO(), FOH.time.nowHM(), 1440);
-      }
-      renderHealthBanner();
-    });
-
-    acts.append(actionBtn, snz1h, snzDay);
+    acts.append(actionBtn, ...snoozeBtns);
     box.append(msg, acts);
   }
 
@@ -19194,73 +19226,32 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   }
 
   // Switch active employee account in 1 tap (for testing & quick terminal handoff)
+  function getQuickSwitchAccounts(ar) {
+    return {
+      fadi: { username: 'fadi', firstName: 'Fadi', lastName: 'Al-Masri', nickname: 'Fadi', phone: '+962 7 9000 1001', email: 'fadi.m@ceenlounge.com', inviteCode: 'CEEN-1001', displayName: ar ? 'فادي (سوبر مانجر)' : 'Fadi (Super Manager)', roleName: '👑 Super Manager', roleAr: '👑 سوبر مانجر', isManager: true, shift: '12:00 – 02:00 · Restaurant Manager' },
+      ali: { username: 'ali', firstName: 'Ali', lastName: 'Hassan', nickname: 'Ali', phone: '+962 7 9000 2002', email: 'ali.h@ceenlounge.com', inviteCode: 'CEEN-2002', displayName: ar ? 'علي (سوبر كابتن)' : 'Ali (Super Captain)', roleName: '🎖️ Super Captain', roleAr: '🎖️ سوبر كابتن', isManager: false, isCaptain: true, shift: '12:00 – 02:00 · Floor Captain' },
+      maher: { username: 'maher', firstName: 'Maher', lastName: 'Zaid', nickname: 'Leo', phone: '+962 7 9000 4004', email: 'maher.z@ceenlounge.com', inviteCode: 'CEEN-4004', displayName: ar ? 'ماهر (سوبر بارتندر)' : 'Maher (Super Bartender)', roleName: '🍸 Super Bartender', roleAr: '🍸 سوبر بارتندر', isManager: false, shift: '12:00 – 02:00 · Main Bar Lead' },
+      sara: { username: 'sara', firstName: 'Sara', lastName: 'Khoury', nickname: 'Sara', phone: '+962 7 9000 3003', email: 'sara.k@ceenlounge.com', inviteCode: 'CEEN-3003', displayName: ar ? 'سارة (سوبر ويتر)' : 'Sara (Super Waiter)', roleName: '⭐ Super Waiter', roleAr: '⭐ سوبر ويتر', isManager: false, shift: '12:00 – 02:00 · Indoor & Terrace Waiter' },
+    };
+  }
+
+  function bindStaffAndRoleToTemplate(username) {
+    const targetRoleName = username === 'fadi' ? 'Supervisor' : username === 'ali' ? 'Captain' : username === 'maher' ? 'Bartender' : 'Waiter';
+    const roleObj = (S.tpl.roles || []).find((r) => (r.name || '').toLowerCase().includes(targetRoleName.toLowerCase())) || S.tpl.roles[0];
+    const person = (S.tpl.staff || []).find((p) => (p.name || '').toLowerCase().startsWith(username));
+    if (person && roleObj) {
+      person.role = roleObj.id;
+      S.me = { staffId: person.id, role: roleObj.id, name: person.name };
+      FOH.store.saveMe(S.me);
+    }
+  }
+
   function quickSwitchEmployeeAccount(username) {
     const ar = isAr();
-    const accounts = {
-      fadi: {
-        username: 'fadi',
-        firstName: 'Fadi',
-        lastName: 'Al-Masri',
-        nickname: 'Fadi',
-        phone: '+962 7 9000 1001',
-        email: 'fadi.m@ceenlounge.com',
-        inviteCode: 'CEEN-1001',
-        displayName: ar ? 'فادي (سوبر مانجر)' : 'Fadi (Super Manager)',
-        roleName: '👑 Super Manager',
-        roleAr: '👑 سوبر مانجر',
-        isManager: true,
-        shift: '12:00 – 02:00 · Restaurant Manager',
-      },
-      ali: {
-        username: 'ali',
-        firstName: 'Ali',
-        lastName: 'Hassan',
-        nickname: 'Ali',
-        phone: '+962 7 9000 2002',
-        email: 'ali.h@ceenlounge.com',
-        inviteCode: 'CEEN-2002',
-        displayName: ar ? 'علي (سوبر كابتن)' : 'Ali (Super Captain)',
-        roleName: '🎖️ Super Captain',
-        roleAr: '🎖️ سوبر كابتن',
-        isManager: false,
-        isCaptain: true,
-        shift: '12:00 – 02:00 · Floor Captain',
-      },
-      maher: {
-        username: 'maher',
-        firstName: 'Maher',
-        lastName: 'Zaid',
-        nickname: 'Leo',
-        phone: '+962 7 9000 4004',
-        email: 'maher.z@ceenlounge.com',
-        inviteCode: 'CEEN-4004',
-        displayName: ar ? 'ماهر (سوبر بارتندر)' : 'Maher (Super Bartender)',
-        roleName: '🍸 Super Bartender',
-        roleAr: '🍸 سوبر بارتندر',
-        isManager: false,
-        shift: '12:00 – 02:00 · Main Bar Lead',
-      },
-      sara: {
-        username: 'sara',
-        firstName: 'Sara',
-        lastName: 'Khoury',
-        nickname: 'Sara',
-        phone: '+962 7 9000 3003',
-        email: 'sara.k@ceenlounge.com',
-        inviteCode: 'CEEN-3003',
-        displayName: ar ? 'سارة (سوبر ويتر)' : 'Sara (Super Waiter)',
-        roleName: '⭐ Super Waiter',
-        roleAr: '⭐ سوبر ويتر',
-        isManager: false,
-        shift: '12:00 – 02:00 · Indoor & Terrace Waiter',
-      },
-    };
+    const accounts = getQuickSwitchAccounts(ar);
     const target = accounts[username] || accounts.fadi;
     const prevSess = getSession() || {};
-    const nextSess = {
-      ...prevSess,
-      ...target,
-    };
+    const nextSess = { ...prevSess, ...target };
     try {
       localStorage.setItem(SESSION_KEY, JSON.stringify(nextSess));
       sessionStorage.removeItem(SESSION_KEY);
@@ -19268,15 +19259,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       /* Storage quota exceeded or disabled in private browsing */
     }
 
-    // Bind S.me to the matching staff & role in S.tpl
-    const targetRoleName = username === 'fadi' ? 'Supervisor' : username === 'ali' ? 'Captain' : username === 'maher' ? 'Bartender' : 'Waiter';
-    let roleObj = (S.tpl.roles || []).find((r) => (r.name || '').toLowerCase().includes(targetRoleName.toLowerCase())) || S.tpl.roles[0];
-    let person = (S.tpl.staff || []).find((p) => (p.name || '').toLowerCase().startsWith(username));
-    if (person && roleObj) {
-      person.role = roleObj.id;
-      S.me = { staffId: person.id, role: roleObj.id, name: person.name };
-      FOH.store.saveMe(S.me);
-    }
+    bindStaffAndRoleToTemplate(username);
 
     roleScopeOnly = username === 'sara' || username === 'maher';
     const ident = ROLE_APP_IDENTITY[getCurrentSuperRoleKey()] || ROLE_APP_IDENTITY.super_waiter;
