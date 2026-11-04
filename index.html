@@ -22699,12 +22699,6 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
   FOH.opsCloseDialog = {
     openCloseRestaurantDialog,
-    ensureUpgradedClosingSections,
-    isClosingSheetActive,
-    activateClosingSheet,
-    renderClosingDeptFilterBar,
-    setActiveClosingDeptFilter: (d) => { activeClosingDeptFilter = d; },
-    getActiveClosingDeptFilter: () => activeClosingDeptFilter,
   };
 })(window.FOH = window.FOH || {});
 
@@ -23126,25 +23120,6 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   }
 
 
-  function ensureUpgradedClosingSections() {
-    if (FOH.opsCloseDialog && FOH.opsCloseDialog.ensureUpgradedClosingSections) {
-      return FOH.opsCloseDialog.ensureUpgradedClosingSections();
-    }
-  }
-
-  function isClosingSheetActive() {
-    if (FOH.opsCloseDialog && FOH.opsCloseDialog.isClosingSheetActive) {
-      return FOH.opsCloseDialog.isClosingSheetActive();
-    }
-    return false;
-  }
-
-  function activateClosingSheet() {
-    if (FOH.opsCloseDialog && FOH.opsCloseDialog.activateClosingSheet) {
-      return FOH.opsCloseDialog.activateClosingSheet();
-    }
-  }
-
   FOH.opsLifecycle = {
     loadOpsConfig,
     saveOpsConfig,
@@ -23157,8 +23132,9 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     ensureUpgradedClosingSections,
     isClosingSheetActive,
     activateClosingSheet,
-    setActiveClosingDeptFilter: (d) => FOH.opsCloseDialog && FOH.opsCloseDialog.setActiveClosingDeptFilter(d),
-    getActiveClosingDeptFilter: () => (FOH.opsCloseDialog ? FOH.opsCloseDialog.getActiveClosingDeptFilter() : 'all'),
+    renderClosingDeptFilterBar,
+    setActiveClosingDeptFilter: (d) => { activeClosingDeptFilter = d; },
+    getActiveClosingDeptFilter: () => activeClosingDeptFilter,
   };
 })(window.FOH = window.FOH || {});
 
