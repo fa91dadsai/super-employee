@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE = 'super-employee-v48-offline-precision';
+const CACHE = 'super-employee-v49-tips-hamilton';
 const PRECACHE = [
   './',
   './index.html',
@@ -66,6 +66,9 @@ const PRECACHE = [
   './js/domains/operations/ops-lifecycle.js',
   './js/domains/operations/hours-settings.js',
   // JS Domain Modules: Tips, Dashboard, Settings, Profile & Academy
+  './js/domains/tips/tips-calc.js',
+  './js/domains/tips/tips-store.js',
+  './js/domains/tips/tips-modal.js',
   './js/domains/tips/tips-view.js',
   './js/domains/dashboard/dashboard-view.js',
   './js/domains/profile/health-profile-view.js',

@@ -73,6 +73,9 @@ const JS_FILES = [
   'js/domains/operations/ops-lifecycle.js',
   'js/domains/operations/hours-settings.js',
   // Domain: Tips, Dashboard, Settings, Profile & Academy
+  'js/domains/tips/tips-calc.js',
+  'js/domains/tips/tips-store.js',
+  'js/domains/tips/tips-modal.js',
   'js/domains/tips/tips-view.js',
   'js/domains/dashboard/dashboard-view.js',
   'js/domains/profile/health-profile-view.js',
