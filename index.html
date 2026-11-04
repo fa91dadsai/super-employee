@@ -4318,44 +4318,326 @@ body.dark .modal-picker-trigger:hover {
 }
 
 /* ============================================================================
-   SUPER EMPLOYEE v20: EXECUTIVE SECTION HEADER & NO-STRIKETHROUGH POLICY
+   SUPER EMPLOYEE v21: EXECUTIVE CHECKLIST ARCHITECTURE & MUTED DONE POLICY
    ============================================================================ */
 
-/* 1. Never strike through completed task text */
+/* 1. Muted / Dimmed Task Completion Policy (STRICTLY NO STRIKETHROUGH) */
 .done > .row .t,
 .item.done .t,
 .task-item.done .task-title,
 .done .tx .t,
 .done .t {
   text-decoration: none !important;
-  color: var(--ink) !important;
-  opacity: 0.92 !important;
-  font-weight: 550 !important;
+  color: var(--ink-muted, #94a3b8) !important;
+  opacity: 0.52 !important;
+  font-weight: 400 !important;
+  transition: all 0.2s ease !important;
 }
 body.dark .done > .row .t,
 body.dark .item.done .t,
 body.dark .task-item.done .task-title,
 body.dark .done .tx .t,
 body.dark .done .t {
+  color: #94a3b8 !important;
+  opacity: 0.48 !important;
+  text-decoration: none !important;
+}
+
+.item.done .n {
+  color: #cbd5e1 !important;
+  opacity: 0.45 !important;
+}
+body.dark .item.done .n {
+  color: #64748b !important;
+  opacity: 0.4 !important;
+}
+
+.item.done .item-meta-row,
+.item.done .due,
+.item.done .due.role,
+.item.done .item-note-chip {
+  opacity: 0.45 !important;
+  filter: grayscale(0.5) !important;
+}
+
+/* Subtle completed row background - Clean & elegant, no harsh tint */
+.item.done {
+  background: var(--card, #ffffff) !important;
+}
+body.dark .item.done {
+  background: var(--card, #17211b) !important;
+}
+
+/* Eliminate pink background on late items in checklist */
+.item.late:not(.done),
+.st.late:not(.done) {
+  background: var(--card, #ffffff) !important;
+}
+body.dark .item.late:not(.done),
+body.dark .st.late:not(.done) {
+  background: var(--card, #17211b) !important;
+}
+
+/* 2. Modern Checklist Row & Item Component */
+.item {
+  border-top: 1px solid var(--line, #e2e8e2) !important;
+  background: var(--card, #ffffff) !important;
+  transition: all 0.2s ease !important;
+}
+body.dark .item {
+  border-top-color: rgba(255, 255, 255, 0.08) !important;
+  background: var(--card, #17211b) !important;
+}
+
+.item:first-child {
+  border-top: none !important;
+}
+
+.row {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 14px !important;
+  padding: 13px 16px !important;
+  min-height: 52px !important;
+  cursor: pointer !important;
+  -webkit-tap-highlight-color: transparent !important;
+  user-select: none !important;
+  border-radius: 0 !important;
+  transition: background 0.15s ease !important;
+}
+
+.row:hover {
+  background: rgba(0, 0, 0, 0.015) !important;
+}
+body.dark .row:hover {
+  background: rgba(255, 255, 255, 0.02) !important;
+}
+
+/* Checkbox 24px Modern Touch Target */
+.ck {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  flex: none !important;
+  width: 24px !important;
+  height: 24px !important;
+  margin: 2px 0 0 !important;
+  border: 2px solid #cbd5e1 !important;
+  border-radius: 50% !important;
+  display: grid !important;
+  place-items: center !important;
+  background: var(--card, #ffffff) !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+body.dark .ck {
+  border-color: rgba(255, 255, 255, 0.25) !important;
+  background: #17211b !important;
+}
+
+.ck:checked {
+  background: #10b981 !important;
+  border-color: #10b981 !important;
+  box-shadow: 0 2px 10px rgba(16, 185, 129, 0.3) !important;
+  transform: scale(1.05) !important;
+}
+.ck:checked::after {
+  content: '✓' !important;
+  color: #ffffff !important;
+  font-size: 0.85rem !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+}
+
+/* Content block */
+.tx {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 5px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: none !important;
+  text-align: start !important;
+}
+
+.item-title-row {
+  display: flex !important;
+  align-items: baseline !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+
+.n {
+  flex: none !important;
+  font-size: 0.86rem !important;
+  font-weight: 700 !important;
+  color: var(--accent, #2f6b5e) !important;
+  font-variant-numeric: tabular-nums !important;
+  opacity: 0.85 !important;
+}
+body.dark .n {
+  color: #34d399 !important;
+}
+
+.t {
+  flex: 1 1 auto !important;
+  font-size: 0.94rem !important;
+  font-weight: 600 !important;
+  line-height: 1.44 !important;
+  color: var(--ink, #142019) !important;
+  word-break: break-word !important;
+  letter-spacing: -0.01em !important;
+}
+body.dark .t {
   color: #f1f5f9 !important;
 }
 
-/* Subtle completed row background with emerald hint */
-.item.done {
-  background: rgba(16, 185, 129, 0.04) !important;
-}
-body.dark .item.done {
-  background: rgba(16, 185, 129, 0.08) !important;
+/* Metadata Sub-Row: Badges sit neatly underneath */
+.item-meta-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  flex-wrap: wrap !important;
+  width: 100% !important;
+  margin-top: 2px !important;
 }
 
-/* 2. Executive Section Card Header Architecture */
+.due, .stamp {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  margin: 0 !important;
+  padding: 2px 8px !important;
+  border-radius: 6px !important;
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+  unicode-bidi: isolate !important;
+}
+
+.due {
+  background: rgba(245, 158, 11, 0.12) !important;
+  border: 1px solid rgba(245, 158, 11, 0.28) !important;
+  color: #b45309 !important;
+}
+body.dark .due {
+  background: rgba(245, 158, 11, 0.18) !important;
+  border-color: rgba(245, 158, 11, 0.35) !important;
+  color: #fbbf24 !important;
+}
+
+.due.role {
+  background: var(--surface2, #f1f5f9) !important;
+  border: 1px solid var(--line, #e2e8e2) !important;
+  color: var(--ink2, #475569) !important;
+}
+body.dark .due.role {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #94a3b8 !important;
+}
+
+.due.mine {
+  background: rgba(16, 185, 129, 0.12) !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+  color: #059669 !important;
+}
+body.dark .due.mine {
+  background: rgba(16, 185, 129, 0.2) !important;
+  border-color: rgba(16, 185, 129, 0.4) !important;
+  color: #34d399 !important;
+}
+
+/* Note button chip */
+.item-note-chip {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  padding: 2px 8px !important;
+  border-radius: 6px !important;
+  font-size: 0.72rem !important;
+  font-weight: 600 !important;
+  background: var(--surface2, #f8fafc) !important;
+  border: 1px dashed var(--line, #cbd5e1) !important;
+  color: var(--ink2, #64748b) !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+.item-note-chip:hover,
+.item-note-chip.has-note {
+  border-color: var(--accent, #2f6b5e) !important;
+  color: var(--accent, #2f6b5e) !important;
+  background: rgba(47, 107, 94, 0.08) !important;
+}
+body.dark .item-note-chip {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: #94a3b8 !important;
+}
+body.dark .item-note-chip:hover,
+body.dark .item-note-chip.has-note {
+  border-color: #34d399 !important;
+  color: #34d399 !important;
+  background: rgba(16, 185, 129, 0.15) !important;
+}
+
+/* Note Display box */
+.item-note-display {
+  display: block !important;
+  margin-top: 4px !important;
+  padding: 6px 10px !important;
+  border-radius: 8px !important;
+  background: rgba(59, 130, 246, 0.06) !important;
+  border-inline-start: 3px solid #3b82f6 !important;
+  color: var(--ink, #1e293b) !important;
+  font-size: 0.78rem !important;
+  line-height: 1.35 !important;
+}
+body.dark .item-note-display {
+  background: rgba(59, 130, 246, 0.12) !important;
+  border-inline-start-color: #60a5fa !important;
+  color: #e2e8f0 !important;
+}
+
+/* 3. Executive Section Card Architecture */
+#sections > section.card,
+.card {
+  border-radius: 18px !important;
+  background: var(--card, #ffffff) !important;
+  border: 1.5px solid var(--line, #e2e8e2) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03) !important;
+  margin-bottom: 16px !important;
+  overflow: hidden !important;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease !important;
+}
+
+body.dark #sections > section.card,
+body.dark .card {
+  background: var(--card, #17211b) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3) !important;
+}
+
+.card.complete {
+  border-color: rgba(16, 185, 129, 0.4) !important;
+}
+body.dark .card.complete {
+  border-color: rgba(52, 211, 153, 0.35) !important;
+}
+
 .card .head {
   display: flex !important;
   flex-direction: column !important;
-  gap: 8px !important;
-  padding: 14px 16px 12px !important;
-  background: var(--card) !important;
-  border-bottom: 1px solid var(--line) !important;
+  gap: 10px !important;
+  padding: 14px 16px !important;
+  background: var(--card, #ffffff) !important;
+  border-bottom: 1px solid var(--line, #e2e8e2) !important;
+}
+body.dark .card .head {
+  background: var(--card, #17211b) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
 }
 
 .card .head-main-row {
@@ -4386,36 +4668,41 @@ body.dark .item.done {
   border-radius: 12px !important;
   display: grid !important;
   place-items: center !important;
-  font-size: 1.3rem !important;
-  background: color-mix(in srgb, var(--c, var(--accent)) 15%, var(--bg)) !important;
-  border: 1px solid color-mix(in srgb, var(--c, var(--accent)) 25%, transparent) !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+  font-size: 1.35rem !important;
+  background: color-mix(in srgb, var(--c, var(--accent)) 12%, var(--card)) !important;
+  border: 1px solid color-mix(in srgb, var(--c, var(--accent)) 24%, transparent) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
 }
 
 .card .head .nm-t {
   font-size: 1.05rem !important;
   font-weight: 800 !important;
-  line-height: 1.35 !important;
-  color: var(--ink) !important;
+  line-height: 1.3 !important;
+  color: var(--ink, #142019) !important;
   white-space: normal !important;
   word-break: break-word !important;
+  letter-spacing: -0.01em !important;
+}
+body.dark .card .head .nm-t {
+  color: #f1f5f9 !important;
 }
 
 .card .head .ct {
   flex: 0 0 auto !important;
-  font-size: 0.84rem !important;
+  font-size: 0.82rem !important;
   font-weight: 800 !important;
   padding: 4px 12px !important;
   border-radius: 99px !important;
-  background: var(--bg2, rgba(0, 0, 0, 0.04)) !important;
-  border: 1px solid var(--line) !important;
-  color: var(--ink) !important;
+  background: var(--surface2, #f1f5f9) !important;
+  border: 1px solid var(--line, #e2e8e2) !important;
+  color: var(--ink, #1e293b) !important;
   white-space: nowrap !important;
+  font-variant-numeric: tabular-nums !important;
 }
 .complete .card .head .ct,
 .card.complete .head .ct {
   background: rgba(16, 185, 129, 0.12) !important;
-  border-color: #34d399 !important;
+  border-color: rgba(16, 185, 129, 0.35) !important;
   color: #059669 !important;
 }
 body.dark .card.complete .head .ct {
@@ -4429,7 +4716,8 @@ body.dark .card.complete .head .ct {
   justify-content: space-between !important;
   gap: 8px !important;
   width: 100% !important;
-  padding-inline-start: 54px !important;
+  padding-inline-start: 0 !important;
+  flex-wrap: wrap !important;
 }
 .card .head-meta-row:empty {
   display: none !important;
@@ -8855,264 +9143,279 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
 <script>
 // --- js/domains/checklist/view.js ---
-// Builds the section cards for run mode and edit mode, and the section chips.
-// User text is always inserted with textContent, never as HTML.
-(function (FOH) {
-  'use strict';
-
-  const { t, pick } = FOH.i18n;
-  const M = FOH.model;
-  const PALETTE = ['#2F6B5E', '#3B6A8F', '#7A4E6E', '#8A6A2E', '#A0563B', '#6B6458'];
-  const pad = (n) => String(n).padStart(2, '0');
-
-  const time = (FOH.time = {
-    todayISO() {
-      const d = new Date();
-      return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
-    },
-    nowHM() {
-      const d = new Date();
-      return pad(d.getHours()) + ':' + pad(d.getMinutes());
-    },
-    // Minutes from now until "HH:MM" today (negative when past).
-    minutesUntil(hm) {
-      const [h, m] = hm.split(':').map(Number);
-      const d = new Date();
-      return h * 60 + m - (d.getHours() * 60 + d.getMinutes());
-    },
-  });
-
-  function el(tag, cls, text) {
-    const node = document.createElement(tag);
-    if (cls) node.className = cls;
-    if (text !== undefined) node.textContent = text;
-    return node;
-  }
-
-  function btn(cls, label, opts = {}) {
-    const isLegacy = typeof opts === 'string';
-    const act = isLegacy ? opts : ((opts && opts.act) || '');
-    const data = isLegacy ? arguments[3] : ((opts && opts.data) || {});
-    const b = el('button', cls, label);
-    b.type = 'button';
-    if (act) b.dataset.act = act;
-    if (data && typeof data === 'object') Object.assign(b.dataset, data);
-    return b;
-  }
-
-  const itemName = (it) => pick(it.text, it.textAr);
-  const sectionName = (s) => pick(s.title, s.titleAr);
-  const S = () => FOH.state;
-
-  function textBlock(cls, item, num) {
-    const tx = cls instanceof Node ? cls : el('span', cls);
-    tx.append(el('span', 'n', num), el('span', 't', itemName(item)));
-    if (item.due) tx.append(el('span', 'due', t('by') + ' ' + item.due));
-    const role = item.role && FOH.tasksView && FOH.tasksView.roleName(item.role);
-    if (role) tx.append(el('span', FOH.tasksView.isMine(item) ? 'due mine' : 'due role', '👤 ' + role));
-    return tx;
-  }
-
-  function isLate(item, done) {
-    return !!item.due && !done && S().date === time.todayISO() && time.minutesUntil(item.due) < 0;
-  }
-
-  // ---- run mode ----
-  function runLeaf(item, num, cls) {
-    const stamp = S().run.checked[item.id];
-    const li = el('li', cls);
-    li.dataset.id = item.id;
-    li.classList.toggle('done', !!stamp);
-    li.classList.toggle('late', isLate(item, stamp));
-    const row = el('label', 'row');
-    const cb = el('input', 'ck');
-    cb.type = 'checkbox';
-    cb.checked = !!stamp;
-    cb.dataset.id = item.id;
-    const tx = textBlock('tx', item, num);
-    if (typeof stamp === 'string') tx.append(el('span', 'stamp', '✓ ' + stamp));
-    row.append(cb, tx);
-    li.append(row);
-    return li;
-  }
-
-  function runParent(item, nums, onlyLeft) {
-    const p = M.progress(item.children, S().run.checked);
-    const open = S().toggled.has(item.id) ? p.complete : !p.complete;
-    const li = el('li', 'item parent');
-    li.dataset.id = item.id;
-    li.classList.toggle('done', p.complete);
-    li.classList.toggle('closed', !open);
-    li.classList.toggle('late', isLate(item, p.complete));
-    const row = el('div', 'row');
-    const ring = el('span', 'mini', p.complete ? '✓' : '');
-    ring.style.setProperty('--p', Math.round((p.done * 100) / p.total) + '%');
-    const toggle = textBlock(btn('tx', '', 'ptoggle', { id: item.id }), item, nums.get(item.id));
-    toggle.setAttribute('aria-expanded', String(open));
-    row.append(ring, toggle, el('span', 'cnt', p.done + '/' + p.total));
-    if (!p.complete) row.append(btn('all', t('checkAll'), 'checkall', { id: item.id }));
-    const kids = el('ol', 'kids');
-    item.children.forEach((c) => {
-      if (onlyLeft && S().run.checked[c.id]) return;
-      kids.append(runLeaf(c, nums.get(c.id), 'item kid'));
-    });
-    li.append(row, kids);
-    return li;
-  }
-
-  // ---- edit mode ----
-  function tray(item, nums) {
-    const at = M.locate(S().tpl, item.id);
-    const box = el('div', 'tray');
-    const data = { id: item.id };
-    const up = btn('tb', '↑', 'up', data);
-    const down = btn('tb', '↓', 'down', data);
-    up.disabled = at.index === 0;
-    down.disabled = at.index === at.list.length - 1;
-    up.setAttribute('aria-label', t('moveUp'));
-    down.setAttribute('aria-label', t('moveDown'));
-    box.append(up, down);
-    if (at.parent) box.append(btn('tb p', t('makeMain'), 'outdent', data));
-    const target = M.indentTarget(S().tpl, item.id);
-    if (target) box.append(btn('tb p', t('makeSub', { n: nums.get(target.id) }), 'indent', data));
-    if (!at.parent) box.append(btn('tb', t('addSub'), 'addsub', data));
-    box.append(btn('tb', t('editBtn'), 'edit', data), btn('tb d', t('delete'), 'delete', data));
-    return box;
-  }
-
-  function editRow(item, nums, depth) {
-    const li = el('li', depth ? 'item kid' : 'item');
-    li.dataset.id = item.id;
-    const open = S().tray === item.id;
-    li.classList.toggle('sel', open);
-    li.classList.toggle('parent', !depth && M.isParent(item));
-    const row = el('div', 'row');
-    const tx = textBlock(btn('tx', '', 'edit', { id: item.id }), item, nums.get(item.id));
-    if (M.isParent(item)) tx.append(el('span', 'cnt', String(item.children.length)));
-    const more = btn('more', '⋯', 'tray', { id: item.id });
-    more.setAttribute('aria-label', t('more'));
-    more.setAttribute('aria-expanded', String(open));
-    row.append(el('span', 'handle', '⠿'), tx, more);
-    li.append(row);
-    if (open) li.append(tray(item, nums));
-    if (!depth && M.isParent(item)) {
-      const kids = el('ol', 'kids');
-      item.children.forEach((c) => kids.append(editRow(c, nums, 1)));
-      FOH.drag.enable(kids, (ids) => FOH.edit.applyOrder(item.id, ids));
-      li.append(kids, btn('addk', t('addSub'), 'addsub', { id: item.id }));
-    }
-    return li;
-  }
-
-  // ---- sections ----
-  function head(section, i, p) {
-    const editing = S().editing;
-    const h = el('div', 'head');
-    const ico = el('span', 'ico', section.icon);
-    ico.setAttribute('aria-hidden', 'true');
-    if (editing) {
-      const more = btn('more', '⋯', 'tray', { sid: section.id });
-      more.setAttribute('aria-label', t('more'));
-      h.append(ico, btn('nm', sectionName(section), 's-rename', { sid: section.id }), more);
-      return h;
-    }
-    const mainRow = el('div', 'head-main-row');
-    const toggle = btn('nm', '', 'collapse', { sid: section.id });
-    toggle.append(ico, el('span', 'nm-t', sectionName(section)));
-    toggle.setAttribute('aria-expanded', String(!S().collapsed.has(section.id)));
-    mainRow.append(toggle, el('span', 'ct', p.done + ' / ' + p.total));
-
-    const metaRow = el('div', 'head-meta-row');
-    h.append(mainRow, metaRow);
-    return h;
-  }
-
-  function sectionTray(section, i) {
-    const box = el('div', 'tray');
-    const data = { sid: section.id };
-    const up = btn('tb', '↑', 's-up', data);
-    const down = btn('tb', '↓', 's-down', data);
-    up.disabled = i === 0;
-    down.disabled = i === S().tpl.sections.length - 1;
-    box.append(up, down, btn('tb', t('rename'), 's-rename', data), btn('tb d', t('delete'), 's-delete', data));
-    return box;
-  }
-
-  function section(sec, i, nums) {
-    const st = S();
-    const p = M.progress(M.sectionLeaves(sec), st.run.checked);
-    const onlyLeft = !st.editing && st.filter === 'left';
-    if (onlyLeft && p.complete) return null;
-    const card = el('section', 'card');
-    card.id = 'sec-' + sec.id;
-    card.style.setProperty('--c', PALETTE[i % PALETTE.length]);
-    card.classList.toggle('complete', !st.editing && p.complete);
-    card.classList.toggle('collapsed', !st.editing && st.collapsed.has(sec.id));
-    card.append(head(sec, i, p));
-    if (st.editing && st.tray === sec.id) card.append(sectionTray(sec, i));
-    if (!st.editing) {
-      const bar = el('div', 'pbar');
-      const fill = el('i');
-      fill.style.width = (p.total ? Math.round((p.done * 100) / p.total) : 0) + '%';
-      bar.append(fill);
-      card.append(bar);
-    }
-    const list = el('ol', 'items');
-    sec.items.forEach((item) => {
-      if (st.editing) return list.append(editRow(item, nums, 0));
-      if (item.scheduleDate && !item.isRecurring && item.scheduleDate !== st.date) return;
-      if (item.isRecurring && item.recurrence) {
-        if (item.recurrence.start && st.date < item.recurrence.start) return;
-        if (item.recurrence.endDate && st.date > item.recurrence.endDate) return;
-        const ev = item.recurrence.every || 1;
-        if (ev > 1 && FOH.schedule && FOH.schedule.diffDays) {
-          const diff = FOH.schedule.diffDays(st.date, item.recurrence.start || st.date);
-          if (diff < 0 || (diff % ev !== 0)) return;
-        }
-      }
-      const done = M.progress(M.leaves(item), st.run.checked).complete;
-      if (onlyLeft && done) return;
-      list.append(M.isParent(item) ? runParent(item, nums, onlyLeft) : runLeaf(item, nums.get(item.id), 'item'));
-    });
-    card.append(list);
-    if (st.editing) {
-      FOH.drag.enable(list, (ids) => FOH.edit.applyOrder(sec.id, ids));
-      card.append(btn('adds', t('addItem'), 'add', { sid: sec.id }));
-    }
-    return card;
-  }
-
-  function sections(root) {
-    const nums = M.numbering(S().tpl);
-    root.replaceChildren();
-    FOH.preview.sections().forEach((sec, i) => {
-      const card = section(sec, i, nums);
-      if (card) root.append(card);
-    });
-    if (!FOH.preview.sections().length) root.append(el('p', 'empty', t('empty')));
-    else if (!root.children.length) root.append(el('p', 'empty', t('nothingLeft')));
-  }
-
-  function chips(root) {
-    root.replaceChildren();
-    const secs = FOH.preview.sections();
-    if (secs.length <= 1) {
-      root.hidden = true;
-      return;
-    }
-    root.hidden = false;
-    secs.forEach((sec) => {
-      const p = M.progress(M.sectionLeaves(sec), S().run.checked);
-      const c = btn('chip', '', 'jump', { sid: sec.id });
-      c.classList.toggle('on', S().activeSection === sec.id);
-      c.classList.toggle('complete', p.complete);
-      c.append(el('span', '', sec.icon + ' ' + sectionName(sec)), el('i', '', p.done + '/' + p.total));
-      root.append(c);
-    });
-  }
-
-  FOH.view = { el, btn, sections, chips, itemName, sectionName };
-})(window.FOH = window.FOH || {});
+// Builds the section cards for run mode and edit mode, and the section chips.
+// User text is always inserted with textContent, never as HTML.
+(function (FOH) {
+  'use strict';
+
+  const { t, pick } = FOH.i18n;
+  const M = FOH.model;
+  const PALETTE = ['#2F6B5E', '#3B6A8F', '#7A4E6E', '#8A6A2E', '#A0563B', '#6B6458'];
+  const pad = (n) => String(n).padStart(2, '0');
+
+  const time = (FOH.time = {
+    todayISO() {
+      const d = new Date();
+      return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+    },
+    nowHM() {
+      const d = new Date();
+      return pad(d.getHours()) + ':' + pad(d.getMinutes());
+    },
+    // Minutes from now until "HH:MM" today (negative when past).
+    minutesUntil(hm) {
+      const [h, m] = hm.split(':').map(Number);
+      const d = new Date();
+      return h * 60 + m - (d.getHours() * 60 + d.getMinutes());
+    },
+  });
+
+  function el(tag, cls, text) {
+    const node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  }
+
+  function btn(cls, label, opts = {}) {
+    const isLegacy = typeof opts === 'string';
+    const act = isLegacy ? opts : ((opts && opts.act) || '');
+    const data = isLegacy ? arguments[3] : ((opts && opts.data) || {});
+    const b = el('button', cls, label);
+    b.type = 'button';
+    if (act) b.dataset.act = act;
+    if (data && typeof data === 'object') Object.assign(b.dataset, data);
+    return b;
+  }
+
+  const itemName = (it) => pick(it.text, it.textAr);
+  const sectionName = (s) => pick(s.title, s.titleAr);
+  const S = () => FOH.state;
+
+  function textBlock(cls, item, num) {
+    const tx = cls instanceof Node ? cls : el('div', cls);
+    const titleRow = el('div', 'item-title-row');
+    titleRow.append(el('span', 'n', num !== undefined && num !== null && String(num).length ? (num + '.') : ''), el('span', 't', itemName(item)));
+    tx.append(titleRow);
+
+    const hasDue = !!item.due;
+    const role = item.role && FOH.tasksView && FOH.tasksView.roleName(item.role);
+    if (hasDue || role) {
+      const metaRow = el('div', 'item-meta-row');
+      if (hasDue) metaRow.append(el('span', 'due', t('by') + ' ' + item.due));
+      if (role) metaRow.append(el('span', FOH.tasksView.isMine(item) ? 'due mine' : 'due role', '👤 ' + role));
+      tx.append(metaRow);
+    }
+    return tx;
+  }
+
+  function isLate(item, done) {
+    return !!item.due && !done && S().date === time.todayISO() && time.minutesUntil(item.due) < 0;
+  }
+
+  // ---- run mode ----
+  function runLeaf(item, num, cls) {
+    const stamp = S().run.checked[item.id];
+    const li = el('li', cls);
+    li.dataset.id = item.id;
+    li.classList.toggle('done', !!stamp);
+    li.classList.toggle('late', isLate(item, stamp));
+    const row = el('label', 'row');
+    const cb = el('input', 'ck');
+    cb.type = 'checkbox';
+    cb.checked = !!stamp;
+    cb.dataset.id = item.id;
+    const tx = textBlock('tx', item, num);
+    if (typeof stamp === 'string') {
+      let metaRow = tx.querySelector('.item-meta-row');
+      if (!metaRow) {
+        metaRow = el('div', 'item-meta-row');
+        tx.append(metaRow);
+      }
+      metaRow.append(el('span', 'stamp', '✓ ' + stamp));
+    }
+    row.append(cb, tx);
+    li.append(row);
+    return li;
+  }
+
+  function runParent(item, nums, onlyLeft) {
+    const p = M.progress(item.children, S().run.checked);
+    const open = S().toggled.has(item.id) ? p.complete : !p.complete;
+    const li = el('li', 'item parent');
+    li.dataset.id = item.id;
+    li.classList.toggle('done', p.complete);
+    li.classList.toggle('closed', !open);
+    li.classList.toggle('late', isLate(item, p.complete));
+    const row = el('div', 'row');
+    const ring = el('span', 'mini', p.complete ? '✓' : '');
+    ring.style.setProperty('--p', Math.round((p.done * 100) / p.total) + '%');
+    const toggle = textBlock(btn('tx', '', 'ptoggle', { id: item.id }), item, nums.get(item.id));
+    toggle.setAttribute('aria-expanded', String(open));
+    row.append(ring, toggle, el('span', 'cnt', p.done + '/' + p.total));
+    if (!p.complete) row.append(btn('all', t('checkAll'), 'checkall', { id: item.id }));
+    const kids = el('ol', 'kids');
+    item.children.forEach((c) => {
+      if (onlyLeft && S().run.checked[c.id]) return;
+      kids.append(runLeaf(c, nums.get(c.id), 'item kid'));
+    });
+    li.append(row, kids);
+    return li;
+  }
+
+  // ---- edit mode ----
+  function tray(item, nums) {
+    const at = M.locate(S().tpl, item.id);
+    const box = el('div', 'tray');
+    const data = { id: item.id };
+    const up = btn('tb', '↑', 'up', data);
+    const down = btn('tb', '↓', 'down', data);
+    up.disabled = at.index === 0;
+    down.disabled = at.index === at.list.length - 1;
+    up.setAttribute('aria-label', t('moveUp'));
+    down.setAttribute('aria-label', t('moveDown'));
+    box.append(up, down);
+    if (at.parent) box.append(btn('tb p', t('makeMain'), 'outdent', data));
+    const target = M.indentTarget(S().tpl, item.id);
+    if (target) box.append(btn('tb p', t('makeSub', { n: nums.get(target.id) }), 'indent', data));
+    if (!at.parent) box.append(btn('tb', t('addSub'), 'addsub', data));
+    box.append(btn('tb', t('editBtn'), 'edit', data), btn('tb d', t('delete'), 'delete', data));
+    return box;
+  }
+
+  function editRow(item, nums, depth) {
+    const li = el('li', depth ? 'item kid' : 'item');
+    li.dataset.id = item.id;
+    const open = S().tray === item.id;
+    li.classList.toggle('sel', open);
+    li.classList.toggle('parent', !depth && M.isParent(item));
+    const row = el('div', 'row');
+    const tx = textBlock(btn('tx', '', 'edit', { id: item.id }), item, nums.get(item.id));
+    if (M.isParent(item)) tx.append(el('span', 'cnt', String(item.children.length)));
+    const more = btn('more', '⋯', 'tray', { id: item.id });
+    more.setAttribute('aria-label', t('more'));
+    more.setAttribute('aria-expanded', String(open));
+    row.append(el('span', 'handle', '⠿'), tx, more);
+    li.append(row);
+    if (open) li.append(tray(item, nums));
+    if (!depth && M.isParent(item)) {
+      const kids = el('ol', 'kids');
+      item.children.forEach((c) => kids.append(editRow(c, nums, 1)));
+      FOH.drag.enable(kids, (ids) => FOH.edit.applyOrder(item.id, ids));
+      li.append(kids, btn('addk', t('addSub'), 'addsub', { id: item.id }));
+    }
+    return li;
+  }
+
+  // ---- sections ----
+  function head(section, i, p) {
+    const editing = S().editing;
+    const h = el('div', 'head');
+    const ico = el('span', 'ico', section.icon);
+    ico.setAttribute('aria-hidden', 'true');
+    if (editing) {
+      const more = btn('more', '⋯', 'tray', { sid: section.id });
+      more.setAttribute('aria-label', t('more'));
+      h.append(ico, btn('nm', sectionName(section), 's-rename', { sid: section.id }), more);
+      return h;
+    }
+    const mainRow = el('div', 'head-main-row');
+    const toggle = btn('nm', '', 'collapse', { sid: section.id });
+    toggle.append(ico, el('span', 'nm-t', sectionName(section)));
+    toggle.setAttribute('aria-expanded', String(!S().collapsed.has(section.id)));
+    mainRow.append(toggle, el('span', 'ct', p.done + ' / ' + p.total));
+
+    const metaRow = el('div', 'head-meta-row');
+    h.append(mainRow, metaRow);
+    return h;
+  }
+
+  function sectionTray(section, i) {
+    const box = el('div', 'tray');
+    const data = { sid: section.id };
+    const up = btn('tb', '↑', 's-up', data);
+    const down = btn('tb', '↓', 's-down', data);
+    up.disabled = i === 0;
+    down.disabled = i === S().tpl.sections.length - 1;
+    box.append(up, down, btn('tb', t('rename'), 's-rename', data), btn('tb d', t('delete'), 's-delete', data));
+    return box;
+  }
+
+  function section(sec, i, nums) {
+    const st = S();
+    const p = M.progress(M.sectionLeaves(sec), st.run.checked);
+    const onlyLeft = !st.editing && st.filter === 'left';
+    if (onlyLeft && p.complete) return null;
+    const card = el('section', 'card');
+    card.id = 'sec-' + sec.id;
+    card.style.setProperty('--c', PALETTE[i % PALETTE.length]);
+    card.classList.toggle('complete', !st.editing && p.complete);
+    card.classList.toggle('collapsed', !st.editing && st.collapsed.has(sec.id));
+    card.append(head(sec, i, p));
+    if (st.editing && st.tray === sec.id) card.append(sectionTray(sec, i));
+    if (!st.editing) {
+      const bar = el('div', 'pbar');
+      const fill = el('i');
+      fill.style.width = (p.total ? Math.round((p.done * 100) / p.total) : 0) + '%';
+      bar.append(fill);
+      card.append(bar);
+    }
+    const list = el('ol', 'items');
+    sec.items.forEach((item) => {
+      if (st.editing) return list.append(editRow(item, nums, 0));
+      if (item.scheduleDate && !item.isRecurring && item.scheduleDate !== st.date) return;
+      if (item.isRecurring && item.recurrence) {
+        if (item.recurrence.start && st.date < item.recurrence.start) return;
+        if (item.recurrence.endDate && st.date > item.recurrence.endDate) return;
+        const ev = item.recurrence.every || 1;
+        if (ev > 1 && FOH.schedule && FOH.schedule.diffDays) {
+          const diff = FOH.schedule.diffDays(st.date, item.recurrence.start || st.date);
+          if (diff < 0 || (diff % ev !== 0)) return;
+        }
+      }
+      const done = M.progress(M.leaves(item), st.run.checked).complete;
+      if (onlyLeft && done) return;
+      list.append(M.isParent(item) ? runParent(item, nums, onlyLeft) : runLeaf(item, nums.get(item.id), 'item'));
+    });
+    card.append(list);
+    if (st.editing) {
+      FOH.drag.enable(list, (ids) => FOH.edit.applyOrder(sec.id, ids));
+      card.append(btn('adds', t('addItem'), 'add', { sid: sec.id }));
+    }
+    return card;
+  }
+
+  function sections(root) {
+    const nums = M.numbering(S().tpl);
+    root.replaceChildren();
+    FOH.preview.sections().forEach((sec, i) => {
+      const card = section(sec, i, nums);
+      if (card) root.append(card);
+    });
+    if (!FOH.preview.sections().length) root.append(el('p', 'empty', t('empty')));
+    else if (!root.children.length) root.append(el('p', 'empty', t('nothingLeft')));
+  }
+
+  function chips(root) {
+    root.replaceChildren();
+    const secs = FOH.preview.sections();
+    if (secs.length <= 1) {
+      root.hidden = true;
+      return;
+    }
+    root.hidden = false;
+    secs.forEach((sec) => {
+      const p = M.progress(M.sectionLeaves(sec), S().run.checked);
+      const c = btn('chip', '', 'jump', { sid: sec.id });
+      c.classList.toggle('on', S().activeSection === sec.id);
+      c.classList.toggle('complete', p.complete);
+      c.append(el('span', '', sec.icon + ' ' + sectionName(sec)), el('i', '', p.done + '/' + p.total));
+      root.append(c);
+    });
+  }
+
+  FOH.view = { el, btn, sections, chips, itemName, sectionName };
+})(window.FOH = window.FOH || {});
 
 </script>
 
@@ -20067,476 +20370,481 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
 <script>
 // --- js/domains/governance/suggestions.js ---
-// foh-opening/js/domains/governance/suggestions.js
-// Checklist Suggestions, Manager Lock Bar & Item-Level Floor Notes
-(function (FOH) {
-  'use strict';
-
-  const $ = (id) => document.getElementById(id);
-  const S = FOH.state;
-  const { t } = FOH.i18n;
-  const { el } = FOH.view;
-  const SESSION_KEY = 'foh-opening.erpSession.v1';
-
-  const SUG_KEY = 'super-employee.suggestions.v1';
-  const NOTES_KEY = 'super-employee.itemNotes.v1';
-
-  function isAr() {
-    return FOH.i18n.lang === 'ar';
-  }
-
-  function getSession() {
-    return FOH.sessionAuth ? FOH.sessionAuth.getSession() : null;
-  }
-
-  function loadGov() {
-    return FOH.gov ? FOH.gov.loadGov() : {};
-  }
-
-  function saveGov(g) {
-    if (FOH.gov) FOH.gov.saveGov(g);
-  }
-
-  function canCurrentUserEditChecklist() {
-    return FOH.gov ? FOH.gov.canCurrentUserEditChecklist() : false;
-  }
-
-  function notifyMobileOnNewTaskAdded(t) {
-    if (FOH.taskInbox && FOH.taskInbox.notifyMobileOnNewTaskAdded) {
-      FOH.taskInbox.notifyMobileOnNewTaskAdded(t);
-    } else if (FOH.notifCenter && FOH.notifCenter.notifyMobileOnNewTaskAdded) {
-      FOH.notifCenter.notifyMobileOnNewTaskAdded(t);
-    } else if (FOH.realtime && FOH.realtime.notifyMobileOnNewTaskAdded) {
-      FOH.realtime.notifyMobileOnNewTaskAdded(t);
-    }
-  }
-
-  // ---- 4. Checklist Suggestions & Item Notes ----
-  function loadSuggestions() {
-    try {
-      const list = FOH.safeJsonParse(localStorage.getItem(SUG_KEY), 'null');
-      if (Array.isArray(list)) return list;
-    } catch (err) { /* Suggestions storage read fallback */ }
-    return [
-      {
-        id: 'sug_demo_1',
-        by: 'Sara (Waiter)',
-        role: 'Waiter',
-        kind: 'add',
-        sectionId: (S.tpl.sections[0] && S.tpl.sections[0].id) || '',
-        text: 'Check terrace heaters gas level before 16:00',
-        textAr: 'فحص مستوى الغاز في دفايات التراس قبل الساعة 4:00 عصرًا',
-        note: 'الطقس أصبح باردًا مساءً في التراس',
-        at: FOH.time.todayISO() + ' 11:20',
-        status: 'pending',
-      },
-    ];
-  }
-
-  function saveSuggestions(list) {
-    try {
-      localStorage.setItem(SUG_KEY, JSON.stringify(list));
-    } catch (err) { /* Suggestions storage write fallback */ }
-  }
-
-  function loadItemNotes() {
-    try {
-      return FOH.safeJsonParse(localStorage.getItem(NOTES_KEY), '{}');
-    } catch (err) {
-      /* Item notes storage read fallback */
-      return {};
-    }
-  }
-
-  function saveItemNotes(map) {
-    try {
-      localStorage.setItem(NOTES_KEY, JSON.stringify(map));
-    } catch (err) { /* Notes storage quota fallback */ }
-  }
-
-  function renderGovStatusBadge(gov, canEdit, ar) {
-    const status = el('div', 'gov-status');
-    if (gov.checklistLocked) {
-      status.innerHTML = ar
-        ? '🔒 <span>الشيك ليست مقفلة من المدير (' + (gov.lockedBy || 'Supervisor') + ')</span>'
-        : '🔒 <span>Checklist Locked by Manager (' + (gov.lockedBy || 'Supervisor') + ')</span>';
-    } else if (canEdit) {
-      status.innerHTML = ar
-        ? '🔓 <span>الشيك ليست مفتوحة · لديك صلاحية التعديل المباشر</span>'
-        : '🔓 <span>Checklist Unlocked · You have edit permission</span>';
-    } else {
-      status.innerHTML = ar
-        ? '🛡️ <span>وضع التنفيذ للموظف · يمكنك إضافة ملاحظات أو اقتراح تعديل</span>'
-        : '🛡️ <span>Staff Execution Mode · Add notes or suggest edits</span>';
-    }
-    return status;
-  }
-
-  function appendManagerGovButtons(actions, opts = {}) {
-    const { gov, sess, ar } = opts;
-    const lockBtn = el(
-      'button',
-      'gov-btn' + (gov.checklistLocked ? ' warn' : ''),
-      gov.checklistLocked
-        ? (ar ? '🔓 فتح قفل الشيك ليست' : '🔓 Unlock Checklist')
-        : (ar ? '🔒 قفل الشيك ليست' : '🔒 Lock Checklist')
-    );
-    lockBtn.type = 'button';
-    lockBtn.addEventListener('click', () => {
-      gov.checklistLocked = !gov.checklistLocked;
-      gov.lockedBy = (sess && sess.displayName) || 'Supervisor';
-      gov.lockedAt = FOH.time.nowHM();
-      if (gov.checklistLocked) S.editing = false;
-      saveGov(gov);
-      FOH.edit.toast(
-        gov.checklistLocked
-          ? (ar ? 'تم قفل الشيك ليست بنجاح 🔒' : 'Checklist locked 🔒')
-          : (ar ? 'تم فتح قفل الشيك ليست 🔓' : 'Checklist unlocked 🔓')
-      );
-      FOH.app.render();
-    });
-    actions.append(lockBtn);
-
-    const permBtn = el('button', 'gov-btn', ar ? '⚙️ صلاحيات الموظفين' : '⚙️ Staff Permissions');
-    permBtn.type = 'button';
-    permBtn.addEventListener('click', () => {
-      S.view = 'settings';
-      FOH.app.render();
-    });
-    actions.append(permBtn);
-  }
-
-  function renderGovActionButtons(opts = {}) {
-    const { gov, canEdit, isMgr, sess, ar } = opts;
-    const actions = el('div', 'gov-actions');
-
-    const sugBtn = el('button', 'gov-btn primary', ar ? '💡 اقتراح تعديل / إضافة مهمة' : '💡 Suggest Checklist Edit');
-    sugBtn.type = 'button';
-    sugBtn.addEventListener('click', () => openSuggestionModal());
-    actions.append(sugBtn);
-
-    if (canEdit && !gov.checklistLocked) {
-      const editBtn = el('button', 'gov-btn', ar ? '✎ تعديل بنود الشيك ليست' : '✎ Edit Checklist');
-      editBtn.type = 'button';
-      editBtn.addEventListener('click', () => {
-        S.editing = true;
-        FOH.app.render();
-      });
-      actions.append(editBtn);
-    }
-
-    if (isMgr) {
-      appendManagerGovButtons(actions, { gov, sess, ar });
-    }
-    return actions;
-  }
-
-  function handleApproveSuggestion(sg, secTitle, ar) {
-    const targetSec = S.tpl.sections.find((s) => s.id === sg.sectionId) || S.tpl.sections[0];
-    if (targetSec) {
-      targetSec.items.push({
-        id: FOH.store.uid(),
-        text: sg.text || sg.textAr,
-        textAr: sg.textAr || sg.text,
-        due: '',
-        remindBefore: null,
-        role: '',
-        children: [],
-      });
-      FOH.store.saveTemplate(S.tpl);
-      if (typeof notifyMobileOnNewTaskAdded === 'function') {
-        notifyMobileOnNewTaskAdded({
-          titleEn: sg.text || sg.textAr,
-          titleAr: sg.textAr || sg.text,
-          sectionLabel: secTitle,
-          roleLabel: sg.by,
-        });
-      }
-    }
-    const allSugs = loadSuggestions();
-    const found = allSugs.find((x) => x.id === sg.id);
-    if (found) found.status = 'approved';
-    saveSuggestions(allSugs);
-    FOH.edit.toast(ar ? 'تمت الموافقة وإضافة المهمة إلى الشيك ليست ✓' : 'Suggestion approved and added to checklist ✓');
-    FOH.app.render();
-  }
-
-  function renderSuggestionRow(sg, ar) {
-    const row = el('div', 'sug-item');
-    const info = el('div', '');
-    info.style.flex = '1';
-    const secObj = S.tpl.sections.find((s) => s.id === sg.sectionId) || S.tpl.sections[0];
-    const secTitle = secObj ? FOH.view.sectionName(secObj) : '';
-    info.innerHTML =
-      '<b>' + (sg.kind === 'add' ? '➕ ' : '✏️ ') + (ar ? sg.textAr || sg.text : sg.text || sg.textAr) + '</b>' +
-      '<small style="display:block;color:var(--ink2);margin-top:2px;">👤 ' + sg.by + ' · 📂 ' + secTitle + ' · 🕒 ' + sg.at + (sg.note ? ' · 💬 ' + sg.note : '') + '</small>';
-
-    const btns = el('div', 'gov-actions');
-    const appBtn = el('button', 'gov-btn primary', ar ? '✓ موافقة وإضافة للقائمة' : '✓ Approve & Add');
-    appBtn.type = 'button';
-    appBtn.addEventListener('click', () => handleApproveSuggestion(sg, secTitle, ar));
-
-    const rejBtn = el('button', 'gov-btn', ar ? '✕ رفض' : '✕ Reject');
-    rejBtn.type = 'button';
-    rejBtn.addEventListener('click', () => {
-      const allSugs = loadSuggestions();
-      const found = allSugs.find((x) => x.id === sg.id);
-      if (found) found.status = 'rejected';
-      saveSuggestions(allSugs);
-      FOH.app.render();
-    });
-
-    btns.append(appBtn, rejBtn);
-    row.append(info, btns);
-    return row;
-  }
-
-  function renderSuggestionsAccordion(sugs, ar) {
-    const qBox = el('details', 'sug-card sug-accordion');
-    qBox.style.width = '100%';
-    qBox.style.marginTop = '8px';
-    qBox.style.marginBottom = '0';
-
-    const summary = el('summary', 'sug-summary');
-    summary.style.display = 'flex';
-    summary.style.alignItems = 'center';
-    summary.style.justifyContent = 'space-between';
-    summary.style.cursor = 'pointer';
-    summary.style.padding = '4px 0';
-    summary.style.fontWeight = '700';
-    summary.style.fontSize = '0.84rem';
-    summary.innerHTML =
-      '<span style="display:inline-flex;align-items:center;gap:6px;">' +
-      '<span>💡</span>' +
-      '<b>' + (ar ? 'اقتراحات وملاحظات الموظفين المعلقة (' + sugs.length + ')' : 'Pending Staff Suggestions (' + sugs.length + ')') + '</b>' +
-      '</span>' +
-      '<span style="font-size:0.75rem;padding:2px 8px;border-radius:12px;background:var(--accent);color:#fff;">' + (ar ? 'مراجعة ▾' : 'Review ▾') + '</span>';
-    qBox.append(summary);
-
-    const itemsWrap = el('div', 'sug-items-wrap');
-    itemsWrap.style.marginTop = '8px';
-    sugs.forEach((sg) => {
-      itemsWrap.append(renderSuggestionRow(sg, ar));
-    });
-    qBox.append(itemsWrap);
-    return qBox;
-  }
-
-  function renderChecklistGovBar() {
-    const bar = $('checklistGovBar');
-    if (!bar) return;
-    if (S.editing || S.view !== 'opening') {
-      bar.hidden = true;
-      return;
-    }
-    bar.hidden = false;
-    bar.replaceChildren();
-
-    const ar = isAr();
-    const sess = getSession();
-    const isMgr = !sess || !!sess.isManager;
-    const gov = loadGov();
-    const canEdit = canCurrentUserEditChecklist();
-    const sugs = loadSuggestions().filter((s) => s.status === 'pending');
-
-    const topWrap = el('div', '');
-    topWrap.style.width = '100%';
-    topWrap.style.display = 'flex';
-    topWrap.style.alignItems = 'center';
-    topWrap.style.justifyContent = 'space-between';
-    topWrap.style.flexWrap = 'wrap';
-    topWrap.style.gap = '8px';
-
-    const status = renderGovStatusBadge(gov, canEdit, ar);
-    const actions = renderGovActionButtons({ gov, canEdit, isMgr, sess, ar });
-    topWrap.append(status, actions);
-    bar.append(topWrap);
-
-    if (sugs.length > 0 && isMgr) {
-      bar.append(renderSuggestionsAccordion(sugs, ar));
-    }
-  }
-
-  function buildSuggestionInputs(ar) {
-    const secLbl = el('label', '', ar ? 'القسم (Section)' : 'Section');
-    const secSel = el('select', 'in');
-    S.tpl.sections.forEach((s) => {
-      const o = el('option', '', s.icon + ' ' + FOH.view.sectionName(s));
-      o.value = s.id;
-      secSel.append(o);
-    });
-    secLbl.append(secSel);
-
-    const kindLbl = el('label', '', ar ? 'نوع الاقتراح' : 'Suggestion Type');
-    const kindSel = el('select', 'in');
-    [
-      ['add', ar ? '➕ اقتراح إضافة مهمة جديدة للشيك ليست' : '➕ Suggest adding a new checklist task'],
-      ['edit', ar ? '✏️ اقتراح تعديل مهمة حالية' : '✏️ Suggest modifying an existing task'],
-      ['note', ar ? '💬 ملاحظة ميدانية للمدير حول الشفت' : '💬 General shift note for Manager'],
-    ].forEach(([v, txt]) => {
-      const o = el('option', '', txt);
-      o.value = v;
-      kindSel.append(o);
-    });
-    kindLbl.append(kindSel);
-
-    if (FOH.modalPicker && FOH.modalPicker.enhanceSelect) {
-      FOH.modalPicker.enhanceSelect(secSel, {
-        title: ar ? 'اختر القسم المقترح' : 'Select Target Section',
-        icon: '📂',
-      });
-      FOH.modalPicker.enhanceSelect(kindSel, {
-        title: ar ? 'اختر نوع الاقتراح' : 'Select Suggestion Type',
-        icon: '💡',
-      });
-    }
-
-    const txtArLbl = el('label', '', ar ? 'نص المهمة المقترحة / التعديل (عربي أو إنجليزي)' : 'Suggested Task / Change Text');
-    const txtArIn = el('textarea', 'in');
-    txtArIn.rows = 2;
-    txtArIn.placeholder = ar ? 'مثال: التأكد من تشغيل دفايات التراس قبل الساعة 4:00...' : 'e.g. Check terrace heaters before 16:00...';
-    txtArLbl.append(txtArIn);
-
-    const noteLbl = el('label', '', ar ? 'السبب أو ملاحظة إضافية للمدير' : 'Reason or Additional Note');
-    const noteIn = el('input', 'in');
-    noteIn.placeholder = ar ? 'لماذا تقترح هذا التعديل؟' : 'Why is this helpful?';
-    noteLbl.append(noteIn);
-
-    return { secLbl, secSel, kindLbl, kindSel, txtArLbl, txtArIn, noteLbl, noteIn };
-  }
-
-  function handleSuggestionSubmit(opts = {}) {
-    const { dlg, sess, ar, secSel, kindSel, txtArIn, noteIn } = opts;
-    const val = txtArIn.value.trim();
-    if (!val) return txtArIn.focus();
-    const list = loadSuggestions();
-    list.unshift({
-      id: 'sug_' + Date.now(),
-      by: (sess && sess.displayName) || S.me.name || 'Staff',
-      role: (sess && sess.roleName) || 'Staff',
-      kind: kindSel.value,
-      sectionId: secSel.value,
-      text: val,
-      textAr: val,
-      note: noteIn.value.trim(),
-      at: FOH.time.todayISO() + ' ' + FOH.time.nowHM(),
-      status: 'pending',
-    });
-    saveSuggestions(list);
-    dlg.close();
-    FOH.edit.toast(ar ? 'تم إرسال اقتراحك للمدير للمراجعة والاعتماد ✓' : 'Suggestion sent to Manager for review ✓');
-    FOH.app.render();
-  }
-
-  function openSuggestionModal() {
-    const ar = isAr();
-    const sess = getSession();
-    let dlg = $('suggestDialog');
-    if (!dlg) {
-      dlg = el('dialog', 'sheet');
-      dlg.id = 'suggestDialog';
-      document.body.append(dlg);
-    }
-    dlg.replaceChildren();
-    const form = el('form', '');
-    form.method = 'dialog';
-    form.append(
-      el('div', 'grab'),
-      el('h2', '', ar ? '💡 اقتراح تعديل أو إضافة ملاحظة للشيك ليست' : '💡 Suggest Checklist Change or Note')
-    );
-
-    const inputs = buildSuggestionInputs(ar);
-
-    const actions = el('div', 'sheet-actions');
-    const cancelB = el('button', 'btn', ar ? 'إلغاء' : 'Cancel');
-    cancelB.type = 'button';
-    cancelB.addEventListener('click', () => dlg.close());
-
-    const submitB = el('button', 'btn primary', ar ? '📤 إرسال الاقتراح للمدير' : '📤 Submit Suggestion');
-    submitB.type = 'button';
-    submitB.addEventListener('click', () => handleSuggestionSubmit({
-      dlg,
-      sess,
-      ar,
-      secSel: inputs.secSel,
-      kindSel: inputs.kindSel,
-      txtArIn: inputs.txtArIn,
-      noteIn: inputs.noteIn,
-    }));
-
-    actions.append(cancelB, submitB);
-    form.append(inputs.secLbl, inputs.kindLbl, inputs.txtArLbl, inputs.noteLbl, actions);
-    dlg.append(form);
-    dlg.showModal();
-  }
-
-  function attachItemNoteChip(tx, opts = {}) {
-    const { noteKey, existing, notesMap, ar, sess } = opts;
-    let chip = tx.querySelector('.item-note-chip');
-    if (!chip) {
-      chip = el('button', 'item-note-chip' + (existing ? ' has-note' : ''), existing ? (ar ? '💬 تعديل الملاحظة' : '💬 Edit note') : (ar ? '💬 +ملاحظة' : '💬 +Note'));
-      chip.type = 'button';
-      chip.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const currentTxt = (notesMap[noteKey] && notesMap[noteKey].text) || '';
-        const input = prompt(ar ? 'أضف ملاحظة ميدانية على هذه المهمة (اتركها فارغة للمسح):' : 'Add a shift note for this task (leave empty to clear):', currentTxt);
-        if (input === null) return;
-        if (!input.trim()) {
-          delete notesMap[noteKey];
-        } else {
-          notesMap[noteKey] = {
-            text: input.trim(),
-            by: (sess && sess.displayName) || S.me.name || 'Staff',
-            at: FOH.time.nowHM(),
-          };
-        }
-        saveItemNotes(notesMap);
-        FOH.app.render();
-      });
-      tx.append(chip);
-    }
-
-    let disp = tx.querySelector('.item-note-display');
-    if (existing && existing.text) {
-      if (!disp) {
-        disp = el('span', 'item-note-display');
-        tx.append(disp);
-      }
-      disp.textContent = '💬 ' + existing.text + ' — (' + existing.by + ' · ' + existing.at + ')';
-    } else if (disp) {
-      disp.remove();
-    }
-  }
-
-  function injectChecklistItemNotes() {
-    if (S.editing || S.view !== 'opening') return;
-    const notesMap = loadItemNotes();
-    const dateKey = S.date;
-    const ar = isAr();
-    const sess = getSession();
-
-    document.querySelectorAll('#sections li.item').forEach((li) => {
-      const cb = li.querySelector('input.ck[data-id]');
-      const tx = li.querySelector('.tx');
-      if (!cb || !tx) return;
-      const itemId = cb.dataset.id;
-      const noteKey = dateKey + '|' + itemId;
-      const existing = notesMap[noteKey];
-      attachItemNoteChip(tx, { noteKey, existing, notesMap, ar, sess });
-    });
-  }
-
-  FOH.suggestions = {
-    loadSuggestions,
-    saveSuggestions,
-    loadItemNotes,
-    saveItemNotes,
-    renderChecklistGovBar,
-    openSuggestionModal,
-    injectChecklistItemNotes,
-  };
-})(window.FOH = window.FOH || {});
+// foh-opening/js/domains/governance/suggestions.js
+// Checklist Suggestions, Manager Lock Bar & Item-Level Floor Notes
+(function (FOH) {
+  'use strict';
+
+  const $ = (id) => document.getElementById(id);
+  const S = FOH.state;
+  const { t } = FOH.i18n;
+  const { el } = FOH.view;
+  const SESSION_KEY = 'foh-opening.erpSession.v1';
+
+  const SUG_KEY = 'super-employee.suggestions.v1';
+  const NOTES_KEY = 'super-employee.itemNotes.v1';
+
+  function isAr() {
+    return FOH.i18n.lang === 'ar';
+  }
+
+  function getSession() {
+    return FOH.sessionAuth ? FOH.sessionAuth.getSession() : null;
+  }
+
+  function loadGov() {
+    return FOH.gov ? FOH.gov.loadGov() : {};
+  }
+
+  function saveGov(g) {
+    if (FOH.gov) FOH.gov.saveGov(g);
+  }
+
+  function canCurrentUserEditChecklist() {
+    return FOH.gov ? FOH.gov.canCurrentUserEditChecklist() : false;
+  }
+
+  function notifyMobileOnNewTaskAdded(t) {
+    if (FOH.taskInbox && FOH.taskInbox.notifyMobileOnNewTaskAdded) {
+      FOH.taskInbox.notifyMobileOnNewTaskAdded(t);
+    } else if (FOH.notifCenter && FOH.notifCenter.notifyMobileOnNewTaskAdded) {
+      FOH.notifCenter.notifyMobileOnNewTaskAdded(t);
+    } else if (FOH.realtime && FOH.realtime.notifyMobileOnNewTaskAdded) {
+      FOH.realtime.notifyMobileOnNewTaskAdded(t);
+    }
+  }
+
+  // ---- 4. Checklist Suggestions & Item Notes ----
+  function loadSuggestions() {
+    try {
+      const list = FOH.safeJsonParse(localStorage.getItem(SUG_KEY), 'null');
+      if (Array.isArray(list)) return list;
+    } catch (err) { /* Suggestions storage read fallback */ }
+    return [
+      {
+        id: 'sug_demo_1',
+        by: 'Sara (Waiter)',
+        role: 'Waiter',
+        kind: 'add',
+        sectionId: (S.tpl.sections[0] && S.tpl.sections[0].id) || '',
+        text: 'Check terrace heaters gas level before 16:00',
+        textAr: 'فحص مستوى الغاز في دفايات التراس قبل الساعة 4:00 عصرًا',
+        note: 'الطقس أصبح باردًا مساءً في التراس',
+        at: FOH.time.todayISO() + ' 11:20',
+        status: 'pending',
+      },
+    ];
+  }
+
+  function saveSuggestions(list) {
+    try {
+      localStorage.setItem(SUG_KEY, JSON.stringify(list));
+    } catch (err) { /* Suggestions storage write fallback */ }
+  }
+
+  function loadItemNotes() {
+    try {
+      return FOH.safeJsonParse(localStorage.getItem(NOTES_KEY), '{}');
+    } catch (err) {
+      /* Item notes storage read fallback */
+      return {};
+    }
+  }
+
+  function saveItemNotes(map) {
+    try {
+      localStorage.setItem(NOTES_KEY, JSON.stringify(map));
+    } catch (err) { /* Notes storage quota fallback */ }
+  }
+
+  function renderGovStatusBadge(gov, canEdit, ar) {
+    const status = el('div', 'gov-status');
+    if (gov.checklistLocked) {
+      status.innerHTML = ar
+        ? '🔒 <span>الشيك ليست مقفلة من المدير (' + (gov.lockedBy || 'Supervisor') + ')</span>'
+        : '🔒 <span>Checklist Locked by Manager (' + (gov.lockedBy || 'Supervisor') + ')</span>';
+    } else if (canEdit) {
+      status.innerHTML = ar
+        ? '🔓 <span>الشيك ليست مفتوحة · لديك صلاحية التعديل المباشر</span>'
+        : '🔓 <span>Checklist Unlocked · You have edit permission</span>';
+    } else {
+      status.innerHTML = ar
+        ? '🛡️ <span>وضع التنفيذ للموظف · يمكنك إضافة ملاحظات أو اقتراح تعديل</span>'
+        : '🛡️ <span>Staff Execution Mode · Add notes or suggest edits</span>';
+    }
+    return status;
+  }
+
+  function appendManagerGovButtons(actions, opts = {}) {
+    const { gov, sess, ar } = opts;
+    const lockBtn = el(
+      'button',
+      'gov-btn' + (gov.checklistLocked ? ' warn' : ''),
+      gov.checklistLocked
+        ? (ar ? '🔓 فتح قفل الشيك ليست' : '🔓 Unlock Checklist')
+        : (ar ? '🔒 قفل الشيك ليست' : '🔒 Lock Checklist')
+    );
+    lockBtn.type = 'button';
+    lockBtn.addEventListener('click', () => {
+      gov.checklistLocked = !gov.checklistLocked;
+      gov.lockedBy = (sess && sess.displayName) || 'Supervisor';
+      gov.lockedAt = FOH.time.nowHM();
+      if (gov.checklistLocked) S.editing = false;
+      saveGov(gov);
+      FOH.edit.toast(
+        gov.checklistLocked
+          ? (ar ? 'تم قفل الشيك ليست بنجاح 🔒' : 'Checklist locked 🔒')
+          : (ar ? 'تم فتح قفل الشيك ليست 🔓' : 'Checklist unlocked 🔓')
+      );
+      FOH.app.render();
+    });
+    actions.append(lockBtn);
+
+    const permBtn = el('button', 'gov-btn', ar ? '⚙️ صلاحيات الموظفين' : '⚙️ Staff Permissions');
+    permBtn.type = 'button';
+    permBtn.addEventListener('click', () => {
+      S.view = 'settings';
+      FOH.app.render();
+    });
+    actions.append(permBtn);
+  }
+
+  function renderGovActionButtons(opts = {}) {
+    const { gov, canEdit, isMgr, sess, ar } = opts;
+    const actions = el('div', 'gov-actions');
+
+    const sugBtn = el('button', 'gov-btn primary', ar ? '💡 اقتراح تعديل / إضافة مهمة' : '💡 Suggest Checklist Edit');
+    sugBtn.type = 'button';
+    sugBtn.addEventListener('click', () => openSuggestionModal());
+    actions.append(sugBtn);
+
+    if (canEdit && !gov.checklistLocked) {
+      const editBtn = el('button', 'gov-btn', ar ? '✎ تعديل بنود الشيك ليست' : '✎ Edit Checklist');
+      editBtn.type = 'button';
+      editBtn.addEventListener('click', () => {
+        S.editing = true;
+        FOH.app.render();
+      });
+      actions.append(editBtn);
+    }
+
+    if (isMgr) {
+      appendManagerGovButtons(actions, { gov, sess, ar });
+    }
+    return actions;
+  }
+
+  function handleApproveSuggestion(sg, secTitle, ar) {
+    const targetSec = S.tpl.sections.find((s) => s.id === sg.sectionId) || S.tpl.sections[0];
+    if (targetSec) {
+      targetSec.items.push({
+        id: FOH.store.uid(),
+        text: sg.text || sg.textAr,
+        textAr: sg.textAr || sg.text,
+        due: '',
+        remindBefore: null,
+        role: '',
+        children: [],
+      });
+      FOH.store.saveTemplate(S.tpl);
+      if (typeof notifyMobileOnNewTaskAdded === 'function') {
+        notifyMobileOnNewTaskAdded({
+          titleEn: sg.text || sg.textAr,
+          titleAr: sg.textAr || sg.text,
+          sectionLabel: secTitle,
+          roleLabel: sg.by,
+        });
+      }
+    }
+    const allSugs = loadSuggestions();
+    const found = allSugs.find((x) => x.id === sg.id);
+    if (found) found.status = 'approved';
+    saveSuggestions(allSugs);
+    FOH.edit.toast(ar ? 'تمت الموافقة وإضافة المهمة إلى الشيك ليست ✓' : 'Suggestion approved and added to checklist ✓');
+    FOH.app.render();
+  }
+
+  function renderSuggestionRow(sg, ar) {
+    const row = el('div', 'sug-item');
+    const info = el('div', '');
+    info.style.flex = '1';
+    const secObj = S.tpl.sections.find((s) => s.id === sg.sectionId) || S.tpl.sections[0];
+    const secTitle = secObj ? FOH.view.sectionName(secObj) : '';
+    info.innerHTML =
+      '<b>' + (sg.kind === 'add' ? '➕ ' : '✏️ ') + (ar ? sg.textAr || sg.text : sg.text || sg.textAr) + '</b>' +
+      '<small style="display:block;color:var(--ink2);margin-top:2px;">👤 ' + sg.by + ' · 📂 ' + secTitle + ' · 🕒 ' + sg.at + (sg.note ? ' · 💬 ' + sg.note : '') + '</small>';
+
+    const btns = el('div', 'gov-actions');
+    const appBtn = el('button', 'gov-btn primary', ar ? '✓ موافقة وإضافة للقائمة' : '✓ Approve & Add');
+    appBtn.type = 'button';
+    appBtn.addEventListener('click', () => handleApproveSuggestion(sg, secTitle, ar));
+
+    const rejBtn = el('button', 'gov-btn', ar ? '✕ رفض' : '✕ Reject');
+    rejBtn.type = 'button';
+    rejBtn.addEventListener('click', () => {
+      const allSugs = loadSuggestions();
+      const found = allSugs.find((x) => x.id === sg.id);
+      if (found) found.status = 'rejected';
+      saveSuggestions(allSugs);
+      FOH.app.render();
+    });
+
+    btns.append(appBtn, rejBtn);
+    row.append(info, btns);
+    return row;
+  }
+
+  function renderSuggestionsAccordion(sugs, ar) {
+    const qBox = el('details', 'sug-card sug-accordion');
+    qBox.style.width = '100%';
+    qBox.style.marginTop = '8px';
+    qBox.style.marginBottom = '0';
+
+    const summary = el('summary', 'sug-summary');
+    summary.style.display = 'flex';
+    summary.style.alignItems = 'center';
+    summary.style.justifyContent = 'space-between';
+    summary.style.cursor = 'pointer';
+    summary.style.padding = '4px 0';
+    summary.style.fontWeight = '700';
+    summary.style.fontSize = '0.84rem';
+    summary.innerHTML =
+      '<span style="display:inline-flex;align-items:center;gap:6px;">' +
+      '<span>💡</span>' +
+      '<b>' + (ar ? 'اقتراحات وملاحظات الموظفين المعلقة (' + sugs.length + ')' : 'Pending Staff Suggestions (' + sugs.length + ')') + '</b>' +
+      '</span>' +
+      '<span style="font-size:0.75rem;padding:2px 8px;border-radius:12px;background:var(--accent);color:#fff;">' + (ar ? 'مراجعة ▾' : 'Review ▾') + '</span>';
+    qBox.append(summary);
+
+    const itemsWrap = el('div', 'sug-items-wrap');
+    itemsWrap.style.marginTop = '8px';
+    sugs.forEach((sg) => {
+      itemsWrap.append(renderSuggestionRow(sg, ar));
+    });
+    qBox.append(itemsWrap);
+    return qBox;
+  }
+
+  function renderChecklistGovBar() {
+    const bar = $('checklistGovBar');
+    if (!bar) return;
+    if (S.editing || S.view !== 'opening') {
+      bar.hidden = true;
+      return;
+    }
+    bar.hidden = false;
+    bar.replaceChildren();
+
+    const ar = isAr();
+    const sess = getSession();
+    const isMgr = !sess || !!sess.isManager;
+    const gov = loadGov();
+    const canEdit = canCurrentUserEditChecklist();
+    const sugs = loadSuggestions().filter((s) => s.status === 'pending');
+
+    const topWrap = el('div', '');
+    topWrap.style.width = '100%';
+    topWrap.style.display = 'flex';
+    topWrap.style.alignItems = 'center';
+    topWrap.style.justifyContent = 'space-between';
+    topWrap.style.flexWrap = 'wrap';
+    topWrap.style.gap = '8px';
+
+    const status = renderGovStatusBadge(gov, canEdit, ar);
+    const actions = renderGovActionButtons({ gov, canEdit, isMgr, sess, ar });
+    topWrap.append(status, actions);
+    bar.append(topWrap);
+
+    if (sugs.length > 0 && isMgr) {
+      bar.append(renderSuggestionsAccordion(sugs, ar));
+    }
+  }
+
+  function buildSuggestionInputs(ar) {
+    const secLbl = el('label', '', ar ? 'القسم (Section)' : 'Section');
+    const secSel = el('select', 'in');
+    S.tpl.sections.forEach((s) => {
+      const o = el('option', '', s.icon + ' ' + FOH.view.sectionName(s));
+      o.value = s.id;
+      secSel.append(o);
+    });
+    secLbl.append(secSel);
+
+    const kindLbl = el('label', '', ar ? 'نوع الاقتراح' : 'Suggestion Type');
+    const kindSel = el('select', 'in');
+    [
+      ['add', ar ? '➕ اقتراح إضافة مهمة جديدة للشيك ليست' : '➕ Suggest adding a new checklist task'],
+      ['edit', ar ? '✏️ اقتراح تعديل مهمة حالية' : '✏️ Suggest modifying an existing task'],
+      ['note', ar ? '💬 ملاحظة ميدانية للمدير حول الشفت' : '💬 General shift note for Manager'],
+    ].forEach(([v, txt]) => {
+      const o = el('option', '', txt);
+      o.value = v;
+      kindSel.append(o);
+    });
+    kindLbl.append(kindSel);
+
+    if (FOH.modalPicker && FOH.modalPicker.enhanceSelect) {
+      FOH.modalPicker.enhanceSelect(secSel, {
+        title: ar ? 'اختر القسم المقترح' : 'Select Target Section',
+        icon: '📂',
+      });
+      FOH.modalPicker.enhanceSelect(kindSel, {
+        title: ar ? 'اختر نوع الاقتراح' : 'Select Suggestion Type',
+        icon: '💡',
+      });
+    }
+
+    const txtArLbl = el('label', '', ar ? 'نص المهمة المقترحة / التعديل (عربي أو إنجليزي)' : 'Suggested Task / Change Text');
+    const txtArIn = el('textarea', 'in');
+    txtArIn.rows = 2;
+    txtArIn.placeholder = ar ? 'مثال: التأكد من تشغيل دفايات التراس قبل الساعة 4:00...' : 'e.g. Check terrace heaters before 16:00...';
+    txtArLbl.append(txtArIn);
+
+    const noteLbl = el('label', '', ar ? 'السبب أو ملاحظة إضافية للمدير' : 'Reason or Additional Note');
+    const noteIn = el('input', 'in');
+    noteIn.placeholder = ar ? 'لماذا تقترح هذا التعديل؟' : 'Why is this helpful?';
+    noteLbl.append(noteIn);
+
+    return { secLbl, secSel, kindLbl, kindSel, txtArLbl, txtArIn, noteLbl, noteIn };
+  }
+
+  function handleSuggestionSubmit(opts = {}) {
+    const { dlg, sess, ar, secSel, kindSel, txtArIn, noteIn } = opts;
+    const val = txtArIn.value.trim();
+    if (!val) return txtArIn.focus();
+    const list = loadSuggestions();
+    list.unshift({
+      id: 'sug_' + Date.now(),
+      by: (sess && sess.displayName) || S.me.name || 'Staff',
+      role: (sess && sess.roleName) || 'Staff',
+      kind: kindSel.value,
+      sectionId: secSel.value,
+      text: val,
+      textAr: val,
+      note: noteIn.value.trim(),
+      at: FOH.time.todayISO() + ' ' + FOH.time.nowHM(),
+      status: 'pending',
+    });
+    saveSuggestions(list);
+    dlg.close();
+    FOH.edit.toast(ar ? 'تم إرسال اقتراحك للمدير للمراجعة والاعتماد ✓' : 'Suggestion sent to Manager for review ✓');
+    FOH.app.render();
+  }
+
+  function openSuggestionModal() {
+    const ar = isAr();
+    const sess = getSession();
+    let dlg = $('suggestDialog');
+    if (!dlg) {
+      dlg = el('dialog', 'sheet');
+      dlg.id = 'suggestDialog';
+      document.body.append(dlg);
+    }
+    dlg.replaceChildren();
+    const form = el('form', '');
+    form.method = 'dialog';
+    form.append(
+      el('div', 'grab'),
+      el('h2', '', ar ? '💡 اقتراح تعديل أو إضافة ملاحظة للشيك ليست' : '💡 Suggest Checklist Change or Note')
+    );
+
+    const inputs = buildSuggestionInputs(ar);
+
+    const actions = el('div', 'sheet-actions');
+    const cancelB = el('button', 'btn', ar ? 'إلغاء' : 'Cancel');
+    cancelB.type = 'button';
+    cancelB.addEventListener('click', () => dlg.close());
+
+    const submitB = el('button', 'btn primary', ar ? '📤 إرسال الاقتراح للمدير' : '📤 Submit Suggestion');
+    submitB.type = 'button';
+    submitB.addEventListener('click', () => handleSuggestionSubmit({
+      dlg,
+      sess,
+      ar,
+      secSel: inputs.secSel,
+      kindSel: inputs.kindSel,
+      txtArIn: inputs.txtArIn,
+      noteIn: inputs.noteIn,
+    }));
+
+    actions.append(cancelB, submitB);
+    form.append(inputs.secLbl, inputs.kindLbl, inputs.txtArLbl, inputs.noteLbl, actions);
+    dlg.append(form);
+    dlg.showModal();
+  }
+
+  function attachItemNoteChip(tx, opts = {}) {
+    const { noteKey, existing, notesMap, ar, sess } = opts;
+    let metaRow = tx.querySelector('.item-meta-row');
+    if (!metaRow) {
+      metaRow = el('div', 'item-meta-row');
+      tx.append(metaRow);
+    }
+    let chip = metaRow.querySelector('.item-note-chip');
+    if (!chip) {
+      chip = el('button', 'item-note-chip' + (existing ? ' has-note' : ''), existing ? (ar ? '💬 تعديل الملاحظة' : '💬 Edit note') : (ar ? '💬 +ملاحظة' : '💬 +Note'));
+      chip.type = 'button';
+      chip.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const currentTxt = (notesMap[noteKey] && notesMap[noteKey].text) || '';
+        const input = prompt(ar ? 'أضف ملاحظة ميدانية على هذه المهمة (اتركها فارغة للمسح):' : 'Add a shift note for this task (leave empty to clear):', currentTxt);
+        if (input === null) return;
+        if (!input.trim()) {
+          delete notesMap[noteKey];
+        } else {
+          notesMap[noteKey] = {
+            text: input.trim(),
+            by: (sess && sess.displayName) || S().me.name || 'Staff',
+            at: FOH.time.nowHM(),
+          };
+        }
+        saveItemNotes(notesMap);
+        FOH.app.render();
+      });
+      metaRow.append(chip);
+    }
+
+    let disp = tx.querySelector('.item-note-display');
+    if (existing && existing.text) {
+      if (!disp) {
+        disp = el('span', 'item-note-display');
+        tx.append(disp);
+      }
+      disp.textContent = '💬 ' + existing.text + ' — (' + existing.by + ' · ' + existing.at + ')';
+    } else if (disp) {
+      disp.remove();
+    }
+  }
+
+  function injectChecklistItemNotes() {
+    if (S.editing || S.view !== 'opening') return;
+    const notesMap = loadItemNotes();
+    const dateKey = S.date;
+    const ar = isAr();
+    const sess = getSession();
+
+    document.querySelectorAll('#sections li.item').forEach((li) => {
+      const cb = li.querySelector('input.ck[data-id]');
+      const tx = li.querySelector('.tx');
+      if (!cb || !tx) return;
+      const itemId = cb.dataset.id;
+      const noteKey = dateKey + '|' + itemId;
+      const existing = notesMap[noteKey];
+      attachItemNoteChip(tx, { noteKey, existing, notesMap, ar, sess });
+    });
+  }
+
+  FOH.suggestions = {
+    loadSuggestions,
+    saveSuggestions,
+    loadItemNotes,
+    saveItemNotes,
+    renderChecklistGovBar,
+    openSuggestionModal,
+    injectChecklistItemNotes,
+  };
+})(window.FOH = window.FOH || {});
 
 </script>
 
