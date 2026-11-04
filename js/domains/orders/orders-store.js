@@ -236,6 +236,56 @@
     }
   }
 
+  function getOrderStatus() {
+    return (ordDB.order && ordDB.order.status) || 'DRAFT';
+  }
+
+  function setOrderStatus(st) {
+    ordDB.order = ordDB.order || emptyOrderState();
+    ordDB.order.status = st;
+    if (st === 'DISPATCHED') ordDB.order.dispatchedAt = Date.now();
+    saveOrdersDB();
+  }
+
+  function addBreakageReplacement(opts = {}) {
+    const { name, qty = 1, note = '' } = opts;
+    if (!name) return;
+    ordDB.order = ordDB.order || emptyOrderState();
+    ordDB.order.lines = ordDB.order.lines || {};
+    const match = ordDB.catalog.items.find((i) =>
+      i.name.toLowerCase().includes(name.toLowerCase()) || (i.nameAr && i.nameAr.includes(name))
+    );
+    const itemId = match ? match.id : 'break_' + Date.now().toString(36);
+    const prev = ordDB.order.lines[itemId] ? ordDB.order.lines[itemId].qty : 0;
+    ordDB.order.lines[itemId] = {
+      qty: prev + Number(qty),
+      unit: match ? match.unit : 'pcs',
+      note: note || ((FOH.i18n && FOH.i18n.lang === 'ar') ? 'تعويض كسر زجاجي' : 'Breakage replacement'),
+    };
+    saveOrdersDB();
+  }
+
+  function confirmOrderReceiving(opts = {}) {
+    const { receivedLines, receiverName, notes } = opts;
+    ordDB.history = ordDB.history || [];
+    ordDB.history.unshift({
+      orderToken: ordDB.order.orderToken,
+      orderDate: (ordDB.order.meta && ordDB.order.meta.orderDate) || (FOH.time ? FOH.time.todayISO() : ''),
+      dispatchedAt: ordDB.order.dispatchedAt,
+      receivedAt: Date.now(),
+      receiverName: receiverName || 'Staff',
+      requestedLines: JSON.parse(JSON.stringify(ordDB.order.lines || {})),
+      receivedLines: receivedLines || JSON.parse(JSON.stringify(ordDB.order.lines || {})),
+      notes: notes || '',
+    });
+    ordDB.order = emptyOrderState();
+    saveOrdersDB();
+  }
+
+  function getOrderHistory() {
+    return ordDB.history || [];
+  }
+
   FOH.ordersStore = {
     ORDERS_DB_KEY,
     emptyOrderState,
@@ -259,5 +309,10 @@
     allowedGroupsForCurrentRole,
     promptEditStock,
     promptStartNewOrder,
+    getOrderStatus,
+    setOrderStatus,
+    addBreakageReplacement,
+    confirmOrderReceiving,
+    getOrderHistory,
   };
 })(window.FOH = window.FOH || {});

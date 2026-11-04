@@ -101,6 +101,9 @@
       // Clipboard write permission denied fallback
     }
     markWarehouseChecklistItemDone();
+    if (store() && store().setOrderStatus) {
+      store().setOrderStatus('DISPATCHED');
+    }
     if (FOH.edit && FOH.edit.toast && FOH.i18n && FOH.i18n.t) {
       FOH.edit.toast(FOH.i18n.t('ordCopied'));
     }

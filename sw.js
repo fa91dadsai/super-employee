@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE = 'super-employee-v49-tips-hamilton';
+const CACHE = 'super-employee-v50-ops-full-sync';
 const PRECACHE = [
   './',
   './index.html',

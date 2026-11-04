@@ -205,6 +205,17 @@
       return;
     }
     if (context) context.onSaved();
+    if (FOH.ordersStore && FOH.ordersStore.addBreakageReplacement) {
+      const tool = FOH.invStore ? FOH.invStore.findVariant(S.inv, brItem.value) : null;
+      const toolName = tool && tool.item ? (tool.item.name || tool.item.nameAr) : '';
+      if (toolName) {
+        FOH.ordersStore.addBreakageReplacement({
+          name: toolName,
+          qty,
+          note: brNote.value.trim() || 'تعويض كسر زجاجي',
+        });
+      }
+    }
     FOH.edit.toast(t('breakSaved'));
     FOH.app.render();
   }

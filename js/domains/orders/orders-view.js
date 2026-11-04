@@ -122,6 +122,100 @@
     });
   }
 
+  function openReceivingModal() {
+    const ar = isAr();
+    const list = store().ordSelectedItems();
+    const overlay = el('div', 'modal-overlay');
+    overlay.style.display = 'flex';
+    overlay.style.zIndex = '9999';
+
+    const dialog = el('div', 'modal-box');
+    dialog.style.maxWidth = '520px';
+    dialog.style.width = '94%';
+    dialog.style.padding = '20px';
+
+    const title = el('h3', '', '📦 ' + (ar ? 'تأكيد استلام طلبية المستودع' : 'Confirm Order Receiving'));
+    const sub = el('p', '', ar ? 'تأكيد وصول الأصناف وتوريدها لمخزون البار والصالة' : 'Verify delivered items & ingest into bar stock');
+    sub.style.color = 'var(--ink2)';
+    sub.style.marginBottom = '12px';
+
+    const itemsBox = el('div', '');
+    itemsBox.style.maxHeight = '280px';
+    itemsBox.style.overflowY = 'auto';
+    itemsBox.style.margin = '10px 0';
+
+    const receivedMap = {};
+    list.forEach((i) => {
+      const line = store().ordLine(i.id);
+      receivedMap[i.id] = line.qty;
+      const row = el('div', 'dayoff-item');
+      row.style.display = 'flex';
+      row.style.justifyContent = 'space-between';
+      row.style.alignItems = 'center';
+      row.style.margin = '6px 0';
+      row.innerHTML = '<div><b>' + i.name + '</b><small style="display:block;color:var(--ink2);">' +
+        (ar ? 'المطلوب: ' : 'Requested: ') + line.qty + ' ' + (line.unit || i.unit) + '</small></div>';
+      const badge = el('span', 'dayoff-badge approved', '✓ ' + line.qty + ' ' + (line.unit || i.unit));
+      row.append(badge);
+      itemsBox.append(row);
+    });
+
+    const btnRow = el('div', '');
+    btnRow.style.display = 'flex';
+    btnRow.style.gap = '8px';
+    btnRow.style.marginTop = '16px';
+
+    const cancelBtn = el('button', 'btn', ar ? 'إلغاء' : 'Cancel');
+    cancelBtn.type = 'button';
+    cancelBtn.style.flex = '1';
+    cancelBtn.addEventListener('click', () => overlay.remove());
+
+    const confirmBtn = el('button', 'btn primary', ar ? '✓ تأكيد الاستلام بالكامل' : '✓ Confirm Full Receipt');
+    confirmBtn.type = 'button';
+    confirmBtn.style.flex = '1.5';
+    confirmBtn.addEventListener('click', () => {
+      store().confirmOrderReceiving({
+        receivedLines: receivedMap,
+        receiverName: (getSession() && getSession().displayName) || S().me.name || 'Staff',
+      });
+      overlay.remove();
+      if (FOH.edit && FOH.edit.toast) {
+        FOH.edit.toast(ar ? 'تم تأكيد استلام الطلبية والتوريد بنجاح ✓' : 'Order received & archived ✓');
+      }
+      ordGo('home');
+    });
+
+    btnRow.append(cancelBtn, confirmBtn);
+    dialog.append(title, sub, itemsBox, btnRow);
+    overlay.append(dialog);
+    document.body.append(overlay);
+  }
+
+  function renderReceivingBanner(ar) {
+    const banner = el('div', 'ord-receiving-banner');
+    banner.style.background = 'linear-gradient(135deg, rgba(245, 158, 11, 0.16), rgba(217, 119, 6, 0.24))';
+    banner.style.border = '1px solid rgba(245, 158, 11, 0.4)';
+    banner.style.borderRadius = '12px';
+    banner.style.padding = '12px 16px';
+    banner.style.marginBottom = '14px';
+    banner.style.display = 'flex';
+    banner.style.justifyContent = 'space-between';
+    banner.style.alignItems = 'center';
+    banner.style.flexWrap = 'wrap';
+    banner.style.gap = '10px';
+
+    const info = el('div', '');
+    info.innerHTML = '<strong>📦 ' + (ar ? 'طلبية المستودع قيد التوريد (Dispatched)' : 'Warehouse Delivery Dispatched') + '</strong>' +
+      '<small style="display:block;color:var(--ink2);">' + (ar ? 'تم إرسال الطلبية بنجاح. اضغط عند وصول البضاعة لتأكيد الاستلام.' : 'Order was sent. Tap when goods arrive to confirm receiving.') + '</small>';
+
+    const recvBtn = el('button', 'btn primary small', ar ? '✓ استلام الطلبية والتوريد' : '✓ Receive & Ingest');
+    recvBtn.type = 'button';
+    recvBtn.addEventListener('click', () => openReceivingModal());
+
+    banner.append(info, recvBtn);
+    return banner;
+  }
+
   // ---- Page 1: Home Groups ----
   function renderHomeGroups(root) {
     const ar = isAr();
@@ -149,6 +243,9 @@
       el('h2', 'ord-page-title', ar ? 'طلبيات البار ومستلزمات الصالة' : 'Bar & FOH Warehouse Orders'),
       el('p', 'ord-page-sub', ar ? 'اختر القسم المطلوب لإعداد طلبيته وتحديد الكميات المطلوبة للمستودع:' : 'Select a section to prepare warehouse requisition:')
     );
+    if (store().getOrderStatus() === 'DISPATCHED') {
+      headWrap.append(renderReceivingBanner(ar));
+    }
     root.append(headWrap);
 
     const secCards = el('div', 'ord-sec-grid');

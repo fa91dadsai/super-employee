@@ -1,5 +1,5 @@
 // foh-opening/js/domains/tasks/day-off.js
-// Employee Day-Off & Schedule Availability Request System
+// Employee Day-Off & Schedule Availability Request System Linked to OpsFlow Schedule
 (function (FOH) {
   'use strict';
 
@@ -7,22 +7,23 @@
   const S = FOH.state;
   const { t } = FOH.i18n;
   const { el } = FOH.view;
-  const SESSION_KEY = 'foh-opening.erpSession.v1';
 
   function isAr() {
-    return FOH.i18n.lang === 'ar';
+    return FOH.i18n ? FOH.i18n.lang === 'ar' : true;
   }
 
   function getSession() {
-    return FOH.sessionAuth ? FOH.sessionAuth.getSession() : null;
+    return (FOH.auth && FOH.auth.getSession) ? FOH.auth.getSession() : (FOH.sessionAuth ? FOH.sessionAuth.getSession() : null);
   }
 
   function apiCall(u, m, d) {
     return FOH.cloudSync ? FOH.cloudSync.apiCall(u, m, d) : Promise.resolve(null);
   }
 
-  function renderProfileBody(el) {
-    if (FOH.profileDialog) FOH.profileDialog.renderProfileBody(el);
+  function renderProfileBody(root) {
+    if (FOH.profileDialog && FOH.profileDialog.renderProfileBody) {
+      FOH.profileDialog.renderProfileBody(root);
+    }
   }
 
   // ---- Day-Off Requests Linked to OpsFlow Schedule (`duty-roster`) ----
@@ -33,7 +34,7 @@
       const raw = localStorage.getItem(DAYOFF_KEY);
       if (raw) return JSON.parse(raw);
     } catch (err) { /* Storage read/write fallback */ }
-    const tomorrow = FOH.schedule.addDays(FOH.time.todayISO(), 2);
+    const tomorrow = FOH.schedule ? FOH.schedule.addDays(FOH.time.todayISO(), 2) : '2026-11-06';
     const seed = [
       {
         id: 'do_seed_1',
@@ -56,6 +57,21 @@
     try {
       localStorage.setItem(DAYOFF_KEY, JSON.stringify(list));
     } catch (err) { /* Storage read/write fallback */ }
+  }
+
+  function checkDateCoverage(reqDate, currentStaffId) {
+    const list = loadDayOffList();
+    const concurrent = list.filter((r) => r.date === reqDate && r.staffId !== currentStaffId && r.status !== 'rejected');
+    return {
+      hasConflict: concurrent.length > 0,
+      conflictNames: concurrent.map((c) => c.staffName),
+    };
+  }
+
+  function isStaffOffToday(staffId) {
+    const today = FOH.time ? FOH.time.todayISO() : new Date().toISOString().slice(0, 10);
+    const list = loadDayOffList();
+    return list.some((r) => r.staffId === staffId && r.date === today && r.status === 'approved');
   }
 
   function buildDowSelector(opts) {
@@ -103,7 +119,7 @@
 
   async function handleDayOffSubmit(opts) {
     const { dateIn, kindSel, dowSel, reasonIn, inDialog, session } = opts;
-    const reqDate = dateIn.value || FOH.schedule.addDays(S.date, 1);
+    const reqDate = dateIn.value || (FOH.schedule ? FOH.schedule.addDays(S.date, 1) : S.date);
     const staffId = (session && session.staffId) || S.me.staffId || 'staff_me';
     const staffName = (session && session.displayName) || S.me.name || 'Staff';
     const kind = kindSel.value || 'off';
@@ -143,21 +159,11 @@
 
     reasonIn.value = '';
     FOH.edit.toast(t('dayOffSentToast'));
-    if (inDialog && !$('profileSheet').hidden && $('profileSheet').open) renderProfileBody();
+    if (inDialog && $('profileSheet') && !$('profileSheet').hidden && $('profileSheet').open) renderProfileBody();
     FOH.app.render();
   }
 
-  function renderDayOffForm(opts) {
-    const { inDialog, session, ar } = opts;
-    const form = el('div', 'dayoff-form');
-    const row1 = el('div', 'two');
-
-    const dateLbl = el('label', '', t('dayOffDateLbl'));
-    const dateIn = el('input', 'in');
-    dateIn.type = 'date';
-    dateIn.value = FOH.schedule.addDays(S.date, 1);
-    dateLbl.append(dateIn);
-
+  function createDayOffKindSelector(ar) {
     const kindLbl = el('label', '', t('dayOffKindLbl'));
     const kindSel = el('select', 'in');
     [
@@ -172,24 +178,26 @@
       kindSel.append(o);
     });
     kindLbl.append(kindSel);
+    return { kindLbl, kindSel };
+  }
+
+  function renderDayOffForm(opts) {
+    const { inDialog, session, ar } = opts;
+    const form = el('div', 'dayoff-form');
+    const row1 = el('div', 'two');
+
+    const dateLbl = el('label', '', t('dayOffDateLbl'));
+    const dateIn = el('input', 'in');
+    dateIn.type = 'date';
+    dateIn.value = FOH.schedule ? FOH.schedule.addDays(S.date, 1) : S.date;
+    dateLbl.append(dateIn);
+
+    const { kindLbl, kindSel } = createDayOffKindSelector(ar);
     row1.append(dateLbl, kindLbl);
 
     const dowLbl = el('label', '', t('dayOffPrefDowLbl'));
     const dowSel = el('select', 'in');
     buildDowSelector({ ar, dowSel, dowLbl });
-
-    if (FOH.modalPicker && FOH.modalPicker.enhanceSelect) {
-      FOH.modalPicker.enhanceSelect(kindSel, {
-        title: ar ? 'اختر نوع طلب العطلة' : 'Select Request Type',
-        subtitle: ar ? 'حدد طبيعة العطلة المطلوبة لتثبيتها في الجدول' : 'Select category to sync with OpsFlow Schedule',
-        icon: '🏖️',
-      });
-      FOH.modalPicker.enhanceSelect(dowSel, {
-        title: ar ? 'اختر يوم العطلة الأسبوعي المفضل' : 'Select Preferred Off Day',
-        subtitle: ar ? 'اليوم المفضل لك للاستراحة الأسبوعية' : 'Your preferred weekly rest day',
-        icon: '🗓️',
-      });
-    }
 
     const reasonIn = el('input', 'in');
     reasonIn.placeholder = t('dayOffReasonPlaceholder');
@@ -216,7 +224,7 @@
         reviewed_by_name: req.reviewedBy,
       });
     }
-    if (inDialog && $('profileSheet').open) renderProfileBody();
+    if (inDialog && $('profileSheet') && $('profileSheet').open) renderProfileBody();
     FOH.app.render();
   }
 
@@ -248,9 +256,14 @@
     const row = el('div', 'dayoff-item');
     const info = el('div', '');
     const kindMap = { off: t('dayOffKindOff'), comp_off: t('dayOffKindComp'), leave: t('dayOffKindLeave') };
+    
+    // Check coverage conflicts
+    const coverage = checkDateCoverage(req.date, req.staffId);
+    const coverageWarning = coverage.hasConflict ? ` · ⚠️ تغطية: ${coverage.conflictNames.join(', ')}` : '';
+
     info.append(
       el('b', '', `👤 ${req.staffName} · 📅 ${req.date}`),
-      el('div', '', `${kindMap[req.kind] || req.kind}${req.reason ? ' — ' + req.reason : ''}`)
+      el('div', '', `${kindMap[req.kind] || req.kind}${req.reason ? ' — ' + req.reason : ''}${coverageWarning}`)
     );
     row.append(info);
 
@@ -306,6 +319,8 @@
   FOH.dayOff = {
     loadDayOffList,
     saveDayOffList,
+    checkDateCoverage,
+    isStaffOffToday,
     buildDayOffSection,
   };
 
