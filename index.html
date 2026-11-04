@@ -16058,8 +16058,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     openSectionModal,
     getStaffList,
     canCurrentUserAssign,
-    ROLE_OPTIONS,
-    DEPT_ICON_PRESETS
+    ROLE_OPTIONS
   };
 })(window.FOH = window.FOH || {});
 
@@ -22698,32 +22697,14 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     renderOfficialCloseConfirmation(dlg, box, { h, nowHM, extMins, doneClosingCount, allClosingLeaves, leftClosingCount, daySt, myName, roleMeta }, ar);
   }
 
-  FOH.opsLifecycle = {
-    defaultOpsConfig,
-    loadOpsConfig,
-    saveOpsConfig,
-    toBizMinutes,
-    formatTime12Ar,
-    getEffectiveNowHM,
-    loadOpsDayState,
-    saveOpsDayState,
+  FOH.opsCloseDialog = {
+    openCloseRestaurantDialog,
     ensureUpgradedClosingSections,
     isClosingSheetActive,
     activateClosingSheet,
+    renderClosingDeptFilterBar,
     setActiveClosingDeptFilter: (d) => { activeClosingDeptFilter = d; },
     getActiveClosingDeptFilter: () => activeClosingDeptFilter,
-    renderClosingDeptFilterBar,
-    SUPER_ROLES_META,
-    PERM_LABELS,
-    renderOpsLifecycleBar,
-    openCloseRestaurantDialog,
-  };
-  FOH.SUPER_ROLES_META = SUPER_ROLES_META;
-  FOH.PERM_LABELS = PERM_LABELS;
-})(window.FOH = window.FOH || {});
-
-  FOH.opsCloseDialog = {
-    openCloseRestaurantDialog,
   };
 })(window.FOH = window.FOH || {});
 
@@ -23145,6 +23126,25 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   }
 
 
+  function ensureUpgradedClosingSections() {
+    if (FOH.opsCloseDialog && FOH.opsCloseDialog.ensureUpgradedClosingSections) {
+      return FOH.opsCloseDialog.ensureUpgradedClosingSections();
+    }
+  }
+
+  function isClosingSheetActive() {
+    if (FOH.opsCloseDialog && FOH.opsCloseDialog.isClosingSheetActive) {
+      return FOH.opsCloseDialog.isClosingSheetActive();
+    }
+    return false;
+  }
+
+  function activateClosingSheet() {
+    if (FOH.opsCloseDialog && FOH.opsCloseDialog.activateClosingSheet) {
+      return FOH.opsCloseDialog.activateClosingSheet();
+    }
+  }
+
   FOH.opsLifecycle = {
     loadOpsConfig,
     saveOpsConfig,
@@ -23153,7 +23153,12 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     saveOpsDayState,
     computeOpsPhase,
     renderOpsLifecycleBar,
-    openCloseRestaurantDialog,
+    openCloseRestaurantDialog: (opts) => (FOH.opsCloseDialog ? FOH.opsCloseDialog.openCloseRestaurantDialog(opts) : null),
+    ensureUpgradedClosingSections,
+    isClosingSheetActive,
+    activateClosingSheet,
+    setActiveClosingDeptFilter: (d) => FOH.opsCloseDialog && FOH.opsCloseDialog.setActiveClosingDeptFilter(d),
+    getActiveClosingDeptFilter: () => (FOH.opsCloseDialog ? FOH.opsCloseDialog.getActiveClosingDeptFilter() : 'all'),
   };
 })(window.FOH = window.FOH || {});
 
