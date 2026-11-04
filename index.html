@@ -3402,8 +3402,8 @@ body.dark .shift-nav-tab.on .shift-tab-time-pill {
 /* ============================================================================
    13B. MODE SWITCHER (CHECKLIST VS TASKS) & DEPARTMENT SEGMENT PANELS
    ============================================================================ */
-.ops-mode-panel,
-.dept-segment-panel {
+.ops-mode-panel:not([hidden]),
+.dept-segment-panel:not([hidden]) {
   display: flex !important;
   flex-direction: column !important;
   align-items: stretch !important;
@@ -3417,6 +3417,13 @@ body.dark .shift-nav-tab.on .shift-tab-time-pill {
   background: var(--card) !important;
   border: 1.5px solid var(--line) !important;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04) !important;
+}
+
+.ops-mode-panel[hidden],
+.dept-segment-panel[hidden],
+.ops-mode-panel.hidden,
+.dept-segment-panel.hidden {
+  display: none !important;
 }
 
 .ops-mode-grid {
@@ -14989,6 +14996,17 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   function openSectionModal(targetSec, opts = {}) {
     const isNew = typeof opts === 'boolean' ? opts : !!(opts && opts.isNew);
     const ar = isAr();
+    const sess = FOH.sessionAuth ? FOH.sessionAuth.getSession() : null;
+    const isMgr = !!(sess && (sess.isManager || sess.roleId === 'manager'));
+    const canEdit = (FOH.gov && FOH.gov.canCurrentUserEditChecklist) ? FOH.gov.canCurrentUserEditChecklist() : isMgr;
+
+    if (!isMgr && !canEdit) {
+      if (FOH.edit && FOH.edit.toast) {
+        FOH.edit.toast(ar ? '⚠️ إعدادات وتخصيص الأقسام متاحة للمدير فقط' : '⚠️ Section customization is restricted to managers');
+      }
+      return;
+    }
+
     let dlg = $('sectionAssignModal');
     if (!dlg) {
       dlg = el('dialog', 'sheet section-assign-dialog');
@@ -19568,8 +19586,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     return {
       fadi: { username: 'fadi', firstName: 'Fadi', lastName: 'Al-Masri', nickname: 'Fadi', phone: '+962 7 9000 1001', email: 'fadi.m@ceenlounge.com', inviteCode: 'CEEN-1001', displayName: ar ? 'فادي (سوبر مانجر)' : 'Fadi (Super Manager)', roleName: '👑 Super Manager', roleAr: '👑 سوبر مانجر', isManager: true, shift: '12:00 – 02:00 · Restaurant Manager' },
       ali: { username: 'ali', firstName: 'Ali', lastName: 'Hassan', nickname: 'Ali', phone: '+962 7 9000 2002', email: 'ali.h@ceenlounge.com', inviteCode: 'CEEN-2002', displayName: ar ? 'علي (سوبر كابتن)' : 'Ali (Super Captain)', roleName: '🎖️ Super Captain', roleAr: '🎖️ سوبر كابتن', isManager: false, isCaptain: true, shift: '12:00 – 02:00 · Floor Captain' },
-      maher: { username: 'maher', firstName: 'Maher', lastName: 'Zaid', nickname: 'Leo', phone: '+962 7 9000 4004', email: 'maher.z@ceenlounge.com', inviteCode: 'CEEN-4004', displayName: ar ? 'ماهر (سوبر بارتندر)' : 'Maher (Super Bartender)', roleName: '🍸 Super Bartender', roleAr: '🍸 سوبر بارتندر', isManager: false, shift: '12:00 – 02:00 · Main Bar Lead' },
-      sara: { username: 'sara', firstName: 'Sara', lastName: 'Khoury', nickname: 'Sara', phone: '+962 7 9000 3003', email: 'sara.k@ceenlounge.com', inviteCode: 'CEEN-3003', displayName: ar ? 'سارة (سوبر ويتر)' : 'Sara (Super Waiter)', roleName: '⭐ Super Waiter', roleAr: '⭐ سوبر ويتر', isManager: false, shift: '12:00 – 02:00 · Indoor & Terrace Waiter' },
+      maher: { username: 'maher', firstName: 'Maher', lastName: 'Zaid', nickname: 'Leo', phone: '+962 7 9000 4004', email: 'maher.z@ceenlounge.com', inviteCode: 'CEEN-4004', displayName: ar ? 'ماهر (سوبر بارتندر)' : 'Maher (Super Bartender)', roleName: '🍸 Super Bartender', roleAr: '🍸 سوبر بارتندر', isManager: false, isCaptain: false, shift: '12:00 – 02:00 · Main Bar Lead' },
+      sara: { username: 'sara', firstName: 'Sara', lastName: 'Khoury', nickname: 'Sara', phone: '+962 7 9000 3003', email: 'sara.k@ceenlounge.com', inviteCode: 'CEEN-3003', displayName: ar ? 'سارة (سوبر ويتر)' : 'Sara (Super Waiter)', roleName: '⭐ Super Waiter', roleAr: '⭐ سوبر ويتر', isManager: false, isCaptain: false, shift: '12:00 – 02:00 · Indoor & Terrace Waiter' },
     };
   }
 
@@ -19774,8 +19792,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   const DEFAULT_ROLE_PERMISSIONS = {
     super_manager: { canCloseRestaurant: true, canEarlyCloseOverride: true, canTriggerLastOrder: true, canSignoffDeptClosing: true, canEditChecklist: true, canSubmitOrders: true, canManageAcademy: true, canViewTeamTips: true },
     super_captain: { canCloseRestaurant: true, canEarlyCloseOverride: false, canTriggerLastOrder: true, canSignoffDeptClosing: true, canEditChecklist: true, canSubmitOrders: true, canManageAcademy: true, canViewTeamTips: true },
-    super_bartender: { canCloseRestaurant: false, canEarlyCloseOverride: false, canTriggerLastOrder: true, canSignoffDeptClosing: true, canEditChecklist: true, canSubmitOrders: true, canManageAcademy: true, canViewTeamTips: false },
-    super_waiter: { canCloseRestaurant: false, canEarlyCloseOverride: false, canTriggerLastOrder: true, canSignoffDeptClosing: true, canEditChecklist: true, canSubmitOrders: true, canManageAcademy: false, canViewTeamTips: false },
+    super_bartender: { canCloseRestaurant: false, canEarlyCloseOverride: false, canTriggerLastOrder: true, canSignoffDeptClosing: true, canEditChecklist: false, canSubmitOrders: true, canManageAcademy: true, canViewTeamTips: false },
+    super_waiter: { canCloseRestaurant: false, canEarlyCloseOverride: false, canTriggerLastOrder: true, canSignoffDeptClosing: true, canEditChecklist: false, canSubmitOrders: true, canManageAcademy: false, canViewTeamTips: false },
     staff: { canCloseRestaurant: false, canEarlyCloseOverride: false, canTriggerLastOrder: false, canSignoffDeptClosing: false, canEditChecklist: false, canSubmitOrders: false, canManageAcademy: false, canViewTeamTips: false },
   };
 
@@ -19798,6 +19816,9 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       Object.keys(d.rolePermissions).forEach((rk) => {
         if (raw.rolePermissions && raw.rolePermissions[rk]) {
           mergedPerms[rk] = { ...d.rolePermissions[rk], ...raw.rolePermissions[rk] };
+        }
+        if (rk === 'super_waiter' || rk === 'super_bartender' || rk === 'staff') {
+          mergedPerms[rk].canEditChecklist = false;
         }
       });
       return {
@@ -24930,17 +24951,17 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
     const loginScr = $('loginScreen');
     const isLoggedOut = document.body.classList.contains('login-open') || (loginScr && !loginScr.hidden);
-    if (isLoggedOut || S().editing) {
-      panel.hidden = true;
-      return;
-    }
-    panel.hidden = false;
-    panel.replaceChildren();
-
-    const ar = isAr();
     const curView = S().view;
     const isChecklist = curView === 'opening';
     const isTasks = curView === 'mine';
+    const shouldShow = (isChecklist || isTasks) && !isLoggedOut && !S().editing;
+
+    panel.hidden = !shouldShow;
+    panel.style.setProperty('display', shouldShow ? 'flex' : 'none', 'important');
+    if (!shouldShow) return;
+
+    panel.replaceChildren();
+    const ar = isAr();
     const ckStats = getChecklistRemaining();
     const tkStats = getTasksCount();
 
@@ -24982,6 +25003,11 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   }
 
   function renderSectionGearButton(sec, ar) {
+    const sess = FOH.sessionAuth ? FOH.sessionAuth.getSession() : null;
+    const isMgr = !!(sess && (sess.isManager || sess.roleId === 'manager'));
+    const canEdit = (FOH.gov && FOH.gov.canCurrentUserEditChecklist) ? FOH.gov.canCurrentUserEditChecklist() : isMgr;
+    if (!isMgr && !canEdit) return el('span', '');
+
     const gearBtn = el('button', 'dept-tile-gear');
     gearBtn.type = 'button';
     gearBtn.title = ar ? 'تخصيص وإسناد الصلاحيات للقسم' : 'Customize & Assign Section Permissions';
@@ -25117,36 +25143,44 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       mainEl.insertBefore(panel, sectionsEl);
     }
 
-    const isChecklistView = S().view === 'opening' && !S().editing;
-    panel.hidden = !isChecklistView;
-    if (panel.hidden) return;
+    const loginScr = $('loginScreen');
+    const isLoggedOut = document.body.classList.contains('login-open') || (loginScr && !loginScr.hidden);
+    const curView = S().view;
+    const isChecklistView = curView === 'opening' && !isLoggedOut && !S().editing;
+
+    const sess = FOH.sessionAuth ? FOH.sessionAuth.getSession() : null;
+    const isMgr = !!(sess && (sess.isManager || sess.roleId === 'manager'));
+    const canEdit = (FOH.gov && FOH.gov.canCurrentUserEditChecklist) ? FOH.gov.canCurrentUserEditChecklist() : isMgr;
+
+    // Strict Governance: Bento Hub is shown ONLY inside checklist view for Manager or staff with edit delegation
+    const shouldShow = isChecklistView && (isMgr || canEdit);
+    panel.hidden = !shouldShow;
+    panel.style.setProperty('display', shouldShow ? 'flex' : 'none', 'important');
+    if (!shouldShow) return;
 
     const chipsEl = $('chips');
     if (chipsEl) chipsEl.style.display = 'none';
 
-    panel.replaceChildren();
-
     const ar = isAr();
     const allSecs = (S().tpl && Array.isArray(S().tpl.sections)) ? S().tpl.sections : [];
-    const sess = FOH.sessionAuth ? FOH.sessionAuth.getSession() : null;
-    const isMgr = !!(sess && (sess.isManager || sess.roleId === 'manager'));
     const roleKey = FOH.roleIdentity ? FOH.roleIdentity.getCurrentSuperRoleKey() : 'staff';
     const uname = (sess && sess.username) || '';
     const isAllowed = FOH.isSectionAllowedForRole || ((s) => true);
-
     const visibleSecs = isMgr ? allSecs : allSecs.filter((s) => isAllowed(s, roleKey, false, uname));
 
+    populateDeptPanel(panel, { visibleSecs, allSecs, isMgr, ar });
+  }
+
+  function populateDeptPanel(panel, opts = {}) {
+    const { visibleSecs, allSecs, isMgr, ar } = opts;
+    panel.replaceChildren();
     if (isMgr) {
       panel.append(renderManagerTopFilterBar(activeDept, allSecs, ar));
     }
-
     panel.append(renderDeptSegmentHeader(activeDept, visibleSecs, { isMgr, ar }));
-
     const grid = el('div', 'dept-bento-grid');
     grid.append(createAllTile(getChecklistRemaining(), activeDept === 'all', ar));
-    visibleSecs.forEach((sec) => {
-      grid.append(createSectionTile(sec, activeDept, ar));
-    });
+    visibleSecs.forEach((sec) => grid.append(createSectionTile(sec, activeDept, ar)));
     panel.append(grid);
   }
 
@@ -25155,7 +25189,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     const secs = isLegacy ? opts : ((opts && opts.secs) || []);
     const ar = isLegacy ? !!arguments[3] : (opts && typeof opts.ar === 'boolean' ? opts.ar : isAr());
     let banner = $('deptIsolatedBanner');
-    if (activeDept !== 'all') {
+    if (activeDept !== 'all' && S().view === 'opening') {
       const curSec = secs.find((s) => s.id === activeDept || s.dept === activeDept || ('sec-' + s.dept) === activeDept);
       const sTitle = curSec ? (ar ? (curSec.titleAr || curSec.title) : (curSec.title || curSec.titleAr)) : activeDept;
       const sIco = curSec ? (curSec.icon || '📌') : '📌';
