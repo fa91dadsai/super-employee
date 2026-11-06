@@ -27427,93 +27427,14 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     }
   }
 
-  function getTasksCount() {
-    try {
-      const states = FOH.tasksView ? FOH.tasksView.todayStates().filter((st) => FOH.tasksView.isMine(st.task)) : [];
-      let pending = 0;
-      states.forEach((st) => { if (!st.doneEntry) pending++; });
-      return { total: states.length, pending };
-    } catch (err) {
-      // Safe fallback when tasks view is initializing
-      return { total: 0, pending: 0 };
-    }
-  }
-
-  function createChecklistModeTab(isChecklist, ckStats, ar) {
-    const ckBtn = el('button', 'shift-nav-tab' + (isChecklist ? ' on' : ''));
-    ckBtn.type = 'button';
-    ckBtn.innerHTML =
-      '<div class="shift-tab-top"><span class="shift-tab-ico">📋</span>' +
-      '<b class="shift-tab-title">' + (ar ? 'الشيك ليست التشغيلي' : 'Shift Checklist') + '</b>' +
-      (isChecklist ? '<span class="shift-now-dot-micro"></span>' : '') + '</div>' +
-      '<div class="shift-tab-time-pill">' + (ar ? (ckStats.done + '/' + ckStats.total + ' منجز · ' + ckStats.left + ' متبقي') : (ckStats.done + '/' + ckStats.total + ' done · ' + ckStats.left + ' left')) + '</div>';
-    ckBtn.addEventListener('click', () => {
-      if (navigator.vibrate) navigator.vibrate(10);
-      if (FOH.superEmployee && FOH.superEmployee.switchView) FOH.superEmployee.switchView('opening');
-      else if (FOH.navigation && FOH.navigation.switchView) FOH.navigation.switchView('opening');
-      else { S().view = 'opening'; FOH.app.render(); }
-    });
-    return ckBtn;
-  }
-
-  function createTasksModeTab(isTasks, tkStats, ar) {
-    const tkBtn = el('button', 'shift-nav-tab' + (isTasks ? ' on' : ''));
-    tkBtn.type = 'button';
-    tkBtn.innerHTML =
-      '<div class="shift-tab-top"><span class="shift-tab-ico">🎯</span>' +
-      '<b class="shift-tab-title">' + (ar ? 'المهام والتكليفات' : 'Assigned Tasks') + '</b>' +
-      (isTasks ? '<span class="shift-now-dot-micro"></span>' : '') + '</div>' +
-      '<div class="shift-tab-time-pill">' + (ar ? (tkStats.pending + ' مهمة مطلوبة اليوم') : (tkStats.pending + ' tasks due today')) + '</div>';
-    tkBtn.addEventListener('click', () => {
-      if (navigator.vibrate) navigator.vibrate(10);
-      if (FOH.superEmployee && FOH.superEmployee.switchView) FOH.superEmployee.switchView('mine');
-      else if (FOH.navigation && FOH.navigation.switchView) FOH.navigation.switchView('mine');
-      else { S().view = 'mine'; FOH.app.render(); }
-    });
-    return tkBtn;
-  }
-
   // ---- 1. Mode Switcher (Checklist vs Tasks) ----
+  // Removed per FOH Touch UX & Navigation standards:
+  // Switching between Shift Checklist and My Tasks is handled exclusively by the dedicated #tabBar ('Home' & 'My Tasks').
   function renderModeSwitcher() {
-    const mainEl = $('appMain');
-    if (!mainEl) return;
-
-    let panel = $('opsModeSwitcher');
-    if (!panel) {
-      panel = el('div', 'ops-mode-panel run-only');
-      panel.id = 'opsModeSwitcher';
-      mainEl.prepend(panel);
+    const panel = document.getElementById('opsModeSwitcher');
+    if (panel) {
+      panel.remove();
     }
-
-    const loginScr = $('loginScreen');
-    const isLoggedOut = document.body.classList.contains('login-open') || (loginScr && !loginScr.hidden);
-    const curView = S().view;
-    const isChecklist = curView === 'opening';
-    const isTasks = curView === 'mine';
-    const shouldShow = (isChecklist || isTasks) && !isLoggedOut && !S().editing;
-
-    panel.hidden = !shouldShow;
-    panel.style.setProperty('display', shouldShow ? 'flex' : 'none', 'important');
-    if (!shouldShow) return;
-
-    panel.replaceChildren();
-    const ar = isAr();
-    const ckStats = getChecklistRemaining();
-    const tkStats = getTasksCount();
-
-    const head = el('div', 'shift-nav-head');
-    head.innerHTML =
-      '<div class="shift-nav-head-left">' +
-      '<span class="shift-clock-chip">⚡ <b>' + (ar ? 'نمط العمليات' : 'Operations') + '</b></span>' +
-      '<span class="shift-status-chip"><span class="shift-live-pulse-dot"></span>' +
-      '<span>' + (isChecklist ? (ar ? 'شيت الشفت النشط' : 'Active Shift Sheet') : (ar ? 'مهام الموظف اليومية' : 'Personal Assigned Tasks')) + '</span>' +
-      '</span></div>';
-    panel.append(head);
-
-    const grid = el('nav', 'shift-nav-grid ops-mode-grid');
-    grid.setAttribute('aria-label', 'Switch Mode: Checklist vs Tasks');
-    grid.append(createChecklistModeTab(isChecklist, ckStats, ar), createTasksModeTab(isTasks, tkStats, ar));
-    panel.append(grid);
   }
 
   // ---- 2. Helpers for Department Tiles ----
