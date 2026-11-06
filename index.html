@@ -13775,8 +13775,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       phone: '+962 7 9000 1001',
       email: 'fadi.m@ceenlounge.com',
       inviteCode: 'CEEN-1001',
-      displayName: 'Fadi (Super Manager)',
-      displayNameAr: 'فادي (سوبر مانجر)',
+      displayName: 'Fadi Al-Masri',
+      displayNameAr: 'فادي المصري',
       roleName: '👑 Super Manager',
       roleAr: '👑 سوبر مانجر',
       isManager: true,
@@ -13795,8 +13795,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       phone: '+962 7 9000 2002',
       email: 'ali.h@ceenlounge.com',
       inviteCode: 'CEEN-2002',
-      displayName: 'Ali (Super Captain)',
-      displayNameAr: 'علي (سوبر كابتن)',
+      displayName: 'Ali Hassan',
+      displayNameAr: 'علي حسن',
       roleName: '🎖️ Super Captain',
       roleAr: '🎖️ سوبر كابتن',
       isManager: false,
@@ -13816,8 +13816,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       phone: '+962 7 9000 3003',
       email: 'sara.k@ceenlounge.com',
       inviteCode: 'CEEN-3003',
-      displayName: 'Sara (Super Waiter)',
-      displayNameAr: 'سارة (سوبر ويتر)',
+      displayName: 'Sara Khoury',
+      displayNameAr: 'سارة خوري',
       roleName: '⭐ Super Waiter',
       roleAr: '⭐ سوبر ويتر',
       isManager: false,
@@ -13836,8 +13836,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       phone: '+962 7 9000 4004',
       email: 'maher.z@ceenlounge.com',
       inviteCode: 'CEEN-4004',
-      displayName: 'Maher (Super Bartender)',
-      displayNameAr: 'ماهر (سوبر بارتندر)',
+      displayName: 'Maher Zaid',
+      displayNameAr: 'ماهر زيد',
       roleName: '🍸 Super Bartender',
       roleAr: '🍸 سوبر بارتندر',
       isManager: false,
@@ -13923,10 +13923,21 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   let showPreviewBar = false;
   let session = null;
 
+  function cleanRoleParens(str) {
+    return typeof str === 'string' ? str.replace(/\s*\([^)]*\)/g, '').trim() : str;
+  }
+
   function loadSession() {
     try {
       const raw = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
-      return raw ? JSON.parse(raw) : null;
+      if (!raw) return null;
+      const s = JSON.parse(raw);
+      if (s) {
+        if (s.user) s.user = cleanRoleParens(s.user);
+        if (s.displayName) s.displayName = cleanRoleParens(s.displayName);
+        if (s.displayNameAr) s.displayNameAr = cleanRoleParens(s.displayNameAr);
+      }
+      return s;
     } catch (err) {
       /* Session load storage fallback */
       return null;
@@ -28652,29 +28663,30 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   function renderHeroHeader(opts) {
     const { titleHtml, subHtml, pct, all, ar } = opts;
     const headerRow = el('div', 'rlh-header-row');
-    const textCol = el('div', 'rlh-text-col');
-    textCol.innerHTML = '<h3>' + titleHtml + '</h3><p>' + subHtml + '</p>';
+    const titleBlock = el('div', 'rlh-title-block');
+    titleBlock.innerHTML = '<h3 class="rlh-title">' + titleHtml + '</h3><p class="rlh-sub">' + subHtml + '</p>';
 
-    const badgeCol = el('div', 'rlh-badge-col');
-    badgeCol.innerHTML = '<span class="rlh-pct-badge">' + pct + '%</span>' +
-      '<small>' + all.done + '/' + all.total + ' ' + (ar ? 'مكتمل' : 'done') + '</small>';
+    const kpiBadge = el('div', 'rlh-kpi-badge');
+    kpiBadge.innerHTML = '<div class="rlh-kpi-num">' + pct + '<small>%</small></div>' +
+      '<div class="rlh-kpi-sub">' + all.done + '/' + all.total + ' ' + (ar ? 'منجز' : 'done') + '</div>';
 
-    headerRow.append(textCol, badgeCol);
+    headerRow.append(titleBlock, kpiBadge);
     return headerRow;
   }
 
   function renderNextUrgentTaskCard(task, ar) {
-    const card = el('div', 'rlh-urgent-card');
+    const card = el('div', 'rlh-next-task');
     const icon = task.isCritical ? '🚨' : '⚡';
     const tag = task.isCritical ? (ar ? 'مهمة حرجة فورية' : 'Critical Immediate') : (ar ? 'المهمة التالية المقترحة' : 'Next Suggested Task');
     const label = ar && task.textAr ? task.textAr : task.text;
 
-    card.innerHTML = '<div class="rlh-urgent-icon">' + icon + '</div>' +
-      '<div class="rlh-urgent-info"><span class="rlh-urgent-tag">' + tag + '</span>' +
-      '<strong class="rlh-urgent-title">' + FOH.escapeHtml(label) + '</strong></div>';
+    card.innerHTML = '<span class="rlh-next-ico">' + icon + '</span>' +
+      '<div class="rlh-next-info"><small>' + tag + '</small>' +
+      '<b title="' + FOH.escapeHtml(label) + '">' + FOH.escapeHtml(label) + '</b></div>';
 
-    const checkBtn = el('button', 'rlh-urgent-action', '✓ ' + (ar ? 'إنجاز الآن' : 'Mark Done'));
+    const checkBtn = el('button', 'rlh-next-done-btn', '✓ ' + (ar ? 'إنجاز' : 'Done'));
     checkBtn.type = 'button';
+    checkBtn.setAttribute('aria-label', (ar ? 'إنجاز المهمة: ' : 'Complete task: ') + label);
     checkBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       S.run.checked[task.id] = FOH.time.nowHM();
@@ -28687,7 +28699,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   }
 
   function renderHeroActions(rKey, ar) {
-    const actions = el('div', 'rlh-actions-row');
+    const actions = el('div', 'rlh-actions');
     if (rKey === 'super_waiter' || rKey === 'staff') {
       const bAcad = el('button', 'rlh-btn', ar ? '🎓 أكاديمية المنيو' : '🎓 Academy');
       bAcad.type = 'button';
@@ -28700,7 +28712,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       actions.append(bOrd);
     } else {
       if (canCurrentUserAssignTasks()) {
-        const bAsg = el('button', 'rlh-btn primary', ar ? '➕ إضافة وتعيين مهمة' : '➕ Assign Task');
+        const bAsg = el('button', 'rlh-btn primary', ar ? '➕ تعيين مهمة' : '➕ Assign Task');
         bAsg.type = 'button';
         bAsg.addEventListener('click', () => openAssignTaskToStaffOrRoleModal());
         actions.append(bAsg);
@@ -28715,23 +28727,24 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
   function resolveHeroText(opts) {
     const { rKey, dispName, leftCount, pct, myStaffId, ar } = opts;
-    const safeDispName = FOH.escapeHtml(dispName || '');
+    const cleanName = (dispName || 'Staff').replace(/\s*\([^)]*\)/g, '').trim();
+    const safeDispName = FOH.escapeHtml(cleanName);
     const isOffToday = FOH.dayOff && FOH.dayOff.isStaffOffToday(myStaffId);
     let titleHtml = '';
     let subHtml = '';
 
     if (rKey === 'super_waiter' || rKey === 'staff') {
-      titleHtml = '⭐ ' + (ar ? 'أهلاً ' + safeDispName + ' · مساحة عمل الويتر' : 'Welcome ' + safeDispName + ' · Waiter Station');
-      subHtml = isOffToday ? (ar ? '🌴 عطلة رسمية معتمدة لليوم (OpsFlow Schedule)' : '🌴 Approved day off today (OpsFlow)') : (ar ? 'لديك ' + leftCount + ' مهام متبقية في شيك ليست هذا الشفت' : leftCount + ' tasks left');
+      titleHtml = '⭐ ' + (ar ? 'أهلاً ' + safeDispName + ' · مساحة الصالة' : 'Welcome ' + safeDispName + ' · Floor Station');
+      subHtml = isOffToday ? (ar ? '🌴 عطلة رسمية معتمدة لليوم (OpsFlow Schedule)' : '🌴 Approved day off today') : (ar ? 'متبقي ' + leftCount + ' مهام في شيك ليست الشفت' : leftCount + ' tasks remaining');
     } else if (rKey === 'super_bartender') {
-      titleHtml = '🍸 ' + (ar ? 'أهلاً ' + safeDispName + ' · محطة عمليات البار' : 'Welcome ' + safeDispName + ' · Bar Operations');
-      subHtml = isOffToday ? (ar ? '🌴 عطلة رسمية معتمدة لليوم (OpsFlow Schedule)' : '🌴 Approved day off today') : (ar ? 'لديك ' + leftCount + ' مهام متبقية لتجهيز البار والطلبيات' : leftCount + ' tasks left');
+      titleHtml = '🍸 ' + (ar ? 'أهلاً ' + safeDispName + ' · محطة البار' : 'Welcome ' + safeDispName + ' · Bar Station');
+      subHtml = isOffToday ? (ar ? '🌴 عطلة رسمية معتمدة لليوم (OpsFlow Schedule)' : '🌴 Approved day off today') : (ar ? 'متبقي ' + leftCount + ' مهام لتجهيز البار والطلبيات' : leftCount + ' tasks remaining');
     } else if (rKey === 'super_captain') {
-      titleHtml = '🎖️ ' + (ar ? 'قيادة الصالة والشفت · الكابتن ' + safeDispName : 'Floor Captain Cockpit · ' + safeDispName);
-      subHtml = ar ? 'جاهزية الصالة ' + pct + '% · إدارة وتعيين مهام الويترية' : 'Floor readiness ' + pct + '% · Waitstaff tasks';
+      titleHtml = '🎖️ ' + (ar ? 'قيادة الصالة · الكابتن ' + safeDispName : 'Floor Captain · ' + safeDispName);
+      subHtml = ar ? 'جاهزية الصالة ' + pct + '% · مهام الشفت' : 'Floor readiness ' + pct + '%';
     } else {
-      titleHtml = '👑 ' + (ar ? 'لوحة القيادة التنفيذية · المدير ' + safeDispName : 'Executive Manager Pulse · ' + safeDispName);
-      subHtml = ar ? 'إشراف كامل على الشيتات الثلاثة، التبس وجاهزية المطعم' : 'Full oversight of shift sheets, tips & readiness';
+      titleHtml = '👑 ' + (ar ? 'لوحة القيادة التنفيذية · ' + safeDispName : 'Executive Pulse · ' + safeDispName);
+      subHtml = ar ? 'إشراف كامل على الشيتات والتبس والجاهزية' : 'Full oversight of shift sheets & readiness';
     }
     return { titleHtml, subHtml };
   }
