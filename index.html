@@ -1203,16 +1203,17 @@ body.dark .report-search {
 .sb-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 90;
+  z-index: 1040;
   background: rgba(9, 13, 20, 0.62);
   backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
 }
 .app-sidebar {
   position: fixed;
   top: 0;
   bottom: 0;
   inset-inline-start: 0;
-  z-index: 100;
+  z-index: 1050;
   width: min(320px, 86vw);
   background: var(--card);
   color: var(--ink);
@@ -1220,8 +1221,9 @@ body.dark .report-search {
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
   display: flex;
   flex-direction: column;
-  padding: calc(14px + env(safe-area-inset-top)) 14px calc(14px + env(safe-area-inset-bottom));
+  padding: calc(14px + env(safe-area-inset-top)) 14px calc(14px + env(safe-area-inset-bottom, 16px));
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   animation: sb-slide 0.2s ease-out;
 }
 @keyframes sb-slide {
@@ -1407,13 +1409,21 @@ body.dark .sb-nav-btn.on {
 }
 .sb-foot {
   display: flex;
+  align-items: center;
   gap: 8px;
-  padding-top: 12px;
-  margin-top: 12px;
+  padding-top: 14px;
+  margin-top: auto;
   border-top: 1px solid var(--line);
+  flex-shrink: 0;
+  padding-bottom: calc(14px + env(safe-area-inset-bottom, 16px));
 }
-.sb-foot-btn { min-height: 40px; font-size: 0.8rem; }
+.sb-foot-btn { min-height: 42px; font-size: 0.82rem; }
 .sb-foot-btn:first-child { flex: 1; }
+
+body.sidebar-open .app-bottom-bar {
+  opacity: 0.35;
+  pointer-events: none;
+}
 
 /* Hide Opening-only chrome when focused on other sections */
 body.focused-non-opening #chips,
@@ -22478,6 +22488,14 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
   let simulatedShiftTime = ''; // '' means real clock FOH.time.nowHM()
 
+  function getSimulatedShiftTime() {
+    return simulatedShiftTime;
+  }
+
+  function setSimulatedShiftTime(val) {
+    simulatedShiftTime = val || '';
+  }
+
   function getEffectiveNowHM() {
     return simulatedShiftTime || FOH.time.nowHM();
   }
@@ -22529,6 +22547,10 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     toBizMinutes,
     formatTime12Ar,
     getEffectiveNowHM,
+    getSimulatedShiftTime,
+    setSimulatedShiftTime,
+    get simulatedShiftTime() { return simulatedShiftTime; },
+    set simulatedShiftTime(v) { simulatedShiftTime = v || ''; },
     loadOpsDayState,
     saveOpsDayState,
   };
@@ -22634,7 +22656,9 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     simHint.style.width = '100%';
     simHint.style.marginBottom = '10px';
     simHint.addEventListener('click', () => {
-      simulatedShiftTime = '02:30';
+      if (FOH.opsConfigStore && FOH.opsConfigStore.setSimulatedShiftTime) {
+        FOH.opsConfigStore.setSimulatedShiftTime('02:30');
+      }
       dlg.close();
       renderOpsLifecycleBar();
       openCloseRestaurantDialog('02:30', toBizMinutes('02:30'), minCloseBiz);
@@ -22837,6 +22861,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   const toBizMinutes = (hm) => (FOH.opsConfigStore && FOH.opsConfigStore.toBizMinutes ? FOH.opsConfigStore.toBizMinutes(hm) : 0);
   const formatTime12Ar = (hm) => (FOH.opsConfigStore && FOH.opsConfigStore.formatTime12Ar ? FOH.opsConfigStore.formatTime12Ar(hm) : hm);
   const getEffectiveNowHM = () => (FOH.opsConfigStore && FOH.opsConfigStore.getEffectiveNowHM ? FOH.opsConfigStore.getEffectiveNowHM() : '12:00');
+  const getSimulatedShiftTime = () => (FOH.opsConfigStore && FOH.opsConfigStore.getSimulatedShiftTime ? FOH.opsConfigStore.getSimulatedShiftTime() : '');
+  const setSimulatedShiftTime = (v) => { if (FOH.opsConfigStore && FOH.opsConfigStore.setSimulatedShiftTime) FOH.opsConfigStore.setSimulatedShiftTime(v); };
   const loadOpsDayState = (d) => (FOH.opsConfigStore && FOH.opsConfigStore.loadOpsDayState ? FOH.opsConfigStore.loadOpsDayState(d) : {});
   const saveOpsDayState = (d, st) => (FOH.opsConfigStore && FOH.opsConfigStore.saveOpsDayState ? FOH.opsConfigStore.saveOpsDayState(d, st) : null);
 
@@ -23048,11 +23074,11 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     ].forEach(([val, txt]) => {
       const o = el('option', '', txt);
       o.value = val;
-      o.selected = simulatedShiftTime === val;
+      o.selected = getSimulatedShiftTime() === val;
       simSel.append(o);
     });
     simSel.addEventListener('change', () => {
-      simulatedShiftTime = simSel.value;
+      setSimulatedShiftTime(simSel.value);
       manualSheetOverride = false;
       FOH.app.render();
     });
@@ -23195,6 +23221,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     PERM_LABELS,
     loadOpsConfig,
     saveOpsConfig,
+    toBizMinutes,
+    formatTime12Ar,
     getEffectiveNowHM,
     loadOpsDayState,
     saveOpsDayState,
@@ -26962,6 +26990,18 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     if (sbBrandStrong) {
       sbBrandStrong.textContent = ar ? ident.titleAr : ident.titleEn;
     }
+    const themeBtn = $('sbThemeToggle');
+    if (themeBtn) {
+      const isDark = document.body.classList.contains('dark');
+      themeBtn.textContent = isDark
+        ? (ar ? '☀️ نهاري' : '☀️ Light')
+        : (ar ? '🌙 ليلي' : '🌙 Dark');
+    }
+    const logoutBtn = $('sbLogoutBtn');
+    if (logoutBtn) {
+      logoutBtn.setAttribute('title', ar ? 'تسجيل الخروج' : 'Log out');
+      logoutBtn.setAttribute('aria-label', ar ? 'تسجيل الخروج' : 'Log out');
+    }
     const sbFoot = document.querySelector('#appSidebar .sb-foot');
     if (sbFoot && !$('sbLangToggle')) {
       const langBtn = el('button', 'btn sb-foot-btn', ar ? '🌐 EN' : '🌐 عربي');
@@ -27031,12 +27071,14 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   function openSidebar() {
     if ($('sidebarBackdrop')) $('sidebarBackdrop').hidden = false;
     if ($('appSidebar')) $('appSidebar').hidden = false;
+    document.body.classList.add('sidebar-open');
     renderSidebarContent();
   }
 
   function closeSidebar() {
     if ($('sidebarBackdrop')) $('sidebarBackdrop').hidden = true;
     if ($('appSidebar')) $('appSidebar').hidden = true;
+    document.body.classList.remove('sidebar-open');
   }
 
   function switchView(nextView) {
@@ -27151,19 +27193,13 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
   function renderSidebarNavList(nav, isMgr, ar) {
     nav.replaceChildren();
-    const all = FOH.model.progress(FOH.model.allLeaves({ sections: FOH.preview.sections() }), S.run.checked);
-    const openLeft = all.total - all.done;
     const ordCount = $('badgeOrders') ? Number($('badgeOrders').textContent || '0') : 0;
 
+    // Secondary / Overflow views only - de-duplicated from Bottom Tab Bar (#tabBar)
     const items = [
-      ['opening', openLeft > 0 ? String(openLeft) : '✓'],
       ['closing_sheet', '🌙'],
-      ['mine', '📋'],
-      ['dayoff', '🏖️'],
       ['orders', ordCount > 0 ? String(ordCount) : ''],
       ['inv', '📦'],
-      ['academy', '🎓'],
-      ['tips', '💰'],
       ['dashboard', '📊'],
       ['profile', '👤'],
     ];
@@ -27189,7 +27225,7 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
       $('sbRestaurantName').textContent = '🍽 ' + (ar ? gov.restaurantNameAr : gov.restaurantName);
     }
     if ($('sbNavTitle')) {
-      $('sbNavTitle').textContent = ar ? 'أقسام التطبيق · اختر للتركيز' : 'SECTIONS · TAP TO FOCUS';
+      $('sbNavTitle').textContent = ar ? 'أقسام إضافية · اختر للتركيز' : 'MORE SECTIONS · TAP TO FOCUS';
     }
 
     const profBox = $('sbProfileCard');
@@ -27909,15 +27945,21 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   }
 
   function toBizMinutes(hm) {
-    return FOH.opsLifecycle ? FOH.opsLifecycle.toBizMinutes(hm) : 0;
+    if (FOH.opsLifecycle && FOH.opsLifecycle.toBizMinutes) return FOH.opsLifecycle.toBizMinutes(hm);
+    if (FOH.opsConfigStore && FOH.opsConfigStore.toBizMinutes) return FOH.opsConfigStore.toBizMinutes(hm);
+    return 0;
   }
 
   function loadOpsConfig() {
-    return FOH.opsLifecycle ? FOH.opsLifecycle.loadOpsConfig() : {};
+    if (FOH.opsLifecycle && FOH.opsLifecycle.loadOpsConfig) return FOH.opsLifecycle.loadOpsConfig();
+    if (FOH.opsConfigStore && FOH.opsConfigStore.loadOpsConfig) return FOH.opsConfigStore.loadOpsConfig();
+    return {};
   }
 
   function loadOpsDayState() {
-    return FOH.opsLifecycle ? FOH.opsLifecycle.loadOpsDayState() : {};
+    if (FOH.opsLifecycle && FOH.opsLifecycle.loadOpsDayState) return FOH.opsLifecycle.loadOpsDayState();
+    if (FOH.opsConfigStore && FOH.opsConfigStore.loadOpsDayState) return FOH.opsConfigStore.loadOpsDayState();
+    return {};
   }
 
   function getCurrentSuperRoleKey() {
