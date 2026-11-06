@@ -22532,6 +22532,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     loadOpsDayState,
     saveOpsDayState,
   };
+  FOH.SUPER_ROLES_META = SUPER_ROLES_META;
+  FOH.PERM_LABELS = PERM_LABELS;
 })(window.FOH = window.FOH || {});
 
 </script>
@@ -22828,7 +22830,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   //     by Department, "Close Restaurant (Last Guest)" Gate & Super Roles (v9)
   // ============================================================================
   // Delegate to opsConfigStore
-  const SUPER_ROLES_META = (FOH.opsConfigStore && FOH.opsConfigStore.SUPER_ROLES_META) || {};
+  const SUPER_ROLES_META = (FOH.opsConfigStore && FOH.opsConfigStore.SUPER_ROLES_META) || (FOH.SUPER_ROLES_META || {});
+  const PERM_LABELS = (FOH.opsConfigStore && FOH.opsConfigStore.PERM_LABELS) || (FOH.PERM_LABELS || []);
   const loadOpsConfig = () => (FOH.opsConfigStore && FOH.opsConfigStore.loadOpsConfig ? FOH.opsConfigStore.loadOpsConfig() : {});
   const saveOpsConfig = (c) => (FOH.opsConfigStore && FOH.opsConfigStore.saveOpsConfig ? FOH.opsConfigStore.saveOpsConfig(c) : null);
   const toBizMinutes = (hm) => (FOH.opsConfigStore && FOH.opsConfigStore.toBizMinutes ? FOH.opsConfigStore.toBizMinutes(hm) : 0);
@@ -23188,6 +23191,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
 
   FOH.opsLifecycle = {
+    SUPER_ROLES_META,
+    PERM_LABELS,
     loadOpsConfig,
     saveOpsConfig,
     getEffectiveNowHM,
@@ -23203,6 +23208,8 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     setActiveClosingDeptFilter: (d) => { activeClosingDeptFilter = d; },
     getActiveClosingDeptFilter: () => activeClosingDeptFilter,
   };
+  FOH.SUPER_ROLES_META = SUPER_ROLES_META;
+  FOH.PERM_LABELS = PERM_LABELS;
 })(window.FOH = window.FOH || {});
 
 </script>
@@ -27064,12 +27071,22 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     return map[view] || map.opening;
   }
 
+  function getSuperRolesMeta() {
+    return (
+      (FOH.opsConfigStore && FOH.opsConfigStore.SUPER_ROLES_META) ||
+      (FOH.opsLifecycle && FOH.opsLifecycle.SUPER_ROLES_META) ||
+      FOH.SUPER_ROLES_META ||
+      {}
+    );
+  }
+
   function renderSidebarProfileCard(profBox, sess, ar) {
     profBox.replaceChildren();
-    const dispName = (sess && (ar ? sess.displayNameAr || sess.displayName : sess.displayName)) || S.me.name || 'Fadi (Supervisor)';
+    const dispName = (sess && (ar ? sess.displayNameAr || sess.displayName : sess.displayName)) || S.me.name || 'Staff';
     const srKey = getCurrentSuperRoleKey();
-    const srMeta = SUPER_ROLES_META[srKey] || SUPER_ROLES_META.staff;
-    const roleLbl = srMeta.badge;
+    const metaMap = getSuperRolesMeta();
+    const srMeta = metaMap[srKey] || metaMap.staff || { badge: 'Staff', label: 'Staff' };
+    const roleLbl = (srMeta && srMeta.badge) || 'Staff';
     const initials = dispName.slice(0, 2).toUpperCase();
 
     const staffRec = (S.tpl.staff || []).find(
@@ -27140,10 +27157,15 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
     const items = [
       ['opening', openLeft > 0 ? String(openLeft) : '✓'],
+      ['closing_sheet', '🌙'],
+      ['mine', '📋'],
+      ['dayoff', '🏖️'],
       ['orders', ordCount > 0 ? String(ordCount) : ''],
       ['inv', '📦'],
-      ['profile', '🏥'],
+      ['academy', '🎓'],
+      ['tips', '💰'],
       ['dashboard', '📊'],
+      ['profile', '👤'],
     ];
     if (isMgr) items.push(['settings', '⚙️']);
 
