@@ -5196,13 +5196,501 @@ body.dark .tab-badge {
 }
 
 
+/* ==========================================================================
+   AUTHENTIC CEEN ORDERS DESIGN SYSTEM (Exact ceen-bar-orders-v2 Parity)
+   ========================================================================== */
+#ordersView .welcome,
+.orders-view-root .welcome {
+  margin: 6px 0 20px;
+}
+#ordersView .welcome .kicker,
+.orders-view-root .kicker {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: var(--amber, #bc9762);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+#ordersView .welcome .title,
+.orders-view-root .welcome .title {
+  font-size: clamp(24px, 5.5vw, 34px);
+  letter-spacing: -0.8px;
+  line-height: 1.2;
+  margin: 0 0 8px;
+  font-weight: 800;
+  color: var(--ink);
+}
+#ordersView .welcome .sub,
+.orders-view-root .welcome .sub {
+  color: var(--ink2, #4b5563);
+  font-size: 14px;
+  margin: 0 0 18px;
+  line-height: 1.5;
+}
+
+/* --- Draft Card --- */
+.draft-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  background: var(--accent-soft, #eaf1e7);
+  border: 1px solid var(--line, #dfe6db);
+  padding: 18px 20px;
+  border-radius: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+}
+body.dark .draft-card {
+  background: rgba(36, 91, 72, 0.22);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+.draft-count {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.draft-count strong {
+  font-size: 38px;
+  font-weight: 800;
+  letter-spacing: -1.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent, #245b48);
+  line-height: 1;
+}
+body.dark .draft-count strong {
+  color: #8cc8aa;
+}
+.draft-count span {
+  font-size: 13px;
+  color: var(--ink2, #4b5563);
+  line-height: 1.4;
+  font-weight: 600;
+}
+.draft-card button.primary {
+  font-size: 13px;
+  font-weight: 700;
+  padding: 12px 18px;
+  min-height: 44px;
+  border-radius: 14px;
+  background: var(--accent, #245b48) !important;
+  color: #ffffff !important;
+  border: 0;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  transition: transform 0.15s, opacity 0.15s;
+}
+.draft-card button.primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+.draft-card button.primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* --- Section Heading --- */
+.section-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 14px;
+}
+.section-heading h2 {
+  font-size: 19px;
+  letter-spacing: -0.4px;
+  margin: 0;
+  font-weight: 800;
+  color: var(--ink);
+}
+.section-heading span {
+  color: var(--muted, #8a8f98);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Group Cards Grid --- */
+.section-cards {
+  display: grid;
+  gap: 14px;
+}
+.group-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  text-align: start;
+  padding: 18px 20px;
+  border: 1px solid var(--line, #dfe6db);
+  border-radius: 20px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05);
+  background: var(--card, #ffffff);
+  cursor: pointer;
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s ease, border-color 0.15s;
+  width: 100%;
+}
+.group-card:hover {
+  border-color: var(--accent, #2f6b5e);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+.group-card:active {
+  transform: scale(0.985);
+}
+body.dark .group-card {
+  background: var(--card, #141f1a);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+body.dark .group-card:hover {
+  border-color: #8cc8aa;
+}
+.glyph {
+  width: 54px;
+  height: 60px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: var(--accent-soft, #eaf1e7);
+  color: var(--amber, #bc9762);
+  flex-shrink: 0;
+  transition: background-color 0.15s;
+}
+body.dark .glyph {
+  background: rgba(201, 164, 106, 0.16);
+  color: #c9a46a;
+}
+.glyph svg {
+  width: 29px;
+  height: 29px;
+}
+.group-card .label {
+  flex: 1;
+  min-width: 0;
+}
+.group-card b {
+  display: block;
+  font-size: 20px;
+  letter-spacing: -0.4px;
+  margin-bottom: 4px;
+  color: var(--ink);
+  font-weight: 800;
+}
+.group-card small {
+  display: block;
+  font-size: 13px;
+  color: var(--ink2, #4b5563);
+  font-weight: 400;
+  line-height: 1.4;
+}
+.group-card .arrow {
+  color: var(--amber, #bc9762);
+  font-size: 22px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.section-progress {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+  color: var(--muted, #8a8f98);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.progress-rail {
+  width: 100%;
+  height: 5px;
+  border-radius: 10px;
+  background: var(--line, #dfe6db);
+  overflow: hidden;
+  margin-top: 6px;
+}
+body.dark .progress-rail {
+  background: rgba(255, 255, 255, 0.08);
+}
+.progress-rail span,
+.progress-rail div {
+  height: 100%;
+  background: var(--amber, #bc9762);
+  border-radius: 10px;
+  transition: width 0.2s ease-out;
+}
+
+/* --- Resume Box --- */
+.resume {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--accent-soft, #eaf1e7);
+  border: 1px solid var(--line, #dfe6db);
+  border-radius: 16px;
+  padding: 14px 18px;
+  margin-top: 16px;
+}
+body.dark .resume {
+  background: rgba(36, 91, 72, 0.18);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.resume span {
+  font-size: 12px;
+  color: var(--ink2, #4b5563);
+  line-height: 1.4;
+}
+.resume b {
+  display: block;
+  font-size: 14px;
+  color: var(--ink);
+  margin-top: 2px;
+}
+
+/* --- Toolbar Row --- */
+.toolbar-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+  align-items: center;
+}
+.toolbar-row button {
+  font-size: 13px;
+  font-weight: 600;
+  min-height: 44px;
+  padding: 10px 16px;
+  border-radius: 14px;
+}
+.toolbar-row button.ghost {
+  background: transparent;
+  border: 1.5px dashed var(--line, #dfe6db);
+  color: var(--ink);
+  cursor: pointer;
+}
+.toolbar-row button.ghost:hover {
+  border-color: var(--accent, #2f6b5e);
+  color: var(--accent, #2f6b5e);
+}
+
+/* --- Small Note --- */
+.small-note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+  font-size: 12px;
+  color: var(--muted, #8a8f98);
+  line-height: 1.45;
+}
+.small-note svg {
+  color: var(--amber, #bc9762);
+  flex-shrink: 0;
+}
+
+/* --- Categories Grid (02 / Choose Category) --- */
+.type-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 20px;
+}
+.type-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: start;
+  gap: 12px;
+  min-height: 145px;
+  padding: 16px 18px;
+  border: 1px solid var(--line, #dfe6db);
+  border-radius: 18px;
+  background: var(--card, #ffffff);
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+  width: 100%;
+}
+.type-card:hover {
+  border-color: var(--accent, #2f6b5e);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+body.dark .type-card {
+  background: var(--card, #141f1a);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.type-icon {
+  color: var(--amber, #bc9762);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+}
+.type-card b {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--ink);
+  line-height: 1.25;
+}
+.type-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  font-size: 12px;
+  color: var(--muted, #8a8f98);
+  margin-top: auto;
+}
+.picked {
+  color: var(--accent, #245b48);
+  font-weight: 700;
+  font-size: 12px;
+  background: var(--accent-soft, rgba(36, 91, 72, 0.1));
+  padding: 2px 8px;
+  border-radius: 99px;
+}
+body.dark .picked {
+  color: #8cc8aa;
+  background: rgba(140, 200, 170, 0.15);
+}
+
+/* --- View Mode Switcher --- */
+.view-switch {
+  display: flex;
+  gap: 4px;
+  background: var(--accent-soft, #eaf1e7);
+  padding: 5px;
+  border: 1px solid var(--line, #dfe6db);
+  border-radius: 16px;
+  margin: 18px 0;
+}
+body.dark .view-switch {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.view-switch button {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted, #8a8f98);
+  padding: 10px 8px;
+  min-height: 44px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+.view-switch button.on {
+  background: var(--card, #ffffff);
+  color: var(--ink);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  font-weight: 700;
+}
+body.dark .view-switch button.on {
+  background: #23382d;
+  color: #eef2ee;
+}
+
+/* --- Stepper (Order Quantity) --- */
+.stepper {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  height: 84px;
+  border: 1px solid var(--line, #ced9cb);
+  background: var(--bg, #f5f6f0);
+  border-radius: 18px;
+  padding: 7px;
+  gap: 6px;
+}
+body.dark .stepper {
+  background: #0e1311;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+.stepper button {
+  min-width: 56px;
+  min-height: 64px;
+  border: 0;
+  background: var(--card, #ffffff);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--accent, #245b48);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.stepper button:active {
+  transform: scale(0.94);
+}
+.stepper button[data-action=plus] {
+  background: var(--accent, #245b48) !important;
+  color: #ffffff !important;
+}
+body.dark .stepper button {
+  background: #1d2622;
+  color: #8cc8aa;
+}
+body.dark .stepper button[data-action=plus] {
+  background: #3f8f6f !important;
+  color: #07100b !important;
+}
+.stepper input {
+  font-size: 38px;
+  font-weight: 700;
+  text-align: center;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  height: 64px;
+  flex: 1;
+  color: var(--ink);
+}
+
+/* --- Stock Panel --- */
+.stock-panel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  background: var(--accent-soft, #eaf1e7);
+  border: 1px solid var(--line, #dfe6db);
+  border-radius: 16px;
+  margin-top: 16px;
+  padding: 14px 18px;
+}
+body.dark .stock-panel {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.stock-panel b {
+  font-size: 13px;
+  font-weight: 700;
+  display: block;
+}
+.stock-panel small {
+  font-size: 11px;
+  color: var(--muted, #8a8f98);
+}
+.stock-panel .ord-stock-val {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--accent, #245b48);
+  direction: ltr;
+}
+body.dark .stock-panel .ord-stock-val {
+  color: #8cc8aa;
+}
+
 /* =========================================================================
    BOTTOM BAR COLLISION FIX & ORDERS BOTTOM BAR ELEVATION
    Prevents action buttons (Previous, Next, Review, etc.) from being hidden
    behind the 5-icon app bottom bar.
    ========================================================================= */
 body.has-bottom-bar .ord-bottom-bar {
-  bottom: calc(64px + env(safe-area-inset-bottom, 0px)) !important;
+  bottom: calc(76px + env(safe-area-inset-bottom, 16px)) !important;
   z-index: 980 !important;
   max-width: 580px !important;
   margin: 0 auto !important;
@@ -5224,7 +5712,7 @@ body.dark.has-bottom-bar .ord-bottom-bar {
 body.has-bottom-bar #ordersView,
 body.has-bottom-bar .orders-view-root,
 body.has-bottom-bar:has(.ord-bottom-bar) {
-  padding-bottom: calc(150px + env(safe-area-inset-bottom, 16px)) !important;
+  padding-bottom: calc(180px + env(safe-area-inset-bottom, 16px)) !important;
 }
 
 /* =========================================================================
@@ -20284,7 +20772,15 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   const isAr = () => (FOH.i18n ? FOH.i18n.lang === 'ar' : false);
   const getSession = () => ((FOH.auth && FOH.auth.getSession) ? FOH.auth.getSession() : (FOH.sessionAuth ? FOH.sessionAuth.loadSession() : null));
 
+  let ordQuickSearch = '';
+  let ordReturnToReview = false;
+
+  function renderOrdersView(root) {
+    if (FOH.ordersView && FOH.ordersView.renderOrdersView) return FOH.ordersView.renderOrdersView(root);
+  }
+
   function ordGo(nextRoute) {
+    if (FOH.ordersView && FOH.ordersView.go) return FOH.ordersView.go(nextRoute);
     if (FOH.ordersView && FOH.ordersView.ordGo) return FOH.ordersView.ordGo(nextRoute);
   }
 
@@ -20627,7 +21123,14 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   const isAr = () => (FOH.i18n ? FOH.i18n.lang === 'ar' : false);
   const getSession = () => ((FOH.auth && FOH.auth.getSession) ? FOH.auth.getSession() : (FOH.sessionAuth ? FOH.sessionAuth.loadSession() : null));
 
+  let ordIncludeStockInMsg = false;
+
+  function renderOrdersView(root) {
+    if (FOH.ordersView && FOH.ordersView.renderOrdersView) return FOH.ordersView.renderOrdersView(root);
+  }
+
   function ordGo(nextRoute) {
+    if (FOH.ordersView && FOH.ordersView.go) return FOH.ordersView.go(nextRoute);
     if (FOH.ordersView && FOH.ordersView.ordGo) return FOH.ordersView.ordGo(nextRoute);
   }
 
@@ -20962,6 +21465,22 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
   let ordReturnToReview = false;
   let ordIncludeStockInMsg = false;
 
+  const ORD_ICONS = {
+    bottle: '<svg viewBox="0 0 24 24" aria-hidden="true" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3h4v5l3 4v8a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-8l3-4zM7 14h10M10 6h4"/></svg>',
+    wine: '<svg viewBox="0 0 24 24" aria-hidden="true" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10l1 6a6 6 0 0 1-12 0zM12 15v6m-4 0h8M6 8h12"/></svg>',
+    leaf: '<svg viewBox="0 0 24 24" aria-hidden="true" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 4C6 2 2 9 5 15s14 7 15-11ZM6 19 16 9m-5 5v-5m0 5h5"/></svg>',
+    box: '<svg viewBox="0 0 24 24" aria-hidden="true" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 12v10"/></svg>',
+    info: '<svg viewBox="0 0 24 24" aria-hidden="true" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v1"/></svg>',
+  };
+
+  function getGroupIconSvg(gid, iconKey) {
+    if (iconKey === 'bottle' || gid === 'bar') return ORD_ICONS.bottle;
+    if (iconKey === 'wine' || gid === 'wine') return ORD_ICONS.wine;
+    if (iconKey === 'leaf' || gid === 'fresh') return ORD_ICONS.leaf;
+    if (iconKey === 'box' || gid === 'foh') return ORD_ICONS.box;
+    return ORD_ICONS.bottle;
+  }
+
   const isAr = () => (FOH.i18n ? FOH.i18n.lang === 'ar' : false);
   const getSession = () => ((FOH.auth && FOH.auth.getSession) ? FOH.auth.getSession() : (FOH.sessionAuth ? FOH.sessionAuth.getSession() : null));
 
@@ -21079,57 +21598,54 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     }
   }
 
-  // ---- Page 1: Home Groups ----
+  // ---- Page 1: Home Groups (Authentic CEEN Design) ----
   function renderHomeGroups(root) {
     const ar = isAr();
     const db = store().getDB();
     const selectedList = store().ordSelectedItems();
+    const allItems = db.catalog.items || [];
+    const checkedCount = allItems.filter((i) => db.order && db.order.visited && db.order.visited[i.id]).length;
 
-    const headWrap = el('div', '');
-    const topRow = el('div', '');
-    topRow.style.display = 'flex';
-    topRow.style.alignItems = 'center';
-    topRow.style.justifyContent = 'space-between';
-    topRow.style.gap = '8px';
-    topRow.style.flexWrap = 'wrap';
+    const hour = new Date().getHours();
+    const greetingEn = hour < 12 ? 'Good morning.' : hour < 17 ? 'Good afternoon.' : 'Good evening.';
+    const greetingAr = hour < 12 ? 'صباح الخير.' : 'مساء الخير.';
 
-    const kicker = el('div', 'ord-kicker', '01 / SECTION SELECT · أقسام الطلبيات');
-    const btnGroup = el('div', '');
-    btnGroup.style.display = 'flex';
-    btnGroup.style.gap = '6px';
-    btnGroup.style.alignItems = 'center';
+    // 1. Welcome Section
+    const welcome = el('section', 'welcome');
+    welcome.innerHTML =
+      '<div class="kicker">' + (ar ? 'جاهز للخدمة · READY FOR SERVICE' : 'READY FOR SERVICE') + '</div>' +
+      '<h1 class="title">' + (ar ? greetingAr + '<br>فلنبدأ طلبية الصالة والبار.' : greetingEn + '<br>Let\'s stock the bar.') + '</h1>' +
+      '<p class="sub">' + (ar ? 'تحضير مسبق دقيق · خدمة أسهل وشفت بلا نواقص.' : 'A little prep. A smoother service.') + '</p>';
+    root.append(welcome);
 
-    const startNewBtn = el('button', 'btn small', ar ? '✨ بدء طلبية جديدة' : '✨ Start new order');
-    startNewBtn.type = 'button';
-    startNewBtn.addEventListener('click', () => {
-      store().promptStartNewOrder(() => renderOrdersView(root));
-    });
-    btnGroup.append(startNewBtn);
+    // 2. Draft Card
+    const draftCard = el('section', 'draft-card');
+    draftCard.setAttribute('aria-label', ar ? 'الطلبية الحالية' : 'Current order');
+    draftCard.innerHTML =
+      '<div class="draft-count">' +
+        '<strong>' + selectedList.length + '</strong>' +
+        '<span>' + (ar ? 'أصناف مختارة<br>في طلبيتك' : 'items in<br>your order') + '</span>' +
+      '</div>';
+    const revBtn = el('button', 'primary', ar ? 'مراجعة الطلبية ←' : 'Review order →');
+    revBtn.type = 'button';
+    revBtn.disabled = selectedList.length === 0;
+    revBtn.addEventListener('click', () => ordGo('review'));
+    draftCard.append(revBtn);
+    root.append(draftCard);
 
-    const canManage = store().canCurrentUserManageOrders && store().canCurrentUserManageOrders();
-    if (canManage) {
-      const setBtn = el('button', 'btn small', ar ? '⚙️ إعدادات وصلاحيات الأقسام' : '⚙️ Order Settings');
-      setBtn.type = 'button';
-      setBtn.addEventListener('click', () => {
-        if (FOH.ordersSettingsModal && FOH.ordersSettingsModal.open) {
-          FOH.ordersSettingsModal.open();
-        }
-      });
-      btnGroup.append(setBtn);
-    }
-    topRow.append(kicker, btnGroup);
-
-    headWrap.append(
-      topRow,
-      el('h2', 'ord-page-title', ar ? 'طلبيات البار ومستلزمات الصالة' : 'Bar & FOH Warehouse Orders'),
-      el('p', 'ord-page-sub', ar ? 'اختر القسم المطلوب لإعداد طلبيته وتحديد الكميات المطلوبة للمستودع:' : 'Select a section to prepare warehouse requisition:')
-    );
     if (store().getOrderStatus() === 'DISPATCHED') {
-      headWrap.append(renderReceivingBanner(ar));
+      root.append(renderReceivingBanner(ar));
     }
-    root.append(headWrap);
 
-    const secCards = el('div', 'ord-sec-grid');
+    // 3. Section Heading
+    const secHeading = el('div', 'section-heading');
+    secHeading.innerHTML =
+      '<h2>' + (ar ? 'أقسام الصالة والبار' : 'Explore your bar') + '</h2>' +
+      '<span>' + checkedCount + ' / ' + allItems.length + ' ' + (ar ? 'تم فحصها' : 'checked') + '</span>';
+    root.append(secHeading);
+
+    // 4. Section Cards
+    const secCards = el('div', 'section-cards');
     const allowed = store().allowedGroupsForCurrentRole(ordForceAllGroups);
 
     allowed.forEach(([gid, g]) => {
@@ -21146,28 +21662,73 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
         reqCount += cItems.filter((i) => store().ordLine(i.id).qty > 0).length;
       });
 
-      const btn = el('button', 'ord-sec-card');
-      btn.type = 'button';
-      btn.append(
-        el('div', 'ord-sec-ico', g.icon || '📦'),
-        Object.assign(el('div', 'ord-sec-body'), {
-          innerHTML:
-            '<h3>' + FOH.escapeHtml(ar ? g.nameAr || g.name : g.name) + '</h3>' +
-            '<p>' + FOH.escapeHtml(ar ? g.subAr || g.sub : g.sub) + '</p>' +
-            '<div class="ord-sec-meta"><span>' + catCount + ' ' + (ar ? 'تصنيفات' : 'categories') + ' · ' + totalItems + ' ' + (ar ? 'أصناف' : 'items') + '</span>' +
-            (reqCount > 0 ? '<strong class="ord-req-chip">✓ ' + reqCount + ' ' + (ar ? 'مطلوب' : 'requested') + '</strong>' : '') +
-            '</div>',
-        })
-      );
-      btn.addEventListener('click', () => ordGo('types/' + gid));
-      secCards.append(btn);
+      const pct = totalItems ? Math.round((100 * doneItems) / totalItems) : 0;
+      const gCard = el('button', 'group-card');
+      gCard.type = 'button';
+      gCard.innerHTML =
+        '<span class="glyph">' + getGroupIconSvg(gid, g.icon) + '</span>' +
+        '<span class="label">' +
+          '<b>' + FOH.escapeHtml(ar ? g.nameAr || g.name : g.name) + '</b>' +
+          '<small>' + FOH.escapeHtml(ar ? g.subAr || g.sub : g.sub) + '</small>' +
+          '<span class="section-progress">' +
+            '<span>' + doneItems + ' / ' + totalItems + ' ' + (ar ? 'تم فحصها' : 'checked') + (reqCount > 0 ? ' · ' + reqCount + (ar ? ' مطلوب' : ' ordered') : '') + '</span>' +
+            '<span>' + catCount + ' ' + (ar ? 'تصنيفات' : 'categories') + '</span>' +
+          '</span>' +
+          '<span class="progress-rail" style="display:block" role="progressbar" aria-valuenow="' + doneItems + '" aria-valuemax="' + totalItems + '">' +
+            '<span style="display:block;height:100%;background:var(--amber,#bc9762);border-radius:10px;width:' + pct + '%"></span>' +
+          '</span>' +
+        '</span>' +
+        '<span class="arrow">' + (ar ? '↖' : '↗') + '</span>';
+      gCard.addEventListener('click', () => ordGo('types/' + gid));
+      secCards.append(gCard);
     });
-
     root.append(secCards);
-    appendGeneralBottomBar(root);
+
+    // 5. Last Item Resume Card
+    const lastItemId = db.order && db.order.lastItem;
+    const lastItemObj = lastItemId && (allItems.find((x) => x.id === lastItemId) || store().ordItem(lastItemId));
+    if (lastItemObj) {
+      const resume = el('div', 'resume');
+      resume.innerHTML =
+        '<span>' + (ar ? 'متابعة من حيث توقفت:' : 'Pick up where you left off') + '<br><b>' + FOH.escapeHtml(ar && lastItemObj.ar ? lastItemObj.ar + ' · ' + lastItemObj.name : lastItemObj.name) + '</b></span>';
+      const contBtn = el('button', 'btn small', ar ? 'متابعة ←' : 'Continue →');
+      contBtn.type = 'button';
+      contBtn.addEventListener('click', () => ordGo('item/' + lastItemId));
+      resume.append(contBtn);
+      root.append(resume);
+    }
+
+    // 6. Toolbar Row
+    const toolRow = el('div', 'toolbar-row');
+    const startNewBtn = el('button', 'ghost', ar ? '+ بدء طلبية جديدة' : '+ Start new order');
+    startNewBtn.type = 'button';
+    startNewBtn.addEventListener('click', () => {
+      store().promptStartNewOrder(() => renderOrdersView(root));
+    });
+    toolRow.append(startNewBtn);
+
+    const canManage = store().canCurrentUserManageOrders && store().canCurrentUserManageOrders();
+    if (canManage) {
+      const setBtn = el('button', 'btn', ar ? '⚙️ إدارة الكتالوج والصلاحيات' : '⚙️ Manage catalog & stock');
+      setBtn.type = 'button';
+      setBtn.addEventListener('click', () => {
+        if (FOH.ordersSettingsModal && FOH.ordersSettingsModal.open) {
+          FOH.ordersSettingsModal.open();
+        }
+      });
+      toolRow.append(setBtn);
+    }
+    root.append(toolRow);
+
+    // 7. Small Note
+    const note = el('p', 'small-note');
+    note.innerHTML =
+      ORD_ICONS.info +
+      '<span>' + (ar ? 'اطلب فقط ما تحتاجه للخدمة. رصيد المخزون لا يتغير إلا عند التوريد الفعلي.' : 'Request only what you need. Your stock stays unchanged until you update it.') + '</span>';
+    root.append(note);
   }
 
-  // ---- Page 2: Types in Group ----
+  // ---- Page 2: Types in Group (Categories Grid) ----
   function renderCategoryTypes(root, groupKey) {
     const ar = isAr();
     const db = store().getDB();
@@ -21182,50 +21743,49 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     const uname = (sess && sess.username) || '';
     const canEditGroup = store().canUserEditGroup ? store().canUserEditGroup(groupKey, { roleKey, username: uname, isManager: isMgr }) : isMgr;
 
-    const headRow = el('div', '');
-    headRow.style.display = 'flex';
-    headRow.style.alignItems = 'center';
-    headRow.style.justifyContent = 'space-between';
-    headRow.style.gap = '8px';
-    headRow.style.flexWrap = 'wrap';
-
-    const kicker = el('div', 'ord-kicker', '02 / CATEGORY · تصنيفات القسم');
-    headRow.append(kicker);
+    const welcome = el('section', 'welcome');
+    welcome.style.margin = '4px 0 16px';
+    welcome.innerHTML =
+      '<div class="kicker">02 / CHOOSE A CATEGORY · ' + (ar ? 'اختر التصنيف' : 'CHOOSE A CATEGORY') + '</div>' +
+      '<h1 class="title">' + (ar ? 'ما الذي سنطلبه اليوم؟' : 'What are we ordering?') + '</h1>' +
+      '<p class="sub">' + (ar ? 'اختر تصنيفاً من قسم ' + FOH.escapeHtml(g.nameAr || g.name) : 'Pick a category in ' + FOH.escapeHtml(g.name)) + '.</p>';
+    root.append(welcome);
 
     if (canEditGroup) {
-      const addCatBtn = el('button', 'btn small primary', ar ? '+ تصنيف جديد' : '+ New Category');
+      const toolRow = el('div', 'toolbar-row');
+      toolRow.style.margin = '0 0 16px';
+      const addCatBtn = el('button', 'ghost', ar ? '+ تصنيف جديد' : '+ Add category');
       addCatBtn.type = 'button';
       addCatBtn.addEventListener('click', () => {
         if (FOH.ordersSettingsModal && FOH.ordersSettingsModal.openAddCategoryModal) {
           FOH.ordersSettingsModal.openAddCategoryModal(groupKey, () => renderOrdersView(root));
         }
       });
-      headRow.append(addCatBtn);
+      toolRow.append(addCatBtn);
+      root.append(toolRow);
     }
 
-    root.append(
-      headRow,
-      el('h2', 'ord-page-title', ar ? g.nameAr || g.name : g.name),
-      el('p', 'ord-page-sub', ar ? 'اختر تصنيفًا للبدء بفحصه وتحديد الكميات المطلوبة:' : 'Pick a category to check and order items:')
-    );
-
     const cats = db.catalog.categories.filter((c) => c.group === groupKey);
-    const grid = el('div', 'ord-cat-grid');
+    const grid = el('div', 'type-grid');
 
     cats.forEach((c) => {
-      const items = store().ordCatItems(c.id);
+      const list = store().ordCatItems(c.id);
       const done = store().ordCatDone(c.id);
       const skipped = store().ordCatSkipped(c.id);
-      const req = items.filter((i) => store().ordLine(i.id).qty > 0).length;
-      const isComplete = items.length > 0 && done + skipped >= items.length;
+      const n = list.filter((i) => store().ordLine(i.id).qty > 0).length;
+      const isComplete = list.length > 0 && done + skipped === list.length;
+      const pct = list.length ? Math.round((100 * done) / list.length) : 0;
 
-      const card = el('button', 'ord-cat-card' + (isComplete ? ' complete' : ''));
+      const card = el('button', 'type-card');
       card.type = 'button';
-      card.append(
-        el('h4', '', ar ? c.nameAr || c.name : c.name),
-        el('div', 'ord-cat-stat', `${items.length} ${ar ? 'أصناف' : 'items'} · ${done} ${ar ? 'تم فحصها' : 'done'}`),
-        req > 0 ? el('span', 'ord-req-badge', `+${req} ${ar ? 'مطلوب' : 'picked'}`) : el('span', 'ord-req-badge zero', isComplete ? '✓ ' + (ar ? 'مكتمل' : 'done') : '—')
-      );
+      card.innerHTML =
+        '<span class="type-icon">' + (isComplete ? '✓' : '◦') + '</span>' +
+        '<b>' + FOH.escapeHtml(ar ? c.nameAr || c.name : c.name) + '</b>' +
+        '<div class="type-bottom">' +
+          '<span>' + list.length + ' ' + (ar ? 'أصناف' : 'items') + (skipped ? ' · ' + skipped + (ar ? ' تخطي' : ' skipped') : '') + '</span>' +
+          (n > 0 ? '<span class="picked">' + n + ' ' + (ar ? 'مطلوب' : 'ordered') + '</span>' : '<span>→</span>') +
+        '</div>' +
+        '<div class="progress-rail"><div style="width:' + pct + '%;height:100%;background:var(--amber,#bc9762);border-radius:10px;"></div></div>';
       card.addEventListener('click', () => ordGo('products/' + c.id));
       grid.append(card);
     });
@@ -21243,11 +21803,14 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
 
     const viewMode = (db.preferences && db.preferences.viewMode) || 'step';
     root.append(buildOrdBreadcrumbs(c.group, c.id));
-    root.append(
-      el('div', 'ord-kicker', '03 / PRODUCTS · قائمة الأصناف'),
-      el('h2', 'ord-page-title', ar ? c.nameAr || c.name : c.name),
-      buildOrdViewSwitch(c.id, viewMode)
-    );
+    const welcome = el('section', 'welcome');
+    welcome.style.margin = '4px 0 14px';
+    welcome.innerHTML =
+      '<div class="kicker">03 / CHOOSE AN ITEM · ' + (ar ? 'اختيار الأصناف' : 'CHOOSE AN ITEM') + '</div>' +
+      '<h1 class="title">' + FOH.escapeHtml(ar ? c.nameAr || c.name : c.name) + '</h1>' +
+      '<p class="sub">' + (ar ? 'استخدم نمط (صنفاً بصنف) للفحص المتسلسل، أو (القائمة السريعة) لإدخال الكميات مباشرة.' : 'Use Next for a guided check, or enter all quantities in Quick list.') + '</p>';
+    root.append(welcome);
+    root.append(buildOrdViewSwitch(c.id, viewMode));
 
     const items = store().ordCatItems(c.id);
     if (viewMode === 'step') {
@@ -21304,6 +21867,11 @@ FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "
     buildOrdWhatsAppText: (inc) => dispatch().buildOrdWhatsAppText(inc),
     promptStartNewOrder: (cb) => store().promptStartNewOrder(cb),
     go: ordGo,
+    ordGo,
+    appendBottomBar,
+    appendGeneralBottomBar,
+    buildOrdBreadcrumbs,
+    buildOrdViewSwitch,
     get ORD_SEED() {
       return (FOH.ordersCatalog && FOH.ordersCatalog.ORD_SEED) || {};
     },
