@@ -1,7 +1,7 @@
 'use strict';
 
-const CACHE = 'super-employee-v58-bar-orders-v2-nav';
-// Rollback cache version: super-employee-v57-hide-tabbar-login
+const CACHE = 'super-employee-v59-login-scroll-fix';
+// Rollback cache version: super-employee-v58-bar-orders-v2-nav
 const PRECACHE = [
   './',
   './index.html',

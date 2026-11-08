@@ -31,7 +31,12 @@ body.dark .item.done { background: rgba(56, 168, 141, 0.08); }
 body.auth-locked .preview-toolbar { display: none !important; }
 body.auth-locked .me-row .pick { display: none !important; }
 body.auth-staff #modeBtn, body.auth-staff #invTab, body.auth-staff #clearDayBtn { display: none !important; }
-body.login-open { overflow: hidden; }
+body.login-open {
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+  height: auto !important;
+  min-height: 100dvh;
+}
 body.login-open header.top,
 body.login-open main,
 body.login-open .quick-report,
@@ -41,17 +46,25 @@ body.login-open #appBottomBar {
   display: none !important;
 }
 
-/* Full-screen Mobile Login */
+/* Full-screen Mobile Login with Smooth Responsive Scrolling */
 .login-screen {
   min-height: 100dvh;
+  height: auto !important;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  padding: calc(20px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));
+  justify-content: flex-start;
+  padding: calc(20px + env(safe-area-inset-top, 0px)) 16px calc(64px + env(safe-area-inset-bottom, 16px));
+  box-sizing: border-box;
   background: radial-gradient(circle at top, #243447 0%, #111822 65%);
   color: #f8fafc;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
-.login-shell { width: 100%; max-width: 420px; margin: 0 auto; }
+.login-shell {
+  width: 100%;
+  max-width: 420px;
+  margin: auto auto;
+}
 .login-topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 .login-brand-pill {
   display: inline-flex; align-items: center; gap: 8px;
