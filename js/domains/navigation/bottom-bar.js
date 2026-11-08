@@ -11,17 +11,17 @@
   const FOH_TABS = [
     { id: 'mine', view: 'mine', ico: '📋', labelAr: 'مهامي', labelEn: 'My Tasks', badgeId: 'botBadgeMine' },
     { id: 'dayoff', view: 'dayoff', ico: '📅', labelAr: 'الدوام', labelEn: 'Schedule', badgeId: 'botBadgeDayoff' },
-    { id: 'opening', view: 'opening', ico: '🏠', labelAr: 'الرئيسية', labelEn: 'Home', isCenter: true, badgeId: 'botBadgeOpening' },
+    { id: 'opening', view: 'opening', ico: '🏠', labelAr: 'الرئيسية', labelEn: 'Home', isCenter: true, isHeroBubble: true, badgeId: 'botBadgeOpening' },
     { id: 'tips', view: 'tips', ico: '💰', labelAr: 'التبس', labelEn: 'Tips', badgeId: 'botBadgeTips' },
     { id: 'academy', view: 'academy', ico: '🎓', labelAr: 'الأكاديمية', labelEn: 'Academy', badgeId: 'botBadgeAcademy' },
   ];
 
   const ORDERS_TABS = [
-    { id: 'ord_catalog', ordAction: 'catalog', ico: '📦', labelAr: 'الأقسام', labelEn: 'Catalog' },
-    { id: 'ord_quick', ordAction: 'quick', ico: '⚡', labelAr: 'سريع', labelEn: 'Quick' },
+    { id: 'ord_catalog', ordAction: 'catalog', ico: '📦', labelAr: 'الأقسام', labelEn: 'Catalog', dot: true },
+    { id: 'ord_quick', ordAction: 'quick', ico: '⚡', labelAr: 'سريع', labelEn: 'Quick', dot: true },
     { id: 'ord_review', ordAction: 'review', ico: '🛒', labelAr: 'المراجعة', labelEn: 'Review', isCenter: true, badgeId: 'botBadgeOrdCart' },
-    { id: 'ord_receiving', ordAction: 'receiving', ico: '📥', labelAr: 'الاستلام', labelEn: 'Receiving' },
-    { id: 'ord_home', ordAction: 'exit_home', ico: '🏠', labelAr: 'الرئيسية', labelEn: 'Home', isExitAnchor: true },
+    { id: 'ord_receiving', ordAction: 'receiving', ico: '📥', labelAr: 'الاستلام', labelEn: 'Receiving', dot: true },
+    { id: 'ord_home', ordAction: 'exit_home', ico: '🏠', labelAr: 'الرئيسية', labelEn: 'Home', isExitAnchor: true, isHeroBubble: true },
   ];
 
   let currentBarMode = 'foh'; // 'foh' | 'orders'
@@ -114,6 +114,7 @@
     const classes = ['tab-item'];
     if (tb.isCenter) classes.push('center-hero');
     if (tb.isExitAnchor) classes.push('exit-anchor');
+    if (tb.isHeroBubble) classes.push('hero-bubble-wrap');
     if (isCur) classes.push('on');
 
     const btn = el('button', classes.join(' '));
@@ -122,7 +123,7 @@
     if (tb.ordAction) btn.dataset.ordAction = tb.ordAction;
     btn.setAttribute('aria-label', ar ? tb.labelAr : tb.labelEn);
 
-    if (tb.isCenter) {
+    if (tb.isHeroBubble) {
       const bubble = el('div', 'center-hero-bubble');
       const ico = el('span', 'hero-ico', tb.ico);
       const b = el('b', 'tab-badge hero-badge');
@@ -137,6 +138,10 @@
       if (tb.badgeId) b.id = tb.badgeId;
       b.hidden = true;
       wrap.append(ico, b);
+      if (tb.dot) {
+        const dot = el('span', 'ord-tab-dot');
+        wrap.append(dot);
+      }
       btn.append(wrap, el('span', 'tab-label', ar ? tb.labelAr : tb.labelEn), el('span', 'tab-active-dot'));
     }
 
