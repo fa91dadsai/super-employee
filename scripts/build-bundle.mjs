@@ -14,6 +14,7 @@ const CSS_FILES = [
   'css/components.css',
   'css/checklist.css',
   'css/super-employee.css',
+  'css/orders-ceen.css',
 ];
 
 const JS_FILES = [
@@ -25,6 +26,7 @@ const JS_FILES = [
   'js/core/modal-picker.js',
   'js/domains/inventory/store.js',
   'js/domains/checklist/view.js',
+  'js/domains/checklist/checklist-search.js',
   'js/domains/tasks/tasks-view.js',
   'js/domains/tasks/reminders.js',
   'js/domains/checklist/app.js',
@@ -43,14 +45,18 @@ const JS_FILES = [
   'js/core/pwa-install.js',
   'js/core/preview-demo.js',
   // Domain: Auth
+  'js/domains/auth/auth-i18n.js',
+  'js/domains/auth/auth-accounts-data.js',
   'js/domains/auth/pending-approvals.js',
   'js/domains/auth/session-auth.js',
+  'js/domains/auth/profile-dialog-settings.js',
   'js/domains/auth/profile-dialog.js',
   // Domain: Inventory
   'js/domains/inventory/batch-tally.js',
   // Domain: Shifts State & Claims
   'js/domains/shifts/sheet-state.js',
   'js/domains/shifts/section-claims.js',
+  'js/domains/checklist/section-assignment-modal.js',
   'js/domains/checklist/section-assignment.js',
   // Domain: Cloud & Sync
   'js/domains/cloud/cloud-sync.js',
@@ -58,17 +64,30 @@ const JS_FILES = [
   // Domain: Tasks
   'js/domains/tasks/day-off.js',
   'js/domains/tasks/task-inbox-notif.js',
+  'js/domains/tasks/task-assignment-state.js',
+  'js/domains/tasks/task-recurrence-card.js',
+  'js/domains/tasks/task-assign-modal.js',
   'js/domains/tasks/task-assignment.js',
   // Domain: Orders
   'js/domains/orders/orders-catalog-data.js',
   'js/domains/orders/orders-store.js',
+  'js/domains/orders/orders-catalog-mutations.js',
+  'js/domains/orders/orders-lifecycle-store.js',
   'js/domains/orders/orders-dispatch.js',
+  'js/domains/orders/orders-settings-modal.js',
+  'js/domains/orders/orders-view-home.js',
+  'js/domains/orders/orders-view-categories.js',
+  'js/domains/orders/orders-view-step.js',
+  'js/domains/orders/orders-view-quick.js',
+  'js/domains/orders/orders-view-review.js',
   'js/domains/orders/orders-view.js',
   // Domain: Governance & Identity
   'js/domains/governance/restaurant-gov.js',
   'js/domains/governance/suggestions.js',
   'js/domains/shifts/role-identity.js',
   // Domain: Operations & Lifecycle
+  'js/domains/operations/ops-config-store.js',
+  'js/domains/operations/ops-close-dialog.js',
   'js/domains/operations/ops-lifecycle.js',
   'js/domains/operations/hours-settings.js',
   // Domain: Tips, Dashboard, Settings, Profile & Academy
@@ -79,9 +98,11 @@ const JS_FILES = [
   'js/domains/dashboard/dashboard-view.js',
   'js/domains/profile/health-profile-view.js',
   'js/domains/settings/settings-view.js',
+  'js/domains/academy/academy-quiz.js',
   'js/domains/academy/academy-view.js',
   // Domain: Notifications & Navigation
   'js/domains/notifications/snooze-engine.js',
+  'js/domains/notifications/notif-bell-ui.js',
   'js/domains/notifications/notif-center.js',
   'js/domains/navigation/sidebar-nav.js',
   'js/domains/navigation/bottom-bar.js',
@@ -89,6 +110,7 @@ const JS_FILES = [
   // Domain: UI Header, Navigation, Hero & Orchestration
   'js/domains/shifts/header-subbars.js',
   'js/domains/shifts/three-shifts-nav.js',
+  'js/domains/shifts/shift-handover.js',
   'js/domains/shifts/landing-hero.js',
   'js/domains/shifts/signoff-gate.js',
   'js/domains/shifts/super-employee-init.js',

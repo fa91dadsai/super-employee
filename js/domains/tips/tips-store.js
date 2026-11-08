@@ -167,3 +167,4 @@
     updateTotalPool,
   };
 })(window.FOH = window.FOH || {});
+

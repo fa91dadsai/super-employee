@@ -12,14 +12,53 @@
   let originalDate = null;
   let originalRun = null;
   const staff = () => S.tpl.staff.filter((p) => p.active);
+  function isSectionAllowedForRole(sec, opts = {}) {
+    const isObj = typeof opts === 'object' && opts !== null;
+    const roleKey = isObj ? (opts.roleKey || 'staff') : (opts || 'staff');
+    const isMgr = isObj ? !!opts.isMgr : !!arguments[2];
+    const username = isObj ? (opts.username || '') : (arguments[3] || '');
+    if (isMgr) return true;
+    if (sec && Array.isArray(sec.allowedRoles) && sec.allowedRoles.length > 0) {
+      if (sec.allowedRoles.includes('all')) return true;
+      return sec.allowedRoles.includes(roleKey);
+    }
+    const sid = (sec.id || '').toLowerCase();
+    const dept = (sec.dept || '').toLowerCase();
+    const asgRole = (sec.assignedRoleKey || '').toLowerCase();
+    const asgUser = (sec.assignedUsername || '').toLowerCase();
+    const curUser = (username || '').toLowerCase();
+    if (asgUser && curUser && asgUser === curUser) return true;
+
+    if (roleKey === 'super_captain') {
+      if (sid.includes('bar') || dept === 'bar' || sid.includes('cash') || dept === 'cash' || asgRole === 'super_bartender' || asgRole === 'super_manager') {
+        return false;
+      }
+      return true;
+    }
+    if (roleKey === 'super_bartender') {
+      return sid.includes('bar') || dept === 'bar' || asgRole === 'super_bartender';
+    }
+    if (roleKey === 'super_waiter' || roleKey === 'staff') {
+      if (sid.includes('bar') || dept === 'bar' || sid.includes('cash') || dept === 'cash' || sid.includes('host') || dept === 'host' || asgRole === 'super_bartender' || asgRole === 'super_manager') {
+        return false;
+      }
+      return sid.includes('floor') || dept === 'floor' || sid.includes('back') || dept === 'back' || asgRole === 'super_waiter' || asgRole === 'runner' || asgRole === 'all';
+    }
+    return true;
+  }
+
   function sections() {
-    if (!S.previewEmployee) return S.tpl.sections;
-    const allowed = (role) => !role || role === S.me.role;
-    return S.tpl.sections.map((sec) => ({ ...sec, items: sec.items.flatMap((it) => {
-      if (!FOH.model.kids(it).length) return allowed(it.role) ? [it] : [];
-      const children = it.children.filter((c) => allowed(c.role || it.role));
-      return children.length ? [{ ...it, children }] : [];
-    }) })).filter((sec) => sec.items.length);
+    const allSecs = (S.tpl && S.tpl.sections) ? S.tpl.sections : [];
+    if (S.editing) return allSecs;
+
+    const sess = FOH.sessionAuth ? FOH.sessionAuth.getSession() : null;
+    const isMgr = !sess || !!(sess.isManager || sess.roleId === 'manager');
+    if (isMgr && !S.previewEmployee) return allSecs;
+
+    const roleKey = FOH.roleIdentity ? FOH.roleIdentity.getCurrentSuperRoleKey() : (S.me ? S.me.role : 'staff');
+    const uname = (sess && sess.username) || (S.me ? S.me.name : '');
+
+    return allSecs.filter((sec) => isSectionAllowedForRole(sec, roleKey, false, uname));
   }
   function choose(id) {
     const person = staff().find((p) => p.id === id);
@@ -102,5 +141,6 @@
     $('previewToggle').addEventListener('click', () => S.previewEmployee ? leave() : enter());
     $('previewPerson').addEventListener('change', (event) => choose(event.target.value));
   }
-  FOH.preview = { init, render, sections, enter, leave, choose, startCountDemo, stopCountDemo };
+  FOH.isSectionAllowedForRole = isSectionAllowedForRole;
+  FOH.preview = { init, render, sections, enter, leave, choose, startCountDemo, stopCountDemo, isSectionAllowedForRole };
 })(window.FOH = window.FOH || {});

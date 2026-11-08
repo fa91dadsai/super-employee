@@ -444,8 +444,8 @@ body.dark .shift-nav-tab.on .shift-tab-time-pill {
 /* ============================================================================
    13B. MODE SWITCHER (CHECKLIST VS TASKS) & DEPARTMENT SEGMENT PANELS
    ============================================================================ */
-.ops-mode-panel,
-.dept-segment-panel {
+.ops-mode-panel:not([hidden]),
+.dept-segment-panel:not([hidden]) {
   display: flex !important;
   flex-direction: column !important;
   align-items: stretch !important;
@@ -459,6 +459,13 @@ body.dark .shift-nav-tab.on .shift-tab-time-pill {
   background: var(--card) !important;
   border: 1.5px solid var(--line) !important;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04) !important;
+}
+
+.ops-mode-panel[hidden],
+.dept-segment-panel[hidden],
+.ops-mode-panel.hidden,
+.dept-segment-panel.hidden {
+  display: none !important;
 }
 
 .ops-mode-grid {
@@ -1353,44 +1360,326 @@ body.dark .modal-picker-trigger:hover {
 }
 
 /* ============================================================================
-   SUPER EMPLOYEE v20: EXECUTIVE SECTION HEADER & NO-STRIKETHROUGH POLICY
+   SUPER EMPLOYEE v21: EXECUTIVE CHECKLIST ARCHITECTURE & MUTED DONE POLICY
    ============================================================================ */
 
-/* 1. Never strike through completed task text */
+/* 1. Muted / Dimmed Task Completion Policy (STRICTLY NO STRIKETHROUGH) */
 .done > .row .t,
 .item.done .t,
 .task-item.done .task-title,
 .done .tx .t,
 .done .t {
   text-decoration: none !important;
-  color: var(--ink) !important;
-  opacity: 0.92 !important;
-  font-weight: 550 !important;
+  color: var(--ink-muted, #94a3b8) !important;
+  opacity: 0.52 !important;
+  font-weight: 400 !important;
+  transition: all 0.2s ease !important;
 }
 body.dark .done > .row .t,
 body.dark .item.done .t,
 body.dark .task-item.done .task-title,
 body.dark .done .tx .t,
 body.dark .done .t {
+  color: #94a3b8 !important;
+  opacity: 0.48 !important;
+  text-decoration: none !important;
+}
+
+.item.done .n {
+  color: #cbd5e1 !important;
+  opacity: 0.45 !important;
+}
+body.dark .item.done .n {
+  color: #64748b !important;
+  opacity: 0.4 !important;
+}
+
+.item.done .item-meta-row,
+.item.done .due,
+.item.done .due.role,
+.item.done .item-note-chip {
+  opacity: 0.45 !important;
+  filter: grayscale(0.5) !important;
+}
+
+/* Subtle completed row background - Clean & elegant, no harsh tint */
+.item.done {
+  background: var(--card, #ffffff) !important;
+}
+body.dark .item.done {
+  background: var(--card, #17211b) !important;
+}
+
+/* Eliminate pink background on late items in checklist */
+.item.late:not(.done),
+.st.late:not(.done) {
+  background: var(--card, #ffffff) !important;
+}
+body.dark .item.late:not(.done),
+body.dark .st.late:not(.done) {
+  background: var(--card, #17211b) !important;
+}
+
+/* 2. Modern Checklist Row & Item Component */
+.item {
+  border-top: 1px solid var(--line, #e2e8e2) !important;
+  background: var(--card, #ffffff) !important;
+  transition: all 0.2s ease !important;
+}
+body.dark .item {
+  border-top-color: rgba(255, 255, 255, 0.08) !important;
+  background: var(--card, #17211b) !important;
+}
+
+.item:first-child {
+  border-top: none !important;
+}
+
+.row {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 14px !important;
+  padding: 13px 16px !important;
+  min-height: 52px !important;
+  cursor: pointer !important;
+  -webkit-tap-highlight-color: transparent !important;
+  user-select: none !important;
+  border-radius: 0 !important;
+  transition: background 0.15s ease !important;
+}
+
+.row:hover {
+  background: rgba(0, 0, 0, 0.015) !important;
+}
+body.dark .row:hover {
+  background: rgba(255, 255, 255, 0.02) !important;
+}
+
+/* Checkbox 24px Modern Touch Target */
+.ck {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  flex: none !important;
+  width: 24px !important;
+  height: 24px !important;
+  margin: 2px 0 0 !important;
+  border: 2px solid #cbd5e1 !important;
+  border-radius: 50% !important;
+  display: grid !important;
+  place-items: center !important;
+  background: var(--card, #ffffff) !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+body.dark .ck {
+  border-color: rgba(255, 255, 255, 0.25) !important;
+  background: #17211b !important;
+}
+
+.ck:checked {
+  background: #10b981 !important;
+  border-color: #10b981 !important;
+  box-shadow: 0 2px 10px rgba(16, 185, 129, 0.3) !important;
+  transform: scale(1.05) !important;
+}
+.ck:checked::after {
+  content: '✓' !important;
+  color: #ffffff !important;
+  font-size: 0.85rem !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+}
+
+/* Content block */
+.tx {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 5px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: none !important;
+  text-align: start !important;
+}
+
+.item-title-row {
+  display: flex !important;
+  align-items: baseline !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+
+.n {
+  flex: none !important;
+  font-size: 0.86rem !important;
+  font-weight: 700 !important;
+  color: var(--accent, #2f6b5e) !important;
+  font-variant-numeric: tabular-nums !important;
+  opacity: 0.85 !important;
+}
+body.dark .n {
+  color: #34d399 !important;
+}
+
+.t {
+  flex: 1 1 auto !important;
+  font-size: 0.94rem !important;
+  font-weight: 600 !important;
+  line-height: 1.44 !important;
+  color: var(--ink, #142019) !important;
+  word-break: break-word !important;
+  letter-spacing: -0.01em !important;
+}
+body.dark .t {
   color: #f1f5f9 !important;
 }
 
-/* Subtle completed row background with emerald hint */
-.item.done {
-  background: rgba(16, 185, 129, 0.04) !important;
-}
-body.dark .item.done {
-  background: rgba(16, 185, 129, 0.08) !important;
+/* Metadata Sub-Row: Badges sit neatly underneath */
+.item-meta-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  flex-wrap: wrap !important;
+  width: 100% !important;
+  margin-top: 2px !important;
 }
 
-/* 2. Executive Section Card Header Architecture */
+.due, .stamp {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  margin: 0 !important;
+  padding: 2px 8px !important;
+  border-radius: 6px !important;
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+  unicode-bidi: isolate !important;
+}
+
+.due {
+  background: rgba(245, 158, 11, 0.12) !important;
+  border: 1px solid rgba(245, 158, 11, 0.28) !important;
+  color: #b45309 !important;
+}
+body.dark .due {
+  background: rgba(245, 158, 11, 0.18) !important;
+  border-color: rgba(245, 158, 11, 0.35) !important;
+  color: #fbbf24 !important;
+}
+
+.due.role {
+  background: var(--surface2, #f1f5f9) !important;
+  border: 1px solid var(--line, #e2e8e2) !important;
+  color: var(--ink2, #475569) !important;
+}
+body.dark .due.role {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #94a3b8 !important;
+}
+
+.due.mine {
+  background: rgba(16, 185, 129, 0.12) !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+  color: #059669 !important;
+}
+body.dark .due.mine {
+  background: rgba(16, 185, 129, 0.2) !important;
+  border-color: rgba(16, 185, 129, 0.4) !important;
+  color: #34d399 !important;
+}
+
+/* Note button chip */
+.item-note-chip {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  padding: 2px 8px !important;
+  border-radius: 6px !important;
+  font-size: 0.72rem !important;
+  font-weight: 600 !important;
+  background: var(--surface2, #f8fafc) !important;
+  border: 1px dashed var(--line, #cbd5e1) !important;
+  color: var(--ink2, #64748b) !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+.item-note-chip:hover,
+.item-note-chip.has-note {
+  border-color: var(--accent, #2f6b5e) !important;
+  color: var(--accent, #2f6b5e) !important;
+  background: rgba(47, 107, 94, 0.08) !important;
+}
+body.dark .item-note-chip {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: #94a3b8 !important;
+}
+body.dark .item-note-chip:hover,
+body.dark .item-note-chip.has-note {
+  border-color: #34d399 !important;
+  color: #34d399 !important;
+  background: rgba(16, 185, 129, 0.15) !important;
+}
+
+/* Note Display box */
+.item-note-display {
+  display: block !important;
+  margin-top: 4px !important;
+  padding: 6px 10px !important;
+  border-radius: 8px !important;
+  background: rgba(59, 130, 246, 0.06) !important;
+  border-inline-start: 3px solid #3b82f6 !important;
+  color: var(--ink, #1e293b) !important;
+  font-size: 0.78rem !important;
+  line-height: 1.35 !important;
+}
+body.dark .item-note-display {
+  background: rgba(59, 130, 246, 0.12) !important;
+  border-inline-start-color: #60a5fa !important;
+  color: #e2e8f0 !important;
+}
+
+/* 3. Executive Section Card Architecture */
+#sections > section.card,
+.card {
+  border-radius: 18px !important;
+  background: var(--card, #ffffff) !important;
+  border: 1.5px solid var(--line, #e2e8e2) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03) !important;
+  margin-bottom: 16px !important;
+  overflow: hidden !important;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease !important;
+}
+
+body.dark #sections > section.card,
+body.dark .card {
+  background: var(--card, #17211b) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3) !important;
+}
+
+.card.complete {
+  border-color: rgba(16, 185, 129, 0.4) !important;
+}
+body.dark .card.complete {
+  border-color: rgba(52, 211, 153, 0.35) !important;
+}
+
 .card .head {
   display: flex !important;
   flex-direction: column !important;
-  gap: 8px !important;
-  padding: 14px 16px 12px !important;
-  background: var(--card) !important;
-  border-bottom: 1px solid var(--line) !important;
+  gap: 10px !important;
+  padding: 14px 16px !important;
+  background: var(--card, #ffffff) !important;
+  border-bottom: 1px solid var(--line, #e2e8e2) !important;
+}
+body.dark .card .head {
+  background: var(--card, #17211b) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
 }
 
 .card .head-main-row {
@@ -1421,36 +1710,41 @@ body.dark .item.done {
   border-radius: 12px !important;
   display: grid !important;
   place-items: center !important;
-  font-size: 1.3rem !important;
-  background: color-mix(in srgb, var(--c, var(--accent)) 15%, var(--bg)) !important;
-  border: 1px solid color-mix(in srgb, var(--c, var(--accent)) 25%, transparent) !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+  font-size: 1.35rem !important;
+  background: color-mix(in srgb, var(--c, var(--accent)) 12%, var(--card)) !important;
+  border: 1px solid color-mix(in srgb, var(--c, var(--accent)) 24%, transparent) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
 }
 
 .card .head .nm-t {
   font-size: 1.05rem !important;
   font-weight: 800 !important;
-  line-height: 1.35 !important;
-  color: var(--ink) !important;
+  line-height: 1.3 !important;
+  color: var(--ink, #142019) !important;
   white-space: normal !important;
   word-break: break-word !important;
+  letter-spacing: -0.01em !important;
+}
+body.dark .card .head .nm-t {
+  color: #f1f5f9 !important;
 }
 
 .card .head .ct {
   flex: 0 0 auto !important;
-  font-size: 0.84rem !important;
+  font-size: 0.82rem !important;
   font-weight: 800 !important;
   padding: 4px 12px !important;
   border-radius: 99px !important;
-  background: var(--bg2, rgba(0, 0, 0, 0.04)) !important;
-  border: 1px solid var(--line) !important;
-  color: var(--ink) !important;
+  background: var(--surface2, #f1f5f9) !important;
+  border: 1px solid var(--line, #e2e8e2) !important;
+  color: var(--ink, #1e293b) !important;
   white-space: nowrap !important;
+  font-variant-numeric: tabular-nums !important;
 }
 .complete .card .head .ct,
 .card.complete .head .ct {
   background: rgba(16, 185, 129, 0.12) !important;
-  border-color: #34d399 !important;
+  border-color: rgba(16, 185, 129, 0.35) !important;
   color: #059669 !important;
 }
 body.dark .card.complete .head .ct {
@@ -1464,7 +1758,8 @@ body.dark .card.complete .head .ct {
   justify-content: space-between !important;
   gap: 8px !important;
   width: 100% !important;
-  padding-inline-start: 54px !important;
+  padding-inline-start: 0 !important;
+  flex-wrap: wrap !important;
 }
 .card .head-meta-row:empty {
   display: none !important;
@@ -1679,6 +1974,13 @@ body.has-bottom-bar {
   padding-bottom: calc(78px + env(safe-area-inset-bottom, 16px)) !important;
 }
 
+.app-bottom-bar[hidden],
+body.login-open .app-bottom-bar,
+body.login-open #appBottomBar,
+body:not(.has-bottom-bar) .app-bottom-bar {
+  display: none !important;
+}
+
 .app-bottom-bar {
   position: fixed !important;
   bottom: 0 !important;
@@ -1884,13 +2186,501 @@ body.dark .tab-badge {
 }
 
 
+/* ==========================================================================
+   AUTHENTIC CEEN ORDERS DESIGN SYSTEM (Exact ceen-bar-orders-v2 Parity)
+   ========================================================================== */
+#ordersView .welcome,
+.orders-view-root .welcome {
+  margin: 6px 0 20px;
+}
+#ordersView .welcome .kicker,
+.orders-view-root .kicker {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: var(--amber, #bc9762);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+#ordersView .welcome .title,
+.orders-view-root .welcome .title {
+  font-size: clamp(24px, 5.5vw, 34px);
+  letter-spacing: -0.8px;
+  line-height: 1.2;
+  margin: 0 0 8px;
+  font-weight: 800;
+  color: var(--ink);
+}
+#ordersView .welcome .sub,
+.orders-view-root .welcome .sub {
+  color: var(--ink2, #4b5563);
+  font-size: 14px;
+  margin: 0 0 18px;
+  line-height: 1.5;
+}
+
+/* --- Draft Card --- */
+.draft-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  background: var(--accent-soft, #eaf1e7);
+  border: 1px solid var(--line, #dfe6db);
+  padding: 18px 20px;
+  border-radius: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+}
+body.dark .draft-card {
+  background: rgba(36, 91, 72, 0.22);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+.draft-count {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.draft-count strong {
+  font-size: 38px;
+  font-weight: 800;
+  letter-spacing: -1.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent, #245b48);
+  line-height: 1;
+}
+body.dark .draft-count strong {
+  color: #8cc8aa;
+}
+.draft-count span {
+  font-size: 13px;
+  color: var(--ink2, #4b5563);
+  line-height: 1.4;
+  font-weight: 600;
+}
+.draft-card button.primary {
+  font-size: 13px;
+  font-weight: 700;
+  padding: 12px 18px;
+  min-height: 44px;
+  border-radius: 14px;
+  background: var(--accent, #245b48) !important;
+  color: #ffffff !important;
+  border: 0;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  transition: transform 0.15s, opacity 0.15s;
+}
+.draft-card button.primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+.draft-card button.primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* --- Section Heading --- */
+.section-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 14px;
+}
+.section-heading h2 {
+  font-size: 19px;
+  letter-spacing: -0.4px;
+  margin: 0;
+  font-weight: 800;
+  color: var(--ink);
+}
+.section-heading span {
+  color: var(--muted, #8a8f98);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Group Cards Grid --- */
+.section-cards {
+  display: grid;
+  gap: 14px;
+}
+.group-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  text-align: start;
+  padding: 18px 20px;
+  border: 1px solid var(--line, #dfe6db);
+  border-radius: 20px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05);
+  background: var(--card, #ffffff);
+  cursor: pointer;
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s ease, border-color 0.15s;
+  width: 100%;
+}
+.group-card:hover {
+  border-color: var(--accent, #2f6b5e);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+.group-card:active {
+  transform: scale(0.985);
+}
+body.dark .group-card {
+  background: var(--card, #141f1a);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+body.dark .group-card:hover {
+  border-color: #8cc8aa;
+}
+.glyph {
+  width: 54px;
+  height: 60px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: var(--accent-soft, #eaf1e7);
+  color: var(--amber, #bc9762);
+  flex-shrink: 0;
+  transition: background-color 0.15s;
+}
+body.dark .glyph {
+  background: rgba(201, 164, 106, 0.16);
+  color: #c9a46a;
+}
+.glyph svg {
+  width: 29px;
+  height: 29px;
+}
+.group-card .label {
+  flex: 1;
+  min-width: 0;
+}
+.group-card b {
+  display: block;
+  font-size: 20px;
+  letter-spacing: -0.4px;
+  margin-bottom: 4px;
+  color: var(--ink);
+  font-weight: 800;
+}
+.group-card small {
+  display: block;
+  font-size: 13px;
+  color: var(--ink2, #4b5563);
+  font-weight: 400;
+  line-height: 1.4;
+}
+.group-card .arrow {
+  color: var(--amber, #bc9762);
+  font-size: 22px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.section-progress {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+  color: var(--muted, #8a8f98);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.progress-rail {
+  width: 100%;
+  height: 5px;
+  border-radius: 10px;
+  background: var(--line, #dfe6db);
+  overflow: hidden;
+  margin-top: 6px;
+}
+body.dark .progress-rail {
+  background: rgba(255, 255, 255, 0.08);
+}
+.progress-rail span,
+.progress-rail div {
+  height: 100%;
+  background: var(--amber, #bc9762);
+  border-radius: 10px;
+  transition: width 0.2s ease-out;
+}
+
+/* --- Resume Box --- */
+.resume {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--accent-soft, #eaf1e7);
+  border: 1px solid var(--line, #dfe6db);
+  border-radius: 16px;
+  padding: 14px 18px;
+  margin-top: 16px;
+}
+body.dark .resume {
+  background: rgba(36, 91, 72, 0.18);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.resume span {
+  font-size: 12px;
+  color: var(--ink2, #4b5563);
+  line-height: 1.4;
+}
+.resume b {
+  display: block;
+  font-size: 14px;
+  color: var(--ink);
+  margin-top: 2px;
+}
+
+/* --- Toolbar Row --- */
+.toolbar-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+  align-items: center;
+}
+.toolbar-row button {
+  font-size: 13px;
+  font-weight: 600;
+  min-height: 44px;
+  padding: 10px 16px;
+  border-radius: 14px;
+}
+.toolbar-row button.ghost {
+  background: transparent;
+  border: 1.5px dashed var(--line, #dfe6db);
+  color: var(--ink);
+  cursor: pointer;
+}
+.toolbar-row button.ghost:hover {
+  border-color: var(--accent, #2f6b5e);
+  color: var(--accent, #2f6b5e);
+}
+
+/* --- Small Note --- */
+.small-note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+  font-size: 12px;
+  color: var(--muted, #8a8f98);
+  line-height: 1.45;
+}
+.small-note svg {
+  color: var(--amber, #bc9762);
+  flex-shrink: 0;
+}
+
+/* --- Categories Grid (02 / Choose Category) --- */
+.type-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 20px;
+}
+.type-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: start;
+  gap: 12px;
+  min-height: 145px;
+  padding: 16px 18px;
+  border: 1px solid var(--line, #dfe6db);
+  border-radius: 18px;
+  background: var(--card, #ffffff);
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+  width: 100%;
+}
+.type-card:hover {
+  border-color: var(--accent, #2f6b5e);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+body.dark .type-card {
+  background: var(--card, #141f1a);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.type-icon {
+  color: var(--amber, #bc9762);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+}
+.type-card b {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--ink);
+  line-height: 1.25;
+}
+.type-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  font-size: 12px;
+  color: var(--muted, #8a8f98);
+  margin-top: auto;
+}
+.picked {
+  color: var(--accent, #245b48);
+  font-weight: 700;
+  font-size: 12px;
+  background: var(--accent-soft, rgba(36, 91, 72, 0.1));
+  padding: 2px 8px;
+  border-radius: 99px;
+}
+body.dark .picked {
+  color: #8cc8aa;
+  background: rgba(140, 200, 170, 0.15);
+}
+
+/* --- View Mode Switcher --- */
+.view-switch {
+  display: flex;
+  gap: 4px;
+  background: var(--accent-soft, #eaf1e7);
+  padding: 5px;
+  border: 1px solid var(--line, #dfe6db);
+  border-radius: 16px;
+  margin: 18px 0;
+}
+body.dark .view-switch {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.view-switch button {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted, #8a8f98);
+  padding: 10px 8px;
+  min-height: 44px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+.view-switch button.on {
+  background: var(--card, #ffffff);
+  color: var(--ink);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  font-weight: 700;
+}
+body.dark .view-switch button.on {
+  background: #23382d;
+  color: #eef2ee;
+}
+
+/* --- Stepper (Order Quantity) --- */
+.stepper {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  height: 84px;
+  border: 1px solid var(--line, #ced9cb);
+  background: var(--bg, #f5f6f0);
+  border-radius: 18px;
+  padding: 7px;
+  gap: 6px;
+}
+body.dark .stepper {
+  background: #0e1311;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+.stepper button {
+  min-width: 56px;
+  min-height: 64px;
+  border: 0;
+  background: var(--card, #ffffff);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--accent, #245b48);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.stepper button:active {
+  transform: scale(0.94);
+}
+.stepper button[data-action=plus] {
+  background: var(--accent, #245b48) !important;
+  color: #ffffff !important;
+}
+body.dark .stepper button {
+  background: #1d2622;
+  color: #8cc8aa;
+}
+body.dark .stepper button[data-action=plus] {
+  background: #3f8f6f !important;
+  color: #07100b !important;
+}
+.stepper input {
+  font-size: 38px;
+  font-weight: 700;
+  text-align: center;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  height: 64px;
+  flex: 1;
+  color: var(--ink);
+}
+
+/* --- Stock Panel --- */
+.stock-panel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  background: var(--accent-soft, #eaf1e7);
+  border: 1px solid var(--line, #dfe6db);
+  border-radius: 16px;
+  margin-top: 16px;
+  padding: 14px 18px;
+}
+body.dark .stock-panel {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.stock-panel b {
+  font-size: 13px;
+  font-weight: 700;
+  display: block;
+}
+.stock-panel small {
+  font-size: 11px;
+  color: var(--muted, #8a8f98);
+}
+.stock-panel .ord-stock-val {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--accent, #245b48);
+  direction: ltr;
+}
+body.dark .stock-panel .ord-stock-val {
+  color: #8cc8aa;
+}
+
 /* =========================================================================
    BOTTOM BAR COLLISION FIX & ORDERS BOTTOM BAR ELEVATION
    Prevents action buttons (Previous, Next, Review, etc.) from being hidden
    behind the 5-icon app bottom bar.
    ========================================================================= */
 body.has-bottom-bar .ord-bottom-bar {
-  bottom: calc(64px + env(safe-area-inset-bottom, 0px)) !important;
+  bottom: calc(76px + env(safe-area-inset-bottom, 16px)) !important;
   z-index: 980 !important;
   max-width: 580px !important;
   margin: 0 auto !important;
@@ -1912,7 +2702,7 @@ body.dark.has-bottom-bar .ord-bottom-bar {
 body.has-bottom-bar #ordersView,
 body.has-bottom-bar .orders-view-root,
 body.has-bottom-bar:has(.ord-bottom-bar) {
-  padding-bottom: calc(150px + env(safe-area-inset-bottom, 16px)) !important;
+  padding-bottom: calc(180px + env(safe-area-inset-bottom, 16px)) !important;
 }
 
 /* =========================================================================
@@ -2896,4 +3686,266 @@ dialog.sheet,
 .dept-isolated-banner {
   will-change: transform, opacity;
   transform: translateZ(0);
+}
+
+/* Manager Top Segmented Filter Bar */
+.mgr-filter-bar {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 4px 2px 8px;
+  margin-bottom: 6px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.mgr-filter-bar::-webkit-scrollbar {
+  display: none;
+}
+.mgr-filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--card, #ffffff);
+  border: 1px solid var(--line, #e2e8e2);
+  color: var(--ink, #1f2937);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+}
+.mgr-filter-pill:hover {
+  background: var(--bg-hover, rgba(47, 107, 94, 0.06));
+}
+.mgr-filter-pill.active {
+  background: var(--accent, #2f6b5e);
+  color: #ffffff;
+  border-color: var(--accent, #2f6b5e);
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(47, 107, 94, 0.25);
+}
+
+
+/* ============================================================================
+   SUPER EMPLOYEE v22: UNCLUTTERED CHECKLIST ARCHITECTURE & ANTI-OCCLUSION CLEARANCE
+   ============================================================================ */
+
+/* 1. Strictly hide redundant repetitive role and department pills */
+.assigned-task-pill,
+.dept-closing-tag {
+  display: none !important;
+}
+
+/* 2. Generous mobile clearance to eliminate bottom nav occlusion */
+body.has-bottom-bar {
+  padding-bottom: calc(140px + env(safe-area-inset-bottom, 24px)) !important;
+}
+body.has-bottom-bar main#appMain,
+body.has-bottom-bar #sections {
+  padding-bottom: calc(130px + env(safe-area-inset-bottom, 24px)) !important;
+}
+#sections > section.card:last-child {
+  margin-bottom: calc(54px + env(safe-area-inset-bottom, 20px)) !important;
+}
+
+/* 3. Luxury Card Architecture with pristine spacing */
+#sections > section.card,
+.card {
+  border-radius: 20px !important;
+  margin-bottom: 18px !important;
+  border: 1.5px solid var(--line, #e2e8e2) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04) !important;
+  background: var(--card, #ffffff) !important;
+}
+body.dark #sections > section.card,
+body.dark .card {
+  background: var(--card, #17211b) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35) !important;
+}
+
+.card .head {
+  padding: 16px 18px !important;
+  gap: 8px !important;
+  border-bottom: 1px solid var(--line, #eef2f0) !important;
+}
+body.dark .card .head {
+  border-bottom-color: rgba(255, 255, 255, 0.07) !important;
+}
+.card .head-meta-row:empty {
+  display: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* 4. Full-width, un-squeezed checklist item rows */
+.items .item {
+  border-top: 1px solid var(--line, #eef2f0) !important;
+  background: var(--card, #ffffff) !important;
+  transition: background-color 0.15s ease !important;
+}
+.items .item:first-child {
+  border-top: 0 !important;
+}
+body.dark .items .item {
+  background: var(--card, #17211b) !important;
+  border-top-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+.items .item .row {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 14px !important;
+  padding: 14px 18px !important;
+  cursor: pointer !important;
+  min-height: 52px !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+}
+
+.items .item .tx {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+}
+
+.item-title-row {
+  width: 100% !important;
+  display: flex !important;
+  align-items: baseline !important;
+  gap: 8px !important;
+}
+.item-title-row .n {
+  flex: 0 0 auto !important;
+  font-weight: 800 !important;
+  font-size: 0.95rem !important;
+  color: var(--accent, #10b981) !important;
+  min-width: 22px !important;
+}
+.item-title-row .t {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  line-height: 1.45 !important;
+  color: var(--ink, #142019) !important;
+  word-break: break-word !important;
+}
+body.dark .item-title-row .t {
+  color: #f1f5f9 !important;
+}
+
+.item-meta-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important;
+  margin-top: 4px !important;
+}
+
+
+/* Checklist Instant Search Bar */
+.checklist-search-bar {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  background: var(--surface) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 12px !important;
+  padding: 6px 12px !important;
+  margin: 8px 0 !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04) !important;
+}
+.chk-search-icon {
+  font-size: 0.95rem !important;
+  opacity: 0.6 !important;
+}
+.chk-search-input {
+  flex: 1 !important;
+  border: none !important;
+  background: transparent !important;
+  color: var(--ink) !important;
+  font-size: 0.88rem !important;
+  outline: none !important;
+  width: 100% !important;
+}
+.chk-search-input::placeholder {
+  color: var(--ink2) !important;
+  opacity: 0.75 !important;
+}
+.chk-search-clear {
+  background: none !important;
+  border: none !important;
+  color: var(--ink2) !important;
+  font-size: 1.2rem !important;
+  cursor: pointer !important;
+  padding: 0 4px !important;
+}
+
+/* ============================================================================
+   FOH Fast-Service Cockpit & Tactile Shift Flow Styles
+   ============================================================================ */
+.role-landing-hero.cockpit-compact {
+  max-height: 42px !important;
+  min-height: 38px !important;
+  padding: 2px 10px !important;
+  overflow: hidden !important;
+  margin-bottom: 8px !important;
+  border-radius: 10px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+}
+
+#sections.cockpit-collapsed {
+  display: none !important;
+}
+
+.cockpit-quick-drawer {
+  background: var(--surface) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 14px !important;
+  padding: 12px !important;
+  margin: 10px 0 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+}
+
+.cockpit-replenish-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  margin-top: 8px !important;
+}
+
+.cockpit-replenish-tile {
+  background: var(--surface2, rgba(255, 255, 255, 0.04)) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 10px !important;
+  padding: 10px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  cursor: pointer !important;
+  text-align: start !important;
+  overflow: hidden !important;
+  min-height: 52px !important;
+}
+
+.cockpit-replenish-tile.in-cooldown {
+  border-color: #f59e0b !important;
+  background: rgba(245, 158, 11, 0.08) !important;
+}
+
+.cockpit-seal-drawer {
+  background: var(--surface) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 16px !important;
+  padding: 16px !important;
+  margin: 12px 0 !important;
+  padding-bottom: calc(var(--tab-bar-height, 68px) + env(safe-area-inset-bottom, 16px)) !important;
 }

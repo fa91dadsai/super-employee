@@ -29,49 +29,13 @@
     if (FOH.snoozeEngine && FOH.snoozeEngine.snoozeAlertWithTimer) FOH.snoozeEngine.snoozeAlertWithTimer(opts);
   }
 
-  function loadSnoozeTimers() {
-    return FOH.snoozeEngine ? FOH.snoozeEngine.loadSnoozeTimers() : {};
-  }
-
-  function saveSnoozeTimers(t) {
-    if (FOH.snoozeEngine && FOH.snoozeEngine.saveSnoozeTimers) FOH.snoozeEngine.saveSnoozeTimers(t);
-  }
-
-  function ensureNotificationPermission() {
-    return (FOH.snoozeEngine && FOH.snoozeEngine.ensureNotificationPermission)
-      ? FOH.snoozeEngine.ensureNotificationPermission()
-      : Promise.resolve('denied');
-  }
-
-  function scheduleServiceWorkerNotification(opts = {}) {
-    if (FOH.snoozeEngine && FOH.snoozeEngine.scheduleServiceWorkerNotification) {
-      const { id, title, body, delay } = opts;
-      return FOH.snoozeEngine.scheduleServiceWorkerNotification(id, title, body, delay);
-    }
-    return Promise.resolve();
-  }
-
-  function fireNativeLockScreenNotification(t, b, tag) {
-    if (FOH.snoozeEngine && FOH.snoozeEngine.fireNativeLockScreenNotification) {
-      FOH.snoozeEngine.fireNativeLockScreenNotification(t, b, tag);
-    }
-  }
-
-  function roleName(id) {
-    return FOH.taskSheet && FOH.taskSheet.roleName ? FOH.taskSheet.roleName(id) : 'Staff';
-  }
-
-  function loadPendingNameChanges() {
-    return FOH.pendingApprovals ? FOH.pendingApprovals.loadPendingNameChanges() : [];
-  }
-
-  function savePendingNameChanges(list) {
-    if (FOH.pendingApprovals) FOH.pendingApprovals.savePendingNameChanges(list);
-  }
-
-  function getHealthAlerts() {
-    return FOH.gov ? FOH.gov.getHealthAlerts() : [];
-  }
+  const loadSnoozeTimers = () => (FOH.snoozeEngine ? FOH.snoozeEngine.loadSnoozeTimers() : {});
+  const saveSnoozeTimers = (t) => { if (FOH.snoozeEngine && FOH.snoozeEngine.saveSnoozeTimers) FOH.snoozeEngine.saveSnoozeTimers(t); };
+  const ensureNotificationPermission = () => ((FOH.snoozeEngine && FOH.snoozeEngine.ensureNotificationPermission) ? FOH.snoozeEngine.ensureNotificationPermission() : Promise.resolve('denied'));
+  const scheduleServiceWorkerNotification = (opts = {}) => ((FOH.snoozeEngine && FOH.snoozeEngine.scheduleServiceWorkerNotification) ? FOH.snoozeEngine.scheduleServiceWorkerNotification(opts.id, opts.title, opts.body, opts.delay) : Promise.resolve());
+  const fireNativeLockScreenNotification = (t, b, tag) => { if (FOH.snoozeEngine && FOH.snoozeEngine.fireNativeLockScreenNotification) FOH.snoozeEngine.fireNativeLockScreenNotification(t, b, tag); };
+  const roleName = (id) => (FOH.taskSheet && FOH.taskSheet.roleName ? FOH.taskSheet.roleName(id) : 'Staff');
+  const getHealthAlerts = () => (FOH.gov ? FOH.gov.getHealthAlerts() : []);
 
   function getActiveSnoozeTimersList() {
     return FOH.snoozeEngine ? FOH.snoozeEngine.getActiveSnoozeTimersList() : [];
@@ -81,61 +45,23 @@
     return FOH.taskInbox ? FOH.taskInbox.loadTaskInbox() : [];
   }
 
-  // ---- Notification Bell 🔔 in Header & Notification Center Modal ----
   function ensureNotifBellInHeader() {
-    let bellBtn = $('notifBellBtn');
-    if (!bellBtn) {
-      const cluster = document.querySelector('.top-right-actions');
-      const bar = document.querySelector('header.top .bar');
-      const profBtn = $('profileBtn');
-      bellBtn = el('button', 'notif-bell-btn');
-      bellBtn.type = 'button';
-      bellBtn.id = 'notifBellBtn';
-      bellBtn.setAttribute('aria-label', 'Notifications');
-      bellBtn.innerHTML = '🔔<span id="notifCountBadge" class="notif-bell-badge" hidden>0</span>';
-      if (cluster && profBtn) cluster.insertBefore(bellBtn, profBtn);
-      else if (bar && profBtn) bar.insertBefore(bellBtn, profBtn);
-    }
-    if (bellBtn && !bellBtn.dataset.v18Wired) {
-      bellBtn.dataset.v18Wired = '1';
-      bellBtn.addEventListener('click', openNotificationCenterModal);
+    if (FOH.notifBell && FOH.notifBell.ensureNotifBellInHeader) {
+      return FOH.notifBell.ensureNotifBellInHeader();
     }
   }
 
   function getActivePendingNameChanges() {
-    const fromStorage = typeof loadPendingNameChanges === 'function' ? loadPendingNameChanges() : (typeof FOH.loadPendingNameChanges === 'function' ? FOH.loadPendingNameChanges() : []);
-    const fromStaff = (S.tpl.staff || []).map((p) => p.pendingNameChange).filter((p) => p && p.status === 'pending');
-    const map = new Map();
-    fromStorage.concat(fromStaff).forEach((it) => {
-      if (it && it.status === 'pending') {
-        const key = it.staffId || it.staffUsername || it.id;
-        if (!map.has(key) || (it.requestedAt && (!map.get(key).requestedAt || it.requestedAt > map.get(key).requestedAt))) {
-          map.set(key, it);
-        }
-      }
-    });
-    return Array.from(map.values());
+    if (FOH.notifBell && FOH.notifBell.getActivePendingNameChanges) {
+      return FOH.notifBell.getActivePendingNameChanges();
+    }
+    return [];
   }
 
   function updateNotifBellUI() {
-    ensureNotifBellInHeader();
-    const badge = $('notifCountBadge');
-    if (!badge) return;
-    const hAlerts = isAlertSnoozedNow('__group_health_banner') ? [] : getHealthAlerts();
-    const due = !isAlertSnoozedNow('__group_task_banner')
-      ? FOH.reminders.next(FOH.preview.sections(), S.run.checked, FOH.tasksView.todayStates(), S.date, FOH.time.nowHM())
-      : null;
-    const activeCount = hAlerts.length + (due && due.ids ? due.ids.length : 0);
-    const snoozedList = getActiveSnoozeTimersList().filter((x) => !x.key.startsWith('__group_'));
-    const unreadTasks = (typeof loadTaskInbox === 'function' ? loadTaskInbox().length : 0);
-    const sess = getSession();
-    const isMgr = !sess || !!sess.isManager;
-    const pendingChanges = isMgr ? getActivePendingNameChanges() : [];
-    const total = activeCount + snoozedList.length + unreadTasks + pendingChanges.length;
-
-    badge.hidden = total === 0;
-    badge.textContent = String(total);
-    badge.classList.toggle('snoozed-only', activeCount === 0 && snoozedList.length > 0 && pendingChanges.length === 0);
+    if (FOH.notifBell && FOH.notifBell.updateNotifBellUI) {
+      return FOH.notifBell.updateNotifBellUI();
+    }
   }
 
   function handleApproveNameChange(opts = {}) {

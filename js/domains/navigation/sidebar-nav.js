@@ -158,6 +158,18 @@
     if (sbBrandStrong) {
       sbBrandStrong.textContent = ar ? ident.titleAr : ident.titleEn;
     }
+    const themeBtn = $('sbThemeToggle');
+    if (themeBtn) {
+      const isDark = document.body.classList.contains('dark');
+      themeBtn.textContent = isDark
+        ? (ar ? '☀️ نهاري' : '☀️ Light')
+        : (ar ? '🌙 ليلي' : '🌙 Dark');
+    }
+    const logoutBtn = $('sbLogoutBtn');
+    if (logoutBtn) {
+      logoutBtn.setAttribute('title', ar ? 'تسجيل الخروج' : 'Log out');
+      logoutBtn.setAttribute('aria-label', ar ? 'تسجيل الخروج' : 'Log out');
+    }
     const sbFoot = document.querySelector('#appSidebar .sb-foot');
     if (sbFoot && !$('sbLangToggle')) {
       const langBtn = el('button', 'btn sb-foot-btn', ar ? '🌐 EN' : '🌐 عربي');
@@ -227,12 +239,14 @@
   function openSidebar() {
     if ($('sidebarBackdrop')) $('sidebarBackdrop').hidden = false;
     if ($('appSidebar')) $('appSidebar').hidden = false;
+    document.body.classList.add('sidebar-open');
     renderSidebarContent();
   }
 
   function closeSidebar() {
     if ($('sidebarBackdrop')) $('sidebarBackdrop').hidden = true;
     if ($('appSidebar')) $('appSidebar').hidden = true;
+    document.body.classList.remove('sidebar-open');
   }
 
   function switchView(nextView) {
@@ -267,12 +281,22 @@
     return map[view] || map.opening;
   }
 
+  function getSuperRolesMeta() {
+    return (
+      (FOH.opsConfigStore && FOH.opsConfigStore.SUPER_ROLES_META) ||
+      (FOH.opsLifecycle && FOH.opsLifecycle.SUPER_ROLES_META) ||
+      FOH.SUPER_ROLES_META ||
+      {}
+    );
+  }
+
   function renderSidebarProfileCard(profBox, sess, ar) {
     profBox.replaceChildren();
-    const dispName = (sess && (ar ? sess.displayNameAr || sess.displayName : sess.displayName)) || S.me.name || 'Fadi (Supervisor)';
+    const dispName = (sess && (ar ? sess.displayNameAr || sess.displayName : sess.displayName)) || S.me.name || 'Staff';
     const srKey = getCurrentSuperRoleKey();
-    const srMeta = SUPER_ROLES_META[srKey] || SUPER_ROLES_META.staff;
-    const roleLbl = srMeta.badge;
+    const metaMap = getSuperRolesMeta();
+    const srMeta = metaMap[srKey] || metaMap.staff || { badge: 'Staff', label: 'Staff' };
+    const roleLbl = (srMeta && srMeta.badge) || 'Staff';
     const initials = dispName.slice(0, 2).toUpperCase();
 
     const staffRec = (S.tpl.staff || []).find(
@@ -337,16 +361,15 @@
 
   function renderSidebarNavList(nav, isMgr, ar) {
     nav.replaceChildren();
-    const all = FOH.model.progress(FOH.model.allLeaves({ sections: FOH.preview.sections() }), S.run.checked);
-    const openLeft = all.total - all.done;
     const ordCount = $('badgeOrders') ? Number($('badgeOrders').textContent || '0') : 0;
 
+    // Secondary / Overflow views only - de-duplicated from Bottom Tab Bar (#tabBar)
     const items = [
-      ['opening', openLeft > 0 ? String(openLeft) : '✓'],
+      ['closing_sheet', '🌙'],
       ['orders', ordCount > 0 ? String(ordCount) : ''],
-      ['dayoff', '🏖️'],
-      ['profile', '🏥'],
+      ['inv', '📦'],
       ['dashboard', '📊'],
+      ['profile', '👤'],
     ];
     if (isMgr) items.push(['settings', '⚙️']);
 
@@ -370,7 +393,7 @@
       $('sbRestaurantName').textContent = '🍽 ' + (ar ? gov.restaurantNameAr : gov.restaurantName);
     }
     if ($('sbNavTitle')) {
-      $('sbNavTitle').textContent = ar ? 'أقسام التطبيق · اختر للتركيز' : 'SECTIONS · TAP TO FOCUS';
+      $('sbNavTitle').textContent = ar ? 'أقسام إضافية · اختر للتركيز' : 'MORE SECTIONS · TAP TO FOCUS';
     }
 
     const profBox = $('sbProfileCard');

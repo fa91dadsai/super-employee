@@ -1,24 +1,28 @@
 // foh-opening/js/domains/orders/orders-view.js
-// Warehouse & Bar Ordering Workflow (Item Selection, Stock Tally & WhatsApp Dispatch)
+// Warehouse & Bar Ordering Workflow (Router, Facade, Emergency Replenishment & Bottom Nav)
 (function (FOH) {
   'use strict';
 
   const $ = (id) => document.getElementById(id);
-  const S = () => FOH.state;
   const store = () => FOH.ordersStore;
-  const dispatch = () => FOH.ordersDispatch;
   const { el } = FOH.view;
+  const isAr = () => (FOH.i18n ? FOH.i18n.lang === 'ar' : false);
 
   let ordRoute = 'home'; // 'home' | 'types/<group>' | 'products/<cat>' | 'item/<id>' | 'complete/<cat>' | 'review'
-  let ordForceAllGroups = false;
-  let ordProductSearch = '';
-  let ordQuickSearch = '';
-  let ordQuickOnlyRequested = false;
-  let ordReturnToReview = false;
-  let ordIncludeStockInMsg = false;
 
-  const isAr = () => (FOH.i18n ? FOH.i18n.lang === 'ar' : false);
-  const getSession = () => ((FOH.auth && FOH.auth.getSession) ? FOH.auth.getSession() : (FOH.sessionAuth ? FOH.sessionAuth.getSession() : null));
+  const ORD_ICONS = {
+    bottle: '<svg viewBox="0 0 24 24" aria-hidden="true" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 3h4v5l3 4v8a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-8l3-4zM7 14h10M10 6h4"/></svg>',
+    wine: '<svg viewBox="0 0 24 24" aria-hidden="true" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3h10l1 6a6 6 0 0 1-12 0zM12 15v6m-4 0h8M6 8h12"/></svg>',
+    leaf: '<svg viewBox="0 0 24 24" aria-hidden="true" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 4C6 2 2 9 5 15s14 7 15-11ZM6 19 16 9m-5 5v-5m0 5h5"/></svg>',
+    box: '<svg viewBox="0 0 24 24" aria-hidden="true" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 12v10"/></svg>',
+  };
+
+  function getGroupIconSvg(gid, iconKey) {
+    if (iconKey === 'wine' || gid === 'wine') return ORD_ICONS.wine;
+    if (iconKey === 'leaf' || gid === 'fresh') return ORD_ICONS.leaf;
+    if (iconKey === 'box' || gid === 'foh') return ORD_ICONS.box;
+    return ORD_ICONS.bottle;
+  }
 
   function updateOrderBadge() {
     const count = store().ordSelectedItems().length;
@@ -36,21 +40,26 @@
     const root = $('ordersView');
     if (root) {
       renderOrdersView(root);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
+        try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch { /* Ignore */ }
+      }
     }
+    if (FOH.bottomBar && FOH.bottomBar.syncBottomBar) FOH.bottomBar.syncBottomBar();
   }
 
   function buildOrdBreadcrumbs(groupKey, catId, tailLabel) {
     const ar = isAr();
-    const nav = el('nav', 'ord-crumbs');
-    const homeBtn = el('button', '', ar ? 'الأقسام (Sections)' : 'Sections');
+    const nav = el('nav', 'breadcrumbs');
+    const arrow = ar ? ' ‹ ' : ' › ';
+
+    const homeBtn = el('button', '', ar ? 'الأقسام' : 'Sections');
     homeBtn.type = 'button';
     homeBtn.addEventListener('click', () => ordGo('home'));
     nav.append(homeBtn);
 
     const db = store().getDB();
     if (groupKey && db.catalog.groups[groupKey]) {
-      nav.append(el('span', '', '›'));
+      nav.append(el('span', '', arrow));
       const g = db.catalog.groups[groupKey];
       const gBtn = el('button', '', ar ? g.nameAr || g.name : g.name);
       gBtn.type = 'button';
@@ -58,7 +67,7 @@
       nav.append(gBtn);
     }
     if (catId && store().ordCat(catId)) {
-      nav.append(el('span', '', '›'));
+      nav.append(el('span', '', arrow));
       const c = store().ordCat(catId);
       const cBtn = el('button', '', ar ? c.nameAr || c.name : c.name);
       cBtn.type = 'button';
@@ -66,28 +75,26 @@
       nav.append(cBtn);
     }
     if (tailLabel) {
-      nav.append(el('span', '', '›'), el('span', '', tailLabel));
+      nav.append(el('span', '', arrow), el('span', '', tailLabel));
     }
     return nav;
   }
 
   function buildOrdViewSwitch(catId, activeMode) {
-    const sw = el('div', 'ord-view-switch');
-    const stepBtn = el('button', activeMode === 'step' ? 'on' : '', isAr() ? '▣ صنفًا بصنف (Step-by-step)' : '▣ Step-by-step');
+    const sw = el('div', 'view-switch');
+    const stepBtn = el('button', activeMode === 'step' ? 'on' : '', isAr() ? '▣ صنفاً بصنف' : '▣ Step-by-step');
     stepBtn.type = 'button';
     stepBtn.addEventListener('click', () => {
-      const db = store().getDB();
-      db.preferences.viewMode = 'step';
+      store().getDB().preferences.viewMode = 'step';
       store().saveOrdersDB();
       const pending = store().ordPendingItem(catId) || store().ordCatItems(catId)[0];
       ordGo(pending ? 'item/' + pending.id : 'products/' + catId);
     });
 
-    const listBtn = el('button', activeMode === 'list' ? 'on' : '', isAr() ? '☷ القائمة السريعة (Quick list)' : '☷ Quick list');
+    const listBtn = el('button', activeMode === 'list' ? 'on' : '', isAr() ? '☷ القائمة السريعة' : '☷ Quick list');
     listBtn.type = 'button';
     listBtn.addEventListener('click', () => {
-      const db = store().getDB();
-      db.preferences.viewMode = 'list';
+      store().getDB().preferences.viewMode = 'list';
       store().saveOrdersDB();
       ordGo('products/' + catId);
     });
@@ -97,24 +104,22 @@
   }
 
   function appendBottomBar(root, buildFn) {
-    const bar = el('nav', 'ord-bottom-bar');
-    const inner = el('div', 'ord-bottom-inner');
+    const bar = el('nav', 'bottom');
+    const inner = el('div', 'bottom-inner');
     buildFn(inner);
     bar.append(inner);
     root.append(bar);
-    root.style.paddingBottom = 'calc(146px + env(safe-area-inset-bottom, 16px))';
   }
 
   function appendGeneralBottomBar(root) {
     const selectedList = store().ordSelectedItems();
     appendBottomBar(root, (inner) => {
-      const info = el('div', '');
-      info.style.minWidth = '110px';
+      const info = el('div', 'bottom-info');
       info.append(
-        el('strong', '', String(selectedList.length) + ' '),
-        el('small', '', isAr() ? 'أصناف مختارة' : 'selected')
+        el('strong', '', String(selectedList.length)),
+        el('span', '', isAr() ? ' أصناف مختارة' : ' items selected')
       );
-      const revBtn = el('button', 'btn primary', isAr() ? 'مراجعة الطلبية الكاملة ←' : 'Review full order →');
+      const revBtn = el('button', 'primary', isAr() ? 'مراجعة الطلبية الكاملة ←' : 'Review full order →');
       revBtn.type = 'button';
       revBtn.disabled = selectedList.length === 0;
       revBtn.addEventListener('click', () => ordGo('review'));
@@ -122,210 +127,62 @@
     });
   }
 
-  function openReceivingModal() {
-    const ar = isAr();
-    const list = store().ordSelectedItems();
-    const overlay = el('div', 'modal-overlay');
-    overlay.style.display = 'flex';
-    overlay.style.zIndex = '9999';
+  function createReplenishTile(it, dept, ar, drawerRef) {
+    const tile = el('button', 'cockpit-replenish-tile');
+    tile.type = 'button';
+    const status = store().canQuickReplenish(it.id, dept);
+    const inCooldown = !status.allowed;
+    if (inCooldown) tile.classList.add('in-cooldown');
 
-    const dialog = el('div', 'modal-box');
-    dialog.style.maxWidth = '520px';
-    dialog.style.width = '94%';
-    dialog.style.padding = '20px';
+    const itName = ar ? (it.labelAr || it.ar || it.name) : (it.label || it.name);
+    const badgeText = inCooldown
+      ? (ar ? '🚀 بالطريق (' + Math.ceil(status.cooldownRemainingSec / 60) + 'د) · +1' : '🚀 En Route (' + Math.ceil(status.cooldownRemainingSec / 60) + 'm) · +1')
+      : (ar ? '⚡ طلب سريع +' + (it.defaultQty || 1) : '⚡ Quick Order +' + (it.defaultQty || 1));
 
-    const title = el('h3', '', '📦 ' + (ar ? 'تأكيد استلام طلبية المستودع' : 'Confirm Order Receiving'));
-    const sub = el('p', '', ar ? 'تأكيد وصول الأصناف وتوريدها لمخزون البار والصالة' : 'Verify delivered items & ingest into bar stock');
-    sub.style.color = 'var(--ink2)';
-    sub.style.marginBottom = '12px';
+    tile.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;width:100%;">' +
+      '<b style="font-size:0.86rem;color:var(--ink);">' + FOH.escapeHtml(itName) + '</b>' +
+      (status.currentQty > 0 ? '<span style="font-size:0.75rem;font-weight:700;color:var(--accent);">' + status.currentQty + ' ' + (it.unit || '') + '</span>' : '') +
+      '</div>' +
+      '<small style="font-size:0.72rem;color:' + (inCooldown ? '#d97706' : 'var(--muted)') + ';">' + badgeText + '</small>';
 
-    const itemsBox = el('div', '');
-    itemsBox.style.maxHeight = '280px';
-    itemsBox.style.overflowY = 'auto';
-    itemsBox.style.margin = '10px 0';
-
-    const receivedMap = {};
-    list.forEach((i) => {
-      const line = store().ordLine(i.id);
-      receivedMap[i.id] = line.qty;
-      const row = el('div', 'dayoff-item');
-      row.style.display = 'flex';
-      row.style.justifyContent = 'space-between';
-      row.style.alignItems = 'center';
-      row.style.margin = '6px 0';
-      row.innerHTML = '<div><b>' + i.name + '</b><small style="display:block;color:var(--ink2);">' +
-        (ar ? 'المطلوب: ' : 'Requested: ') + line.qty + ' ' + (line.unit || i.unit) + '</small></div>';
-      const badge = el('span', 'dayoff-badge approved', '✓ ' + line.qty + ' ' + (line.unit || i.unit));
-      row.append(badge);
-      itemsBox.append(row);
-    });
-
-    const btnRow = el('div', '');
-    btnRow.style.display = 'flex';
-    btnRow.style.gap = '8px';
-    btnRow.style.marginTop = '16px';
-
-    const cancelBtn = el('button', 'btn', ar ? 'إلغاء' : 'Cancel');
-    cancelBtn.type = 'button';
-    cancelBtn.style.flex = '1';
-    cancelBtn.addEventListener('click', () => overlay.remove());
-
-    const confirmBtn = el('button', 'btn primary', ar ? '✓ تأكيد الاستلام بالكامل' : '✓ Confirm Full Receipt');
-    confirmBtn.type = 'button';
-    confirmBtn.style.flex = '1.5';
-    confirmBtn.addEventListener('click', () => {
-      store().confirmOrderReceiving({
-        receivedLines: receivedMap,
-        receiverName: (getSession() && getSession().displayName) || S().me.name || 'Staff',
-      });
-      overlay.remove();
-      if (FOH.edit && FOH.edit.toast) {
-        FOH.edit.toast(ar ? 'تم تأكيد استلام الطلبية والتوريد بنجاح ✓' : 'Order received & archived ✓');
+    tile.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (navigator.vibrate) navigator.vibrate(15);
+      const res = store().quickReplenishItem(it.id, dept, it.defaultQty || 1);
+      if (res.success) {
+        const msg = ar ? '📦 تم طلب ' + (it.labelAr || it.name) + ' (' + res.newQty + ')' : '📦 ' + it.name + ' ordered (' + res.newQty + ')';
+        if (FOH.edit && FOH.edit.toast) FOH.edit.toast(msg);
+        renderQuickReplenishDrawer(drawerRef && drawerRef.parentElement, dept);
       }
-      ordGo('home');
     });
-
-    btnRow.append(cancelBtn, confirmBtn);
-    dialog.append(title, sub, itemsBox, btnRow);
-    overlay.append(dialog);
-    document.body.append(overlay);
+    return tile;
   }
 
-  function renderReceivingBanner(ar) {
-    const banner = el('div', 'ord-receiving-banner');
-    banner.style.background = 'linear-gradient(135deg, rgba(245, 158, 11, 0.16), rgba(217, 119, 6, 0.24))';
-    banner.style.border = '1px solid rgba(245, 158, 11, 0.4)';
-    banner.style.borderRadius = '12px';
-    banner.style.padding = '12px 16px';
-    banner.style.marginBottom = '14px';
-    banner.style.display = 'flex';
-    banner.style.justifyContent = 'space-between';
-    banner.style.alignItems = 'center';
-    banner.style.flexWrap = 'wrap';
-    banner.style.gap = '10px';
-
-    const info = el('div', '');
-    info.innerHTML = '<strong>📦 ' + (ar ? 'طلبية المستودع قيد التوريد (Dispatched)' : 'Warehouse Delivery Dispatched') + '</strong>' +
-      '<small style="display:block;color:var(--ink2);">' + (ar ? 'تم إرسال الطلبية بنجاح. اضغط عند وصول البضاعة لتأكيد الاستلام.' : 'Order was sent. Tap when goods arrive to confirm receiving.') + '</small>';
-
-    const recvBtn = el('button', 'btn primary small', ar ? '✓ استلام الطلبية والتوريد' : '✓ Receive & Ingest');
-    recvBtn.type = 'button';
-    recvBtn.addEventListener('click', () => openReceivingModal());
-
-    banner.append(info, recvBtn);
-    return banner;
-  }
-
-  // ---- Page 1: Home Groups ----
-  function renderHomeGroups(root) {
+  function renderQuickReplenishDrawer(container, targetDept) {
+    if (!container) return;
     const ar = isAr();
-    const db = store().getDB();
-    const selectedList = store().ordSelectedItems();
+    const dept = targetDept || ((FOH.modeDeptPanels && FOH.modeDeptPanels.getActiveDept) ? FOH.modeDeptPanels.getActiveDept() : 'floor');
+    const items = (FOH.ordersCatalog && FOH.ordersCatalog.getQuickReplenishItems) ? FOH.ordersCatalog.getQuickReplenishItems(dept) : [];
+    if (!items.length) return;
 
-    const headWrap = el('div', '');
-    const topRow = el('div', '');
-    topRow.style.display = 'flex';
-    topRow.style.alignItems = 'center';
-    topRow.style.justifyContent = 'space-between';
-    topRow.style.gap = '8px';
-    topRow.style.flexWrap = 'wrap';
-
-    const kicker = el('div', 'ord-kicker', '01 / SECTION SELECT · أقسام الطلبيات');
-    const startNewBtn = el('button', 'btn small', ar ? '✨ بدء طلبية جديدة' : '✨ Start new order');
-    startNewBtn.type = 'button';
-    startNewBtn.addEventListener('click', () => {
-      store().promptStartNewOrder(() => renderOrdersView(root));
-    });
-    topRow.append(kicker, startNewBtn);
-
-    headWrap.append(
-      topRow,
-      el('h2', 'ord-page-title', ar ? 'طلبيات البار ومستلزمات الصالة' : 'Bar & FOH Warehouse Orders'),
-      el('p', 'ord-page-sub', ar ? 'اختر القسم المطلوب لإعداد طلبيته وتحديد الكميات المطلوبة للمستودع:' : 'Select a section to prepare warehouse requisition:')
-    );
-    if (store().getOrderStatus() === 'DISPATCHED') {
-      headWrap.append(renderReceivingBanner(ar));
+    let drawer = $('cockpitQuickDrawer');
+    if (!drawer) {
+      drawer = el('section', 'cockpit-quick-drawer run-only');
+      drawer.id = 'cockpitQuickDrawer';
+      container.append(drawer);
     }
-    root.append(headWrap);
+    drawer.replaceChildren();
 
-    const secCards = el('div', 'ord-sec-grid');
-    const allowed = store().allowedGroupsForCurrentRole(ordForceAllGroups);
+    const head = el('div', 'cockpit-drawer-head');
+    head.innerHTML = '<span style="font-weight:800;font-size:0.9rem;">⚡ ' +
+      (ar ? 'الإمداد السريع للمحطة' : 'Station Emergency Replenishment') + '</span>';
+    drawer.append(head);
 
-    allowed.forEach(([gid, g]) => {
-      const cats = db.catalog.categories.filter((c) => c.group === gid);
-      const catCount = cats.length;
-      let totalItems = 0;
-      let doneItems = 0;
-      let reqCount = 0;
-
-      cats.forEach((c) => {
-        const cItems = store().ordCatItems(c.id);
-        totalItems += cItems.length;
-        doneItems += store().ordCatDone(c.id);
-        reqCount += cItems.filter((i) => store().ordLine(i.id).qty > 0).length;
-      });
-
-      const btn = el('button', 'ord-sec-card');
-      btn.type = 'button';
-      btn.append(
-        el('div', 'ord-sec-ico', g.icon || '📦'),
-        Object.assign(el('div', 'ord-sec-body'), {
-          innerHTML:
-            '<h3>' + FOH.escapeHtml(ar ? g.nameAr || g.name : g.name) + '</h3>' +
-            '<p>' + FOH.escapeHtml(ar ? g.subAr || g.sub : g.sub) + '</p>' +
-            '<div class="ord-sec-meta"><span>' + catCount + ' ' + (ar ? 'تصنيفات' : 'categories') + ' · ' + totalItems + ' ' + (ar ? 'أصناف' : 'items') + '</span>' +
-            (reqCount > 0 ? '<strong class="ord-req-chip">✓ ' + reqCount + ' ' + (ar ? 'مطلوب' : 'requested') + '</strong>' : '') +
-            '</div>',
-        })
-      );
-      btn.addEventListener('click', () => ordGo('types/' + gid));
-      secCards.append(btn);
-    });
-
-    root.append(secCards);
-    appendGeneralBottomBar(root);
+    const grid = el('div', 'cockpit-replenish-grid');
+    items.forEach((it) => grid.append(createReplenishTile(it, dept, ar, drawer)));
+    drawer.append(grid);
   }
 
-  // ---- Page 2: Types in Group ----
-  function renderCategoryTypes(root, groupKey) {
-    const ar = isAr();
-    const db = store().getDB();
-    const g = db.catalog.groups[groupKey];
-    if (!g) { ordGo('home'); return; }
-
-    root.append(buildOrdBreadcrumbs(groupKey, null));
-    root.append(
-      el('div', 'ord-kicker', '02 / CATEGORY · تصنيفات القسم'),
-      el('h2', 'ord-page-title', ar ? g.nameAr || g.name : g.name),
-      el('p', 'ord-page-sub', ar ? 'اختر تصنيفًا للبدء بفحصه وتحديد الكميات المطلوبة:' : 'Pick a category to check and order items:')
-    );
-
-    const cats = db.catalog.categories.filter((c) => c.group === groupKey);
-    const grid = el('div', 'ord-cat-grid');
-
-    cats.forEach((c) => {
-      const items = store().ordCatItems(c.id);
-      const done = store().ordCatDone(c.id);
-      const skipped = store().ordCatSkipped(c.id);
-      const req = items.filter((i) => store().ordLine(i.id).qty > 0).length;
-      const isComplete = items.length > 0 && done + skipped >= items.length;
-
-      const card = el('button', 'ord-cat-card' + (isComplete ? ' complete' : ''));
-      card.type = 'button';
-      card.append(
-        el('h4', '', ar ? c.nameAr || c.name : c.name),
-        el('div', 'ord-cat-stat', `${items.length} ${ar ? 'أصناف' : 'items'} · ${done} ${ar ? 'تم فحصها' : 'done'}`),
-        req > 0 ? el('span', 'ord-req-badge', `+${req} ${ar ? 'مطلوب' : 'picked'}`) : el('span', 'ord-req-badge zero', isComplete ? '✓ ' + (ar ? 'مكتمل' : 'done') : '—')
-      );
-      card.addEventListener('click', () => ordGo('products/' + c.id));
-      grid.append(card);
-    });
-
-    root.append(grid);
-    appendGeneralBottomBar(root);
-  }
-
-  // ---- Page 3: Products in Category ----
   function renderCategoryProducts(root, catId) {
     const ar = isAr();
     const db = store().getDB();
@@ -334,490 +191,59 @@
 
     const viewMode = (db.preferences && db.preferences.viewMode) || 'step';
     root.append(buildOrdBreadcrumbs(c.group, c.id));
-    root.append(
-      el('div', 'ord-kicker', '03 / PRODUCTS · قائمة الأصناف'),
-      el('h2', 'ord-page-title', ar ? c.nameAr || c.name : c.name),
-      buildOrdViewSwitch(c.id, viewMode)
-    );
 
-    const items = store().ordCatItems(c.id);
-    if (viewMode === 'step') {
-      renderStepModeList(root, c, items, ar);
-    } else {
-      renderQuickListMode(root, c, items, ar);
+    const welcome = el('section', 'welcome');
+    welcome.style.margin = '4px 0 14px';
+    welcome.innerHTML =
+      '<div class="kicker">03 / CHOOSE AN ITEM · ' + (ar ? 'اختيار الأصناف' : 'CHOOSE AN ITEM') + '</div>' +
+      '<h1 class="title">' + FOH.escapeHtml(ar ? c.nameAr || c.name : c.name) + '</h1>' +
+      '<p class="sub">' + (ar ? 'اختر الأصناف لتحديد الكميات المطلوبة للخدمة.' : 'Use Next for a guided check, or enter all quantities in Quick list.') + '</p>';
+    root.append(welcome);
+    root.append(buildOrdViewSwitch(c.id, viewMode));
+
+    if (viewMode === 'list' && FOH.ordersViewQuick) {
+      FOH.ordersViewQuick.renderQuickListMode(root, c, ar);
+    } else if (FOH.ordersViewStep) {
+      FOH.ordersViewStep.renderCategoryStepList(root, c, ar);
     }
   }
 
-  function renderStepModeList(root, c, opts = {}) {
-    const isLegacy = Array.isArray(opts);
-    const items = isLegacy ? opts : ((opts && opts.items) || store().ordCatItems(c.id));
-    const ar = isLegacy ? !!arguments[3] : (opts && typeof opts.ar === 'boolean' ? opts.ar : isAr());
-    const db = store().getDB();
-    const listWrap = el('div', 'ord-step-list');
-    items.forEach((i, idx) => {
-      const line = store().ordLine(i.id);
-      const isVisited = !!db.order.visited[i.id];
-      const isSkipped = !!db.order.skipped[i.id];
-
-      const row = el('button', 'ord-step-row' + (isVisited ? ' visited' : isSkipped ? ' skipped' : ''));
-      row.type = 'button';
-      row.append(
-        el('span', 'ord-step-num', String(idx + 1)),
-        Object.assign(el('div', 'ord-step-info'), {
-          innerHTML: '<strong>' + FOH.escapeHtml(ar && i.ar ? i.ar + ' · ' + i.name : i.name) + '</strong>' +
-            '<small>' + FOH.escapeHtml(ar ? 'المخزون المسجّل: ' : 'Recorded stock: ') + store().ordStockLabel(i) + '</small>',
-        }),
-        el('span', 'ord-step-status', line.qty > 0 ? `+${line.qty} ${store().ordUnitText(line.qty, line.unit || i.unit)}` : isSkipped ? (ar ? 'تخطي' : 'skip') : isVisited ? '✓' : '—')
-      );
-      row.addEventListener('click', () => ordGo('item/' + i.id));
-      listWrap.append(row);
-    });
-    root.append(listWrap);
-    appendGeneralBottomBar(root);
-  }
-
-  function createQuickItemCard(i, db, ar) {
-    const line = store().ordLine(i.id);
-    const card = el('div', 'ord-quick-card' + (line.qty > 0 ? ' ordered' : ''));
-
-    const head = el('div', 'ord-quick-head');
-    head.append(
-      Object.assign(el('div', ''), {
-        innerHTML: '<b>' + FOH.escapeHtml(ar && i.ar ? i.ar + ' · ' + i.name : i.name) + '</b>' +
-          '<small style="display:block;color:var(--ink2);">' + (ar ? 'المخزون: ' : 'Stock: ') + store().ordStockLabel(i) + '</small>',
-      })
-    );
-
-    const stepper = el('div', 'ord-stepper-sm');
-    const minus = el('button', '', '−');
-    minus.type = 'button';
-    const inVal = el('input', '');
-    inVal.type = 'number';
-    inVal.min = '0';
-    inVal.max = '9999';
-    inVal.value = String(line.qty || 0);
-
-    const plus = el('button', '', '+');
-    plus.type = 'button';
-
-    const updateQty = (delta, direct) => {
-      const cur = direct !== undefined ? Math.max(0, direct) : Math.max(0, Number(inVal.value || 0) + delta);
-      inVal.value = String(cur);
-      db.order.lines[i.id] = { ...line, qty: cur };
-      db.order.visited[i.id] = true;
-      store().saveOrdersDB();
-      card.classList.toggle('ordered', cur > 0);
-    };
-
-    minus.addEventListener('click', () => updateQty(-1));
-    plus.addEventListener('click', () => updateQty(1));
-    inVal.addEventListener('change', () => updateQty(0, Number(inVal.value || 0)));
-
-    stepper.append(minus, inVal, plus);
-    card.append(head, stepper);
-    return card;
-  }
-
-  function renderQuickListMode(root, c, opts = {}) {
-    const isLegacy = Array.isArray(opts);
-    const items = isLegacy ? opts : ((opts && opts.items) || store().ordCatItems(c.id));
-    const ar = isLegacy ? !!arguments[3] : (opts && typeof opts.ar === 'boolean' ? opts.ar : isAr());
-    const db = store().getDB();
-
-    const toolbar = el('div', 'ord-toolbar');
-    const qSearch = el('input', 'in ord-search-in');
-    qSearch.placeholder = ar ? '🔍 تصفية في هذا التصنيف...' : '🔍 Search in this category...';
-    qSearch.value = ordQuickSearch;
-    qSearch.addEventListener('input', () => {
-      ordQuickSearch = qSearch.value;
-      renderOrdersView(root);
-    });
-
-    const skipRemBtn = el('button', 'btn small', ar ? '⏭ تخطي المتبقي' : '⏭ Skip rest');
-    skipRemBtn.type = 'button';
-    skipRemBtn.addEventListener('click', () => {
-      store().ordSkipRemaining(c.id);
-      store().saveOrdersDB();
-      ordGo('complete/' + c.id);
-    });
-    toolbar.append(qSearch, skipRemBtn);
-    root.append(toolbar);
-
-    const qFilter = (ordQuickSearch || '').toLowerCase().trim();
-    const visible = items.filter((i) => !qFilter || (i.name + ' ' + (i.ar || '')).toLowerCase().includes(qFilter));
-
-    const grid = el('div', 'ord-quick-grid');
-    visible.forEach((i) => grid.append(createQuickItemCard(i, db, ar)));
-    root.append(grid);
-    appendGeneralBottomBar(root);
-  }
-
-  // ---- Page 4: Single Item Stepper Card ----
-  function buildItemStepperControls(card, i, opts = {}) {
-    const isLegacy = typeof opts === 'object' && ('qty' in opts);
-    const line = isLegacy ? opts : ((opts && opts.line) || store().ordLine(i.id));
-    const root = isLegacy ? arguments[3] : (opts && opts.root);
-    const ar = isAr();
-    const db = store().getDB();
-    const qtyRow = el('div', 'ord-qty-row');
-    const stepper = el('div', 'ord-stepper-lg');
-    const minus = el('button', '', '−');
-    minus.type = 'button';
-    const qtyIn = el('input', '');
-    qtyIn.type = 'number';
-    qtyIn.min = '0';
-    qtyIn.max = '9999';
-    qtyIn.value = String(line.qty);
-
-    const denom = el('span', 'ord-denom');
-    denom.append('/ ', el('b', '', store().ordStockDenominator(i)));
-    const plus = el('button', '', '+');
-    plus.type = 'button';
-    stepper.append(minus, qtyIn, denom, plus);
-
-    const unitSel = el('select', 'in ord-unit-sel');
-    const units = (FOH.ordersCatalog && FOH.ordersCatalog.ORD_UNITS) || {};
-    Object.entries(units).forEach(([uk, uLabel]) => {
-      const opt = el('option', '', uLabel);
-      opt.value = uk;
-      opt.selected = uk === (line.unit || i.unit || 'bottle');
-      unitSel.append(opt);
-    });
-    qtyRow.append(stepper, unitSel);
-    card.append(qtyRow);
-
-    const commitQty = (val) => {
-      const q = Math.max(0, Number(val || 0));
-      db.order.lines[i.id] = { ...line, qty: q, unit: unitSel.value };
-      db.order.visited[i.id] = true;
-      delete db.order.skipped[i.id];
-      store().saveOrdersDB();
-    };
-
-    minus.addEventListener('click', () => {
-      const cur = Math.max(0, Number(qtyIn.value || 0) - 1);
-      qtyIn.value = String(cur);
-      commitQty(cur);
-    });
-    plus.addEventListener('click', () => {
-      const cur = Number(qtyIn.value || 0) + 1;
-      qtyIn.value = String(cur);
-      commitQty(cur);
-    });
-    qtyIn.addEventListener('change', () => commitQty(qtyIn.value));
-    unitSel.addEventListener('change', () => commitQty(qtyIn.value));
-
-    return { commitQty, qtyIn };
-  }
-
-  function buildItemStepperNav(opts) {
-    const { card, i, catItems, curIdx, c, commitFn, qtyIn } = opts;
-    const ar = isAr();
-    const db = store().getDB();
-    const actRow = el('div', 'ord-item-nav');
-    if (curIdx > 0) {
-      const prevBtn = el('button', 'btn', ar ? '← السابق' : '← Previous');
-      prevBtn.type = 'button';
-      prevBtn.addEventListener('click', () => ordGo('item/' + catItems[curIdx - 1].id));
-      actRow.append(prevBtn);
-    }
-
-    const skipBtn = el('button', 'btn', ar ? 'تخطي الصنف' : 'Skip item');
-    skipBtn.type = 'button';
-    skipBtn.addEventListener('click', () => {
-      db.order.skipped[i.id] = true;
-      store().saveOrdersDB();
-      navigateNextItem(catItems, curIdx, c);
-    });
-
-    const nextBtn = el('button', 'btn primary', ar ? 'التالي →' : 'Next →');
-    nextBtn.type = 'button';
-    nextBtn.addEventListener('click', () => {
-      commitFn(qtyIn.value);
-      navigateNextItem(catItems, curIdx, c);
-    });
-
-    actRow.append(skipBtn, nextBtn);
-    card.append(actRow);
-  }
-
-  function renderItemStepperCard(root, itemId) {
-    const ar = isAr();
-    const i = store().ordById(itemId);
-    if (!i) { ordGo('home'); return; }
-
-    const c = store().ordCat(i.cat);
-    const line = store().ordLine(i.id);
-    const catItems = store().ordCatItems(i.cat);
-    const curIdx = catItems.findIndex((it) => it.id === i.id);
-
-    root.append(buildOrdBreadcrumbs(c ? c.group : null, c ? c.id : null, i.name));
-
-    const card = el('section', 'card ord-stepper-card');
-    const head = el('div', 'ord-item-head');
-    head.append(
-      Object.assign(el('div', 'ord-item-Title'), {
-        innerHTML: '<small>' + FOH.escapeHtml(ar && c ? c.nameAr || c.name : (c ? c.name : '')) + '</small>' +
-          '<h3>' + FOH.escapeHtml(ar && i.ar ? i.ar + ' · ' + i.name : i.name) + '</h3>' +
-          '<small>' + FOH.escapeHtml(i.packSize || i.id.toUpperCase()) + '</small>',
-      })
-    );
-    card.append(head);
-
-    const stockBox = el('div', 'ord-stock-panel');
-    const stockLeft = el('div', '');
-    stockLeft.append(
-      el('b', '', ar ? 'المخزون المسجّل' : 'Recorded stock'),
-      el('small', '', ar ? 'مؤكد في الجرد' : 'Confirmed stock')
-    );
-    const editBtn = el('button', 'btn small', '✎ ' + (ar ? 'تحديث المخزون' : 'Edit stock'));
-    editBtn.type = 'button';
-    editBtn.addEventListener('click', () => {
-      store().promptEditStock(i, () => renderOrdersView(root));
-    });
-    stockLeft.append(editBtn);
-
-    const stockRight = el('div', 'ord-stock-val', store().ordStockLabel(i));
-    stockBox.append(stockLeft, stockRight);
-    card.append(stockBox);
-
-    const { commitQty, qtyIn } = buildItemStepperControls(card, i, line, root);
-    buildItemStepperNav({ card, i, catItems, curIdx, c, commitFn: commitQty, qtyIn });
-
-    root.append(card);
-    appendGeneralBottomBar(root);
-  }
-
-  function navigateNextItem(catItems, curIdx, c) {
-    if (ordReturnToReview) {
-      ordReturnToReview = false;
-      ordGo('review');
-      return;
-    }
-    if (curIdx < catItems.length - 1) {
-      ordGo('item/' + catItems[curIdx + 1].id);
-    } else {
-      ordGo('complete/' + (c ? c.id : ''));
-    }
-  }
-
-  // ---- Page 5: Category Complete ----
-  function renderCategoryComplete(root, catId) {
-    const ar = isAr();
-    const c = store().ordCat(catId);
-    if (!c) { ordGo('home'); return; }
-
-    const list = store().ordCatItems(c.id);
-    const done = store().ordCatDone(c.id);
-    const skipped = store().ordCatSkipped(c.id);
-    const pending = store().ordPendingItem(c.id);
-    const reqCount = list.filter((i) => store().ordLine(i.id).qty > 0).length;
-
-    root.append(buildOrdBreadcrumbs(c.group, c.id));
-    const box = el('section', 'card');
-    box.style.padding = '18px';
-    box.style.textAlign = 'center';
-    box.append(
-      el('div', '', '✅'),
-      el('h2', 'ord-page-title', pending ? (ar ? 'تم حفظ كمياتك' : 'Quantities saved') : (ar ? 'اكتمل فحص الكاتيجوري' : 'Category complete')),
-      el('p', 'ord-page-sub', ar ? 'تم حفظ الأصناف المطلوبة. يمكنك مراجعة الطلبية أو اختيار قسم آخر.' : 'Requested items saved. Review order or choose another section.')
-    );
-
-    const stats = el('div', 'ord-stats-grid');
-    [
-      [reqCount, ar ? 'أصناف مطلوبة' : 'Requested items'],
-      [done, ar ? 'تم فحصها' : 'Checked'],
-      [skipped, ar ? 'تم تخطيها' : 'Skipped'],
-    ].forEach(([val, lbl]) => {
-      const s = el('div', 'ord-stat-box');
-      s.append(el('strong', '', String(val)), el('span', '', lbl));
-      stats.append(s);
-    });
-    box.append(stats);
-
-    const actCol = el('div', '');
-    actCol.style.display = 'flex';
-    actCol.style.flexDirection = 'column';
-    actCol.style.gap = '8px';
-
-    const revBtn = el('button', 'btn primary', ar ? 'مراجعة الطلبية الكاملة وإرسال WhatsApp' : 'Review full order & send WhatsApp');
-    revBtn.type = 'button';
-    revBtn.addEventListener('click', () => ordGo('review'));
-
-    const typesBtn = el('button', 'btn', ar ? 'اختيار كاتيجوري آخر' : 'Choose another category');
-    typesBtn.type = 'button';
-    typesBtn.addEventListener('click', () => ordGo('types/' + c.group));
-
-    actCol.append(revBtn, typesBtn);
-    box.append(actCol);
-    root.append(box);
-    appendGeneralBottomBar(root);
-  }
-
-  // ---- Page 6: Full Order Review ----
-  function renderOrderReview(root) {
-    const ar = isAr();
-    const db = store().getDB();
-    const selectedList = store().ordSelectedItems();
-
-    root.append(buildOrdBreadcrumbs(null, null, ar ? 'مراجعة الطلبية' : 'Review order'));
-    root.append(
-      el('div', 'ord-kicker', '04 / REVIEW & SEND · مراجعة وإرسال الطلبية'),
-      el('h2', 'ord-page-title', (ar ? 'مراجعة الطلبية الكاملة (' : 'Review full order (') + selectedList.length + ')')
-    );
-
-    const metaCard = el('section', 'card');
-    metaCard.style.padding = '14px';
-    const m = db.order.meta;
-    const session = getSession();
-    const requester = (session && session.displayName) || (S().me && S().me.name) || m.requester || 'Staff';
-    const orderDate = S().date || (FOH.time ? FOH.time.todayISO() : '');
-
-    const autoBanner = el('div', 'ord-meta-auto-banner');
-    autoBanner.append(
-      el('div', 'ord-meta-pill', `👤 ${requester}`),
-      el('div', 'ord-meta-pill', `📅 ${orderDate}`),
-      el('div', 'ord-meta-pill', `📦 ${ar ? 'المستودع الرئيسي' : 'Store Warehouse'}`)
-    );
-
-    const noteLbl = el('label', '', ar ? 'ملاحظة عامة على الطلبية (اختياري)' : 'General order note (optional)');
-    noteLbl.style.display = 'block';
-    noteLbl.style.marginTop = '10px';
-    const noteIn = el('input', 'in');
-    noteIn.value = m.orderNote || '';
-    noteIn.addEventListener('input', () => {
-      m.orderNote = noteIn.value;
-      store().saveOrdersDB();
-    });
-    noteLbl.append(noteIn);
-    metaCard.append(autoBanner, noteLbl);
-    root.append(metaCard);
-
-    if (!selectedList.length) {
-      const emp = el('section', 'card');
-      emp.append(el('p', 'empty', ar ? 'لم تقم بطلب أي صنف بعد.' : 'No items requested yet.'));
-      root.append(emp);
-    } else {
-      renderReviewItemsList(root, selectedList, ar);
-    }
-
-    appendBottomBar(root, (inner) => {
-      const addMoreB = el('button', 'btn', ar ? '+ إضافة أصناف' : '+ Add items');
-      addMoreB.type = 'button';
-      addMoreB.addEventListener('click', () => ordGo('home'));
-
-      const waB = el('button', 'btn primary', ar ? '📲 إرسال عبر WhatsApp' : '📲 Send via WhatsApp');
-      waB.type = 'button';
-      waB.disabled = selectedList.length === 0;
-      waB.addEventListener('click', () => {
-        const msg = dispatch().buildOrdWhatsAppText(ordIncludeStockInMsg);
-        dispatch().openWhatsApp(msg);
-      });
-      inner.append(addMoreB, waB);
-    });
-  }
-
-  function renderReviewItemsList(root, selectedList, ar) {
-    const db = store().getDB();
-    const listCard = el('section', 'card');
-    listCard.style.padding = '12px 14px';
-
-    selectedList.forEach((i) => {
-      const l = store().ordLine(i.id);
-      const row = el('div', 'ord-review-row');
-      row.style.display = 'flex';
-      row.style.alignItems = 'center';
-      row.style.justifyContent = 'space-between';
-      row.style.padding = '8px 0';
-      row.style.borderBottom = '1px dashed var(--line)';
-
-      const left = el('div', '');
-      left.append(
-        el('b', '', ar && i.ar ? `${i.ar} · ${i.name}` : i.name),
-        el('small', '', `${l.note ? '📝 ' + l.note + ' · ' : ''}${ar ? 'المخزون' : 'Stock'}: ${store().ordStockLabel(i)}`)
-      );
-      left.querySelector('small').style.display = 'block';
-      left.querySelector('small').style.color = 'var(--ink2)';
-
-      const right = el('div', '');
-      right.style.display = 'flex';
-      right.style.alignItems = 'center';
-      right.style.gap = '6px';
-      right.append(el('strong', 'ord-picked-pill', `${l.qty} ${store().ordUnitText(l.qty, l.unit || i.unit)}`));
-
-      const delBtn = el('button', 'btn danger small', '✕');
-      delBtn.type = 'button';
-      delBtn.addEventListener('click', () => {
-        db.order.lines[i.id] = { ...l, qty: 0 };
-        store().saveOrdersDB();
-        renderOrdersView(root);
-      });
-      right.append(delBtn);
-
-      row.append(left, right);
-      listCard.append(row);
-    });
-
-    // WhatsApp Message Preview Box
-    const msgText = dispatch().buildOrdWhatsAppText(ordIncludeStockInMsg);
-    const ta = el('textarea', 'ord-msg-box');
-    ta.readOnly = true;
-    ta.value = msgText;
-    listCard.append(ta);
-
-    const actRow = el('div', '');
-    actRow.style.display = 'flex';
-    actRow.style.gap = '8px';
-    actRow.style.marginTop = '10px';
-
-    const copyBtn = el('button', 'btn', ar ? '📋 نسخ النص' : '📋 Copy text');
-    copyBtn.type = 'button';
-    copyBtn.addEventListener('click', () => dispatch().copyOrderText(msgText));
-
-    const resetBtn = el('button', 'btn danger', ar ? 'بدء طلبية جديدة' : 'Start new order');
-    resetBtn.type = 'button';
-    resetBtn.addEventListener('click', () => {
-      store().promptStartNewOrder(() => ordGo('home'));
-    });
-
-    actRow.append(copyBtn, resetBtn);
-    listCard.append(actRow);
-    root.append(listCard);
-  }
-
-  // ---- Router ----
   function renderOrdersView(root) {
     if (!root) return;
     root.replaceChildren();
+    root.classList.add('ord-ceen-scope');
 
     const [page, param] = (ordRoute || 'home').split('/');
-    if (page === 'home') renderHomeGroups(root);
-    else if (page === 'types') renderCategoryTypes(root, param);
+    if (page === 'home' && FOH.ordersViewHome) FOH.ordersViewHome.renderHomeGroups(root);
+    else if (page === 'types' && FOH.ordersViewCategories) FOH.ordersViewCategories.renderCategoryTypes(root, param);
     else if (page === 'products') renderCategoryProducts(root, param);
-    else if (page === 'item') renderItemStepperCard(root, param);
-    else if (page === 'complete') renderCategoryComplete(root, param);
-    else if (page === 'review') renderOrderReview(root);
-    else renderHomeGroups(root);
+    else if (page === 'item' && FOH.ordersViewStep) FOH.ordersViewStep.renderItemStepperCard(root, param);
+    else if (page === 'complete' && FOH.ordersViewReview) FOH.ordersViewReview.renderCategoryComplete(root, param);
+    else if (page === 'review' && FOH.ordersViewReview) FOH.ordersViewReview.renderOrderReview(root);
+    else if (FOH.ordersViewHome) FOH.ordersViewHome.renderHomeGroups(root);
 
     updateOrderBadge();
   }
 
-  // Expose backwards-compatible API on FOH.ordersView
   FOH.ordersView = {
-    emptyOrderState: () => store().emptyOrderState(),
-    loadOrdersDB: () => store().loadOrdersDB(),
-    saveOrdersDB: () => store().saveOrdersDB(),
-    allowedGroupsForCurrentRole: (force) => store().allowedGroupsForCurrentRole(force),
-    updateOrderBadge,
     renderOrdersView,
-    buildOrdWhatsAppText: (inc) => dispatch().buildOrdWhatsAppText(inc),
-    promptStartNewOrder: (cb) => store().promptStartNewOrder(cb),
+    updateOrderBadge,
     go: ordGo,
+    ordGo,
+    getRoute: () => ordRoute,
+    getGroupIconSvg,
+    buildOrdBreadcrumbs,
+    buildOrdViewSwitch,
+    appendBottomBar,
+    appendGeneralBottomBar,
+    createReplenishTile,
+    renderQuickReplenishDrawer,
     get ORD_SEED() {
       return (FOH.ordersCatalog && FOH.ordersCatalog.ORD_SEED) || {};
     },
   };
 
+  FOH.erpPwa = FOH.ordersView;
   FOH.renderOrdersView = renderOrdersView;
   FOH.updateOrderBadge = updateOrderBadge;
 })(window.FOH = window.FOH || {});

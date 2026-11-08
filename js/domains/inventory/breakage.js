@@ -253,7 +253,7 @@
     $('brQty').addEventListener('input', selectedLabel);
     [['brMinus', -1], ['brPlus', 1]].forEach(([id, step]) => $(id).addEventListener('click', () => {
       const current = Number($('brQty').value);
-      $('brQty').value = String(Math.max(1, Math.min(9999, (Number.isFinite(current) ? Math.floor(current) : 1) + step))); selectedLabel();
+      $('brQty').value = String(Math.max(1, Math.min(9999, (Number.isFinite(current) ? Math.floor(current) : 1) + step))); selectedLabel(); if (navigator.vibrate) navigator.vibrate(10);
     }));
     $('brPhoto').addEventListener('change', async (e) => {
       const id = await FOH.photos.add(e.target.files[0]);

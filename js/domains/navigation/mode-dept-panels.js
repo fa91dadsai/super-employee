@@ -22,93 +22,14 @@
     }
   }
 
-  function getTasksCount() {
-    try {
-      const states = FOH.tasksView ? FOH.tasksView.todayStates().filter((st) => FOH.tasksView.isMine(st.task)) : [];
-      let pending = 0;
-      states.forEach((st) => { if (!st.doneEntry) pending++; });
-      return { total: states.length, pending };
-    } catch (err) {
-      // Safe fallback when tasks view is initializing
-      return { total: 0, pending: 0 };
-    }
-  }
-
-  function createChecklistModeTab(isChecklist, ckStats, ar) {
-    const ckBtn = el('button', 'shift-nav-tab' + (isChecklist ? ' on' : ''));
-    ckBtn.type = 'button';
-    ckBtn.innerHTML =
-      '<div class="shift-tab-top"><span class="shift-tab-ico">📋</span>' +
-      '<b class="shift-tab-title">' + (ar ? 'الشيك ليست التشغيلي' : 'Shift Checklist') + '</b>' +
-      (isChecklist ? '<span class="shift-now-dot-micro"></span>' : '') + '</div>' +
-      '<div class="shift-tab-time-pill">' + (ar ? (ckStats.done + '/' + ckStats.total + ' منجز · ' + ckStats.left + ' متبقي') : (ckStats.done + '/' + ckStats.total + ' done · ' + ckStats.left + ' left')) + '</div>';
-    ckBtn.addEventListener('click', () => {
-      if (navigator.vibrate) navigator.vibrate(10);
-      if (FOH.superEmployee && FOH.superEmployee.switchView) FOH.superEmployee.switchView('opening');
-      else if (FOH.navigation && FOH.navigation.switchView) FOH.navigation.switchView('opening');
-      else { S().view = 'opening'; FOH.app.render(); }
-    });
-    return ckBtn;
-  }
-
-  function createTasksModeTab(isTasks, tkStats, ar) {
-    const tkBtn = el('button', 'shift-nav-tab' + (isTasks ? ' on' : ''));
-    tkBtn.type = 'button';
-    tkBtn.innerHTML =
-      '<div class="shift-tab-top"><span class="shift-tab-ico">🎯</span>' +
-      '<b class="shift-tab-title">' + (ar ? 'المهام والتكليفات' : 'Assigned Tasks') + '</b>' +
-      (isTasks ? '<span class="shift-now-dot-micro"></span>' : '') + '</div>' +
-      '<div class="shift-tab-time-pill">' + (ar ? (tkStats.pending + ' مهمة مطلوبة اليوم') : (tkStats.pending + ' tasks due today')) + '</div>';
-    tkBtn.addEventListener('click', () => {
-      if (navigator.vibrate) navigator.vibrate(10);
-      if (FOH.superEmployee && FOH.superEmployee.switchView) FOH.superEmployee.switchView('mine');
-      else if (FOH.navigation && FOH.navigation.switchView) FOH.navigation.switchView('mine');
-      else { S().view = 'mine'; FOH.app.render(); }
-    });
-    return tkBtn;
-  }
-
   // ---- 1. Mode Switcher (Checklist vs Tasks) ----
+  // Removed per FOH Touch UX & Navigation standards:
+  // Switching between Shift Checklist and My Tasks is handled exclusively by the dedicated #tabBar ('Home' & 'My Tasks').
   function renderModeSwitcher() {
-    const mainEl = $('appMain');
-    if (!mainEl) return;
-
-    let panel = $('opsModeSwitcher');
-    if (!panel) {
-      panel = el('div', 'ops-mode-panel run-only');
-      panel.id = 'opsModeSwitcher';
-      mainEl.prepend(panel);
+    const panel = document.getElementById('opsModeSwitcher');
+    if (panel) {
+      panel.remove();
     }
-
-    const loginScr = $('loginScreen');
-    const isLoggedOut = document.body.classList.contains('login-open') || (loginScr && !loginScr.hidden);
-    if (isLoggedOut || S().editing) {
-      panel.hidden = true;
-      return;
-    }
-    panel.hidden = false;
-    panel.replaceChildren();
-
-    const ar = isAr();
-    const curView = S().view;
-    const isChecklist = curView === 'opening';
-    const isTasks = curView === 'mine';
-    const ckStats = getChecklistRemaining();
-    const tkStats = getTasksCount();
-
-    const head = el('div', 'shift-nav-head');
-    head.innerHTML =
-      '<div class="shift-nav-head-left">' +
-      '<span class="shift-clock-chip">⚡ <b>' + (ar ? 'نمط العمليات' : 'Operations') + '</b></span>' +
-      '<span class="shift-status-chip"><span class="shift-live-pulse-dot"></span>' +
-      '<span>' + (isChecklist ? (ar ? 'شيت الشفت النشط' : 'Active Shift Sheet') : (ar ? 'مهام الموظف اليومية' : 'Personal Assigned Tasks')) + '</span>' +
-      '</span></div>';
-    panel.append(head);
-
-    const grid = el('nav', 'shift-nav-grid ops-mode-grid');
-    grid.setAttribute('aria-label', 'Switch Mode: Checklist vs Tasks');
-    grid.append(createChecklistModeTab(isChecklist, ckStats, ar), createTasksModeTab(isTasks, tkStats, ar));
-    panel.append(grid);
   }
 
   // ---- 2. Helpers for Department Tiles ----
@@ -134,6 +55,11 @@
   }
 
   function renderSectionGearButton(sec, ar) {
+    const sess = FOH.sessionAuth ? FOH.sessionAuth.getSession() : null;
+    const isMgr = !!(sess && (sess.isManager || sess.roleId === 'manager'));
+    const canEdit = (FOH.gov && FOH.gov.canCurrentUserEditChecklist) ? FOH.gov.canCurrentUserEditChecklist() : isMgr;
+    if (!isMgr && !canEdit) return el('span', '');
+
     const gearBtn = el('button', 'dept-tile-gear');
     gearBtn.type = 'button';
     gearBtn.title = ar ? 'تخصيص وإسناد الصلاحيات للقسم' : 'Customize & Assign Section Permissions';
@@ -230,7 +156,33 @@
     return head;
   }
 
-  // ---- 3. Render Department Bento Hub ----
+  // ---- Helper: Manager Top Segmented Filter Pills ----
+  function createFilterPill(opts = {}) {
+    const { label, icon, key, isActive } = opts;
+    const pill = el('button', 'mgr-filter-pill' + (isActive ? ' active' : ''));
+    pill.type = 'button';
+    pill.append(el('span', '', icon + ' ' + label));
+    pill.addEventListener('click', () => {
+      if (navigator.vibrate) navigator.vibrate(8);
+      setActiveDept(key);
+    });
+    return pill;
+  }
+
+  function renderManagerTopFilterBar(curActive, secs, ar) {
+    const wrap = el('div', 'mgr-filter-bar');
+    wrap.setAttribute('aria-label', ar ? 'تصفية سريعة للأقسام' : 'Quick Department Filter');
+    wrap.append(createFilterPill({ label: ar ? 'الكل' : 'All', icon: '✨', key: 'all', isActive: curActive === 'all' }));
+    secs.forEach((sec) => {
+      const sTitle = ar ? (sec.titleAr || sec.title) : (sec.title || sec.titleAr);
+      const sIco = sec.icon || '📌';
+      const isSecActive = (curActive === sec.id) || (curActive === sec.dept) || (('sec-' + curActive) === sec.id);
+      wrap.append(createFilterPill({ label: sTitle, icon: sIco, key: sec.id, isActive: isSecActive }));
+    });
+    return wrap;
+  }
+
+  // ---- 3. Render Department Bento Hub & Manager Filter Bar ----
   function renderDeptSegmentPanel() {
     const mainEl = $('appMain');
     const sectionsEl = $('sections');
@@ -243,27 +195,44 @@
       mainEl.insertBefore(panel, sectionsEl);
     }
 
-    const isChecklistView = S().view === 'opening' && !S().editing;
-    panel.hidden = !isChecklistView;
-    if (panel.hidden) return;
+    const loginScr = $('loginScreen');
+    const isLoggedOut = document.body.classList.contains('login-open') || (loginScr && !loginScr.hidden);
+    const curView = S().view;
+    const isChecklistView = curView === 'opening' && !isLoggedOut && !S().editing;
+
+    const sess = FOH.sessionAuth ? FOH.sessionAuth.getSession() : null;
+    const isMgr = !!(sess && (sess.isManager || sess.roleId === 'manager'));
+    const canEdit = (FOH.gov && FOH.gov.canCurrentUserEditChecklist) ? FOH.gov.canCurrentUserEditChecklist() : isMgr;
+
+    // Strict Governance: Bento Hub is shown ONLY inside checklist view for Manager or staff with edit delegation
+    const shouldShow = isChecklistView && (isMgr || canEdit);
+    panel.hidden = !shouldShow;
+    panel.style.setProperty('display', shouldShow ? 'flex' : 'none', 'important');
+    if (!shouldShow) return;
 
     const chipsEl = $('chips');
     if (chipsEl) chipsEl.style.display = 'none';
 
-    panel.replaceChildren();
-
     const ar = isAr();
-    const secs = (S().tpl && Array.isArray(S().tpl.sections)) ? S().tpl.sections : [];
-    const sess = FOH.sessionAuth ? FOH.sessionAuth.getSession() : null;
-    const isMgr = !!(sess && (sess.isManager || sess.roleId === 'manager'));
+    const allSecs = (S().tpl && Array.isArray(S().tpl.sections)) ? S().tpl.sections : [];
+    const roleKey = FOH.roleIdentity ? FOH.roleIdentity.getCurrentSuperRoleKey() : 'staff';
+    const uname = (sess && sess.username) || '';
+    const isAllowed = FOH.isSectionAllowedForRole || ((s) => true);
+    const visibleSecs = isMgr ? allSecs : allSecs.filter((s) => isAllowed(s, roleKey, false, uname));
 
-    panel.append(renderDeptSegmentHeader(activeDept, secs, { isMgr, ar }));
+    populateDeptPanel(panel, { visibleSecs, allSecs, isMgr, ar });
+  }
 
+  function populateDeptPanel(panel, opts = {}) {
+    const { visibleSecs, allSecs, isMgr, ar } = opts;
+    panel.replaceChildren();
+    if (isMgr) {
+      panel.append(renderManagerTopFilterBar(activeDept, allSecs, ar));
+    }
+    panel.append(renderDeptSegmentHeader(activeDept, visibleSecs, { isMgr, ar }));
     const grid = el('div', 'dept-bento-grid');
     grid.append(createAllTile(getChecklistRemaining(), activeDept === 'all', ar));
-    secs.forEach((sec) => {
-      grid.append(createSectionTile(sec, activeDept, ar));
-    });
+    visibleSecs.forEach((sec) => grid.append(createSectionTile(sec, activeDept, ar)));
     panel.append(grid);
   }
 
@@ -272,7 +241,7 @@
     const secs = isLegacy ? opts : ((opts && opts.secs) || []);
     const ar = isLegacy ? !!arguments[3] : (opts && typeof opts.ar === 'boolean' ? opts.ar : isAr());
     let banner = $('deptIsolatedBanner');
-    if (activeDept !== 'all') {
+    if (activeDept !== 'all' && S().view === 'opening') {
       const curSec = secs.find((s) => s.id === activeDept || s.dept === activeDept || ('sec-' + s.dept) === activeDept);
       const sTitle = curSec ? (ar ? (curSec.titleAr || curSec.title) : (curSec.title || curSec.titleAr)) : activeDept;
       const sIco = curSec ? (curSec.icon || '📌') : '📌';
@@ -298,7 +267,7 @@
     }
   }
 
-  // ---- 4. Apply Department Filter to Section Cards ----
+  // ---- 4. Apply Department Filter to Section Cards with Strict Scoping ----
   function applyDeptFilter() {
     const secEl = $('sections');
     if (!secEl || S().view !== 'opening' || S().editing) return;
@@ -306,10 +275,23 @@
     const chipsEl = $('chips');
     if (chipsEl) chipsEl.style.display = 'none';
 
+    const sess = FOH.sessionAuth ? FOH.sessionAuth.getSession() : null;
+    const isMgr = !!(sess && (sess.isManager || sess.roleId === 'manager'));
+    const roleKey = FOH.roleIdentity ? FOH.roleIdentity.getCurrentSuperRoleKey() : 'staff';
+    const uname = (sess && sess.username) || '';
+    const isAllowed = FOH.isSectionAllowedForRole || ((s) => true);
+
     const cards = document.querySelectorAll('#sections > section.card');
     cards.forEach((card) => {
       const sid = (card.id || '').replace(/^sec-/, '');
       const secObj = (S().tpl && S().tpl.sections ? S().tpl.sections : []).find((x) => x.id === card.id || x.id === ('sec-' + sid) || x.id === sid);
+
+      // Strict Scoping: If user is not manager and section is not allowed, unconditionally hide!
+      if (!isMgr && secObj && !isAllowed(secObj, roleKey, false, uname)) {
+        card.style.display = 'none';
+        return;
+      }
+
       const sDept = (secObj && secObj.dept ? secObj.dept : sid).toLowerCase();
 
       if (activeDept === 'all') {

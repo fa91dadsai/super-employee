@@ -97,7 +97,7 @@
       titleAr: '🎖️ Super Captain · سوبر كابتن',
       subEn: 'Floor Leadership, Last Order & Closing Sign-off',
       subAr: 'قيادة الصالة، إعلان الـ Last Order واعتماد الإغلاق',
-      allowedViews: ['opening', 'closing_sheet', 'mine', 'dayoff', 'orders', 'inv', 'academy', 'tips', 'profile'],
+      allowedViews: ['opening', 'closing_sheet', 'mine', 'dayoff', 'orders', 'academy', 'tips', 'profile'],
       openingKeywords: null, // all floor & station sections
       closingDept: 'all',
     },
@@ -145,8 +145,8 @@
     return {
       fadi: { username: 'fadi', firstName: 'Fadi', lastName: 'Al-Masri', nickname: 'Fadi', phone: '+962 7 9000 1001', email: 'fadi.m@ceenlounge.com', inviteCode: 'CEEN-1001', displayName: ar ? 'فادي (سوبر مانجر)' : 'Fadi (Super Manager)', roleName: '👑 Super Manager', roleAr: '👑 سوبر مانجر', isManager: true, shift: '12:00 – 02:00 · Restaurant Manager' },
       ali: { username: 'ali', firstName: 'Ali', lastName: 'Hassan', nickname: 'Ali', phone: '+962 7 9000 2002', email: 'ali.h@ceenlounge.com', inviteCode: 'CEEN-2002', displayName: ar ? 'علي (سوبر كابتن)' : 'Ali (Super Captain)', roleName: '🎖️ Super Captain', roleAr: '🎖️ سوبر كابتن', isManager: false, isCaptain: true, shift: '12:00 – 02:00 · Floor Captain' },
-      maher: { username: 'maher', firstName: 'Maher', lastName: 'Zaid', nickname: 'Leo', phone: '+962 7 9000 4004', email: 'maher.z@ceenlounge.com', inviteCode: 'CEEN-4004', displayName: ar ? 'ماهر (سوبر بارتندر)' : 'Maher (Super Bartender)', roleName: '🍸 Super Bartender', roleAr: '🍸 سوبر بارتندر', isManager: false, shift: '12:00 – 02:00 · Main Bar Lead' },
-      sara: { username: 'sara', firstName: 'Sara', lastName: 'Khoury', nickname: 'Sara', phone: '+962 7 9000 3003', email: 'sara.k@ceenlounge.com', inviteCode: 'CEEN-3003', displayName: ar ? 'سارة (سوبر ويتر)' : 'Sara (Super Waiter)', roleName: '⭐ Super Waiter', roleAr: '⭐ سوبر ويتر', isManager: false, shift: '12:00 – 02:00 · Indoor & Terrace Waiter' },
+      maher: { username: 'maher', firstName: 'Maher', lastName: 'Zaid', nickname: 'Leo', phone: '+962 7 9000 4004', email: 'maher.z@ceenlounge.com', inviteCode: 'CEEN-4004', displayName: ar ? 'ماهر (سوبر بارتندر)' : 'Maher (Super Bartender)', roleName: '🍸 Super Bartender', roleAr: '🍸 سوبر بارتندر', isManager: false, isCaptain: false, shift: '12:00 – 02:00 · Main Bar Lead' },
+      sara: { username: 'sara', firstName: 'Sara', lastName: 'Khoury', nickname: 'Sara', phone: '+962 7 9000 3003', email: 'sara.k@ceenlounge.com', inviteCode: 'CEEN-3003', displayName: ar ? 'سارة (سوبر ويتر)' : 'Sara (Super Waiter)', roleName: '⭐ Super Waiter', roleAr: '⭐ سوبر ويتر', isManager: false, isCaptain: false, shift: '12:00 – 02:00 · Indoor & Terrace Waiter' },
     };
   }
 

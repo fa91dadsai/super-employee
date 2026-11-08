@@ -61,7 +61,7 @@
     const headRow = el('div', 'modal-picker-head');
     const titleBox = el('div', 'modal-picker-title-box');
     const h3 = el('h3', 'modal-picker-title');
-    h3.innerHTML = (icon ? `<span class="picker-head-icon">${icon}</span> ` : '') + (title || (ar ? 'اختر من القائمة' : 'Select an Option'));
+    h3.innerHTML = (icon ? `<span class="picker-head-icon">${FOH.escapeHtml(icon)}</span> ` : '') + FOH.escapeHtml(title || (ar ? 'اختر من القائمة' : 'Select an Option'));
     titleBox.append(h3);
     if (subtitle) {
       const sub = el('p', 'modal-picker-sub', subtitle);

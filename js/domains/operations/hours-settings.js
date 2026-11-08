@@ -266,7 +266,7 @@
       row.style.padding = '8px 0';
       row.style.borderBottom = '1px dashed var(--line)';
       row.style.cursor = 'pointer';
-      row.innerHTML = '<div><b>' + rkLabel + '</b><small style="display:block;color:var(--ink2);font-size:0.72rem;">' + rkSub + '</small></div>';
+      row.innerHTML = '<div><b>' + FOH.escapeHtml(rkLabel) + '</b><small style="display:block;color:var(--ink2);font-size:0.72rem;">' + FOH.escapeHtml(rkSub) + '</small></div>';
       const cb = el('input', 'sw');
       cb.type = 'checkbox';
       cb.checked = delRoles.includes(rk);
@@ -308,7 +308,7 @@
       row.style.padding = '8px 0';
       row.style.borderBottom = '1px dashed var(--line)';
       row.style.cursor = uname === 'fadi' ? 'default' : 'pointer';
-      row.innerHTML = '<div><b>👤 ' + fullName + '</b><small style="display:block;color:var(--ink2);font-size:0.72rem;">' + (uname === 'fadi' ? (ar ? '👑 المدير العام (مفعل دائماً)' : '👑 General Manager (Always Active)') : (ar ? 'مهمة إدارة طلبيات الصالة والمستودع' : 'Floor & warehouse order mission')) + '</small></div>';
+      row.innerHTML = '<div><b>👤 ' + FOH.escapeHtml(fullName) + '</b><small style="display:block;color:var(--ink2);font-size:0.72rem;">' + (uname === 'fadi' ? (ar ? '👑 المدير العام (مفعل دائماً)' : '👑 General Manager (Always Active)') : (ar ? 'مهمة إدارة طلبيات الصالة والمستودع' : 'Floor & warehouse order mission')) + '</small></div>';
 
       if (uname === 'fadi') {
         const badge = el('span', 'tag mine', ar ? 'مفعل دائماً' : 'Always Active');
@@ -385,7 +385,7 @@
       row.style.padding = '8px 0';
       row.style.borderBottom = '1px dashed var(--line)';
       row.style.cursor = 'pointer';
-      row.innerHTML = '<div><b>' + rkLabel + '</b><small style="display:block;color:var(--ink2);font-size:0.72rem;">' + rkSub + '</small></div>';
+      row.innerHTML = '<div><b>' + FOH.escapeHtml(rkLabel) + '</b><small style="display:block;color:var(--ink2);font-size:0.72rem;">' + FOH.escapeHtml(rkSub) + '</small></div>';
       const cb = el('input', 'sw');
       cb.type = 'checkbox';
       cb.checked = delAsgRoles.includes(rk);
@@ -427,7 +427,7 @@
       row.style.padding = '8px 0';
       row.style.borderBottom = '1px dashed var(--line)';
       row.style.cursor = uname === 'fadi' ? 'default' : 'pointer';
-      row.innerHTML = '<div><b>👤 ' + fullName + '</b><small style="display:block;color:var(--ink2);font-size:0.72rem;">' + (uname === 'fadi' ? (ar ? '👑 المدير العام (مفعل دائماً)' : '👑 General Manager (Always Active)') : (ar ? 'صلاحية تعيين وتوجيه المهام' : 'Task assignment mission')) + '</small></div>';
+      row.innerHTML = '<div><b>👤 ' + FOH.escapeHtml(fullName) + '</b><small style="display:block;color:var(--ink2);font-size:0.72rem;">' + (uname === 'fadi' ? (ar ? '👑 المدير العام (مفعل دائماً)' : '👑 General Manager (Always Active)') : (ar ? 'صلاحية تعيين وتوجيه المهام' : 'Task assignment mission')) + '</small></div>';
 
       if (uname === 'fadi') {
         const badge = el('span', 'tag mine', ar ? 'مفعل دائماً' : 'Always Active');

@@ -138,6 +138,7 @@
     try {
       raw = JSON.parse(localStorage.getItem(KEY) || 'null');
     } catch (err) {
+      /* Corrupt inventory state fallback */
       raw = null;
     }
     return normalize(raw, tpl);
@@ -149,6 +150,7 @@
       localStorage.setItem(KEY, JSON.stringify(inv));
       return true;
     } catch (err) {
+      /* Storage quota exceeded fallback */
       return false;
     }
   }

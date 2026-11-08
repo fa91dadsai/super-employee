@@ -332,6 +332,7 @@
       const raw = localStorage.getItem(key);
       return raw ? JSON.parse(raw) : null;
     } catch (err) {
+      /* Corrupt JSON or storage unavailable; return null */
       return null;
     }
   }
@@ -341,6 +342,7 @@
       localStorage.setItem(key, JSON.stringify(value));
       return true;
     } catch (err) {
+      /* Storage quota exceeded or disabled; return false */
       return false;
     }
   }

@@ -185,6 +185,9 @@
     const grid = renderShiftNavGrid({ ar, curType, scheduledType });
 
     bar.append(head, grid);
+    if (FOH.shiftHandover && FOH.shiftHandover.injectButton) {
+      FOH.shiftHandover.injectButton();
+    }
   }
 
   FOH.threeShifts = {

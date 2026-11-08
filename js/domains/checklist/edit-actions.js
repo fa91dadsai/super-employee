@@ -21,11 +21,18 @@
     undoSnapshot = FOH.store.clone(S.tpl);
   }
 
-  function toast(message) {
-    $('toastMsg').textContent = message;
-    $('toast').hidden = false;
+  function toast(message, hasUndo = false) {
+    const msgEl = $('toastMsg');
+    const undoBtn = $('toastUndo');
+    const toastEl = $('toast');
+    if (!toastEl) return;
+    if (msgEl) msgEl.textContent = message;
+    if (undoBtn) undoBtn.hidden = !hasUndo && !undoSnapshot;
+    toastEl.hidden = false;
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => ($('toast').hidden = true), 6000);
+    toastTimer = setTimeout(() => {
+      toastEl.hidden = true;
+    }, 5000);
   }
 
   function undo() {
@@ -145,6 +152,7 @@
         const parsed = JSON.parse(raw);
         tpl = FOH.store.upgrade(parsed.template || parsed);
       } catch (err) {
+        /* Corrupt template JSON fallback */
         tpl = null;
       }
       if (!tpl) return alert(t('badFile'));

@@ -32,7 +32,14 @@ body.auth-locked .preview-toolbar { display: none !important; }
 body.auth-locked .me-row .pick { display: none !important; }
 body.auth-staff #modeBtn, body.auth-staff #invTab, body.auth-staff #clearDayBtn { display: none !important; }
 body.login-open { overflow: hidden; }
-body.login-open header.top, body.login-open main, body.login-open .quick-report, body.login-open .preview-toolbar { display: none !important; }
+body.login-open header.top,
+body.login-open main,
+body.login-open .quick-report,
+body.login-open .preview-toolbar,
+body.login-open .app-bottom-bar,
+body.login-open #appBottomBar {
+  display: none !important;
+}
 
 /* Full-screen Mobile Login */
 .login-screen {
@@ -847,16 +854,17 @@ body.dark .report-search {
 .sb-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 90;
+  z-index: 1040;
   background: rgba(9, 13, 20, 0.62);
   backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
 }
 .app-sidebar {
   position: fixed;
   top: 0;
   bottom: 0;
   inset-inline-start: 0;
-  z-index: 100;
+  z-index: 1050;
   width: min(320px, 86vw);
   background: var(--card);
   color: var(--ink);
@@ -864,8 +872,9 @@ body.dark .report-search {
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
   display: flex;
   flex-direction: column;
-  padding: calc(14px + env(safe-area-inset-top)) 14px calc(14px + env(safe-area-inset-bottom));
+  padding: calc(14px + env(safe-area-inset-top)) 14px calc(14px + env(safe-area-inset-bottom, 16px));
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   animation: sb-slide 0.2s ease-out;
 }
 @keyframes sb-slide {
@@ -1051,13 +1060,21 @@ body.dark .sb-nav-btn.on {
 }
 .sb-foot {
   display: flex;
+  align-items: center;
   gap: 8px;
-  padding-top: 12px;
-  margin-top: 12px;
+  padding-top: 14px;
+  margin-top: auto;
   border-top: 1px solid var(--line);
+  flex-shrink: 0;
+  padding-bottom: calc(14px + env(safe-area-inset-bottom, 16px));
 }
-.sb-foot-btn { min-height: 40px; font-size: 0.8rem; }
+.sb-foot-btn { min-height: 42px; font-size: 0.82rem; }
 .sb-foot-btn:first-child { flex: 1; }
+
+body.sidebar-open .app-bottom-bar {
+  opacity: 0.35;
+  pointer-events: none;
+}
 
 /* Hide Opening-only chrome when focused on other sections */
 body.focused-non-opening #chips,
@@ -1831,6 +1848,69 @@ header.top .active-sec-pill {
 }
 .notif-bell-badge.snoozed-only {
   background: #d9822b;
+}
+
+.notif-bell-red-dot {
+  position: absolute;
+  top: 3px;
+  inset-inline-end: 3px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 0 2px rgba(22, 34, 47, 0.95), 0 0 8px #ef4444;
+  animation: notifRedDotPulse 2s infinite ease-in-out;
+  pointer-events: none;
+}
+
+@keyframes notifRedDotPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 2px rgba(22, 34, 47, 0.95), 0 0 6px #ef4444;
+  }
+  50% {
+    transform: scale(1.25);
+    box-shadow: 0 0 0 2px rgba(22, 34, 47, 0.95), 0 0 12px #f87171;
+  }
+}
+
+.notif-bell-btn.has-unread {
+  border-color: rgba(239, 68, 68, 0.45);
+  background: rgba(239, 68, 68, 0.12);
+}
+
+/* In-Page Notification Suppression: Keep operational screens quiet & clean */
+#banner,
+#healthAlertBanner {
+  display: none !important;
+}
+
+/* Contextual Orders Bottom Navigation Bar */
+.app-bottom-bar.orders-mode {
+  border-top: 1px solid rgba(212, 175, 55, 0.35) !important;
+  box-shadow: 0 -4px 26px rgba(212, 175, 55, 0.08) !important;
+}
+
+body.dark .app-bottom-bar.orders-mode {
+  border-top: 1px solid rgba(212, 175, 55, 0.28) !important;
+  box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.7), 0 -1px 8px rgba(212, 175, 55, 0.12) !important;
+}
+
+.tab-item.exit-anchor {
+  border-inline-start: 1px solid rgba(148, 163, 184, 0.2) !important;
+  opacity: 0.88 !important;
+}
+
+.tab-item.exit-anchor:hover,
+.tab-item.exit-anchor:active {
+  opacity: 1 !important;
+}
+
+#botBadgeOrdCart {
+  background: var(--gold, #d4af37) !important;
+  color: #121212 !important;
+  font-weight: 800 !important;
+  border: 2px solid rgba(22, 34, 47, 0.95) !important;
 }
 
 /* 2. Remove Sticky Floating Bottom "Report damage" Bar */

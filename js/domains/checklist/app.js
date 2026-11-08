@@ -45,71 +45,10 @@
 
   function renderBanner(all) {
     const banner = $('banner');
-    const due = nextDue();
-    banner.className = 'banner';
-    if (S.editing || (!due && !all.complete)) {
-      banner.hidden = true;
-      return;
-    }
-    banner.hidden = false;
-    if (all.complete && !due) {
-      banner.classList.add('ready');
-      banner.textContent = t('ready');
-      return;
-    }
-    const when = due.min > 0 ? t('dueIn', { d: duration(due.min) }) : due.min === 0 ? t('dueNow') : t('dueLate', { d: duration(due.min) });
-    banner.classList.toggle('late', due.min < 0);
-
-    const mainRow = FOH.view.el('div', 'banner-main');
-    const txtSpan = FOH.view.el('span', '');
-    txtSpan.append('⏰ ', FOH.view.el('b', '', due.at), ' · ' + due.names.join('، ') + ' — ' + when);
-    mainRow.append(txtSpan);
-
-    const actions = FOH.view.el('div', 'banner-actions');
-    const makeSnoozeBtn = (labelKey, mins) => {
-      const b = FOH.view.el('button', 'snooze-btn', t(labelKey));
-      b.type = 'button';
-      b.addEventListener('click', (e) => {
-        e.stopPropagation();
-        FOH.reminders.snoozeItems(due.ids || [], S.date, time.nowHM(), mins);
-        FOH.edit.toast(mins >= 1440 ? t('snoozedTodayToast') : t('snoozedToast', { m: mins }));
-        render();
-      });
-      return b;
-    };
-
-    // Quick "Done Now" button directly inside the alert banner
-    const doneNowBtn = FOH.view.el('button', 'snooze-btn done-now', t('snoozeDoneNow'));
-    doneNowBtn.type = 'button';
-    doneNowBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const now = time.nowHM();
-      (due.items || []).forEach((entry) => {
-        if (entry.kind === 'task') {
-          const st = FOH.schedule.stateOn(entry.item, S.log, S.date, time.todayISO(), now);
-          if (st && !st.doneEntry) {
-            FOH.schedule.toggle(S.log, st, S.date, now, S.me.name);
-            FOH.store.saveLog(S.log);
-          }
-        } else {
-          M.leaves(entry.item).forEach((lf) => {
-            S.run.checked[lf.id] = now;
-          });
-          saveRun();
-        }
-      });
-      buzz();
-      render();
-    });
-
-    actions.append(
-      doneNowBtn,
-      makeSnoozeBtn('snooze15', 15),
-      makeSnoozeBtn('snooze30', 30),
-      makeSnoozeBtn('snooze60', 60),
-      makeSnoozeBtn('snoozeToday', 1440)
-    );
-    banner.replaceChildren(mainRow, actions);
+    if (!banner) return;
+    // Quiet Notifications: In-page banners are suppressed from main screens.
+    // All due task reminders and actions are accessible directly inside Notification Center (Header Bell).
+    banner.hidden = true;
   }
 
   function renderHeader() {
@@ -185,10 +124,18 @@
       rolesView: S.editing && S.editTab === 'roles',
     };
     Object.keys(show).forEach((id) => ($(id).hidden = !show[id]));
-    if (show.sections) FOH.view.sections($('sections'));
+    if (show.sections) {
+      FOH.view.sections($('sections'));
+      if (FOH.checklistSearch && FOH.checklistSearch.render) FOH.checklistSearch.render();
+    } else {
+      const searchBar = $('checklistSearchBar');
+      if (searchBar) searchBar.hidden = true;
+    }
     if (show.today) FOH.tasksView.today($('today'));
     if (show.mine) FOH.tasksView.mine($('mine'));
-    if (show.ordersView && FOH.erpPwa && FOH.erpPwa.renderOrdersView) FOH.erpPwa.renderOrdersView($('ordersView'));
+    if (show.ordersView && (FOH.ordersView || FOH.erpPwa) && (FOH.ordersView || FOH.erpPwa).renderOrdersView) {
+      (FOH.ordersView || FOH.erpPwa).renderOrdersView($('ordersView'));
+    }
     if (show.inv) FOH.invManage.render($('inv'));
     if (show.sched) FOH.tasksView.schedule($('sched'));
     if (show.rolesView) FOH.tasksView.roles($('rolesView'));

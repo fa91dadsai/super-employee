@@ -403,7 +403,12 @@
 
   function attachItemNoteChip(tx, opts = {}) {
     const { noteKey, existing, notesMap, ar, sess } = opts;
-    let chip = tx.querySelector('.item-note-chip');
+    let metaRow = tx.querySelector('.item-meta-row');
+    if (!metaRow) {
+      metaRow = el('div', 'item-meta-row');
+      tx.append(metaRow);
+    }
+    let chip = metaRow.querySelector('.item-note-chip');
     if (!chip) {
       chip = el('button', 'item-note-chip' + (existing ? ' has-note' : ''), existing ? (ar ? '💬 تعديل الملاحظة' : '💬 Edit note') : (ar ? '💬 +ملاحظة' : '💬 +Note'));
       chip.type = 'button';
@@ -418,14 +423,14 @@
         } else {
           notesMap[noteKey] = {
             text: input.trim(),
-            by: (sess && sess.displayName) || S.me.name || 'Staff',
+            by: (sess && sess.displayName) || S().me.name || 'Staff',
             at: FOH.time.nowHM(),
           };
         }
         saveItemNotes(notesMap);
         FOH.app.render();
       });
-      tx.append(chip);
+      metaRow.append(chip);
     }
 
     let disp = tx.querySelector('.item-note-display');

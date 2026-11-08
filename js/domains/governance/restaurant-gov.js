@@ -56,6 +56,7 @@
       return {
         ...d,
         ...raw,
+        checklistLocked: false, // Ensure operational checklist is open by default
         preferEnglishBrand: raw.preferEnglishBrand !== undefined ? !!raw.preferEnglishBrand : true,
         restaurantName: raw.restaurantName || d.restaurantName,
         restaurantNameAr: raw.restaurantNameAr || raw.restaurantName || d.restaurantName,
@@ -246,9 +247,11 @@
 
     const ar = isAr();
     const msg = el('div', '');
+    const sName = FOH.escapeHtml(top.staff ? top.staff.name : '');
+    const sExpiry = FOH.escapeHtml(top.staff ? top.staff.healthCertExpiry : '');
     const statusTxt = top.expired
-      ? (ar ? '🚨 تنبيه الشهادة الصحية: شهادة (' + top.staff.name + ') منتهية منذ ' + Math.abs(top.days) + ' يوم (' + top.staff.healthCertExpiry + ')!' : '🚨 Health Certificate Expired: ' + top.staff.name + ' expired ' + Math.abs(top.days) + 'd ago (' + top.staff.healthCertExpiry + ')!')
-      : (ar ? '⚠️ تنبيه الشهادة الصحية: شهادة (' + top.staff.name + ') تنتهي خلال ' + top.days + ' يوم (' + top.staff.healthCertExpiry + ')' : '⚠️ Health Certificate Warning: ' + top.staff.name + ' expires in ' + top.days + ' days (' + top.staff.healthCertExpiry + ')');
+      ? (ar ? '🚨 تنبيه الشهادة الصحية: شهادة (' + sName + ') منتهية منذ ' + Math.abs(top.days) + ' يوم (' + sExpiry + ')!' : '🚨 Health Certificate Expired: ' + sName + ' expired ' + Math.abs(top.days) + 'd ago (' + sExpiry + ')!')
+      : (ar ? '⚠️ تنبيه الشهادة الصحية: شهادة (' + sName + ') تنتهي خلال ' + top.days + ' يوم (' + sExpiry + ')' : '⚠️ Health Certificate Warning: ' + sName + ' expires in ' + top.days + ' days (' + sExpiry + ')');
     msg.innerHTML = '<b>' + statusTxt + '</b>' + (alerts.length > 1 ? (ar ? ' <small>(+' + (alerts.length - 1) + ' تنبيه آخر)</small>' : ' <small>(+' + (alerts.length - 1) + ' more)</small>') : '');
 
     const acts = el('div', 'health-banner-actions');

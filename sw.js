@@ -1,6 +1,7 @@
 'use strict';
 
-const CACHE = 'super-employee-v50-ops-full-sync';
+const CACHE = 'super-employee-v57-hide-tabbar-login';
+// Rollback cache version: super-employee-v56-quiet-notifs-orders-nav
 const PRECACHE = [
   './',
   './index.html',
@@ -13,6 +14,7 @@ const PRECACHE = [
   './css/components.css',
   './css/checklist.css',
   './css/super-employee.css',
+  './css/orders-ceen.css',
   // JS Core & Checklist Engine
   './js/core/security.js',
   './js/core/i18n.js',
@@ -56,7 +58,15 @@ const PRECACHE = [
   './js/domains/tasks/task-assignment.js',
   './js/domains/orders/orders-catalog-data.js',
   './js/domains/orders/orders-store.js',
+  './js/domains/orders/orders-catalog-mutations.js',
+  './js/domains/orders/orders-lifecycle-store.js',
   './js/domains/orders/orders-dispatch.js',
+  './js/domains/orders/orders-settings-modal.js',
+  './js/domains/orders/orders-view-home.js',
+  './js/domains/orders/orders-view-categories.js',
+  './js/domains/orders/orders-view-step.js',
+  './js/domains/orders/orders-view-quick.js',
+  './js/domains/orders/orders-view-review.js',
   './js/domains/orders/orders-view.js',
   // JS Domain Modules: Governance & Identity
   './js/domains/governance/restaurant-gov.js',
@@ -76,6 +86,7 @@ const PRECACHE = [
   './js/domains/academy/academy-view.js',
   // JS Domain Modules: Notifications & Navigation
   './js/domains/notifications/snooze-engine.js',
+  './js/domains/notifications/notif-bell-ui.js',
   './js/domains/notifications/notif-center.js',
   './js/domains/navigation/sidebar-nav.js',
   './js/domains/navigation/bottom-bar.js',
@@ -83,6 +94,7 @@ const PRECACHE = [
   // JS Domain Modules: UI Header, Navigation, Hero & Orchestration
   './js/domains/shifts/header-subbars.js',
   './js/domains/shifts/three-shifts-nav.js',
+  './js/domains/shifts/shift-sealing.js',
   './js/domains/shifts/landing-hero.js',
   './js/domains/shifts/signoff-gate.js',
   './js/domains/shifts/super-employee-init.js',

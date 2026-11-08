@@ -218,6 +218,11 @@
     if (S.view === 'tips' && $('tipsView')) renderTipsView($('tipsView'));
     if (S.view === 'dashboard' && $('dashboardView')) renderDashboardView($('dashboardView'));
     if (S.view === 'profile' && $('profilePageView')) renderProfilePageView($('profilePageView'));
+    if (S.view === 'dayoff' && $('dayoffView') && FOH.dayOff && FOH.dayOff.buildDayOffSection) {
+      $('dayoffView').replaceChildren();
+      const sec = FOH.dayOff.buildDayOffSection(false);
+      if (sec) $('dayoffView').append(sec);
+    }
     if (S.view === 'settings' && $('settingsView')) {
       renderSettingsView($('settingsView'));
       appendHoursAndSuperRolesSettings($('settingsView'));
@@ -312,25 +317,7 @@
       });
     }
 
-    ['sections', 'today', 'mine'].forEach((cid) => {
-      const node = $(cid);
-      if (!node) return;
-      node.addEventListener(
-        'click',
-        (ev) => {
-          const cb = ev.target.closest('input.ck[data-id]');
-          if (!cb) return;
-          const gov = loadGov();
-          const sess = getSession();
-          if (gov.checklistLocked && sess && !sess.isManager) {
-            ev.preventDefault();
-            ev.stopPropagation();
-            FOH.edit.toast(isAr() ? '🔒 الشيك ليست مقفلة حاليًا من قِبل المدير' : '🔒 Checklist is currently locked by Manager');
-          }
-        },
-        true
-      );
-    });
+    // Operational task checking is never blocked for staff during active shift
   }
 
   function init() {

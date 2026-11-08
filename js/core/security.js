@@ -43,6 +43,7 @@
       const parsed = JSON.parse(raw);
       return parsed !== undefined && parsed !== null ? parsed : resolveFallback();
     } catch {
+      /* Safe JSON parse fallback */
       return resolveFallback();
     }
   }
@@ -77,14 +78,34 @@
     return '#';
   }
 
+
+  /**
+   * Debounces a function call by delay ms to eliminate storage churn & layout thrashing.
+   * @param {Function} fn
+   * @param {number} delay
+   * @returns {Function}
+   */
+  function debounce(fn, delay = 150) {
+    let timer = null;
+    return function (...args) {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        timer = null;
+        fn.apply(this, args);
+      }, delay);
+    };
+  }
+
   FOH.security = {
     escapeHtml,
     safeJsonParse,
     sanitizeText,
     sanitizeUrl,
+    debounce,
   };
 
   // Expose directly on FOH for fast zero-overhead access
   FOH.escapeHtml = escapeHtml;
   FOH.safeJsonParse = safeJsonParse;
+  FOH.debounce = debounce;
 })(window.FOH = window.FOH || {});

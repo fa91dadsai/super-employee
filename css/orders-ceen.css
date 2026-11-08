@@ -1,0 +1,3251 @@
+/* =========================================================================
+   CEEN 2 Bar Orders Scoped Stylesheet for FOH Opening App
+   Generated from ceen-bar-orders-v2 with strict #ordersView encapsulation,
+   Obsidian Noir & Imperial Alabaster theme parity, and RTL support.
+   ========================================================================= */
+
+#ordersView,
+.ord-ceen-scope {
+  --bg: var(--bg-primary, #f5f6f0);
+  --paper: var(--card, #ffffff);
+  --raised: var(--accent-soft, #eaf1e7);
+  --ink: var(--ink, #24392e);
+  --muted: var(--muted, #69776e);
+  --green: var(--accent, #245b48);
+  --action: var(--accent, #245b48);
+  --on-action: #ffffff;
+  --soft: var(--accent-soft, #eaf1e7);
+  --line: var(--line, #dfe6db);
+  --control: var(--control, #ced9cb);
+  --gold: var(--amber, #bc9762);
+  --brass: #bc9762;
+  --warn: #87562b;
+  --danger: var(--danger, #a33f2e);
+  --danger-soft: var(--danger-soft, #faece7);
+  --shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  --tab-height: var(--tab-bar-height, 68px);
+  --header-height: 56px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: var(--ink);
+  padding-bottom: calc(140px + env(safe-area-inset-bottom, 16px)) !important;
+  box-sizing: border-box;
+}
+
+body.dark #ordersView,
+body.dark .ord-ceen-scope {
+  --bg: var(--bg, #0e1311);
+  --paper: var(--card, #161d1a);
+  --raised: #1d2622;
+  --ink: var(--ink, #eef2ee);
+  --muted: var(--muted, #a3b1a8);
+  --green: var(--accent, #8cc8aa);
+  --action: #3f8f6f;
+  --on-action: #07100b;
+  --soft: #23382d;
+  --line: var(--line, #303e35);
+  --control: #708679;
+  --gold: #c9a46a;
+  --brass: #c9a46a;
+  --warn: #e3bc7d;
+  --danger: var(--danger, #ed917b);
+  --danger-soft: #36251f;
+  --shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* --- Responsive Floating Action Bar (Positioned safely above FOH Bottom Nav) --- */
+#ordersView .bottom,
+.ord-ceen-scope .bottom {
+  position: fixed !important;
+  bottom: calc(var(--tab-bar-height, 68px) + env(safe-area-inset-bottom, 16px)) !important;
+  left: 0 !important;
+  right: 0 !important;
+  max-width: 680px !important;
+  margin: 0 auto !important;
+  z-index: 850 !important;
+  background: rgba(255, 255, 255, 0.94) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid var(--line) !important;
+  border-bottom: 0 !important;
+  border-radius: 20px 20px 0 0 !important;
+  box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.1) !important;
+  padding: 10px 16px !important;
+  display: block !important;
+}
+
+body.dark #ordersView .bottom,
+body.dark .ord-ceen-scope .bottom {
+  background: rgba(22, 29, 26, 0.94) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.5) !important;
+}
+
+#ordersView .bottom-inner,
+.ord-ceen-scope .bottom-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+#ordersView .bottom-info {
+  font-size: 13px;
+  color: var(--muted);
+}
+#ordersView .bottom-info strong {
+  font-size: 18px;
+  color: var(--ink);
+  font-weight: 800;
+  margin-inline-end: 4px;
+}
+#ordersView .bottom-info small {
+  display: block;
+  font-size: 11px;
+}
+
+/* --- Scoped CEEN 2 Rules --- */
+
+#ordersView button,
+#ordersView input,
+#ordersView select,
+#ordersView textarea {
+  font:inherit;
+  color:inherit
+}
+
+#ordersView button,
+#ordersView a,
+#ordersView input,
+#ordersView select,
+#ordersView textarea,
+#ordersView summary {
+  touch-action:manipulation
+}
+
+#ordersView button {
+  cursor:pointer;
+  border:1px solid var(--control);
+  background:var(--paper);
+  border-radius:14px;
+  padding:11px 16px;
+  min-height:48px;
+  font-weight:600;
+  transition:background-color .18s,border-color .18s,color .18s
+}
+
+#ordersView button:active:not(:disabled) {
+  background:var(--raised)
+}
+
+#ordersView button:disabled {
+  opacity:.45;
+  cursor:default
+}
+
+#ordersView button:focus-visible,
+#ordersView a:focus-visible,
+#ordersView input:focus-visible,
+#ordersView select:focus-visible,
+#ordersView textarea:focus-visible,
+#ordersView summary:focus-visible {
+  outline:3px solid var(--gold);
+  outline-offset:3px
+}
+
+#ordersView input,
+#ordersView textarea,
+#ordersView select {
+  min-height:48px;
+  max-width:100%;
+  width:100%;
+  min-width:0;
+  padding:12px;
+  border:1px solid var(--control);
+  border-radius:12px;
+  background:var(--paper);
+  font-size:16px
+}
+
+#ordersView textarea {
+  resize:vertical
+}
+
+#ordersView input[type=number] {
+  appearance:textfield;
+  -moz-appearance:textfield;
+  font-variant-numeric:tabular-nums
+}
+
+#ordersView input::-webkit-inner-spin-button,
+#ordersView input::-webkit-outer-spin-button {
+  -webkit-appearance:none;
+  margin:0
+}
+
+#ordersView input[type=checkbox] {
+  accent-color:var(--action)
+}
+
+#ordersView h1,
+#ordersView h2,
+#ordersView h3,
+#ordersView p {
+  margin:0
+}
+
+#ordersView h1,
+#ordersView h2,
+#ordersView h3,
+#ordersView b,
+#ordersView strong {
+  line-height:1.25
+}
+
+#ordersView h1,
+#ordersView h2,
+#ordersView h3,
+#ordersView button,
+#ordersView p,
+#ordersView small {
+  overflow-wrap:anywhere
+}
+
+#ordersView svg {
+  width:24px;
+  height:24px;
+  stroke:currentColor;
+  fill:none;
+  stroke-width:1.7;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  flex-shrink:0
+}
+
+#ordersView a {
+  color:var(--green)
+}
+
+#ordersView [hidden] {
+  display:none!important
+}
+
+#ordersView .app,
+.ord-ceen-scope .app {
+  max-width:760px;
+  margin:auto;
+  padding:26px 22px calc(190px + env(safe-area-inset-bottom));
+  min-height:calc(100dvh - var(--header-height))
+}
+
+#ordersView .app[data-page=item],
+.ord-ceen-scope .app[data-page=item] {
+  max-width:620px;
+  padding-bottom:calc(240px + env(safe-area-inset-bottom))
+}
+
+#ordersView .breadcrumbs,
+.ord-ceen-scope .breadcrumbs {
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:8px;
+  font-size:12px;
+  color:var(--muted);
+  margin:-10px 0 14px
+}
+
+#ordersView .breadcrumbs button,
+.ord-ceen-scope .breadcrumbs button {
+  min-width:44px;
+  min-height:44px;
+  padding:5px 0;
+  border:0;
+  border-radius:4px;
+  background:var(--clear);
+  font-size:12px;
+  color:var(--muted)
+}
+
+#ordersView .kicker,
+.ord-ceen-scope .kicker {
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:2px;
+  color:var(--gold);
+  margin-bottom:10px
+}
+
+#ordersView .title,
+.ord-ceen-scope .title {
+  font-size:clamp(28px,6vw,36px);
+  letter-spacing:-1px;
+  line-height:1.15;
+  margin-bottom:12px
+}
+
+#ordersView .sub,
+.ord-ceen-scope .sub {
+  font-size:14px;
+  color:var(--muted);
+  line-height:1.6
+}
+
+#ordersView .welcome,
+.ord-ceen-scope .welcome {
+  margin:4px 0 24px
+}
+
+#ordersView .welcome .title,
+.ord-ceen-scope .welcome .title {
+  max-width:400px
+}
+
+#ordersView .draft-card,
+.ord-ceen-scope .draft-card {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  background:var(--soft);
+  border:1px solid var(--line);
+  padding:20px;
+  border-radius:20px;
+  margin-bottom:30px
+}
+
+#ordersView .draft-count,
+.ord-ceen-scope .draft-count {
+  display:flex;
+  gap:10px;
+  align-items:center
+}
+
+#ordersView .draft-count strong,
+.ord-ceen-scope .draft-count strong {
+  font-size:40px;
+  letter-spacing:-2px;
+  font-variant-numeric:tabular-nums;
+  color:var(--green)
+}
+
+#ordersView .draft-count span,
+.ord-ceen-scope .draft-count span {
+  font-size:12px;
+  color:var(--muted);
+  line-height:1.5
+}
+
+#ordersView .draft-card button,
+.ord-ceen-scope .draft-card button {
+  font-size:13px;
+  padding:12px
+}
+
+#ordersView .section-heading,
+.ord-ceen-scope .section-heading {
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:10px;
+  margin:0 0 13px
+}
+
+#ordersView .section-heading h2,
+.ord-ceen-scope .section-heading h2 {
+  font-size:18px;
+  letter-spacing:-.4px
+}
+
+#ordersView .section-heading span,
+.ord-ceen-scope .section-heading span {
+  color:var(--muted);
+  font-size:12px
+}
+
+#ordersView .section-cards,
+.ord-ceen-scope .section-cards {
+  display:grid;
+  gap:12px
+}
+
+#ordersView .group-card,
+.ord-ceen-scope .group-card {
+  display:flex;
+  align-items:center;
+  gap:16px;
+  text-align:left;
+  padding:20px;
+  border:1px solid var(--line);
+  border-radius:20px;
+  box-shadow:0 4px 18px var(--shadow)
+}
+
+#ordersView .glyph,
+.ord-ceen-scope .glyph {
+  width:54px;
+  height:60px;
+  border-radius:16px;
+  display:grid;
+  place-items:center;
+  background:var(--raised);
+  color:var(--gold);
+  flex-shrink:0
+}
+
+#ordersView .glyph svg,
+.ord-ceen-scope .glyph svg {
+  width:29px;
+  height:29px
+}
+
+#ordersView .group-card .label,
+.ord-ceen-scope .group-card .label {
+  flex:1;
+  min-width:0
+}
+
+#ordersView .group-card b,
+.ord-ceen-scope .group-card b {
+  display:block;
+  font-size:22px;
+  letter-spacing:-.4px;
+  margin-bottom:5px
+}
+
+#ordersView .group-card small,
+.ord-ceen-scope .group-card small {
+  display:block;
+  font-size:12px;
+  color:var(--muted);
+  font-weight:400
+}
+
+#ordersView .group-card .arrow,
+.ord-ceen-scope .group-card .arrow {
+  color:var(--gold);
+  font-size:23px
+}
+
+#ordersView .section-progress,
+.ord-ceen-scope .section-progress {
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  margin-top:12px;
+  color:var(--muted);
+  font-size:11px;
+  font-weight:500;
+  font-variant-numeric:tabular-nums
+}
+
+#ordersView .progress-rail,
+.ord-ceen-scope .progress-rail {
+  width:100%;
+  height:4px;
+  border-radius:10px;
+  background:var(--line);
+  overflow:hidden;
+  margin-top:8px
+}
+
+#ordersView .progress-rail div,
+.ord-ceen-scope .progress-rail div {
+  height:100%;
+  background:var(--gold);
+  border-radius:10px;
+  transition:width .18s
+}
+
+#ordersView .small-note,
+.ord-ceen-scope .small-note {
+  display:flex;
+  gap:9px;
+  font-size:12px;
+  color:var(--muted);
+  margin-top:24px
+}
+
+#ordersView .small-note svg,
+.ord-ceen-scope .small-note svg {
+  width:18px;
+  height:18px;
+  margin-top:1px
+}
+
+#ordersView .resume,
+.ord-ceen-scope .resume {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  padding:18px;
+  border:1px solid var(--line);
+  background:var(--paper);
+  border-radius:16px;
+  margin-top:20px;
+  font-size:12px
+}
+
+#ordersView .resume b,
+.ord-ceen-scope .resume b {
+  display:block;
+  margin-top:5px
+}
+
+#ordersView .resume button,
+.ord-ceen-scope .resume button {
+  font-size:12px;
+  flex-shrink:0
+}
+
+#ordersView .type-grid,
+.ord-ceen-scope .type-grid {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+  margin-top:24px
+}
+
+#ordersView .type-card,
+.ord-ceen-scope .type-card {
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  text-align:left;
+  gap:14px;
+  min-height:160px;
+  padding:19px;
+  border-color:var(--line);
+  border-radius:18px
+}
+
+#ordersView .type-card b,
+.ord-ceen-scope .type-card b {
+  font-size:18px
+}
+
+#ordersView .type-icon,
+.ord-ceen-scope .type-icon {
+  color:var(--gold);
+  font-size:20px
+}
+
+#ordersView .type-bottom,
+.ord-ceen-scope .type-bottom {
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  flex-wrap:wrap;
+  width:100%;
+  font-size:11px;
+  color:var(--muted);
+  margin-top:auto
+}
+
+#ordersView .picked,
+.ord-ceen-scope .picked {
+  color:var(--green)
+}
+
+#ordersView .type-card .progress-rail,
+.ord-ceen-scope .type-card .progress-rail {
+  margin-top:0
+}
+
+#ordersView .search,
+.ord-ceen-scope .search {
+  position:relative;
+  margin:22px 0 14px
+}
+
+#ordersView .search input,
+.ord-ceen-scope .search input {
+  padding-left:44px
+}
+
+#ordersView .search svg,
+.ord-ceen-scope .search svg {
+  position:absolute;
+  top:14px;
+  left:14px;
+  width:20px;
+  height:20px;
+  color:var(--muted)
+}
+
+#ordersView .product-list,
+.ord-ceen-scope .product-list {
+  border:1px solid var(--line);
+  border-radius:18px;
+  overflow:hidden;
+  background:var(--paper)
+}
+
+#ordersView .product-pick,
+.ord-ceen-scope .product-pick {
+  display:flex;
+  width:100%;
+  align-items:center;
+  gap:14px;
+  text-align:left;
+  padding:18px 16px;
+  border:0;
+  border-radius:0;
+  min-height:84px
+}
+
+#ordersView .product-pick+.product-pick,
+.ord-ceen-scope .product-pick+.product-pick {
+  border-top:1px solid var(--line)
+}
+
+#ordersView .product-pick .number,
+.ord-ceen-scope .product-pick .number {
+  font-size:12px;
+  color:var(--muted);
+  min-width:20px;
+  font-variant-numeric:tabular-nums
+}
+
+#ordersView .product-pick .name,
+.ord-ceen-scope .product-pick .name {
+  flex:1;
+  min-width:0
+}
+
+#ordersView .product-pick b,
+.ord-ceen-scope .product-pick b {
+  font-size:16px;
+  display:block
+}
+
+#ordersView .product-pick small,
+.ord-ceen-scope .product-pick small {
+  font-size:11px;
+  color:var(--muted);
+  display:block;
+  margin-top:7px;
+  font-weight:400
+}
+
+#ordersView .product-pick .requested,
+.ord-ceen-scope .product-pick .requested {
+  font-size:12px;
+  color:var(--green);
+  background:var(--soft);
+  padding:8px;
+  border-radius:10px;
+  text-align:center
+}
+
+#ordersView .check,
+.ord-ceen-scope .check {
+  color:var(--green)!important
+}
+
+#ordersView .list-head,
+.ord-ceen-scope .list-head {
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  color:var(--muted);
+  font-size:11px;
+  margin-bottom:12px
+}
+
+#ordersView .start,
+.ord-ceen-scope .start {
+  margin-top:22px
+}
+
+#ordersView .primary,
+.ord-ceen-scope .primary {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  background:var(--action);
+  border-color:var(--action);
+  color:var(--on-action);
+  font-weight:700
+}
+
+#ordersView .primary:active:not(:disabled),
+.ord-ceen-scope .primary:active:not(:disabled) {
+  background:var(--action);
+  filter:brightness(.92)
+}
+
+#ordersView .wide,
+.ord-ceen-scope .wide {
+  width:100%
+}
+
+#ordersView .view-switch,
+.ord-ceen-scope .view-switch {
+  display:flex;
+  gap:4px;
+  background:var(--raised);
+  padding:5px;
+  border:1px solid var(--line);
+  border-radius:15px;
+  margin:22px 0
+}
+
+#ordersView .view-switch button,
+.ord-ceen-scope .view-switch button {
+  flex:1;
+  min-width:0;
+  border:0;
+  background:var(--clear);
+  font-size:13px;
+  color:var(--muted);
+  padding:10px 6px;
+  min-height:44px;
+  border-radius:10px
+}
+
+#ordersView .view-switch button[aria-pressed=true],
+.ord-ceen-scope .view-switch button[aria-pressed=true] {
+  background:var(--paper);
+  color:var(--ink);
+  box-shadow:0 2px 5px var(--shadow)
+}
+
+#ordersView .progress-head,
+.ord-ceen-scope .progress-head {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  color:var(--muted);
+  font-size:12px
+}
+
+#ordersView .progress-head strong,
+.ord-ceen-scope .progress-head strong {
+  font-size:16px;
+  color:var(--ink);
+  font-variant-numeric:tabular-nums
+}
+
+#ordersView .progress-head button,
+.ord-ceen-scope .progress-head button {
+  border:0;
+  background:var(--clear);
+  color:var(--green);
+  font-size:12px;
+  padding:6px 0
+}
+
+#ordersView .item-progress,
+.ord-ceen-scope .item-progress {
+  margin:2px 0 20px
+}
+
+#ordersView .item-card,
+.ord-ceen-scope .item-card {
+  border:1px solid var(--line);
+  background:var(--paper);
+  border-radius:22px;
+  padding:23px;
+  box-shadow:0 8px 30px var(--shadow)
+}
+
+#ordersView .product-heading,
+.ord-ceen-scope .product-heading {
+  display:flex;
+  align-items:center;
+  gap:14px
+}
+
+#ordersView .product-heading .text,
+.ord-ceen-scope .product-heading .text {
+  flex:1;
+  min-width:0
+}
+
+#ordersView .cat,
+.ord-ceen-scope .cat {
+  font-size:11px;
+  color:var(--gold);
+  margin-bottom:7px
+}
+
+#ordersView .product-name,
+.ord-ceen-scope .product-name {
+  font-size:clamp(27px,6vw,34px);
+  letter-spacing:-.7px;
+  line-height:1.15;
+  overflow-wrap:anywhere
+}
+
+#ordersView .item-code,
+.ord-ceen-scope .item-code {
+  font-size:11px;
+  color:var(--muted);
+  margin-top:8px
+}
+
+#ordersView .edit-item,
+.ord-ceen-scope .edit-item {
+  font-size:12px;
+  border:0;
+  background:var(--clear);
+  color:var(--muted);
+  padding:8px;
+  margin-top:7px;
+  min-height:44px
+}
+
+#ordersView .stock-panel,
+.ord-ceen-scope .stock-panel {
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:14px;
+  background:var(--raised);
+  border:1px solid var(--line);
+  border-radius:16px;
+  margin-top:16px;
+  padding:16px
+}
+
+#ordersView .stock-panel b,
+.ord-ceen-scope .stock-panel b {
+  font-size:13px;
+  display:block
+}
+
+#ordersView .stock-panel small,
+.ord-ceen-scope .stock-panel small {
+  display:block;
+  font-size:11px;
+  color:var(--muted);
+  margin-top:6px;
+  max-width:260px
+}
+
+#ordersView .stock-right,
+.ord-ceen-scope .stock-right {
+  text-align:right;
+  min-width:40px;
+  max-width:45%;
+  overflow-wrap:anywhere
+}
+
+#ordersView .stock-value,
+.ord-ceen-scope .stock-value {
+  font-size:34px;
+  line-height:1.15;
+  font-weight:600;
+  font-variant-numeric:tabular-nums;
+  color:var(--green)
+}
+
+#ordersView .stock-value.missing,
+.ord-ceen-scope .stock-value.missing {
+  font-size:15px;
+  line-height:1.5
+}
+
+#ordersView .stock-unit,
+.ord-ceen-scope .stock-unit {
+  font-size:11px;
+  color:var(--muted);
+  margin-top:4px
+}
+
+#ordersView .stock-edit,
+.ord-ceen-scope .stock-edit {
+  display:block;
+  min-height:44px;
+  margin-top:4px;
+  padding:7px 0;
+  background:var(--clear);
+  border:0;
+  color:var(--green);
+  font-size:12px;
+  text-decoration:underline;
+  text-underline-offset:4px
+}
+
+#ordersView .stock-foot,
+.ord-ceen-scope .stock-foot,
+#ordersView .stock-warning,
+.ord-ceen-scope .stock-warning {
+  font-size:11px;
+  color:var(--muted);
+  margin-top:9px
+}
+
+#ordersView .stock-warning,
+.ord-ceen-scope .stock-warning {
+  color:var(--warn)
+}
+
+#ordersView .order-label,
+.ord-ceen-scope .order-label {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin:28px 0 14px;
+  font-size:15px;
+  font-weight:600
+}
+
+#ordersView .order-label small,
+.ord-ceen-scope .order-label small {
+  font-size:10px;
+  color:var(--muted);
+  font-weight:400
+}
+
+#ordersView .qty-row,
+.ord-ceen-scope .qty-row {
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:12px
+}
+
+#ordersView .stepper,
+.ord-ceen-scope .stepper {
+  display:flex;
+  align-items:center;
+  min-width:0;
+  height:88px;
+  border:1px solid var(--control);
+  background:var(--bg);
+  border-radius:18px;
+  padding:7px;
+  gap:5px
+}
+
+#ordersView .stepper button,
+.ord-ceen-scope .stepper button {
+  min-width:56px;
+  min-height:64px;
+  padding:0;
+  border:0;
+  background:var(--paper);
+  font-size:30px;
+  color:var(--green);
+  border-radius:12px
+}
+
+#ordersView .stepper button[data-action=plus],
+.ord-ceen-scope .stepper button[data-action=plus] {
+  background:var(--action);
+  color:var(--on-action)
+}
+
+#ordersView .stepper input,
+.ord-ceen-scope .stepper input {
+  font-size:40px;
+  font-weight:600;
+  text-align:center;
+  min-width:0;
+  padding:0;
+  border:0;
+  background:var(--clear);
+  height:64px;
+  flex:1
+}
+
+#ordersView .ratio-denominator,
+.ord-ceen-scope .ratio-denominator {
+  font-size:18px;
+  color:var(--muted);
+  white-space:nowrap;
+  padding-right:5px
+}
+
+#ordersView .ratio-denominator b,
+.ord-ceen-scope .ratio-denominator b {
+  font-weight:500
+}
+
+#ordersView .qty-row select,
+.ord-ceen-scope .qty-row select {
+  width:100%;
+  min-height:48px
+}
+
+#ordersView .ratio-caption,
+.ord-ceen-scope .ratio-caption,
+#ordersView .qty-help,
+.ord-ceen-scope .qty-help {
+  font-size:12px;
+  color:var(--muted);
+  margin-top:10px
+}
+
+#ordersView .qty-help,
+.ord-ceen-scope .qty-help {
+  color:var(--green)
+}
+
+#ordersView .optional,
+.ord-ceen-scope .optional {
+  border-top:1px solid var(--line);
+  margin-top:22px;
+  padding-top:6px
+}
+
+#ordersView .optional summary,
+.ord-ceen-scope .optional summary {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  min-height:48px;
+  cursor:pointer;
+  font-size:13px;
+  list-style:none
+}
+
+#ordersView .optional summary span,
+.ord-ceen-scope .optional summary span {
+  color:var(--muted);
+  font-size:11px
+}
+
+#ordersView .field,
+.ord-ceen-scope .field {
+  margin:14px 0
+}
+
+#ordersView .field label,
+.ord-ceen-scope .field label {
+  display:block;
+  font-size:12px;
+  color:var(--muted);
+  margin-bottom:7px
+}
+
+#ordersView .field-row,
+.ord-ceen-scope .field-row {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px
+}
+
+#ordersView .item-status,
+.ord-ceen-scope .item-status {
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  margin:14px 4px;
+  font-size:11px;
+  color:var(--muted)
+}
+
+#ordersView .done,
+.ord-ceen-scope .done {
+  color:var(--green)
+}
+
+#ordersView .error,
+.ord-ceen-scope .error,
+#ordersView .quick-error,
+.ord-ceen-scope .quick-error {
+  color:var(--danger);
+  background:var(--danger-soft);
+  padding:12px;
+  border:1px solid var(--danger);
+  border-radius:12px;
+  font-size:12px;
+  margin-top:12px
+}
+
+#ordersView .bottom,
+.ord-ceen-scope .bottom {
+  position:fixed;
+  bottom:calc(var(--tab-height) + env(safe-area-inset-bottom));
+  left:0;
+  right:0;
+  background:var(--bg);
+  border-top:1px solid var(--line);
+  z-index:9
+}
+
+#ordersView .bottom-inner,
+.ord-ceen-scope .bottom-inner {
+  max-width:760px;
+  margin:auto;
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:10px;
+  padding:12px 22px
+}
+
+#ordersView .bottom .primary,
+.ord-ceen-scope .bottom .primary {
+  flex:1;
+  min-height:52px;
+  min-width:0;
+  font-size:14px
+}
+
+#ordersView .bottom .prev,
+.ord-ceen-scope .bottom .prev {
+  min-height:52px;
+  font-size:13px;
+  padding:10px 14px
+}
+
+#ordersView .bottom-info,
+.ord-ceen-scope .bottom-info {
+  font-size:12px;
+  min-width:94px;
+  color:var(--muted)
+}
+
+#ordersView .bottom-info strong,
+.ord-ceen-scope .bottom-info strong {
+  font-size:25px;
+  color:var(--ink);
+  margin-right:5px;
+  font-variant-numeric:tabular-nums
+}
+
+#ordersView .bottom-info small,
+.ord-ceen-scope .bottom-info small {
+  display:block;
+  font-size:10px
+}
+
+#ordersView .skip-rest,
+.ord-ceen-scope .skip-rest {
+  flex:0 0 100%;
+  min-height:44px;
+  border:0;
+  padding:5px;
+  background:var(--clear);
+  font-size:12px;
+  color:var(--muted);
+  margin-top:-6px
+}
+
+#ordersView .tab svg,
+.ord-ceen-scope .tab svg {
+  width:22px;
+  height:22px
+}
+
+#ordersView .tab[aria-current=page],
+.ord-ceen-scope .tab[aria-current=page],
+#ordersView .tab[aria-expanded=true],
+.ord-ceen-scope .tab[aria-expanded=true] {
+  color:var(--green);
+  background:var(--soft)
+}
+
+#ordersView .badge,
+.ord-ceen-scope .badge {
+  position:absolute;
+  top:0;
+  left:calc(50% + 8px);
+  display:grid;
+  place-items:center;
+  min-width:19px;
+  height:19px;
+  padding:0 4px;
+  border-radius:8px;
+  font-size:10px;
+  font-variant-numeric:tabular-nums;
+  background:var(--action);
+  color:var(--on-action);
+  border:2px solid var(--paper)
+}
+
+#ordersView .completion,
+.ord-ceen-scope .completion {
+  text-align:center;
+  padding:20px 0
+}
+
+#ordersView .complete-icon,
+.ord-ceen-scope .complete-icon {
+  display:grid;
+  place-items:center;
+  margin:0 auto 20px;
+  width:78px;
+  height:78px;
+  border:1px solid var(--control);
+  border-radius:26px;
+  background:var(--soft);
+  color:var(--green)
+}
+
+#ordersView .complete-icon svg,
+.ord-ceen-scope .complete-icon svg {
+  width:34px;
+  height:34px
+}
+
+#ordersView .completion h1,
+.ord-ceen-scope .completion h1 {
+  font-size:28px;
+  letter-spacing:-.6px
+}
+
+#ordersView .stats,
+.ord-ceen-scope .stats {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+  margin:24px 0
+}
+
+#ordersView .stat,
+.ord-ceen-scope .stat {
+  padding:20px 8px;
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:16px;
+  text-align:center
+}
+
+#ordersView .stat strong,
+.ord-ceen-scope .stat strong {
+  display:block;
+  font-size:29px;
+  font-variant-numeric:tabular-nums;
+  color:var(--green);
+  margin-bottom:6px
+}
+
+#ordersView .stat span,
+.ord-ceen-scope .stat span {
+  font-size:11px;
+  color:var(--muted)
+}
+
+#ordersView .complete-actions,
+.ord-ceen-scope .complete-actions {
+  display:flex;
+  flex-direction:column;
+  gap:10px
+}
+
+#ordersView .empty,
+.ord-ceen-scope .empty {
+  text-align:center;
+  padding:42px 18px;
+  color:var(--muted);
+  font-size:14px;
+  background:var(--paper);
+  border:1px dashed var(--control);
+  border-radius:18px;
+  margin:16px 0
+}
+
+#ordersView .empty svg,
+.ord-ceen-scope .empty svg {
+  width:42px;
+  height:42px;
+  color:var(--gold);
+  margin-bottom:14px
+}
+
+#ordersView .empty button,
+.ord-ceen-scope .empty button {
+  margin-top:18px
+}
+
+#ordersView .review-title,
+.ord-ceen-scope .review-title {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:16px
+}
+
+#ordersView .review-title h1,
+.ord-ceen-scope .review-title h1 {
+  font-size:32px;
+  letter-spacing:-1px
+}
+
+#ordersView .review-title>span,
+.ord-ceen-scope .review-title>span {
+  background:var(--soft);
+  color:var(--green);
+  border-radius:10px;
+  padding:8px 11px;
+  font-size:12px;
+  white-space:nowrap
+}
+
+#ordersView .review-summary,
+.ord-ceen-scope .review-summary {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  color:var(--muted);
+  font-size:12px;
+  padding:14px 0 20px
+}
+
+#ordersView .review-summary svg,
+.ord-ceen-scope .review-summary svg {
+  color:var(--gold)
+}
+
+#ordersView .review-meta,
+.ord-ceen-scope .review-meta {
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:var(--paper);
+  overflow:hidden;
+  margin:8px 0 16px
+}
+
+#ordersView .review-meta>summary,
+.ord-ceen-scope .review-meta>summary {
+  cursor:pointer;
+  min-height:56px;
+  padding:17px;
+  font-size:13px;
+  font-weight:600
+}
+
+#ordersView .review-meta>summary span,
+.ord-ceen-scope .review-meta>summary span {
+  display:block;
+  font-size:11px;
+  font-weight:400;
+  color:var(--muted);
+  margin:5px 0 0 18px
+}
+
+#ordersView .review-meta-fields,
+.ord-ceen-scope .review-meta-fields {
+  padding:4px 17px 12px;
+  border-top:1px solid var(--line)
+}
+
+#ordersView .review-list-tools,
+.ord-ceen-scope .review-list-tools {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:8px;
+  font-size:11px;
+  color:var(--muted);
+  margin:10px 0
+}
+
+#ordersView .review-list-tools label,
+.ord-ceen-scope .review-list-tools label,
+#ordersView .checkline,
+.ord-ceen-scope .checkline {
+  display:flex;
+  align-items:center;
+  gap:9px;
+  min-height:44px;
+  cursor:pointer
+}
+
+#ordersView .review-list-tools input,
+.ord-ceen-scope .review-list-tools input,
+#ordersView .checkline input,
+.ord-ceen-scope .checkline input {
+  width:20px;
+  height:20px;
+  min-height:20px;
+  flex-shrink:0;
+  margin:0
+}
+
+#ordersView .review-group,
+.ord-ceen-scope .review-group {
+  margin-bottom:18px
+}
+
+#ordersView .review-section,
+.ord-ceen-scope .review-section {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  background:var(--raised);
+  border:1px solid var(--line);
+  border-radius:14px 14px 0 0;
+  padding:14px 16px;
+  color:var(--gold);
+  font-size:12px;
+  position:sticky;
+  top:calc(var(--header-height) + env(safe-area-inset-top));
+  z-index:3
+}
+
+#ordersView .review-section small,
+.ord-ceen-scope .review-section small {
+  font-size:11px;
+  color:var(--muted)
+}
+
+#ordersView .review-list,
+.ord-ceen-scope .review-list {
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-top:0;
+  border-radius:0 0 14px 14px;
+  overflow:hidden
+}
+
+#ordersView .review-line+.review-line,
+.ord-ceen-scope .review-line+.review-line {
+  border-top:1px solid var(--line)
+}
+
+#ordersView .review-line-main,
+.ord-ceen-scope .review-line-main {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto 44px;
+  gap:10px;
+  align-items:center;
+  padding:12px 8px 12px 16px;
+  min-height:76px
+}
+
+#ordersView .review-name,
+.ord-ceen-scope .review-name {
+  font-size:14px;
+  line-height:1.4;
+  overflow-wrap:anywhere
+}
+
+#ordersView .review-name small,
+.ord-ceen-scope .review-name small {
+  display:block;
+  font-size:10px;
+  color:var(--muted)
+}
+
+#ordersView .note-mark,
+.ord-ceen-scope .note-mark {
+  color:var(--gold);
+  margin-left:5px
+}
+
+#ordersView .review-quantity,
+.ord-ceen-scope .review-quantity {
+  text-align:right;
+  max-width:112px;
+  font-variant-numeric:tabular-nums
+}
+
+#ordersView .review-quantity strong,
+.ord-ceen-scope .review-quantity strong {
+  font-size:21px;
+  color:var(--green)
+}
+
+#ordersView .review-quantity span,
+.ord-ceen-scope .review-quantity span {
+  font-size:11px;
+  color:var(--muted)
+}
+
+#ordersView .review-quantity small,
+.ord-ceen-scope .review-quantity small {
+  display:block;
+  font-size:11px;
+  color:var(--muted)
+}
+
+#ordersView .review-edit,
+.ord-ceen-scope .review-edit {
+  display:grid;
+  place-items:center;
+  min-height:44px;
+  width:44px;
+  border:0;
+  background:var(--raised);
+  padding:0;
+  color:var(--green);
+  border-radius:12px
+}
+
+#ordersView .review-edit svg,
+.ord-ceen-scope .review-edit svg {
+  width:18px;
+  height:18px
+}
+
+#ordersView .review-line-detail,
+.ord-ceen-scope .review-line-detail {
+  display:none;
+  padding:12px 16px;
+  background:var(--raised);
+  border-top:1px solid var(--line)
+}
+
+#ordersView .compact-review.show-details .review-line-detail,
+.ord-ceen-scope .compact-review.show-details .review-line-detail {
+  display:block
+}
+
+#ordersView .compact-review:has(#reviewDetails:checked) .review-line-detail,
+.ord-ceen-scope .compact-review:has(#reviewDetails:checked) .review-line-detail {
+  display:block
+}
+
+#ordersView .review-line-detail p,
+.ord-ceen-scope .review-line-detail p {
+  font-size:12px;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+  margin-bottom:5px
+}
+
+#ordersView .review-line-detail button,
+.ord-ceen-scope .review-line-detail button {
+  font-size:12px;
+  background:var(--clear);
+  border:0;
+  padding:9px 0;
+  min-height:44px
+}
+
+#ordersView .review-note,
+.ord-ceen-scope .review-note,
+#ordersView .review-stock-key,
+.ord-ceen-scope .review-stock-key {
+  font-size:11px;
+  color:var(--muted);
+  margin-top:16px
+}
+
+#ordersView .other-actions,
+.ord-ceen-scope .other-actions {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  margin:22px 0
+}
+
+#ordersView .other-actions button,
+.ord-ceen-scope .other-actions button {
+  font-size:12px
+}
+
+#ordersView .share-actions,
+.ord-ceen-scope .share-actions {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  margin:20px 0
+}
+
+#ordersView .share-actions button,
+.ord-ceen-scope .share-actions button {
+  min-height:54px;
+  font-size:14px
+}
+
+#ordersView .toolbar-row,
+.ord-ceen-scope .toolbar-row {
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:20px
+}
+
+#ordersView .toolbar-row button,
+.ord-ceen-scope .toolbar-row button {
+  font-size:12px;
+  min-height:44px;
+  padding:10px 13px
+}
+
+#ordersView .ghost,
+.ord-ceen-scope .ghost {
+  color:var(--green);
+  background:var(--clear);
+  border-style:dashed
+}
+
+#ordersView .compact,
+.ord-ceen-scope .compact {
+  margin-top:8px
+}
+
+#ordersView .manage-row,
+.ord-ceen-scope .manage-row {
+  padding:19px;
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:17px;
+  margin-bottom:12px
+}
+
+#ordersView .manage-row b,
+.ord-ceen-scope .manage-row b {
+  display:block;
+  font-size:16px;
+  overflow-wrap:anywhere
+}
+
+#ordersView .manage-row small,
+.ord-ceen-scope .manage-row small {
+  display:block;
+  font-size:12px;
+  color:var(--muted);
+  margin-top:7px
+}
+
+#ordersView .manage-row .toolbar-row,
+.ord-ceen-scope .manage-row .toolbar-row {
+  margin-top:14px
+}
+
+#ordersView .danger-text,
+.ord-ceen-scope .danger-text {
+  color:var(--danger)!important
+}
+
+#ordersView .danger,
+.ord-ceen-scope .danger {
+  background:var(--danger-soft);
+  border-color:var(--danger);
+  color:var(--danger)
+}
+
+#ordersView .footer-status,
+.ord-ceen-scope .footer-status {
+  font-size:11px;
+  color:var(--muted);
+  margin-top:20px
+}
+
+#ordersView .quick-searchbar,
+.ord-ceen-scope .quick-searchbar {
+  display:flex;
+  gap:8px;
+  align-items:center;
+  position:sticky;
+  top:calc(var(--header-height) + env(safe-area-inset-top));
+  z-index:4;
+  background:var(--bg);
+  padding:12px 0;
+  margin:8px 0 10px;
+  border-bottom:1px solid var(--line)
+}
+
+#ordersView .quick-searchbar .search,
+.ord-ceen-scope .quick-searchbar .search {
+  flex:1;
+  min-width:0;
+  margin:0
+}
+
+#ordersView .quick-searchbar button,
+.ord-ceen-scope .quick-searchbar button {
+  font-size:11px;
+  max-width:110px;
+  padding:9px;
+  min-height:50px
+}
+
+#ordersView .quick-searchbar button[aria-pressed=true],
+.ord-ceen-scope .quick-searchbar button[aria-pressed=true] {
+  background:var(--soft);
+  color:var(--green);
+  border-color:var(--green)
+}
+
+#ordersView .quick-stats,
+.ord-ceen-scope .quick-stats {
+  font-size:11px;
+  color:var(--muted);
+  margin-bottom:14px
+}
+
+#ordersView .toast,
+.ord-ceen-scope .toast {
+  position:fixed;
+  bottom:calc(214px + env(safe-area-inset-bottom));
+  left:50%;
+  transform:translateX(-50%);
+  width:max-content;
+  max-width:calc(100vw - 32px);
+  z-index:35;
+  display:none;
+  padding:14px 18px;
+  border:1px solid var(--control);
+  border-radius:14px;
+  background:var(--raised);
+  color:var(--ink);
+  box-shadow:0 8px 24px var(--shadow);
+  font-size:13px
+}
+
+#ordersView .toast.show,
+.ord-ceen-scope .toast.show {
+  display:block;
+  animation:appear .18s ease-out
+}
+
+#ordersView dialog[open] {
+  animation:appear .18s ease-out
+}
+
+#ordersView dialog::backdrop {
+  background:var(--scrim);
+  backdrop-filter:blur(4px)
+}
+
+#ordersView .dialog-head,
+.ord-ceen-scope .dialog-head {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:18px 20px;
+  border-bottom:1px solid var(--line);
+  background:var(--paper);
+  position:sticky;
+  top:0;
+  z-index:2
+}
+
+#ordersView .dialog-head h2,
+.ord-ceen-scope .dialog-head h2 {
+  font-size:19px;
+  letter-spacing:-.4px
+}
+
+#ordersView .dialog-head button,
+.ord-ceen-scope .dialog-head button {
+  width:44px;
+  min-height:44px;
+  border:0;
+  background:var(--raised);
+  border-radius:50%;
+  font-size:24px;
+  padding:0;
+  flex-shrink:0
+}
+
+#ordersView .dialog-body,
+.ord-ceen-scope .dialog-body {
+  padding:22px;
+  font-size:14px;
+  line-height:1.7
+}
+
+#ordersView .dialog-body .hint,
+.ord-ceen-scope .dialog-body .hint {
+  font-size:12px;
+  color:var(--muted);
+  margin-top:7px
+}
+
+#ordersView .dialog-foot,
+.ord-ceen-scope .dialog-foot {
+  position:sticky;
+  bottom:0;
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  padding:16px 20px;
+  border-top:1px solid var(--line);
+  background:var(--paper)
+}
+
+#ordersView .dialog-foot button,
+.ord-ceen-scope .dialog-foot button {
+  flex:1;
+  font-size:13px;
+  min-height:48px
+}
+
+#ordersView .dialog-foot .select-text,
+.ord-ceen-scope .dialog-foot .select-text {
+  flex:0 0 100%;
+  background:var(--clear);
+  border:0;
+  color:var(--green);
+  min-height:44px
+}
+
+#ordersView .editor-fields .field,
+.ord-ceen-scope .editor-fields .field {
+  margin:0 0 18px
+}
+
+#ordersView .source-ref,
+.ord-ceen-scope .source-ref {
+  padding:14px;
+  background:var(--raised);
+  border:1px solid var(--line);
+  border-radius:12px;
+  font-size:12px;
+  color:var(--muted);
+  margin-bottom:18px
+}
+
+#ordersView .history,
+.ord-ceen-scope .history {
+  border-top:1px solid var(--line);
+  padding-top:14px;
+  margin-top:16px;
+  color:var(--muted);
+  font-size:12px
+}
+
+#ordersView .history p,
+.ord-ceen-scope .history p {
+  margin-top:8px
+}
+
+#ordersView .checkline,
+.ord-ceen-scope .checkline {
+  font-size:13px;
+  margin:14px 0
+}
+
+#ordersView .message-preview,
+.ord-ceen-scope .message-preview {
+  font:14px/1.65 -apple-system,"SF Pro Text","Segoe UI",Roboto,Arial,sans-serif;
+  white-space:pre-wrap;
+  min-height:280px;
+  user-select:text;
+  -webkit-user-select:text
+}
+
+#ordersView .copy-status,
+.ord-ceen-scope .copy-status {
+  background:var(--soft);
+  color:var(--green);
+  padding:12px;
+  border-radius:12px;
+  margin:12px 0;
+  font-size:12px
+}
+
+#ordersView .more-list,
+.ord-ceen-scope .more-list {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px
+}
+
+#ordersView .more-list button,
+.ord-ceen-scope .more-list button {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  text-align:left;
+  min-height:66px;
+  font-size:13px;
+  background:var(--raised);
+  border-color:var(--line);
+  padding:14px
+}
+
+#ordersView .more-list svg,
+.ord-ceen-scope .more-list svg {
+  width:22px;
+  height:22px;
+  color:var(--gold)
+}
+
+#ordersView .theme-label,
+.ord-ceen-scope .theme-label {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-top:24px;
+  font-size:13px
+}
+
+#ordersView .theme-label span,
+.ord-ceen-scope .theme-label span {
+  font-size:11px;
+  color:var(--muted)
+}
+
+#ordersView .theme-switch,
+.ord-ceen-scope .theme-switch {
+  margin:10px 0 22px
+}
+
+#ordersView .more-foot,
+.ord-ceen-scope .more-foot {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  color:var(--muted);
+  font-size:11px;
+  border-top:1px solid var(--line);
+  padding-top:18px
+}
+
+#ordersView .more-foot button,
+.ord-ceen-scope .more-foot button {
+  font-size:12px
+}
+
+#ordersView .print-area,
+.ord-ceen-scope .print-area {
+  display:none
+}
+
+@keyframes appear {
+  from{opacity:0}to{opacity:1}
+}
+
+@media(hover:hover) {
+  #ordersView button:hover:not(:disabled) {
+    border-color:var(--gold)
+  }
+  #ordersView .tab:hover,
+  .ord-ceen-scope .tab:hover {
+    background:var(--raised)
+  }
+}
+
+@media(min-width:800px) {
+  #ordersView .app,
+  .ord-ceen-scope .app {
+    padding-top:36px
+  }
+  #ordersView .group-card,
+  .ord-ceen-scope .group-card {
+    padding:24px
+  }
+  #ordersView .type-grid,
+  .ord-ceen-scope .type-grid {
+    grid-template-columns:repeat(3,minmax(0,1fr))
+  }
+  #ordersView .welcome .title,
+  .ord-ceen-scope .welcome .title {
+    font-size:42px;
+    max-width:500px
+  }
+  #ordersView .item-card,
+  .ord-ceen-scope .item-card {
+    padding:28px
+  }
+  #ordersView .bottom-inner,
+  .ord-ceen-scope .bottom-inner {
+    padding-top:14px;
+    padding-bottom:14px
+  }
+}
+
+@media(max-width:600px) {
+  #ordersView dialog:before {
+    content:'';
+    display:block;
+    width:36px;
+    height:4px;
+    background:var(--control);
+    border-radius:8px;
+    margin:10px auto 0
+  }
+  #ordersView .dialog-head,
+  .ord-ceen-scope .dialog-head {
+    padding-top:10px
+  }
+  #ordersView .dialog-body,
+  .ord-ceen-scope .dialog-body {
+    padding:20px
+  }
+  #ordersView .dialog-foot,
+  .ord-ceen-scope .dialog-foot {
+    padding-bottom:16px
+  }
+}
+
+@media(max-width:360px) {
+  #ordersView .app,
+  .ord-ceen-scope .app {
+    padding-left:16px;
+    padding-right:16px
+  }
+  #ordersView .group-card,
+  .ord-ceen-scope .group-card {
+    padding:16px;
+    gap:12px
+  }
+  #ordersView .group-card .glyph,
+  .ord-ceen-scope .group-card .glyph {
+    width:43px;
+    height:52px
+  }
+  #ordersView .group-card b,
+  .ord-ceen-scope .group-card b {
+    font-size:20px
+  }
+  #ordersView .draft-card,
+  .ord-ceen-scope .draft-card {
+    padding:16px
+  }
+  #ordersView .draft-count strong,
+  .ord-ceen-scope .draft-count strong {
+    font-size:34px
+  }
+  #ordersView .draft-card button,
+  .ord-ceen-scope .draft-card button {
+    font-size:12px;
+    padding:10px
+  }
+  #ordersView .item-card,
+  .ord-ceen-scope .item-card {
+    padding:16px
+  }
+  #ordersView .product-heading .glyph,
+  .ord-ceen-scope .product-heading .glyph {
+    display:none
+  }
+  #ordersView .stepper,
+  .ord-ceen-scope .stepper {
+    padding:5px;
+    gap:2px
+  }
+  #ordersView .stepper button,
+  .ord-ceen-scope .stepper button {
+    min-width:56px
+  }
+  #ordersView .stepper input,
+  .ord-ceen-scope .stepper input {
+    font-size:34px
+  }
+  #ordersView .ratio-denominator,
+  .ord-ceen-scope .ratio-denominator {
+    font-size:15px;
+    padding-right:2px
+  }
+  #ordersView .bottom-inner,
+  .ord-ceen-scope .bottom-inner {
+    padding:10px 16px;
+    gap:8px
+  }
+  #ordersView .bottom .prev,
+  .ord-ceen-scope .bottom .prev {
+    padding:10px;
+    font-size:12px
+  }
+  #ordersView .bottom .primary,
+  .ord-ceen-scope .bottom .primary {
+    font-size:13px
+  }
+  #ordersView .field-row,
+  .ord-ceen-scope .field-row {
+    grid-template-columns:1fr;
+    gap:0
+  }
+  #ordersView .type-card,
+  .ord-ceen-scope .type-card {
+    padding:15px
+  }
+  #ordersView .more-list button,
+  .ord-ceen-scope .more-list button {
+    padding:12px;
+    font-size:12px;
+    gap:8px
+  }
+  #ordersView .review-line-main,
+  .ord-ceen-scope .review-line-main {
+    gap:7px;
+    padding-left:12px
+  }
+  #ordersView .review-name,
+  .ord-ceen-scope .review-name {
+    font-size:13px
+  }
+  #ordersView .review-title h1,
+  .ord-ceen-scope .review-title h1 {
+    font-size:29px
+  }
+  #ordersView .section-heading span,
+  .ord-ceen-scope .section-heading span {
+    font-size:11px
+  }
+}
+
+@media(prefers-reduced-motion:reduce) {
+  #ordersView *:before,
+  #ordersView *:after {
+    animation:none!important;
+    transition:none!important;
+    scroll-behavior:auto!important
+  }
+}
+
+#ordersView .app[data-page=item],
+.ord-ceen-scope .app[data-page=item] {
+  padding-top:14px
+}
+
+#ordersView .app[data-page=item]>.breadcrumbs,
+.ord-ceen-scope .app[data-page=item]>.breadcrumbs {
+  display:none
+}
+
+#ordersView .app[data-page=item]>.view-switch,
+.ord-ceen-scope .app[data-page=item]>.view-switch {
+  margin:0 0 8px
+}
+
+#ordersView .app[data-page=item] .item-progress,
+.ord-ceen-scope .app[data-page=item] .item-progress {
+  margin:0 0 14px
+}
+
+#ordersView .app[data-page=item] .stock-panel,
+.ord-ceen-scope .app[data-page=item] .stock-panel {
+  padding:13px;
+  margin-top:18px
+}
+
+#ordersView .app[data-page=item] .order-label,
+.ord-ceen-scope .app[data-page=item] .order-label {
+  margin-top:20px
+}
+
+#ordersView .app[data-page=item] .item-card,
+.ord-ceen-scope .app[data-page=item] .item-card {
+  padding-top:20px
+}
+
+#ordersView .tab#moreTab[aria-current=page],
+.ord-ceen-scope .tab#moreTab[aria-current=page] {
+  background:var(--soft);
+  color:var(--green)
+}
+
+#ordersView .order-label select,
+.ord-ceen-scope .order-label select {
+  width:132px;
+  min-height:48px;
+  font-size:14px;
+  padding:10px
+}
+
+#ordersView .app[data-page=item] .order-label,
+.ord-ceen-scope .app[data-page=item] .order-label {
+  margin-bottom:12px
+}
+
+#ordersView .app[data-page=item] .stepper,
+.ord-ceen-scope .app[data-page=item] .stepper {
+  height:80px
+}
+
+#ordersView .item-product,
+.ord-ceen-scope .item-product,
+#ordersView .item-order,
+.ord-ceen-scope .item-order,
+#ordersView .review-sidebar,
+.ord-ceen-scope .review-sidebar,
+#ordersView .review-orders,
+.ord-ceen-scope .review-orders {
+  min-width:0
+}
+
+#ordersView .review-layout,
+.ord-ceen-scope .review-layout {
+  display:flex;
+  flex-direction:column
+}
+
+#ordersView .review-sidebar,
+.ord-ceen-scope .review-sidebar {
+  display:contents
+}
+
+#ordersView .review-orders,
+.ord-ceen-scope .review-orders {
+  display:contents
+}
+
+#ordersView .review-sidebar .other-actions,
+.ord-ceen-scope .review-sidebar .other-actions {
+  order:2
+}
+
+#ordersView .review-sidebar .review-note,
+.ord-ceen-scope .review-sidebar .review-note {
+  order:3
+}
+
+#ordersView .review-stock-key,
+.ord-ceen-scope .review-stock-key {
+  order:1
+}
+
+#ordersView .item-order .bottom,
+.ord-ceen-scope .item-order .bottom {
+  background:var(--bg)
+}
+
+@media(min-width:700px) {
+  #ordersView .app,
+  .ord-ceen-scope .app,
+  #ordersView .app[data-page=item],
+  .ord-ceen-scope .app[data-page=item] {
+    max-width:1100px;
+    padding-left:32px;
+    padding-right:32px
+  }
+  #ordersView .bottom-inner,
+  .ord-ceen-scope .bottom-inner {
+    max-width:1100px;
+    padding-left:32px;
+    padding-right:32px
+  }
+  #ordersView .section-cards,
+  .ord-ceen-scope .section-cards,
+  #ordersView .type-grid,
+  .ord-ceen-scope .type-grid,
+  #ordersView #manageList,
+  #ordersView .trash-grid,
+  .ord-ceen-scope .trash-grid,
+  #ordersView .product-list,
+  .ord-ceen-scope .product-list {
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:16px
+  }
+  #ordersView .group-card,
+  .ord-ceen-scope .group-card {
+    padding:20px;
+    gap:12px
+  }
+  #ordersView .group-card .glyph,
+  .ord-ceen-scope .group-card .glyph {
+    width:44px;
+    height:52px
+  }
+  #ordersView .section-progress,
+  .ord-ceen-scope .section-progress {
+    flex-wrap:wrap
+  }
+  #ordersView .product-list,
+  .ord-ceen-scope .product-list {
+    border:0;
+    overflow:visible;
+    background:var(--clear)
+  }
+  #ordersView .product-pick,
+  .ord-ceen-scope .product-pick,
+  #ordersView .product-pick+.product-pick,
+  .ord-ceen-scope .product-pick+.product-pick {
+    border:1px solid var(--line);
+    border-radius:16px;
+    background:var(--paper)
+  }
+  #ordersView .manage-row,
+  .ord-ceen-scope .manage-row {
+    margin:0
+  }
+  #ordersView .type-grid,
+  .ord-ceen-scope .type-grid {
+    grid-template-columns:repeat(2,minmax(0,1fr))
+  }
+  #ordersView .item-order .bottom-inner,
+  .ord-ceen-scope .item-order .bottom-inner {
+    padding-left:32px;
+    padding-right:32px
+  }
+}
+
+@media(min-width:900px) {
+  #ordersView .app[data-page=review]~.bottom,
+  .ord-ceen-scope .app[data-page=review]~.bottom {
+    display:none
+  }
+  #ordersView .app[data-page=review],
+  .ord-ceen-scope .app[data-page=review] {
+    padding-bottom:calc(120px + env(safe-area-inset-bottom))
+  }
+  #ordersView .app[data-page=item],
+  .ord-ceen-scope .app[data-page=item] {
+    padding-top:26px;
+    padding-bottom:calc(120px + env(safe-area-inset-bottom))
+  }
+  #ordersView .item-card,
+  .ord-ceen-scope .item-card {
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);
+    gap:30px;
+    align-items:start
+  }
+  #ordersView .item-product,
+  .ord-ceen-scope .item-product {
+    position:sticky;
+    top:calc(var(--header-height) + 24px)
+  }
+  #ordersView .app[data-page=item] .order-label,
+  .ord-ceen-scope .app[data-page=item] .order-label {
+    margin-top:0
+  }
+  #ordersView .item-order .bottom,
+  .ord-ceen-scope .item-order .bottom {
+    position:static;
+    border-top:1px solid var(--line);
+    margin-top:20px;
+    background:var(--clear)
+  }
+  #ordersView .item-order .bottom-inner,
+  .ord-ceen-scope .item-order .bottom-inner {
+    padding:18px 0 0;
+    gap:10px
+  }
+  #ordersView .review-layout,
+  .ord-ceen-scope .review-layout {
+    display:grid;
+    grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);
+    gap:28px;
+    align-items:start
+  }
+  #ordersView .review-sidebar,
+  .ord-ceen-scope .review-sidebar {
+    display:block;
+    grid-column:2;
+    grid-row:1;
+    position:sticky;
+    top:calc(var(--header-height) + 24px);
+    max-height:calc(100dvh - var(--header-height) - 220px);
+    overflow:auto;
+    overscroll-behavior:contain;
+    padding:20px;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:20px
+  }
+  #ordersView .review-orders,
+  .ord-ceen-scope .review-orders {
+    display:block;
+    grid-column:1;
+    grid-row:1
+  }
+  #ordersView .review-sidebar .review-summary,
+  .ord-ceen-scope .review-sidebar .review-summary {
+    padding-top:0
+  }
+  #ordersView .review-sidebar .share-actions,
+  .ord-ceen-scope .review-sidebar .share-actions {
+    grid-template-columns:1fr;
+    margin-top:0
+  }
+  #ordersView .review-sidebar .other-actions,
+  .ord-ceen-scope .review-sidebar .other-actions {
+    margin-bottom:0
+  }
+  #ordersView .review-sidebar .field-row,
+  .ord-ceen-scope .review-sidebar .field-row {
+    grid-template-columns:1fr;
+    gap:0
+  }
+  #ordersView .review-list-tools,
+  .ord-ceen-scope .review-list-tools {
+    margin-top:0
+  }
+  #ordersView .review-section,
+  .ord-ceen-scope .review-section {
+    top:calc(var(--header-height) + 12px)
+  }
+}
+
+@media(min-width:1024px) {
+  #ordersView .section-cards,
+  .ord-ceen-scope .section-cards,
+  #ordersView .type-grid,
+  .ord-ceen-scope .type-grid,
+  #ordersView #manageList,
+  #ordersView .trash-grid,
+  .ord-ceen-scope .trash-grid,
+  #ordersView .product-list,
+  .ord-ceen-scope .product-list {
+    grid-template-columns:repeat(3,minmax(0,1fr))
+  }
+  #ordersView .group-card,
+  .ord-ceen-scope .group-card {
+    flex-wrap:wrap
+  }
+  #ordersView .group-card .label,
+  .ord-ceen-scope .group-card .label {
+    flex-basis:calc(100% - 75px)
+  }
+  #ordersView .group-card .arrow,
+  .ord-ceen-scope .group-card .arrow {
+    display:none
+  }
+  #ordersView .group-card b,
+  .ord-ceen-scope .group-card b {
+    font-size:21px
+  }
+}
+
+@media(max-width:699px) {
+  #ordersView .item-order .bottom-inner,
+  .ord-ceen-scope .item-order .bottom-inner {
+    max-width:760px
+  }
+  #ordersView .stepper input,
+  .ord-ceen-scope .stepper input {
+    width:0
+  }
+  #ordersView .ratio-denominator,
+  .ord-ceen-scope .ratio-denominator {
+    max-width:34%;
+    white-space:normal;
+    overflow-wrap:anywhere
+  }
+}
+
+#ordersView .item-viewport .header,
+.ord-ceen-scope .item-viewport .header {
+  position:relative;
+  flex:none;
+  padding-left:env(safe-area-inset-left);
+  padding-right:env(safe-area-inset-right)
+}
+
+#ordersView .item-viewport .top,
+.ord-ceen-scope .item-viewport .top {
+  padding-left:16px;
+  padding-right:16px
+}
+
+#ordersView .item-viewport .app[data-page=item],
+.ord-ceen-scope .item-viewport .app[data-page=item] {
+  display:flex;
+  flex-direction:column;
+  flex:1;
+  min-height:0;
+  width:100%;
+  padding:8px max(12px,env(safe-area-inset-right)) 6px max(12px,env(safe-area-inset-left));
+  overflow:hidden
+}
+
+#ordersView .item-viewport .app[data-page=item] .breadcrumbs,
+.ord-ceen-scope .item-viewport .app[data-page=item] .breadcrumbs {
+  flex:none;
+  margin:0;
+  min-height:28px;
+  font-size:11px;
+  gap:6px;
+  flex-wrap:nowrap;
+  white-space:nowrap;
+  overflow:hidden
+}
+
+#ordersView .item-viewport .app[data-page=item] .breadcrumbs button,
+.ord-ceen-scope .item-viewport .app[data-page=item] .breadcrumbs button {
+  min-height:28px;
+  font-size:11px;
+  white-space:nowrap
+}
+
+#ordersView .item-viewport .app[data-page=item] .view-switch,
+.ord-ceen-scope .item-viewport .app[data-page=item] .view-switch {
+  flex:none;
+  margin:4px 0;
+  padding:3px;
+  border-radius:12px
+}
+
+#ordersView .item-viewport .app[data-page=item] .view-switch button,
+.ord-ceen-scope .item-viewport .app[data-page=item] .view-switch button {
+  min-height:36px;
+  padding:4px;
+  font-size:12px
+}
+
+#ordersView .item-viewport .app[data-page=item] .progress-head,
+.ord-ceen-scope .item-viewport .app[data-page=item] .progress-head {
+  flex:none;
+  font-size:11px;
+  min-height:30px
+}
+
+#ordersView .item-viewport .app[data-page=item] .progress-head button,
+.ord-ceen-scope .item-viewport .app[data-page=item] .progress-head button {
+  min-height:30px;
+  padding:3px 0;
+  font-size:11px
+}
+
+#ordersView .item-viewport .app[data-page=item] .progress-head strong,
+.ord-ceen-scope .item-viewport .app[data-page=item] .progress-head strong {
+  font-size:14px
+}
+
+#ordersView .item-viewport .app[data-page=item] .item-progress,
+.ord-ceen-scope .item-viewport .app[data-page=item] .item-progress {
+  flex:none;
+  margin:4px 0 8px
+}
+
+#ordersView .item-viewport .app[data-page=item] .item-card,
+.ord-ceen-scope .item-viewport .app[data-page=item] .item-card {
+  flex:1;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  padding:12px;
+  gap:8px;
+  border-radius:18px
+}
+
+#ordersView .item-viewport .app[data-page=item] .item-product,
+.ord-ceen-scope .item-viewport .app[data-page=item] .item-product {
+  position:static;
+  flex:none;
+  min-width:0
+}
+
+#ordersView .item-viewport .app[data-page=item] .product-heading,
+.ord-ceen-scope .item-viewport .app[data-page=item] .product-heading {
+  gap:10px
+}
+
+#ordersView .item-viewport .app[data-page=item] .glyph,
+.ord-ceen-scope .item-viewport .app[data-page=item] .glyph {
+  width:42px;
+  height:48px;
+  border-radius:12px
+}
+
+#ordersView .item-viewport .app[data-page=item] .glyph svg,
+.ord-ceen-scope .item-viewport .app[data-page=item] .glyph svg {
+  width:25px;
+  height:25px
+}
+
+#ordersView .item-viewport .app[data-page=item] .cat,
+.ord-ceen-scope .item-viewport .app[data-page=item] .cat {
+  font-size:11px;
+  margin-bottom:3px;
+  line-height:1.2
+}
+
+#ordersView .item-viewport .app[data-page=item] .product-name,
+.ord-ceen-scope .item-viewport .app[data-page=item] .product-name {
+  font-size:27px;
+  line-height:1.1;
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  overflow:hidden
+}
+
+#ordersView .item-viewport .app[data-page=item] .item-code,
+.ord-ceen-scope .item-viewport .app[data-page=item] .item-code {
+  font-size:10px;
+  line-height:1.2;
+  margin-top:3px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis
+}
+
+#ordersView .item-viewport .app[data-page=item] .stock-panel,
+.ord-ceen-scope .item-viewport .app[data-page=item] .stock-panel {
+  align-items:center;
+  padding:5px 10px;
+  margin-top:8px;
+  gap:8px;
+  border-radius:12px;
+  min-height:48px
+}
+
+#ordersView .item-viewport .app[data-page=item] .stock-panel>div:first-child,
+.ord-ceen-scope .item-viewport .app[data-page=item] .stock-panel>div:first-child {
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:0 8px;
+  min-width:0
+}
+
+#ordersView .item-viewport .app[data-page=item] .stock-panel b,
+.ord-ceen-scope .item-viewport .app[data-page=item] .stock-panel b {
+  font-size:11px
+}
+
+#ordersView .item-viewport .app[data-page=item] .stock-panel small,
+.ord-ceen-scope .item-viewport .app[data-page=item] .stock-panel small {
+  display:none
+}
+
+#ordersView .item-viewport .app[data-page=item] .stock-edit,
+.ord-ceen-scope .item-viewport .app[data-page=item] .stock-edit {
+  min-height:36px;
+  margin:0;
+  padding:4px 0;
+  font-size:11px
+}
+
+#ordersView .item-viewport .app[data-page=item] .stock-right,
+.ord-ceen-scope .item-viewport .app[data-page=item] .stock-right {
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:5px
+}
+
+#ordersView .item-viewport .app[data-page=item] .stock-value,
+.ord-ceen-scope .item-viewport .app[data-page=item] .stock-value {
+  font-size:25px
+}
+
+#ordersView .item-viewport .app[data-page=item] .stock-value.missing,
+.ord-ceen-scope .item-viewport .app[data-page=item] .stock-value.missing {
+  font-size:12px
+}
+
+#ordersView .item-viewport .app[data-page=item] .stock-unit,
+.ord-ceen-scope .item-viewport .app[data-page=item] .stock-unit {
+  font-size:10px;
+  margin:0
+}
+
+#ordersView .item-viewport .app[data-page=item] .stock-warning,
+.ord-ceen-scope .item-viewport .app[data-page=item] .stock-warning {
+  display:none
+}
+
+#ordersView .item-viewport .app[data-page=item] .item-order,
+.ord-ceen-scope .item-viewport .app[data-page=item] .item-order {
+  display:flex;
+  flex-direction:column;
+  flex:1;
+  min-height:0;
+  position:relative
+}
+
+#ordersView .item-viewport .app[data-page=item] .order-label,
+.ord-ceen-scope .item-viewport .app[data-page=item] .order-label {
+  flex:none;
+  margin:0 0 6px;
+  gap:8px;
+  font-size:13px;
+  min-height:42px
+}
+
+#ordersView .item-viewport .app[data-page=item] .order-label label,
+.ord-ceen-scope .item-viewport .app[data-page=item] .order-label label {
+  white-space:nowrap
+}
+
+#ordersView .item-viewport .app[data-page=item] .order-label select,
+.ord-ceen-scope .item-viewport .app[data-page=item] .order-label select {
+  width:52%;
+  min-height:42px;
+  padding:6px 8px;
+  font-size:14px
+}
+
+#ordersView .item-viewport .app[data-page=item] .qty-row,
+.ord-ceen-scope .item-viewport .app[data-page=item] .qty-row {
+  flex:none;
+  gap:0
+}
+
+#ordersView .item-viewport .app[data-page=item] .stepper,
+.ord-ceen-scope .item-viewport .app[data-page=item] .stepper {
+  height:66px;
+  padding:5px;
+  gap:4px;
+  border-radius:14px
+}
+
+#ordersView .item-viewport .app[data-page=item] .stepper button,
+.ord-ceen-scope .item-viewport .app[data-page=item] .stepper button {
+  width:48px;
+  min-width:48px;
+  height:54px;
+  min-height:48px;
+  font-size:27px
+}
+
+#ordersView .item-viewport .app[data-page=item] .stepper input,
+.ord-ceen-scope .item-viewport .app[data-page=item] .stepper input {
+  height:54px;
+  min-height:48px;
+  font-size:32px;
+  width:0
+}
+
+#ordersView .item-viewport .app[data-page=item] .ratio-denominator,
+.ord-ceen-scope .item-viewport .app[data-page=item] .ratio-denominator {
+  font-size:15px
+}
+
+#ordersView .item-viewport .app[data-page=item] .qty-help,
+.ord-ceen-scope .item-viewport .app[data-page=item] .qty-help {
+  flex:none;
+  font-size:11px;
+  line-height:1.3;
+  margin:6px 0 0
+}
+
+#ordersView .item-viewport .app[data-page=item] .optional,
+.ord-ceen-scope .item-viewport .app[data-page=item] .optional {
+  flex:none;
+  border-top:1px solid var(--line);
+  margin-top:6px;
+  padding-top:0;
+  min-height:32px
+}
+
+#ordersView .item-viewport .app[data-page=item] .optional summary,
+.ord-ceen-scope .item-viewport .app[data-page=item] .optional summary {
+  min-height:32px;
+  font-size:12px
+}
+
+#ordersView .item-viewport .app[data-page=item] .item-more-panel,
+.ord-ceen-scope .item-viewport .app[data-page=item] .item-more-panel {
+  position:fixed;
+  z-index:12;
+  top:calc(var(--header-height) + env(safe-area-inset-top) + 6px);
+  left:max(12px,env(safe-area-inset-left));
+  right:max(12px,env(safe-area-inset-right));
+  max-width:600px;
+  margin:auto;
+  max-height:30vh;
+  max-height:30dvh;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  background:var(--paper);
+  padding:12px;
+  border:1px solid var(--control);
+  border-radius:14px;
+  box-shadow:0 8px 30px var(--shadow)
+}
+
+#ordersView .item-viewport .app[data-page=item] .item-more-panel .field,
+.ord-ceen-scope .item-viewport .app[data-page=item] .item-more-panel .field {
+  margin:0 0 8px
+}
+
+#ordersView .item-viewport .app[data-page=item] .item-more-panel textarea,
+.ord-ceen-scope .item-viewport .app[data-page=item] .item-more-panel textarea {
+  resize:none
+}
+
+#ordersView .item-viewport .app[data-page=item] .item-more-panel .ratio-caption,
+.ord-ceen-scope .item-viewport .app[data-page=item] .item-more-panel .ratio-caption {
+  margin:8px 0;
+  font-size:11px
+}
+
+#ordersView .item-viewport .app[data-page=item] .item-more-actions,
+.ord-ceen-scope .item-viewport .app[data-page=item] .item-more-actions {
+  display:flex;
+  justify-content:flex-end;
+  gap:8px
+}
+
+#ordersView .item-viewport .app[data-page=item] .edit-item,
+.ord-ceen-scope .item-viewport .app[data-page=item] .edit-item {
+  margin:0
+}
+
+#ordersView .item-viewport .app[data-page=item] .item-order .bottom,
+.ord-ceen-scope .item-viewport .app[data-page=item] .item-order .bottom {
+  position:static;
+  flex:none;
+  margin-top:auto;
+  border-top:1px solid var(--line);
+  background:var(--clear)
+}
+
+#ordersView .item-viewport .app[data-page=item] .item-order .bottom-inner,
+.ord-ceen-scope .item-viewport .app[data-page=item] .item-order .bottom-inner {
+  padding:8px 0 0;
+  gap:6px;
+  width:100%
+}
+
+#ordersView .item-viewport .app[data-page=item] .bottom .primary,
+.ord-ceen-scope .item-viewport .app[data-page=item] .bottom .primary,
+#ordersView .item-viewport .app[data-page=item] .bottom .prev,
+.ord-ceen-scope .item-viewport .app[data-page=item] .bottom .prev {
+  min-height:48px;
+  font-size:12px;
+  padding:8px
+}
+
+#ordersView .item-viewport .app[data-page=item] .skip-rest,
+.ord-ceen-scope .item-viewport .app[data-page=item] .skip-rest {
+  min-height:32px;
+  padding:3px;
+  margin:0;
+  font-size:11px
+}
+
+#ordersView .item-viewport .app[data-page=item] .item-status,
+.ord-ceen-scope .item-viewport .app[data-page=item] .item-status {
+  flex:none;
+  margin:4px 2px 0;
+  font-size:10px;
+  line-height:1.3
+}
+
+#ordersView .item-viewport .tabs,
+.ord-ceen-scope .item-viewport .tabs {
+  position:relative;
+  flex:none;
+  left:auto;
+  right:auto;
+  bottom:auto;
+  transform:none;
+  align-self:center;
+  width:100%;
+  padding-left:env(safe-area-inset-left);
+  padding-right:env(safe-area-inset-right);
+  padding-bottom:env(safe-area-inset-bottom)
+}
+
+#ordersView .item-viewport .tab-inner,
+.ord-ceen-scope .item-viewport .tab-inner {
+  height:var(--tab-height);
+  padding:3px 8px
+}
+
+#ordersView .item-viewport .tab,
+.ord-ceen-scope .item-viewport .tab {
+  min-height:48px;
+  gap:1px;
+  padding:2px;
+  font-size:10px
+}
+
+#ordersView .item-viewport .tab svg,
+.ord-ceen-scope .item-viewport .tab svg {
+  width:20px;
+  height:20px
+}
+
+#ordersView .item-viewport .app[data-page=item] #itemError,
+.ord-ceen-scope .item-viewport .app[data-page=item] #itemError {
+  position:absolute;
+  bottom:100%;
+  left:0;
+  right:0;
+  z-index:3;
+  padding:8px;
+  margin:0;
+  max-height:72px;
+  overflow:auto
+}
+
+@media(max-height:740px) {
+  #ordersView .item-viewport .app[data-page=item],
+  .ord-ceen-scope .item-viewport .app[data-page=item] {
+    padding-top:4px;
+    padding-bottom:4px
+  }
+  #ordersView .item-viewport .app[data-page=item] .breadcrumbs,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .breadcrumbs {
+    display:none
+  }
+  #ordersView .item-viewport .app[data-page=item] .view-switch,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .view-switch {
+    margin:0 0 3px;
+    padding:2px
+  }
+  #ordersView .item-viewport .app[data-page=item] .view-switch button,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .view-switch button {
+    min-height:32px
+  }
+  #ordersView .item-viewport .app[data-page=item] .item-progress,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .item-progress {
+    margin:2px 0 5px
+  }
+  #ordersView .item-viewport .app[data-page=item] .item-card,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .item-card {
+    padding:8px;
+    gap:5px
+  }
+  #ordersView .item-viewport .app[data-page=item] .product-name,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .product-name {
+    font-size:23px
+  }
+  #ordersView .item-viewport .app[data-page=item] .glyph,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .glyph {
+    width:34px;
+    height:38px
+  }
+  #ordersView .item-viewport .app[data-page=item] .glyph svg,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .glyph svg {
+    width:22px;
+    height:22px
+  }
+  #ordersView .item-viewport .app[data-page=item] .stock-panel,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .stock-panel {
+    margin-top:5px;
+    padding:2px 8px;
+    min-height:38px
+  }
+  #ordersView .item-viewport .app[data-page=item] .stock-edit,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .stock-edit {
+    min-height:32px
+  }
+  #ordersView .item-viewport .app[data-page=item] .stock-value,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .stock-value {
+    font-size:22px
+  }
+  #ordersView .item-viewport .app[data-page=item] .stepper,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .stepper {
+    height:60px
+  }
+  #ordersView .item-viewport .app[data-page=item] .stepper button,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .stepper button,
+  #ordersView .item-viewport .app[data-page=item] .stepper input,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .stepper input {
+    height:48px
+  }
+  #ordersView .item-viewport .app[data-page=item] .qty-help,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .qty-help {
+    font-size:10px;
+    margin-top:4px
+  }
+  #ordersView .item-viewport .app[data-page=item] .optional,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .optional {
+    margin-top:4px
+  }
+  #ordersView .item-viewport .app[data-page=item] .item-order .bottom-inner,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .item-order .bottom-inner {
+    padding-top:5px;
+    gap:2px
+  }
+  #ordersView .item-viewport .app[data-page=item] .skip-rest,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .skip-rest {
+    min-height:28px
+  }
+}
+
+@media(max-height:640px) {
+  #ordersView .item-viewport .app[data-page=item],
+  .ord-ceen-scope .item-viewport .app[data-page=item] {
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    grid-template-rows:auto 4px minmax(0,1fr);
+    gap:4px 8px;
+    padding:4px max(8px,env(safe-area-inset-right)) 4px max(8px,env(safe-area-inset-left))
+  }
+  #ordersView .item-viewport .app[data-page=item] .view-switch,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .view-switch {
+    margin:0;
+    grid-column:1;
+    grid-row:1
+  }
+  #ordersView .item-viewport .app[data-page=item] .view-switch button,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .view-switch button {
+    font-size:11px;
+    min-height:32px
+  }
+  #ordersView .item-viewport .app[data-page=item] .progress-head,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .progress-head {
+    grid-column:2;
+    grid-row:1;
+    min-height:32px;
+    font-size:10px
+  }
+  #ordersView .item-viewport .app[data-page=item] .progress-head button,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .progress-head button {
+    display:none
+  }
+  #ordersView .item-viewport .app[data-page=item] .item-progress,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .item-progress {
+    grid-column:1/-1;
+    grid-row:2;
+    margin:0
+  }
+  #ordersView .item-viewport .app[data-page=item] .item-card,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .item-card {
+    grid-column:1/-1;
+    grid-row:3;
+    gap:4px;
+    padding:7px
+  }
+  #ordersView .item-viewport .app[data-page=item] .product-name,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .product-name {
+    font-size:21px
+  }
+  #ordersView .item-viewport .app[data-page=item] .cat,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .cat {
+    font-size:10px;
+    margin-bottom:2px
+  }
+  #ordersView .item-viewport .app[data-page=item] .item-code,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .item-code {
+    margin-top:2px
+  }
+  #ordersView .item-viewport .app[data-page=item] .stock-panel,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .stock-panel {
+    margin-top:4px;
+    min-height:34px;
+    padding:0 7px
+  }
+  #ordersView .item-viewport .app[data-page=item] .stock-edit,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .stock-edit {
+    min-height:32px
+  }
+  #ordersView .item-viewport .app[data-page=item] .order-label,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .order-label {
+    min-height:36px;
+    margin-bottom:4px;
+    font-size:12px
+  }
+  #ordersView .item-viewport .app[data-page=item] .order-label select,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .order-label select {
+    min-height:36px;
+    font-size:13px;
+    padding:4px 6px
+  }
+  #ordersView .item-viewport .app[data-page=item] .qty-help,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .qty-help {
+    display:none
+  }
+  #ordersView .item-viewport .app[data-page=item] .optional,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .optional {
+    margin-top:4px;
+    min-height:28px
+  }
+  #ordersView .item-viewport .app[data-page=item] .optional summary,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .optional summary {
+    min-height:28px;
+    font-size:11px
+  }
+  #ordersView .item-viewport .app[data-page=item] .item-status,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .item-status {
+    display:none
+  }
+  #ordersView .item-viewport .app[data-page=item] .item-order .bottom-inner,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .item-order .bottom-inner {
+    padding-top:4px
+  }
+}
+
+@media(min-width:700px) {
+  #ordersView .item-viewport .tabs,
+  .ord-ceen-scope .item-viewport .tabs {
+    width:640px;
+    max-width:calc(100% - 48px)
+  }
+  #ordersView .item-viewport .app[data-page=item],
+  .ord-ceen-scope .item-viewport .app[data-page=item] {
+    padding-left:max(32px,env(safe-area-inset-left));
+    padding-right:max(32px,env(safe-area-inset-right))
+  }
+}
+
+@media(min-width:900px) {
+  #ordersView .item-viewport .app[data-page=item] .item-card,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .item-card {
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);
+    gap:30px;
+    align-items:stretch;
+    padding:23px
+  }
+  #ordersView .item-viewport .app[data-page=item] .item-order .bottom-inner,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .item-order .bottom-inner {
+    padding-top:18px;
+    gap:10px
+  }
+  #ordersView .item-viewport .app[data-page=item] .product-name,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .product-name {
+    font-size:34px
+  }
+  #ordersView .item-viewport .app[data-page=item] .glyph,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .glyph {
+    width:54px;
+    height:60px
+  }
+  #ordersView .item-viewport .app[data-page=item] .stock-panel,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .stock-panel {
+    margin-top:16px;
+    padding:12px
+  }
+  #ordersView .item-viewport .app[data-page=item] .stepper,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .stepper {
+    height:88px
+  }
+  #ordersView .item-viewport .app[data-page=item] .stepper button,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .stepper button {
+    min-width:56px;
+    height:64px
+  }
+  #ordersView .item-viewport .app[data-page=item] .stepper input,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .stepper input {
+    height:64px;
+    font-size:40px
+  }
+  #ordersView .item-viewport .app[data-page=item] .optional,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .optional {
+    margin-top:16px
+  }
+}
+
+@media(min-width:900px) {
+  #ordersView .item-viewport .app[data-page=item] .item-more-panel,
+  .ord-ceen-scope .item-viewport .app[data-page=item] .item-more-panel {
+    left:max(32px,calc((100vw - 1100px)/2 + 32px),env(safe-area-inset-left));
+    right:auto;
+    width:min(40vw,450px)
+  }
+}
+
+#ordersView #quickList {
+  display:block;
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:14px;
+  overflow:hidden
+}
+
+#ordersView .quick-row,
+.ord-ceen-scope .quick-row {
+  position:relative;
+  display:grid;
+  grid-template-columns:44px minmax(0,1fr) auto;
+  align-items:center;
+  gap:8px;
+  padding:10px 8px;
+  min-height:76px;
+  background:var(--paper)
+}
+
+#ordersView .quick-row+.quick-row,
+.ord-ceen-scope .quick-row+.quick-row {
+  border-top:1px solid var(--line)
+}
+
+#ordersView .quick-row.has-order,
+.ord-ceen-scope .quick-row.has-order {
+  box-shadow:inset 3px 0 var(--green)
+}
+
+#ordersView .quick-heading,
+.ord-ceen-scope .quick-heading {
+  min-width:0
+}
+
+#ordersView .quick-heading b,
+.ord-ceen-scope .quick-heading b {
+  display:block;
+  font-size:14px;
+  line-height:1.4;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis
+}
+
+#ordersView .quick-heading small,
+.ord-ceen-scope .quick-heading small {
+  display:block;
+  font-size:10px;
+  color:var(--muted);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis
+}
+
+#ordersView .quick-summary,
+.ord-ceen-scope .quick-summary {
+  font-size:11px;
+  line-height:1.5;
+  color:var(--muted);
+  font-variant-numeric:tabular-nums;
+  overflow-wrap:anywhere
+}
+
+#ordersView .quick-summary strong,
+.ord-ceen-scope .quick-summary strong {
+  color:var(--green);
+  font-size:16px
+}
+
+#ordersView .quick-stepper,
+.ord-ceen-scope .quick-stepper {
+  display:flex;
+  gap:4px
+}
+
+#ordersView .quick-stepper button,
+.ord-ceen-scope .quick-stepper button {
+  width:44px;
+  min-width:44px;
+  min-height:44px;
+  padding:0;
+  border:0;
+  border-radius:12px;
+  background:var(--raised);
+  color:var(--green);
+  font-size:23px
+}
+
+#ordersView .quick-stepper button[data-qplus],
+.ord-ceen-scope .quick-stepper button[data-qplus] {
+  background:var(--action);
+  color:var(--on-action)
+}
+
+#ordersView .quick-row .quick-error,
+.ord-ceen-scope .quick-row .quick-error {
+  grid-column:1/-1;
+  margin:0
+}
+
+@media(min-width:1024px) {
+  #ordersView #quickList {
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:0
+  }
+  #ordersView .quick-row+.quick-row,
+  .ord-ceen-scope .quick-row+.quick-row {
+    border-top:0
+  }
+  #ordersView .quick-row:nth-child(n+3),
+  .ord-ceen-scope .quick-row:nth-child(n+3) {
+    border-top:1px solid var(--line)
+  }
+  #ordersView .quick-row:nth-child(even),
+  .ord-ceen-scope .quick-row:nth-child(even) {
+    border-left:1px solid var(--line)
+  }
+}
+
+/* --- RTL & Logical Properties Overrides --- */
+[dir="rtl"] #ordersView .search input,
+html[lang="ar"] #ordersView .search input {
+  padding-inline-start: 44px;
+  padding-inline-end: 14px;
+}
+[dir="rtl"] #ordersView .search svg,
+html[lang="ar"] #ordersView .search svg {
+  inset-inline-start: 14px;
+  inset-inline-end: auto;
+}
+[dir="rtl"] #ordersView .group-card .arrow,
+html[lang="ar"] #ordersView .group-card .arrow {
+  transform: scaleX(-1);
+}
+[dir="rtl"] #ordersView .breadcrumbs span,
+html[lang="ar"] #ordersView .breadcrumbs span {
+  display: inline-block;
+  transform: scaleX(-1);
+}

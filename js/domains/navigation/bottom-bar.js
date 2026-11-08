@@ -1,5 +1,5 @@
 // foh-opening/js/domains/navigation/bottom-bar.js
-// 5-Icon Tactile Mobile Bottom Bar with Center Hero Anchor (Home / Shift Checklist)
+// Tactile Mobile Bottom Bar with Adaptive Modes (FOH Checklist & Focused Orders Flow)
 (function (FOH) {
   'use strict';
 
@@ -8,58 +8,29 @@
   const isAr = () => (FOH.i18n ? FOH.i18n.lang === 'ar' : false);
   const { el } = FOH.view;
 
-  const TABS = [
-    {
-      id: 'mine',
-      view: 'mine',
-      ico: '📋',
-      labelAr: 'مهامي',
-      labelEn: 'My Tasks',
-      badgeId: 'botBadgeMine',
-    },
-    {
-      id: 'inv',
-      view: 'inv',
-      ico: '📦',
-      labelAr: 'الكسر والجرد',
-      labelEn: 'Inventory',
-      badgeId: 'botBadgeInv',
-    },
-    {
-      id: 'opening',
-      view: 'opening',
-      ico: '🏠',
-      labelAr: 'الرئيسية',
-      labelEn: 'Home',
-      isCenter: true,
-      badgeId: 'botBadgeOpening',
-    },
-    {
-      id: 'tips',
-      view: 'tips',
-      ico: '💰',
-      labelAr: 'التبس',
-      labelEn: 'Tips',
-      badgeId: 'botBadgeTips',
-    },
-    {
-      id: 'academy',
-      view: 'academy',
-      ico: '🎓',
-      labelAr: 'الأكاديمية',
-      labelEn: 'Academy',
-      badgeId: 'botBadgeAcademy',
-    },
+  const FOH_TABS = [
+    { id: 'mine', view: 'mine', ico: '📋', labelAr: 'مهامي', labelEn: 'My Tasks', badgeId: 'botBadgeMine' },
+    { id: 'dayoff', view: 'dayoff', ico: '📅', labelAr: 'الدوام', labelEn: 'Schedule', badgeId: 'botBadgeDayoff' },
+    { id: 'opening', view: 'opening', ico: '🏠', labelAr: 'الرئيسية', labelEn: 'Home', isCenter: true, badgeId: 'botBadgeOpening' },
+    { id: 'tips', view: 'tips', ico: '💰', labelAr: 'التبس', labelEn: 'Tips', badgeId: 'botBadgeTips' },
+    { id: 'academy', view: 'academy', ico: '🎓', labelAr: 'الأكاديمية', labelEn: 'Academy', badgeId: 'botBadgeAcademy' },
   ];
+
+  const ORDERS_TABS = [
+    { id: 'ord_catalog', ordAction: 'catalog', ico: '📦', labelAr: 'الأقسام', labelEn: 'Catalog' },
+    { id: 'ord_quick', ordAction: 'quick', ico: '⚡', labelAr: 'سريع', labelEn: 'Quick' },
+    { id: 'ord_review', ordAction: 'review', ico: '🛒', labelAr: 'المراجعة', labelEn: 'Review', isCenter: true, badgeId: 'botBadgeOrdCart' },
+    { id: 'ord_receiving', ordAction: 'receiving', ico: '📥', labelAr: 'الاستلام', labelEn: 'Receiving' },
+    { id: 'ord_home', ordAction: 'exit_home', ico: '🏠', labelAr: 'الرئيسية', labelEn: 'Home', isExitAnchor: true },
+  ];
+
+  let currentBarMode = 'foh'; // 'foh' | 'orders'
 
   function getUnfinishedChecklistCount() {
     try {
       const all = FOH.model.progress(FOH.model.allLeaves({ sections: FOH.preview.sections() }), S().run.checked);
       return Math.max(0, (all.total || 0) - (all.done || 0));
-    } catch (err) {
-      /* Fallback for remaining task count calculation */
-      return 0;
-    }
+    } catch { return 0; }
   }
 
   function getMyTasksRemainingCount() {
@@ -67,57 +38,95 @@
       const sess = FOH.sessionAuth ? FOH.sessionAuth.getSession() : null;
       const curUser = (sess && sess.username ? sess.username.toLowerCase() : 'fadi');
       const curRole = FOH.roleIdentity ? FOH.roleIdentity.getCurrentSuperRoleKey() : 'staff';
-      let remaining = 0;
-
-      // 1. Scheduled tasks
-      const states = FOH.tasksView ? FOH.tasksView.todayStates().filter((st) => FOH.tasksView.isMine(st.task)) : [];
-      states.forEach((st) => {
-        if (!st.doneEntry) remaining++;
-      });
-
-      // 2. Assigned checklist items
+      const states = FOH.tasksView ? FOH.tasksView.todayStates().filter((st) => FOH.tasksView.isMine(st.task) && !st.doneEntry) : [];
+      let rem = states.length;
+      const checked = (S().run && S().run.checked) || {};
       (S().tpl.sections || []).forEach((sec) => {
         (sec.items || []).forEach((it) => {
-          const isDone = !!(S().run && S().run.checked && S().run.checked[it.id]);
-          if (!isDone) {
-            if (it.assignedUsername && it.assignedUsername.toLowerCase() === curUser) {
-              remaining++;
-            } else if (!it.assignedUsername && it.assignedRoleKey && it.assignedRoleKey === curRole) {
-              remaining++;
-            }
-          }
+          if (!checked[it.id] && ((it.assignedUsername && it.assignedUsername.toLowerCase() === curUser) || (!it.assignedUsername && it.assignedRoleKey === curRole))) rem++;
         });
       });
-
-      return remaining;
-    } catch {
-      return 0;
-    }
+      return rem;
+    } catch { return 0; }
   }
 
-  function getInventoryDamageBadgeCount() {
+  function getDayOffBadgeCount() {
     try {
-      // Pending blind counts
-      const counts = FOH.invCount && FOH.invCount.pending ? FOH.invCount.pending() : 0;
-      return counts;
-    } catch (err) {
-      /* Fallback for inventory pending count */
-      return 0;
+      if (!FOH.dayOff || !FOH.dayOff.loadDayOffList) return 0;
+      const list = FOH.dayOff.loadDayOffList() || [];
+      const sess = FOH.sessionAuth ? FOH.sessionAuth.getSession() : null;
+      if (!sess || !!sess.isManager) return list.filter((r) => r.status === 'pending').length;
+      const myName = (sess && sess.displayName) || (FOH.state && FOH.state.me && FOH.state.me.name) || '';
+      return list.filter((r) => r.status === 'pending' && (!myName || (r.staffName || '').toLowerCase().includes(myName.toLowerCase()))).length;
+    } catch { return 0; }
+  }
+
+  function getOrdersCartCount() {
+    try {
+      const db = FOH.ordersStore ? FOH.ordersStore.getDB() : null;
+      return (db && db.order && db.order.lines) ? Object.values(db.order.lines).filter((l) => Number(l.qty || 0) > 0).length : 0;
+    } catch { return 0; }
+  }
+
+  function handleOrdersTabClick(action) {
+    const OV = FOH.ordersView;
+    if (action === 'catalog') {
+      if (OV && OV.go) OV.go('home');
+    } else if (action === 'quick') {
+      const db = FOH.ordersStore ? FOH.ordersStore.getDB() : null;
+      if (db) {
+        db.preferences = db.preferences || {};
+        db.preferences.viewMode = 'list';
+        if (FOH.ordersStore.saveOrdersDB) FOH.ordersStore.saveOrdersDB();
+      }
+      const cat = (db && db.order && db.order.lastCat) || 'bar-0';
+      if (OV && OV.go) OV.go('products/' + cat);
+    } else if (action === 'review') {
+      if (OV && OV.go) OV.go('review');
+    } else if (action === 'receiving') {
+      if (FOH.ordersViewReview && FOH.ordersViewReview.openReceivingModal) FOH.ordersViewReview.openReceivingModal();
+      else if (OV && OV.go) OV.go('review');
+    } else if (action === 'exit_home') {
+      if (FOH.superEmployee && FOH.superEmployee.switchView) FOH.superEmployee.switchView('opening');
+      else if (FOH.navigation && FOH.navigation.switchView) FOH.navigation.switchView('opening');
+      else { S().view = 'opening'; FOH.app.render(); }
     }
   }
 
-  function renderBottomTabItem(tb, curView, ar) {
-    const isCur = curView === tb.view;
-    const btn = el('button', 'tab-item' + (tb.isCenter ? ' center-hero' : '') + (isCur ? ' on' : ''));
+  function isOrdersTabActive(tb) {
+    const route = (FOH.ordersView && FOH.ordersView.getRoute) ? FOH.ordersView.getRoute() : 'home';
+    const db = FOH.ordersStore ? FOH.ordersStore.getDB() : null;
+    const viewMode = (db && db.preferences && db.preferences.viewMode) || 'step';
+    if (tb.ordAction === 'catalog') {
+      return viewMode !== 'list' && (route === 'home' || route.startsWith('types') || route.startsWith('products') || route.startsWith('item'));
+    }
+    if (tb.ordAction === 'quick') {
+      return viewMode === 'list' && (route.startsWith('products') || route === 'quick');
+    }
+    if (tb.ordAction === 'review') {
+      return route === 'review' || route.startsWith('complete');
+    }
+    return false;
+  }
+
+  function renderBottomTabItem(tb, isOrdersMode, curView, ar) {
+    const isCur = isOrdersMode ? isOrdersTabActive(tb) : curView === tb.view;
+    const classes = ['tab-item'];
+    if (tb.isCenter) classes.push('center-hero');
+    if (tb.isExitAnchor) classes.push('exit-anchor');
+    if (isCur) classes.push('on');
+
+    const btn = el('button', classes.join(' '));
     btn.type = 'button';
-    btn.dataset.view = tb.view;
+    if (tb.view) btn.dataset.view = tb.view;
+    if (tb.ordAction) btn.dataset.ordAction = tb.ordAction;
     btn.setAttribute('aria-label', ar ? tb.labelAr : tb.labelEn);
 
     if (tb.isCenter) {
       const bubble = el('div', 'center-hero-bubble');
       const ico = el('span', 'hero-ico', tb.ico);
       const b = el('b', 'tab-badge hero-badge');
-      b.id = tb.badgeId;
+      if (tb.badgeId) b.id = tb.badgeId;
       b.hidden = true;
       bubble.append(ico, b);
       btn.append(bubble, el('span', 'tab-label center-label', ar ? tb.labelAr : tb.labelEn));
@@ -125,7 +134,7 @@
       const wrap = el('div', 'tab-icon-wrap');
       const ico = el('span', 'tab-ico', tb.ico);
       const b = el('b', 'tab-badge');
-      b.id = tb.badgeId;
+      if (tb.badgeId) b.id = tb.badgeId;
       b.hidden = true;
       wrap.append(ico, b);
       btn.append(wrap, el('span', 'tab-label', ar ? tb.labelAr : tb.labelEn), el('span', 'tab-active-dot'));
@@ -133,13 +142,17 @@
 
     btn.addEventListener('click', () => {
       if (navigator.vibrate) navigator.vibrate(12);
-      if (FOH.superEmployee && FOH.superEmployee.switchView) {
-        FOH.superEmployee.switchView(tb.view);
-      } else if (FOH.navigation && FOH.navigation.switchView) {
-        FOH.navigation.switchView(tb.view);
+      if (isOrdersMode) {
+        handleOrdersTabClick(tb.ordAction);
       } else {
-        S().view = tb.view;
-        FOH.app.render();
+        if (FOH.superEmployee && FOH.superEmployee.switchView) {
+          FOH.superEmployee.switchView(tb.view);
+        } else if (FOH.navigation && FOH.navigation.switchView) {
+          FOH.navigation.switchView(tb.view);
+        } else {
+          S().view = tb.view;
+          FOH.app.render();
+        }
       }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
@@ -158,9 +171,14 @@
 
     const ar = isAr();
     const curView = S().view;
+    const isOrdersMode = curView === 'orders';
+    currentBarMode = isOrdersMode ? 'orders' : 'foh';
 
-    TABS.forEach((tb) => {
-      bar.append(renderBottomTabItem(tb, curView, ar));
+    bar.classList.toggle('orders-mode', isOrdersMode);
+    const activeTabs = isOrdersMode ? ORDERS_TABS : FOH_TABS;
+
+    activeTabs.forEach((tb) => {
+      bar.append(renderBottomTabItem(tb, isOrdersMode, curView, ar));
     });
 
     updateBadges();
@@ -170,7 +188,6 @@
     const bar = $('appBottomBar');
     if (!bar) return;
 
-    // 1. My tasks badge
     const bMine = $('botBadgeMine');
     if (bMine) {
       const cnt = getMyTasksRemainingCount();
@@ -178,7 +195,6 @@
       bMine.hidden = cnt <= 0;
     }
 
-    // 2. Home / Opening checklist badge
     const bOpen = $('botBadgeOpening');
     if (bOpen) {
       const left = getUnfinishedChecklistCount();
@@ -186,12 +202,18 @@
       bOpen.hidden = left <= 0;
     }
 
-    // 3. Inventory / Breakage badge
-    const bInv = $('botBadgeInv');
-    if (bInv) {
-      const cnt = getInventoryDamageBadgeCount();
-      bInv.textContent = String(cnt);
-      bInv.hidden = cnt <= 0;
+    const bDayoff = $('botBadgeDayoff');
+    if (bDayoff) {
+      const cnt = getDayOffBadgeCount();
+      bDayoff.textContent = String(cnt);
+      bDayoff.hidden = cnt <= 0;
+    }
+
+    const bCart = $('botBadgeOrdCart');
+    if (bCart) {
+      const cartCount = getOrdersCartCount();
+      bCart.textContent = String(cartCount);
+      bCart.hidden = cartCount <= 0;
     }
   }
 
@@ -201,32 +223,44 @@
     let bar = $('appBottomBar');
 
     if (isLoggedOut || S().editing) {
-      if (bar) bar.hidden = true;
+      if (bar) {
+        bar.hidden = true;
+        if (bar.style) {
+          if (typeof bar.style.setProperty === 'function') bar.style.setProperty('display', 'none', 'important');
+          else bar.style.display = 'none';
+        }
+      }
       document.body.classList.remove('has-bottom-bar');
       return;
     }
 
-    if (!bar) {
+    const curView = S().view;
+    const targetMode = curView === 'orders' ? 'orders' : 'foh';
+
+    if (!bar || currentBarMode !== targetMode) {
       buildBottomBar();
       bar = $('appBottomBar');
     }
     bar.hidden = false;
+    if (bar.style) {
+      if (typeof bar.style.removeProperty === 'function') bar.style.removeProperty('display');
+      else bar.style.display = '';
+    }
     document.body.classList.add('has-bottom-bar');
 
     const ar = isAr();
-    const curView = S().view;
+    const isOrdersMode = targetMode === 'orders';
+    const activeTabs = isOrdersMode ? ORDERS_TABS : FOH_TABS;
 
-    // Update active class & labels
-    TABS.forEach((tb) => {
-      const btn = bar.querySelector(`.tab-item[data-view="${tb.view}"]`);
+    activeTabs.forEach((tb) => {
+      const sel = isOrdersMode ? `.tab-item[data-ord-action="${tb.ordAction}"]` : `.tab-item[data-view="${tb.view}"]`;
+      const btn = bar.querySelector(sel);
       if (!btn) return;
-      const isCur = curView === tb.view;
+      const isCur = isOrdersMode ? isOrdersTabActive(tb) : curView === tb.view;
       btn.classList.toggle('on', isCur);
 
       const lbl = btn.querySelector('.tab-label');
-      if (lbl) {
-        lbl.textContent = ar ? tb.labelAr : tb.labelEn;
-      }
+      if (lbl) lbl.textContent = ar ? tb.labelAr : tb.labelEn;
     });
 
     updateBadges();
@@ -241,6 +275,8 @@
     syncBottomBar,
     updateBadges,
     buildBottomBar,
-    TABS,
+    TABS: FOH_TABS,
+    FOH_TABS,
+    ORDERS_TABS,
   };
 })(window.FOH = window.FOH || {});

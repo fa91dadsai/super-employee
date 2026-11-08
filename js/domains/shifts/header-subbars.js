@@ -68,15 +68,21 @@
   }
 
   function toBizMinutes(hm) {
-    return FOH.opsLifecycle ? FOH.opsLifecycle.toBizMinutes(hm) : 0;
+    if (FOH.opsLifecycle && FOH.opsLifecycle.toBizMinutes) return FOH.opsLifecycle.toBizMinutes(hm);
+    if (FOH.opsConfigStore && FOH.opsConfigStore.toBizMinutes) return FOH.opsConfigStore.toBizMinutes(hm);
+    return 0;
   }
 
   function loadOpsConfig() {
-    return FOH.opsLifecycle ? FOH.opsLifecycle.loadOpsConfig() : {};
+    if (FOH.opsLifecycle && FOH.opsLifecycle.loadOpsConfig) return FOH.opsLifecycle.loadOpsConfig();
+    if (FOH.opsConfigStore && FOH.opsConfigStore.loadOpsConfig) return FOH.opsConfigStore.loadOpsConfig();
+    return {};
   }
 
   function loadOpsDayState() {
-    return FOH.opsLifecycle ? FOH.opsLifecycle.loadOpsDayState() : {};
+    if (FOH.opsLifecycle && FOH.opsLifecycle.loadOpsDayState) return FOH.opsLifecycle.loadOpsDayState();
+    if (FOH.opsConfigStore && FOH.opsConfigStore.loadOpsDayState) return FOH.opsConfigStore.loadOpsDayState();
+    return {};
   }
 
   function getCurrentSuperRoleKey() {

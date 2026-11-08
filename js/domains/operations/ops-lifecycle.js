@@ -52,202 +52,25 @@
   // 11. Operational Hours, Shift Prep, Department Last Order, Closing Sheet
   //     by Department, "Close Restaurant (Last Guest)" Gate & Super Roles (v9)
   // ============================================================================
-  const OPS_CFG_KEY = 'super-employee.opsConfig.v1';
-  const OPS_DAY_PREFIX = 'super-employee.opsDay.v1.';
+  // Delegate to opsConfigStore
+  const SUPER_ROLES_META = (FOH.opsConfigStore && FOH.opsConfigStore.SUPER_ROLES_META) || (FOH.SUPER_ROLES_META || {});
+  const PERM_LABELS = (FOH.opsConfigStore && FOH.opsConfigStore.PERM_LABELS) || (FOH.PERM_LABELS || []);
+  const loadOpsConfig = () => (FOH.opsConfigStore && FOH.opsConfigStore.loadOpsConfig ? FOH.opsConfigStore.loadOpsConfig() : {});
+  const saveOpsConfig = (c) => (FOH.opsConfigStore && FOH.opsConfigStore.saveOpsConfig ? FOH.opsConfigStore.saveOpsConfig(c) : null);
+  const toBizMinutes = (hm) => (FOH.opsConfigStore && FOH.opsConfigStore.toBizMinutes ? FOH.opsConfigStore.toBizMinutes(hm) : 0);
+  const formatTime12Ar = (hm) => (FOH.opsConfigStore && FOH.opsConfigStore.formatTime12Ar ? FOH.opsConfigStore.formatTime12Ar(hm) : hm);
+  const getEffectiveNowHM = () => (FOH.opsConfigStore && FOH.opsConfigStore.getEffectiveNowHM ? FOH.opsConfigStore.getEffectiveNowHM() : '12:00');
+  const getSimulatedShiftTime = () => (FOH.opsConfigStore && FOH.opsConfigStore.getSimulatedShiftTime ? FOH.opsConfigStore.getSimulatedShiftTime() : '');
+  const setSimulatedShiftTime = (v) => { if (FOH.opsConfigStore && FOH.opsConfigStore.setSimulatedShiftTime) FOH.opsConfigStore.setSimulatedShiftTime(v); };
+  const loadOpsDayState = (d) => (FOH.opsConfigStore && FOH.opsConfigStore.loadOpsDayState ? FOH.opsConfigStore.loadOpsDayState(d) : {});
+  const saveOpsDayState = (d, st) => (FOH.opsConfigStore && FOH.opsConfigStore.saveOpsDayState ? FOH.opsConfigStore.saveOpsDayState(d, st) : null);
 
-  const SUPER_ROLES_META = {
-    super_manager: {
-      id: 'super_manager',
-      badge: '👑 Super Manager',
-      labelAr: '👑 سوبر مانجر (Super Manager · مدير المطعم)',
-      labelEn: '👑 Super Manager (Restaurant Manager)',
-      dept: 'all',
-    },
-    super_captain: {
-      id: 'super_captain',
-      badge: '🎖️ Super Captain',
-      labelAr: '🎖️ سوبر كابتن (Super Captain · كابتن الصالة)',
-      labelEn: '🎖️ Super Captain (Floor Captain)',
-      dept: 'floor',
-    },
-    super_bartender: {
-      id: 'super_bartender',
-      badge: '🍸 Super Bartender',
-      labelAr: '🍸 سوبر بارتندر (Super Bartender · مسؤول البار)',
-      labelEn: '🍸 Super Bartender (Head Bartender)',
-      dept: 'bar',
-    },
-    super_waiter: {
-      id: 'super_waiter',
-      badge: '⭐ Super Waiter',
-      labelAr: '⭐ سوبر ويتر (Super Waiter · ويتر متقدم)',
-      labelEn: '⭐ Super Waiter (Senior Waiter)',
-      dept: 'floor',
-    },
-    staff: {
-      id: 'staff',
-      badge: '👤 Staff',
-      labelAr: '👤 موظف صالة / بار (Waiter / Bartender)',
-      labelEn: '👤 Waiter / Bartender (Standard Staff)',
-      dept: 'floor',
-    },
-  };
-
-  const PERM_LABELS = [
-    ['canCloseRestaurant', '🚪 إغلاق المطعم رسمياً (بعد الحد الأدنى / مع آخر زبون)', '🚪 Official Restaurant Close (After Min Time / Last Guest)'],
-    ['canEarlyCloseOverride', '⚠️ كسر قفل الإغلاق المبكر قبل 2:00 ص (بسبب إلزامي)', '⚠️ Override Early-Close Lock before 02:00 AM (with reason)'],
-    ['canTriggerLastOrder', '🔔 إعلان وتوثيق Last Order للمطبخ والبار', '🔔 Trigger & Log Kitchen / Bar Last Order'],
-    ['canSignoffDeptClosing', '🌙 اعتماد وإغلاق الـ Closing Sheet الخاص بالقسم', '🌙 Sign off Department Closing Sheet'],
-    ['canEditChecklist', '✎ تعديل وإضافة بنود الشيك ليست (Opening / Closing)', '✎ Edit Opening & Closing Checklist Items'],
-    ['canSubmitOrders', '🛒 إنشاء وإرسال طلبيات البار والصالة', '🛒 Create & Submit Bar / FOH Orders'],
-    ['canManageAcademy', '🎓 إضافة وتعديل أصناف وأسئلة الأكاديمية', '🎓 Add & Edit Menu Academy Items & Quizzes'],
-    ['canViewTeamTips', '💰 الاطلاع على جدول التبس الكامل للفريق', '💰 View Full Team Tip Pool & Shares'],
-  ];
-
-  const DEFAULT_OPS_HOURS = {
-    prepStart: '12:00',
-    doorsOpen: '13:00',
-    kitchenLastOrder: '00:00',
-    barLastOrder: '01:00',
-    minCloseTime: '02:00',
-    closeWithLastGuest: true,
-  };
-  const DEFAULT_STAFF_SUPER_ROLES = {
-    fadi: 'super_manager',
-    ali: 'super_captain',
-    maher: 'super_bartender',
-    sara: 'super_waiter',
-  };
-  const DEFAULT_ORDERING_DELEGATION = {
-    roles: ['super_manager', 'super_bartender'],
-    staffUsernames: ['sara'],
-  };
-  const DEFAULT_TASK_DELEGATION = {
-    roles: ['super_manager', 'super_captain'],
-    staffUsernames: ['ali'],
-  };
-  const DEFAULT_ROLE_PERMISSIONS = {
-    super_manager: { canCloseRestaurant: true, canEarlyCloseOverride: true, canTriggerLastOrder: true, canSignoffDeptClosing: true, canEditChecklist: true, canSubmitOrders: true, canManageAcademy: true, canViewTeamTips: true },
-    super_captain: { canCloseRestaurant: true, canEarlyCloseOverride: false, canTriggerLastOrder: true, canSignoffDeptClosing: true, canEditChecklist: true, canSubmitOrders: true, canManageAcademy: true, canViewTeamTips: true },
-    super_bartender: { canCloseRestaurant: false, canEarlyCloseOverride: false, canTriggerLastOrder: true, canSignoffDeptClosing: true, canEditChecklist: true, canSubmitOrders: true, canManageAcademy: true, canViewTeamTips: false },
-    super_waiter: { canCloseRestaurant: false, canEarlyCloseOverride: false, canTriggerLastOrder: true, canSignoffDeptClosing: true, canEditChecklist: true, canSubmitOrders: true, canManageAcademy: false, canViewTeamTips: false },
-    staff: { canCloseRestaurant: false, canEarlyCloseOverride: false, canTriggerLastOrder: false, canSignoffDeptClosing: false, canEditChecklist: false, canSubmitOrders: false, canManageAcademy: false, canViewTeamTips: false },
-  };
-
-  function defaultOpsConfig() {
-    return {
-      hours: { ...DEFAULT_OPS_HOURS },
-      staffSuperRoles: { ...DEFAULT_STAFF_SUPER_ROLES },
-      orderingDelegation: { roles: [...DEFAULT_ORDERING_DELEGATION.roles], staffUsernames: [...DEFAULT_ORDERING_DELEGATION.staffUsernames] },
-      taskAssignmentDelegation: { roles: [...DEFAULT_TASK_DELEGATION.roles], staffUsernames: [...DEFAULT_TASK_DELEGATION.staffUsernames] },
-      rolePermissions: JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS)),
-    };
-  }
-
-  function loadOpsConfig() {
-    try {
-      const raw = FOH.safeJsonParse(localStorage.getItem(OPS_CFG_KEY), 'null');
-      const d = defaultOpsConfig();
-      if (!raw || typeof raw !== 'object') return d;
-      const mergedPerms = { ...d.rolePermissions };
-      Object.keys(d.rolePermissions).forEach((rk) => {
-        if (raw.rolePermissions && raw.rolePermissions[rk]) {
-          mergedPerms[rk] = { ...d.rolePermissions[rk], ...raw.rolePermissions[rk] };
-        }
-      });
-      return {
-        hours: { ...d.hours, ...(raw.hours || {}) },
-        staffSuperRoles: { ...d.staffSuperRoles, ...(raw.staffSuperRoles || {}) },
-        orderingDelegation: {
-          roles: (raw.orderingDelegation && Array.isArray(raw.orderingDelegation.roles))
-            ? raw.orderingDelegation.roles
-            : d.orderingDelegation.roles,
-          staffUsernames: (raw.orderingDelegation && Array.isArray(raw.orderingDelegation.staffUsernames))
-            ? raw.orderingDelegation.staffUsernames
-            : d.orderingDelegation.staffUsernames,
-        },
-        taskAssignmentDelegation: {
-          roles: (raw.taskAssignmentDelegation && Array.isArray(raw.taskAssignmentDelegation.roles))
-            ? raw.taskAssignmentDelegation.roles
-            : (d.taskAssignmentDelegation ? d.taskAssignmentDelegation.roles : ['super_manager', 'super_captain']),
-          staffUsernames: (raw.taskAssignmentDelegation && Array.isArray(raw.taskAssignmentDelegation.staffUsernames))
-            ? raw.taskAssignmentDelegation.staffUsernames
-            : (d.taskAssignmentDelegation ? d.taskAssignmentDelegation.staffUsernames : ['ali']),
-        },
-        rolePermissions: mergedPerms,
-      };
-    } catch {
-      return defaultOpsConfig();
+  function openCloseRestaurantDialog(...args) {
+    if (FOH.opsCloseDialog && FOH.opsCloseDialog.openCloseRestaurantDialog) {
+      return FOH.opsCloseDialog.openCloseRestaurantDialog(...args);
     }
   }
 
-  function saveOpsConfig(cfg) {
-    try {
-      localStorage.setItem(OPS_CFG_KEY, JSON.stringify(cfg));
-    } catch (err) {
-      /* Storage quota fallback */
-    }
-  }
-
-
-
-  // Convert HH:MM to operational business-day minutes (06:00..29:59 so 00:00=24:00, 02:30=26:30)
-  function toBizMinutes(hm) {
-    if (!hm || typeof hm !== 'string' || !/^\d{2}:\d{2}$/.test(hm)) return 780;
-    const h = Number(hm.slice(0, 2));
-    const m = Number(hm.slice(3, 5));
-    const adjH = h < 6 ? h + 24 : h;
-    return adjH * 60 + m;
-  }
-
-  function formatTime12Ar(hm) {
-    if (!hm || !/^\d{2}:\d{2}$/.test(hm)) return hm || '';
-    const h = Number(hm.slice(0, 2));
-    const m = hm.slice(3, 5);
-    const ar = isAr();
-    const suffix = h < 12 ? (ar ? 'ص' : 'AM') : (ar ? 'م' : 'PM');
-    const h12 = h % 12 === 0 ? 12 : h % 12;
-    return h12 + ':' + m + ' ' + suffix;
-  }
-
-  let simulatedShiftTime = ''; // '' means real clock FOH.time.nowHM()
-
-  function getEffectiveNowHM() {
-    return simulatedShiftTime || FOH.time.nowHM();
-  }
-
-  function loadOpsDayState(dateStr) {
-    const key = OPS_DAY_PREFIX + (dateStr || S.date);
-    try {
-      const raw = FOH.safeJsonParse(localStorage.getItem(key), 'null');
-      if (raw && typeof raw === 'object') return raw;
-    } catch (err) {
-      /* Storage quota or JSON parse fallback */
-    }
-    return {
-      kitchenLastOrderAt: '',
-      kitchenLastOrderBy: '',
-      barLastOrderAt: '',
-      barLastOrderBy: '',
-      closedAt: '',
-      closedBy: '',
-      closedRole: '',
-      extensionMins: 0,
-      earlyOverrideReason: '',
-      overtimeCredited: false,
-    };
-  }
-
-  function saveOpsDayState(dateStr, st) {
-    const key = OPS_DAY_PREFIX + (dateStr || S.date);
-    try {
-      localStorage.setItem(key, JSON.stringify(st));
-    } catch (err) {
-      /* Storage quota fallback */
-    }
-  }
-
-  // ---- Department-Specific Closing Sheet Sections ----
   const DEPT_CLOSING_SECTIONS = [
     {
       id: 'cls-bar',
@@ -368,17 +191,7 @@
       const secObj = (S.tpl.sections || []).find((x) => x.id === sid);
       const secDept = (secObj && secObj.dept) || (sid === 'cls-bar' ? 'bar' : sid === 'cls-lockup' ? 'cash' : 'floor');
 
-      const head = card.querySelector('.head');
-      if (head && !head.querySelector('.dept-closing-tag')) {
-        const tag = el('span', 'super-role-pill dept-closing-tag');
-        tag.style.fontSize = '0.68rem';
-        tag.textContent = secDept === 'bar'
-          ? (ar ? '🍸 مختص بقسم البار' : '🍸 Bar Dept')
-          : secDept === 'cash'
-          ? (ar ? '💳 الكاشير والمشرف' : '💳 Cash & Manager')
-          : (ar ? '🍽️ مختص بقسم الصالة' : '🍽️ Floor Dept');
-        head.append(tag);
-      }
+      // Department closing tag omitted to avoid duplicating section name in card header
     });
   }
 
@@ -460,11 +273,11 @@
     ].forEach(([val, txt]) => {
       const o = el('option', '', txt);
       o.value = val;
-      o.selected = simulatedShiftTime === val;
+      o.selected = getSimulatedShiftTime() === val;
       simSel.append(o);
     });
     simSel.addEventListener('change', () => {
-      simulatedShiftTime = simSel.value;
+      setSimulatedShiftTime(simSel.value);
       manualSheetOverride = false;
       FOH.app.render();
     });
@@ -601,208 +414,43 @@
     bar.append(topRow, timeline, actRow);
   }
 
-  function renderClosePermissionDenied(dlg, roleMeta, ar) {
-    const box = el('div', '');
-    box.style.padding = '16px 18px 22px';
-    box.innerHTML =
-      '<div class="grab"></div>' +
-      '<h2 style="color:var(--danger);">🔒 ' + (ar ? 'صلاحية إغلاق المطعم غير متوفرة لمنصبك' : 'Permission Required to Close Restaurant') + '</h2>' +
-      '<p style="font-size:0.88rem;color:var(--ink2);line-height:1.5;">' +
-      (ar ? 'منصبك الحالي هو <b>' + roleMeta.badge + '</b>. إغلاق المطعم رسمياً في نهاية الشفت مخصص لـ <b>👑 Super Manager</b> أو <b>🎖️ Super Captain</b> (يمكن للمدير تعديل هذه الصلاحية من ⚙️ الإعدادات).' : 'Your current role is ' + roleMeta.badge + '. Super Manager or Super Captain permission required.') +
-      '</p>';
-    const okB = el('button', 'btn primary', ar ? 'حسناً' : 'OK');
-    okB.type = 'button';
-    okB.style.width = '100%';
-    okB.addEventListener('click', () => dlg.close());
-    box.append(okB);
-    dlg.append(box);
-    dlg.showModal();
+  // ---- Presentation Mode Toggle (Checklist vs Cockpit) ----
+  const VIEW_MODE_KEY = 'foh-opening.viewMode.v1';
+  let cachedViewMode = null;
+
+  function getViewMode() {
+    if (cachedViewMode) return cachedViewMode;
+    try {
+      cachedViewMode = localStorage.getItem(VIEW_MODE_KEY) || 'checklist';
+    } catch (err) {
+      /* Storage quota fallback */
+      cachedViewMode = 'checklist';
+    }
+    return cachedViewMode;
   }
 
-  function renderEmergencyOverrideSection(dlg, opts, ar) {
-    const { nowHM, daySt, myName, roleMeta } = opts;
-    const ovWrap = el('div', '');
-    ovWrap.style.marginTop = '10px';
-    ovWrap.style.paddingTop = '10px';
-    ovWrap.style.borderTop = '1px dashed var(--line)';
-    const ovLbl = el('label', '', ar ? '👑 تجاوز استثنائي بأمر Super Manager فقط (أدخل سبب الإغلاق المبكر الإلزامي):' : '👑 Super Manager Emergency Override:');
-    ovLbl.style.fontSize = '0.8rem';
-    ovLbl.style.fontWeight = '700';
-    const ovIn = el('input', 'in');
-    ovIn.placeholder = ar ? 'مثال: صيانة طارئة للكهرباء / ظرف جوي استثنائي...' : 'Emergency reason...';
-    ovIn.style.marginTop = '6px';
-    const ovBtn = el('button', 'btn danger', ar ? '⚠️ فرض الإغلاق المبكر بأمر السوبر مانجر' : '⚠️ Force Early Close');
-    ovBtn.type = 'button';
-    ovBtn.style.width = '100%';
-    ovBtn.style.marginTop = '8px';
-    ovBtn.addEventListener('click', () => {
-      if (!ovIn.value.trim()) return ovIn.focus();
-      daySt.closedAt = nowHM;
-      daySt.closedBy = myName;
-      daySt.closedRole = roleMeta.badge;
-      daySt.extensionMins = 0;
-      daySt.earlyOverrideReason = ovIn.value.trim();
-      saveOpsDayState(S.date, daySt);
-      dlg.close();
-      FOH.edit.toast(ar ? '🔒 تم إغلاق المطعم استثنائياً بأمر السوبر مانجر' : '🔒 Restaurant closed via override');
-      FOH.app.render();
-    });
-    ovWrap.append(ovLbl, ovIn, ovBtn);
-    return ovWrap;
+  function setViewMode(mode) {
+    cachedViewMode = mode === 'cockpit' ? 'cockpit' : 'checklist';
+    try {
+      localStorage.setItem(VIEW_MODE_KEY, cachedViewMode);
+    } catch (err) {
+      /* Storage quota fallback */
+    }
+    const secEl = $('sections');
+    if (secEl) {
+      if (cachedViewMode === 'cockpit') secEl.classList.add('cockpit-collapsed');
+      else secEl.classList.remove('cockpit-collapsed');
+    }
+    if (FOH.app && FOH.app.render) FOH.app.render();
   }
 
-  function renderEarlyCloseWarning(dlg, box, opts = {}) {
-    const isLegacy = typeof opts === 'object' && ('h' in opts);
-    const options = isLegacy ? opts : (opts && opts.options) || {};
-    const ar = (opts && typeof opts.ar === 'boolean') ? opts.ar : (isLegacy ? !!arguments[3] : isAr());
-    const { h, nowHM, minCloseBiz, canOverrideEarly } = options;
-
-    box.innerHTML =
-      '<div class="grab"></div>' +
-      '<div style="padding:12px;border-radius:12px;background:var(--danger-soft);border:1.5px solid var(--danger);margin-bottom:12px;">' +
-      '<h3 style="margin:0 0 6px;color:var(--danger);">⛔ ' + (ar ? 'منع الإغلاق المبكر للمطعم (الساعة الآن ' + formatTime12Ar(nowHM) + ')' : 'Early Closing Blocked (' + formatTime12Ar(nowHM) + ')') + '</h3>' +
-      '<p style="margin:0;font-size:0.84rem;line-height:1.5;">' + (ar ? 'الحد الأدنى الرسمي لإغلاق المطعم هو <b>' + formatTime12Ar(h.minCloseTime) + '</b>. حسب قوانين المطعم، <b>لا يُغلق المطعم مبكراً (مثلاً الساعة 11:30 مساءً) حتى لو كانت الصالة فارغة من الزبائن</b>.' : 'Minimum closing time is ' + formatTime12Ar(h.minCloseTime) + '. Early close is blocked.') + '</p>' +
-      '</div>';
-
-    const simHint = el('button', 'btn', ar ? '⏱ تجربة محاكاة الساعة 02:30 ص (بعد مغادرة آخر زبون)' : '⏱ Simulate 02:30 AM (Last Guest Left)');
-    simHint.type = 'button';
-    simHint.style.width = '100%';
-    simHint.style.marginBottom = '10px';
-    simHint.addEventListener('click', () => {
-      simulatedShiftTime = '02:30';
-      dlg.close();
-      renderOpsLifecycleBar();
-      openCloseRestaurantDialog('02:30', toBizMinutes('02:30'), minCloseBiz);
-    });
-    box.append(simHint);
-
-    if (canOverrideEarly) {
-      box.append(renderEmergencyOverrideSection(dlg, options, ar));
-    }
-
-    const closeDlgB = el('button', 'btn', ar ? 'إلغاء' : 'Cancel');
-    closeDlgB.type = 'button';
-    closeDlgB.style.width = '100%';
-    closeDlgB.style.marginTop = '8px';
-    closeDlgB.addEventListener('click', () => dlg.close());
-    box.append(closeDlgB);
-    dlg.append(box);
-    dlg.showModal();
-  }
-
-  function submitOfficialRestaurantClose(dlg, opts, ar) {
-    const { h, nowHM, extMins, daySt, myName, roleMeta } = opts;
-    daySt.closedAt = nowHM;
-    daySt.closedBy = myName;
-    daySt.closedRole = roleMeta.badge;
-    daySt.extensionMins = extMins;
-    if (!daySt.kitchenLastOrderAt) daySt.kitchenLastOrderAt = h.kitchenLastOrder;
-    if (!daySt.barLastOrderAt) daySt.barLastOrderAt = h.barLastOrder;
-
-    if (extMins > 0 && !daySt.overtimeCredited) {
-      const extraHours = Math.round((extMins / 60) * 10) / 10;
-      const tipsDB = loadTipsData();
-      if (tipsDB && tipsDB.staff) {
-        Object.values(tipsDB.staff).forEach((st) => {
-          st.hours = Math.round(((Number(st.hours) || 40) + extraHours) * 10) / 10;
-        });
-        saveTipsData(tipsDB);
-      }
-      daySt.overtimeCredited = true;
-    }
-    saveOpsDayState(S.date, daySt);
-    dlg.close();
-    FOH.edit.toast(ar ? '🚪 تم إغلاق المطعم رسمياً الساعة ' + formatTime12Ar(nowHM) + (extMins > 0 ? ' واحتساب +' + extMins + ' دقيقة تمديد ✓' : ' ✓') : '🚪 Closed at ' + formatTime12Ar(nowHM) + ' ✓');
-    FOH.app.render();
-  }
-
-  function renderOfficialCloseConfirmation(dlg, box, opts = {}) {
-    const isLegacy = typeof opts === 'object' && ('h' in opts);
-    const options = isLegacy ? opts : (opts && opts.options) || {};
-    const ar = (opts && typeof opts.ar === 'boolean') ? opts.ar : (isLegacy ? !!arguments[3] : isAr());
-    const { h, nowHM, extMins, doneClosingCount, allClosingLeaves, leftClosingCount } = options;
-
-    box.innerHTML =
-      '<div class="grab"></div>' +
-      '<h2>🚪 ' + (ar ? 'تأكيد إغلاق المطعم رسمياً (مع مغادرة آخر زبون)' : 'Confirm Official Restaurant Closing') + '</h2>' +
-      '<div style="padding:12px;border-radius:12px;background:var(--accent-soft);border:1px solid var(--accent);margin-bottom:12px;font-size:0.84rem;line-height:1.55;">' +
-      '<div>🕒 <b>' + (ar ? 'وقت الإغلاق الفعلي:' : 'Closing Time:') + '</b> ' + formatTime12Ar(nowHM) + (extMins > 0 ? (ar ? ' (تمديد +' + extMins + ' دقيقة بعد الـ ' + formatTime12Ar(h.minCloseTime) + ')' : ' (+' + extMins + 'm extension)') : '') + '</div>' +
-      '<div>🌙 <b>' + (ar ? 'إنجاز شيت الإغلاق:' : 'Closing Sheet:') + '</b> ' + doneClosingCount + ' / ' + allClosingLeaves.length + (leftClosingCount === 0 ? ' ✅' : (ar ? ' (متبقي ' + leftClosingCount + ' مهام)' : ' (' + leftClosingCount + ' left)')) + '</div>' +
-      '<div>💰 <b>' + (ar ? 'ربط الساعات مع Tip Manager:' : 'Tip Manager Sync:') + '</b> ' + (extMins > 0 ? (ar ? 'سيتم احتساب +' + (extMins / 60).toFixed(1) + ' س إضافية تلقائياً' : '+' + (extMins / 60).toFixed(1) + 'h overtime logged') : (ar ? 'ساعات الشفت القياسية مكتملة' : 'Standard hours')) + '</div>' +
-      '</div>';
-
-    if (leftClosingCount > 0) {
-      const openClsBtn = el('button', 'btn', ar ? '🌙 مراجعة واستكمال مهام الـ Closing Sheet المتبقية (' + leftClosingCount + ')' : '🌙 Review Remaining Items (' + leftClosingCount + ')');
-      openClsBtn.type = 'button';
-      openClsBtn.style.width = '100%';
-      openClsBtn.style.marginBottom = '10px';
-      openClsBtn.addEventListener('click', () => { dlg.close(); activateClosingSheet('all'); });
-      box.append(openClsBtn);
-    }
-
-    const confirmCloseBtn = el('button', 'btn primary', ar ? '✅ تأكيد مغادرة آخر زبون وإغلاق المطعم الآن (' + formatTime12Ar(nowHM) + ')' : '✅ Confirm Close (' + formatTime12Ar(nowHM) + ')');
-    confirmCloseBtn.type = 'button';
-    confirmCloseBtn.style.width = '100%';
-    confirmCloseBtn.addEventListener('click', () => submitOfficialRestaurantClose(dlg, options, ar));
-
-    const cancelB = el('button', 'btn', ar ? 'إلغاء' : 'Cancel');
-    cancelB.type = 'button';
-    cancelB.style.width = '100%';
-    cancelB.style.marginTop = '8px';
-    cancelB.addEventListener('click', () => dlg.close());
-
-    box.append(confirmCloseBtn, cancelB);
-    dlg.append(box);
-    dlg.showModal();
-  }
-
-  function openCloseRestaurantDialog(nowHM, nowBiz, minCloseBiz) {
-    const ar = isAr();
-    const cfg = loadOpsConfig();
-    const h = cfg.hours;
-    const daySt = loadOpsDayState(S.date);
-    const sess = getSession();
-    const myName = (sess && sess.displayName) || S.me.name || 'Supervisor';
-    const roleKey = getCurrentSuperRoleKey();
-    const roleMeta = SUPER_ROLES_META[roleKey] || SUPER_ROLES_META.staff;
-    const canClose = hasSuperPerm('canCloseRestaurant');
-    const canOverrideEarly = hasSuperPerm('canEarlyCloseOverride');
-
-    let dlg = $('closeRestaurantDialog');
-    if (!dlg) {
-      dlg = el('dialog', 'sheet');
-      dlg.id = 'closeRestaurantDialog';
-      document.body.append(dlg);
-    }
-    dlg.replaceChildren();
-
-    if (!canClose) {
-      renderClosePermissionDenied(dlg, roleMeta, ar);
-      return;
-    }
-
-    const box = el('div', '');
-    box.style.padding = '16px 18px 22px';
-
-    if (nowBiz < minCloseBiz) {
-      renderEarlyCloseWarning(dlg, box, { h, nowHM, minCloseBiz, canOverrideEarly, daySt, myName, roleMeta }, ar);
-      return;
-    }
-
-    ensureUpgradedClosingSections();
-    const closingSecs = FOH.safeJsonParse(localStorage.getItem('foh-opening.closingSections.v1'), 'null') || DEPT_CLOSING_SECTIONS;
-    const closingRun = FOH.safeJsonParse(localStorage.getItem('foh-opening.closingRun.' + S.date), '{"checked":{}}');
-    const checkedMap = (isClosingSheetActive() ? S.run.checked : closingRun.checked) || {};
-    const allClosingLeaves = closingSecs.flatMap((s) => s.items || []);
-    const doneClosingCount = allClosingLeaves.filter((it) => checkedMap[it.id]).length;
-    const leftClosingCount = allClosingLeaves.length - doneClosingCount;
-    const extMins = Math.max(0, nowBiz - minCloseBiz);
-
-    renderOfficialCloseConfirmation(dlg, box, { h, nowHM, extMins, doneClosingCount, allClosingLeaves, leftClosingCount, daySt, myName, roleMeta }, ar);
+  function toggleViewMode() {
+    setViewMode(getViewMode() === 'cockpit' ? 'checklist' : 'cockpit');
   }
 
   FOH.opsLifecycle = {
-    defaultOpsConfig,
+    SUPER_ROLES_META,
+    PERM_LABELS,
     loadOpsConfig,
     saveOpsConfig,
     toBizMinutes,
@@ -810,16 +458,18 @@
     getEffectiveNowHM,
     loadOpsDayState,
     saveOpsDayState,
+    computeOpsPhase,
+    renderOpsLifecycleBar,
+    openCloseRestaurantDialog: (opts) => (FOH.opsCloseDialog ? FOH.opsCloseDialog.openCloseRestaurantDialog(opts) : null),
     ensureUpgradedClosingSections,
     isClosingSheetActive,
     activateClosingSheet,
+    renderClosingDeptFilterBar,
     setActiveClosingDeptFilter: (d) => { activeClosingDeptFilter = d; },
     getActiveClosingDeptFilter: () => activeClosingDeptFilter,
-    renderClosingDeptFilterBar,
-    SUPER_ROLES_META,
-    PERM_LABELS,
-    renderOpsLifecycleBar,
-    openCloseRestaurantDialog,
+    getViewMode,
+    setViewMode,
+    toggleViewMode,
   };
   FOH.SUPER_ROLES_META = SUPER_ROLES_META;
   FOH.PERM_LABELS = PERM_LABELS;

@@ -138,7 +138,7 @@
       r.style.padding = '10px 0';
       r.style.borderTop = '1px solid var(--line)';
       const roleObj = (S.tpl.roles || []).find((x) => x.id === p.role);
-      r.innerHTML = '<span>👤 <b>' + p.name + '</b> <small style="color:var(--ink2);">(' + (roleObj ? roleObj.name : 'Staff') + ')</small></span>';
+      r.innerHTML = '<span>👤 <b>' + FOH.escapeHtml(p.name) + '</b> <small style="color:var(--ink2);">(' + FOH.escapeHtml(roleObj ? roleObj.name : 'Staff') + ')</small></span>';
       const cb = el('input', 'sw');
       cb.type = 'checkbox';
       cb.checked = !!p.canEditChecklist;

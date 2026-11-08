@@ -57,6 +57,15 @@
 
       const cur = dayClaims[sid];
       const isMine = cur && cur.by === myName;
+
+      // If section is already statically assigned to this user/role, do not show "Claim Section"
+      const tplSec = (S.tpl && S.tpl.sections) ? S.tpl.sections.find((s) => s.id === sid) : null;
+      const isPreAssigned = tplSec && (
+        (tplSec.assignedUsername && session && tplSec.assignedUsername.toLowerCase() === (session.username || '').toLowerCase()) ||
+        (tplSec.assignedRoleKey && session && tplSec.assignedRoleKey === session.role)
+      );
+      if (isPreAssigned && !cur) return;
+
       const b = el(
         'button',
         'sec-claim-btn' + (cur ? ' claimed' : '') + (isMine ? ' mine' : ''),
