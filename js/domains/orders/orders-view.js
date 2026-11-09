@@ -208,27 +208,30 @@
       FOH.ordersViewStep.renderCategoryStepList(root, c, ar);
     }
 
-    // Docked Thumb Navigation Bar at the Bottom (Docked above Tab Bar for easy 1-handed reach)
-    const bottomNav = el('nav', 'ord-bottom-nav-bar');
+    // Floating Thumb Navigation Capsule at the Bottom (Docked above Tab Bar with zero overlap)
+    const bottomNav = el('nav', 'ord-floating-capsule');
     bottomNav.setAttribute('aria-label', ar ? 'التنقل السريع بين الأقسام' : 'Quick Category Navigation');
 
-    const navLinks = el('div', 'ord-bottom-nav-links');
-    const homeBtn = el('button', 'ord-bottom-nav-btn', ar ? '⌂ الأقسام' : '⌂ Sections');
+    const homeBtn = el('button', 'ord-capsule-btn ord-capsule-home', '⌂');
     homeBtn.type = 'button';
+    homeBtn.title = ar ? 'الأقسام' : 'Sections';
+    homeBtn.setAttribute('aria-label', ar ? 'الأقسام' : 'Sections');
     homeBtn.addEventListener('click', () => ordGo('home'));
 
     const g = db.catalog.groups[c.group];
     const groupName = ar ? (g && g.nameAr ? g.nameAr : g ? g.name : 'القسم') : (g ? g.name : 'Group');
-    const groupBtn = el('button', 'ord-bottom-nav-btn', (ar ? '‹ ' : '‹ ') + groupName);
-    groupBtn.type = 'button';
-    groupBtn.addEventListener('click', () => ordGo('types/' + c.group));
+    const backBtn = el('button', 'ord-capsule-btn ord-capsule-back');
+    backBtn.type = 'button';
+    backBtn.innerHTML = '<span class="ord-capsule-chevron">‹</span> <span class="ord-capsule-back-label">' + FOH.escapeHtml(groupName) + '</span>';
+    backBtn.addEventListener('click', () => ordGo('types/' + c.group));
 
-    navLinks.append(homeBtn, groupBtn);
+    const divider = el('div', 'ord-capsule-divider');
 
-    const catPill = el('div', 'ord-bottom-nav-current');
-    catPill.innerHTML = '<b>' + FOH.escapeHtml(catTitle) + '</b> <small>(' + itemsCount + ')</small>';
+    const catInfo = el('div', 'ord-capsule-title');
+    catInfo.innerHTML = '<span class="ord-capsule-name">' + FOH.escapeHtml(catTitle) + '</span>' +
+      '<span class="ord-capsule-count">' + itemsCount + '</span>';
 
-    bottomNav.append(navLinks, catPill);
+    bottomNav.append(homeBtn, backBtn, divider, catInfo);
     root.append(bottomNav);
   }
 

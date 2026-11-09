@@ -1,0 +1,98 @@
+{
+  "projectName": "orders",
+  "communityLabels": {
+    "0": "Order Management",
+    "1": "Community 1",
+    "2": "Community 2",
+    "3": "Community 3",
+    "4": "Community 4",
+    "5": "Community 5",
+    "6": "Community 6",
+    "7": "Order Management",
+    "8": "Community 8",
+    "9": "Community 9",
+    "10": "Order Fulfillment",
+    "11": "Community 11"
+  },
+  "communitySummaries": {
+    "0": "Handles creation, editing, quick reordering, UI rendering, and database persistence for orders.",
+    "1": "",
+    "2": "",
+    "3": "",
+    "4": "",
+    "5": "",
+    "6": "",
+    "7": "Handles creation, tracking, and persistence of orders including status updates, replacements, and history.",
+    "8": "",
+    "9": "",
+    "10": "Manages order lifecycle events, such as status updates and warehouse checklist marking, while constructing and sending order information via WhatsApp.",
+    "11": ""
+  },
+  "communityLinks": {
+    "11": {
+      "4": 1
+    },
+    "4": {
+      "5": 3,
+      "0": 3
+    },
+    "3": {
+      "2": 1,
+      "0": 1
+    },
+    "2": {
+      "6": 2,
+      "4": 4,
+      "5": 2,
+      "0": 3,
+      "9": 1,
+      "7": 2
+    },
+    "0": {
+      "1": 3,
+      "4": 5,
+      "9": 2,
+      "5": 3
+    },
+    "10": {
+      "2": 1,
+      "7": 1
+    },
+    "7": {
+      "6": 1,
+      "4": 3,
+      "5": 5,
+      "0": 1
+    },
+    "8": {
+      "7": 1,
+      "2": 1,
+      "1": 1
+    },
+    "6": {
+      "7": 1,
+      "4": 2
+    },
+    "1": {
+      "0": 9,
+      "8": 3,
+      "2": 1,
+      "4": 2,
+      "5": 5,
+      "7": 1,
+      "9": 1,
+      "6": 3,
+      "10": 1
+    },
+    "5": {
+      "9": 1,
+      "0": 2,
+      "4": 5
+    },
+    "9": {
+      "5": 1,
+      "0": 4,
+      "4": 1
+    }
+  }
+}

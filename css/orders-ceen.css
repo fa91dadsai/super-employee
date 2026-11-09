@@ -269,67 +269,134 @@ body.dark .ord-ceen-scope {
   cursor:default !important;
 }
 
-#ordersView .ord-bottom-nav-bar,
-.ord-ceen-scope .ord-bottom-nav-bar {
+#ordersView .ord-floating-capsule,
+.ord-ceen-scope .ord-floating-capsule {
   position: fixed !important;
-  bottom: calc(var(--tab-bar-height, 68px) + env(safe-area-inset-bottom, 16px) + 6px) !important;
-  left: 10px !important;
-  right: 10px !important;
-  z-index: 15 !important;
-  display: flex !important;
+  bottom: calc(var(--tab-bar-height, 68px) + env(safe-area-inset-bottom, 16px) + 14px) !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 990 !important;
+  display: inline-flex !important;
   align-items: center !important;
-  justify-content: space-between !important;
-  padding: 5px 12px !important;
-  min-height: 42px !important;
-  border-radius: 14px !important;
-  background: rgba(255, 255, 255, 0.95) !important;
-  border: 1px solid rgba(0, 0, 0, 0.08) !important;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
+  gap: 5px !important;
+  padding: 4px 6px !important;
+  min-height: 38px !important;
+  max-width: calc(100vw - 28px) !important;
+  width: max-content !important;
+  border-radius: 9999px !important;
+  background: rgba(255, 255, 255, 0.94) !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
   box-sizing: border-box !important;
+  pointer-events: auto !important;
 }
 
-body.dark #ordersView .ord-bottom-nav-bar,
-body.dark .ord-ceen-scope .ord-bottom-nav-bar {
-  background: rgba(22, 29, 26, 0.95) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45) !important;
+body.dark #ordersView .ord-floating-capsule,
+body.dark .ord-ceen-scope .ord-floating-capsule {
+  background: rgba(18, 27, 23, 0.94) !important;
+  border: 1px solid rgba(212, 175, 55, 0.3) !important;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.06) !important;
 }
 
-#ordersView .ord-bottom-nav-links,
-.ord-ceen-scope .ord-bottom-nav-links {
-  display: flex !important;
+#ordersView .ord-capsule-btn,
+.ord-ceen-scope .ord-capsule-btn {
+  display: inline-flex !important;
   align-items: center !important;
-  gap: 6px !important;
-}
-
-#ordersView .ord-bottom-nav-btn,
-.ord-ceen-scope .ord-bottom-nav-btn {
-  min-height: 34px !important;
-  padding: 4px 10px !important;
-  font-size: 0.8rem !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  min-height: 28px !important;
+  padding: 0 10px !important;
+  border-radius: 9999px !important;
+  border: 1px solid var(--line, #dfe6db) !important;
+  background: var(--raised, #f0f4ee) !important;
+  color: var(--green, #245b48) !important;
+  font-size: 12px !important;
   font-weight: 700 !important;
-  border-radius: 8px !important;
-  border: 1px solid var(--line) !important;
-  background: var(--paper) !important;
-  color: var(--ink) !important;
   cursor: pointer !important;
   white-space: nowrap !important;
+  transition: all 0.15s ease !important;
 }
 
-#ordersView .ord-bottom-nav-current,
-.ord-ceen-scope .ord-bottom-nav-current {
-  font-size: 0.8rem !important;
-  color: var(--muted) !important;
+body.dark #ordersView .ord-capsule-btn,
+body.dark .ord-ceen-scope .ord-capsule-btn {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  color: #9fe0c6 !important;
+}
+
+#ordersView .ord-capsule-btn:active,
+.ord-ceen-scope .ord-capsule-btn:active {
+  transform: scale(0.95) !important;
+  background: var(--green, #245b48) !important;
+  color: #ffffff !important;
+}
+
+#ordersView .ord-capsule-home,
+.ord-ceen-scope .ord-capsule-home {
+  width: 28px !important;
+  min-width: 28px !important;
+  padding: 0 !important;
+  font-size: 13px !important;
+}
+
+#ordersView .ord-capsule-chevron,
+.ord-ceen-scope .ord-capsule-chevron {
+  font-size: 14px !important;
+  line-height: 1 !important;
+  font-weight: 800 !important;
+}
+
+#ordersView .ord-capsule-divider,
+.ord-ceen-scope .ord-capsule-divider {
+  width: 1px !important;
+  height: 16px !important;
+  background: var(--line, rgba(0, 0, 0, 0.12)) !important;
+  margin: 0 2px !important;
+  flex-shrink: 0 !important;
+}
+
+body.dark #ordersView .ord-capsule-divider,
+body.dark .ord-ceen-scope .ord-capsule-divider {
+  background: rgba(255, 255, 255, 0.18) !important;
+}
+
+#ordersView .ord-capsule-title,
+.ord-ceen-scope .ord-capsule-title {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  padding: 0 6px !important;
+  font-size: 12.5px !important;
   white-space: nowrap !important;
 }
 
-#ordersView .ord-bottom-nav-current b,
-.ord-ceen-scope .ord-bottom-nav-current b {
+#ordersView .ord-capsule-name,
+.ord-ceen-scope .ord-capsule-name {
+  font-weight: 800 !important;
   color: var(--ink) !important;
+}
+
+#ordersView .ord-capsule-count,
+.ord-ceen-scope .ord-capsule-count {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 18px !important;
+  height: 18px !important;
+  padding: 0 5px !important;
+  border-radius: 9999px !important;
+  background: rgba(212, 175, 55, 0.18) !important;
+  color: var(--gold, #b8860b) !important;
+  font-size: 11px !important;
   font-weight: 800 !important;
 }
+
+body.dark #ordersView .ord-capsule-count,
+body.dark .ord-ceen-scope .ord-capsule-count {
+  background: rgba(212, 175, 55, 0.25) !important;
+  color: #ffd700 !important;
 }
 
 #ordersView .kicker,

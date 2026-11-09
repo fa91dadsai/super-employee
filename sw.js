@@ -1,7 +1,7 @@
 'use strict';
 
-const CACHE = 'super-employee-v62-orders-ui-polish';
-// Rollback cache version: super-employee-v61-orders-phase1-hardened
+const CACHE = 'super-employee-v63-floating-nav-capsule';
+// Rollback cache version: super-employee-v62-orders-ui-polish
 const PRECACHE = [
   './',
   './index.html',

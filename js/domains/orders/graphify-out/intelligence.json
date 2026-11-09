@@ -1,0 +1,36 @@
+{
+  "hotspots": [
+    {
+      "label": "renderReviewLines()",
+      "risk": 0.577,
+      "type": "FUNCTION"
+    },
+    {
+      "label": "buildItemStepperControls()",
+      "risk": 0.571,
+      "type": "FUNCTION"
+    },
+    {
+      "label": "renderReviewSidebar()",
+      "risk": 0.553,
+      "type": "FUNCTION"
+    },
+    {
+      "label": "renderCategoryStepList()",
+      "risk": 0.416,
+      "type": "FUNCTION"
+    },
+    {
+      "label": "createGroupCard()",
+      "risk": 0.404,
+      "type": "FUNCTION"
+    }
+  ],
+  "blast_radius": {
+    "renderItemStepperCard()": 21,
+    "getDB()": 20,
+    "renderHomeGroups()": 14,
+    "renderCategoryComplete()": 12,
+    "ordCatItems()": 11
+  }
+}
