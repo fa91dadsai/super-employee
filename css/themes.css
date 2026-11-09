@@ -42,7 +42,8 @@ body.login-open main,
 body.login-open .quick-report,
 body.login-open .preview-toolbar,
 body.login-open .app-bottom-bar,
-body.login-open #appBottomBar {
+body.login-open #appBottomBar,
+.checklist-search-bar[hidden] {
   display: none !important;
 }
 

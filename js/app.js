@@ -39,7 +39,6 @@
       box = document.createElement('section');
       box.id = 'installCard';
       box.className = 'card install-card';
-      document.querySelector('main').prepend(box);
     }
     return box;
   }

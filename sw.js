@@ -1,7 +1,7 @@
 'use strict';
 
-const CACHE = 'super-employee-v59-login-scroll-fix';
-// Rollback cache version: super-employee-v58-bar-orders-v2-nav
+const CACHE = 'super-employee-v62-orders-ui-polish';
+// Rollback cache version: super-employee-v61-orders-phase1-hardened
 const PRECACHE = [
   './',
   './index.html',
@@ -57,10 +57,12 @@ const PRECACHE = [
   './js/domains/tasks/task-inbox-notif.js',
   './js/domains/tasks/task-assignment.js',
   './js/domains/orders/orders-catalog-data.js',
+  './js/domains/orders/orders-quick-replenish-store.js',
   './js/domains/orders/orders-store.js',
   './js/domains/orders/orders-catalog-mutations.js',
   './js/domains/orders/orders-lifecycle-store.js',
   './js/domains/orders/orders-dispatch.js',
+  './js/domains/orders/orders-add-modals.js',
   './js/domains/orders/orders-settings-modal.js',
   './js/domains/orders/orders-view-home.js',
   './js/domains/orders/orders-view-categories.js',

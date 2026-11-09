@@ -23,13 +23,18 @@
     const card = el('button', 'type-card');
     card.type = 'button';
     card.innerHTML =
-      '<span class="type-icon">' + (isComplete ? '✓' : '◦') + '</span>' +
-      '<b>' + FOH.escapeHtml(ar ? c.nameAr || c.name : c.name) + '</b>' +
-      '<div class="type-bottom">' +
-        '<span>' + list.length + ' ' + (ar ? 'أصناف' : 'items') + (skipped ? ' · ' + skipped + (ar ? ' تخطي' : ' skipped') : '') + '</span>' +
-        (n > 0 ? '<span class="picked">' + n + ' ' + (ar ? 'مطلوب' : 'ordered') + '</span>' : '<span>→</span>') +
+      '<div class="type-card-main">' +
+        '<span class="type-icon">' + (isComplete ? '✓' : '◦') + '</span>' +
+        '<div class="type-card-info">' +
+          '<b>' + FOH.escapeHtml(ar ? c.nameAr || c.name : c.name) + '</b>' +
+          '<small>' + list.length + ' ' + (ar ? 'أصناف' : 'items') + (skipped ? ' · ' + skipped + (ar ? ' تخطي' : ' skipped') : '') + '</small>' +
+        '</div>' +
       '</div>' +
-      '<div class="progress-rail"><div style="width:' + pct + '%;height:100%;background:var(--gold);border-radius:10px;"></div></div>';
+      '<div class="type-card-side">' +
+        (n > 0 ? '<span class="picked">' + n + ' ' + (ar ? 'مطلوب' : 'ordered') + '</span>' : '') +
+        '<span class="type-arrow">' + (ar ? '←' : '→') + '</span>' +
+      '</div>' +
+      (pct > 0 ? '<div class="progress-rail"><div style="width:' + pct + '%;height:100%;background:var(--gold);border-radius:10px;"></div></div>' : '');
 
     card.addEventListener('click', () => ordGo('products/' + c.id));
     return card;

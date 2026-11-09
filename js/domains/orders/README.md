@@ -1,7 +1,7 @@
 # Orders Domain (js/domains/orders)
 
 ## Overview
-Front of House & Bar daily supply ordering system styled to CEEN 2 luxury bar orders design parity. Manages catalog seeds across Bar, Wine, Fresh Fruits, Dry Goods, Cleaning, and Packaging. Supports role-scoped item visibility, line item quantity mutations, WhatsApp/PDF dispatch generation, warehouse receiving modal, and order lifecycle states (Draft, Sent, Received).
+Front of House & Bar daily supply ordering system styled to CEEN 2 luxury bar orders design parity. Manages catalog seeds across Bar, Wine, Fresh Fruits, Dry Goods, Cleaning, and Packaging. Supports role-scoped item visibility, line item quantity mutations, WhatsApp/PDF dispatch generation, warehouse receiving modal, fast service 10-minute cooldown replenishment, and order lifecycle states (Draft, Sent, Received).
 
 ## Interface
 - `FOH.ordersView.renderOrdersView`: Main view router and container for CEEN 2 orders flow `[orders-view.js:renderOrdersView]`
@@ -16,15 +16,17 @@ Front of House & Bar daily supply ordering system styled to CEEN 2 luxury bar or
 - `FOH.ordersCatalogMutations.addNewItem`: Adds custom supply items to active catalog groups `[orders-catalog-mutations.js:addNewItem]`
 - `FOH.ordersDispatch.buildOrdWhatsAppText`: Formats order summary into structured WhatsApp text `[orders-dispatch.js:buildOrdWhatsAppText]`
 - `FOH.ordersLifecycleStore.setOrderStatus`: Advances order state from Draft to Sent or Received `[orders-lifecycle-store.js:setOrderStatus]`
+- `FOH.ordersQuickReplenishStore.quickReplenishItem`: Debounced fast-cockpit 1-tap replenishment with 10-minute cooldown `[orders-quick-replenish-store.js:quickReplenishItem]`
+- `FOH.ordersAddModals.openAddItemModal`: In-view modal for adding custom supply items `[orders-add-modals.js:openAddItemModal]`
 
 ## Invariants
 - Scoping RBAC: Waiters see FOH supplies only; Bartenders see Bar, Wine, & Fresh; Captains see FOH & Wine; Managers see all `[orders-store.js:isGroupAllowedForUser]`
-- Quantities must be positive integers matching designated units (bottles, boxes, kg, pcs) `[orders-store.js:ordLine]`
-- Sent orders lock line items against arbitrary non-manager modifications `[orders-lifecycle-store.js:setOrderStatus]`
+- Quantities must be positive numbers matching designated units (bottles, boxes, kg, pcs) `[orders-store.js:ordLine]`
+- Default operational browsing mode is Quick List for high-throughput service `[orders-view.js:renderCategoryProducts]`
 
 ## Side Effects
 - Mutates `foh-opening.ceenOrdersDB.v2` in `localStorage` `[orders-store.js:saveOrdersDB]`
-- Opens external URI handlers (`https://wa.me/` / `mailto:`) and broadcasts order status updates over Realtime `[orders-dispatch.js:openWhatsApp]`
+- Opens external WhatsApp URI handler (`https://wa.me/?text=`) and broadcasts replenishment over Realtime `[orders-dispatch.js:openWhatsApp]`
 
 ## Verification
 - Run: `node --test tests/*.test.mjs`

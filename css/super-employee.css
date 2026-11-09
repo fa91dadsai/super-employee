@@ -3852,6 +3852,9 @@ body.dark .item-title-row .t {
 
 
 /* Checklist Instant Search Bar */
+.checklist-search-bar[hidden] {
+  display: none !important;
+}
 .checklist-search-bar {
   display: flex !important;
   align-items: center !important;

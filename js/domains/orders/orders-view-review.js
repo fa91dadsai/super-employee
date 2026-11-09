@@ -175,6 +175,10 @@
           if (FOH.ordersView && FOH.ordersView.renderOrdersView) {
             FOH.ordersView.renderOrdersView(container.closest('#ordersView') || document.getElementById('ordersView'));
           }
+          if (FOH.edit && FOH.edit.toast) {
+            const itLabel = ar ? (i.ar || i.name) : i.name;
+            FOH.edit.toast(ar ? '🗑 تم حذف ' + itLabel + ' من الطلبية' : '🗑 Removed ' + itLabel + ' from order');
+          }
         });
       }
 
@@ -226,25 +230,6 @@
     layout.append(ordersBox);
     compRev.append(layout);
     root.append(compRev);
-
-    // Floating bottom bar
-    if (FOH.ordersView && FOH.ordersView.appendBottomBar) {
-      FOH.ordersView.appendBottomBar(root, (inner) => {
-        const addMore = el('button', 'prev', ar ? '+ إضافة أصناف' : '+ Add items');
-        addMore.type = 'button';
-        addMore.addEventListener('click', () => ordGo('home'));
-
-        const waBtn = el('button', 'primary', ar ? 'إرسال عبر WhatsApp ↗' : 'WhatsApp message →');
-        waBtn.type = 'button';
-        waBtn.disabled = list.length === 0;
-        waBtn.addEventListener('click', () => {
-          const msg = dispatch().buildOrdWhatsAppText(false);
-          dispatch().openWhatsApp(msg);
-        });
-
-        inner.append(addMore, waBtn);
-      });
-    }
   }
 
   function openReceivingModal() {
@@ -267,11 +252,11 @@
     list.forEach((i) => {
       const line = store().ordLine(i.id);
       receivedMap[i.id] = line.qty;
-      const row = el('div', 'dayoff-item');
-      row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin:6px 0;';
+      const row = el('div', 'ord-receiving-item');
+      row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin:6px 0;padding:8px 10px;border-radius:10px;background:var(--bg);border:1px solid var(--line);';
       row.innerHTML = '<div><b>' + FOH.escapeHtml(ar && i.ar ? i.ar + ' · ' + i.name : i.name) + '</b><small style="display:block;color:var(--muted);">' +
         (ar ? 'المطلوب: ' : 'Requested: ') + line.qty + ' ' + FOH.escapeHtml(line.unit || i.unit || '') + '</small></div>';
-      row.append(el('span', 'dayoff-badge approved', '✓ ' + line.qty));
+      row.append(el('span', 'ord-receiving-qty-badge', '✓ ' + line.qty));
       itemsBox.append(row);
     });
 

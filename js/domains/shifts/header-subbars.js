@@ -9,85 +9,24 @@
   const { el } = FOH.view;
   const SESSION_KEY = 'foh-opening.erpSession.v1';
 
-  function isAr() {
-    return FOH.i18n.lang === 'ar';
-  }
-
-  function getSession() {
-    return FOH.sessionAuth ? FOH.sessionAuth.getSession() : null;
-  }
-
-  function loadGov() {
-    return FOH.gov ? FOH.gov.loadGov() : {};
-  }
-
-  function saveGov(g) {
-    if (FOH.gov) FOH.gov.saveGov(g);
-  }
-
-  function canCurrentUserEditChecklist() {
-    return FOH.gov ? FOH.gov.canCurrentUserEditChecklist() : false;
-  }
-
-  function getActiveSheetType() {
-    return FOH.threeShifts ? FOH.threeShifts.getActiveSheetType() : 'opening';
-  }
-
-  function openSuggestionModal() {
-    if (FOH.suggestions) FOH.suggestions.openSuggestionModal();
-  }
-
-  function getEffectiveNowHM() {
-    return FOH.opsLifecycle ? FOH.opsLifecycle.getEffectiveNowHM() : '12:00';
-  }
-
-  function formatTime12Ar(hm) {
-    return FOH.opsLifecycle ? FOH.opsLifecycle.formatTime12Ar(hm) : hm;
-  }
-
-  function getAppRoleIdentity() {
-    return FOH.roleIdentity ? FOH.roleIdentity.getAppRoleIdentity() : {};
-  }
-
-  function quickSwitchEmployeeAccount(u) {
-    if (FOH.roleIdentity && FOH.roleIdentity.quickSwitchEmployeeAccount) FOH.roleIdentity.quickSwitchEmployeeAccount(u);
-  }
-
-  function hasSuperPerm(p) {
-    return FOH.roleIdentity ? FOH.roleIdentity.hasSuperPerm(p) : true;
-  }
-
-  function closeSidebar() {
-    if (FOH.navigation) FOH.navigation.closeSidebar();
-  }
-
-  function isClosingSheetActive() {
-    return (FOH.opsLifecycle && FOH.opsLifecycle.isClosingSheetActive)
-      ? FOH.opsLifecycle.isClosingSheetActive()
-      : ((FOH.threeShifts && FOH.threeShifts.getActiveSheetType) ? FOH.threeShifts.getActiveSheetType() === 'closing' : false);
-  }
-
-  function toBizMinutes(hm) {
-    if (FOH.opsLifecycle && FOH.opsLifecycle.toBizMinutes) return FOH.opsLifecycle.toBizMinutes(hm);
-    if (FOH.opsConfigStore && FOH.opsConfigStore.toBizMinutes) return FOH.opsConfigStore.toBizMinutes(hm);
-    return 0;
-  }
-
-  function loadOpsConfig() {
-    if (FOH.opsLifecycle && FOH.opsLifecycle.loadOpsConfig) return FOH.opsLifecycle.loadOpsConfig();
-    if (FOH.opsConfigStore && FOH.opsConfigStore.loadOpsConfig) return FOH.opsConfigStore.loadOpsConfig();
-    return {};
-  }
-
-  function loadOpsDayState() {
-    if (FOH.opsLifecycle && FOH.opsLifecycle.loadOpsDayState) return FOH.opsLifecycle.loadOpsDayState();
-    if (FOH.opsConfigStore && FOH.opsConfigStore.loadOpsDayState) return FOH.opsConfigStore.loadOpsDayState();
-    return {};
-  }
-
-  function getCurrentSuperRoleKey() {
-    return FOH.roleIdentity ? FOH.roleIdentity.getCurrentSuperRoleKey() : 'staff';
-  }
+  const isAr = () => FOH.i18n.lang === 'ar';
+  const getSession = () => (FOH.sessionAuth ? FOH.sessionAuth.getSession() : null);
+  const loadGov = () => (FOH.gov ? FOH.gov.loadGov() : {});
+  const saveGov = (g) => { if (FOH.gov) FOH.gov.saveGov(g); };
+  const canCurrentUserEditChecklist = () => (FOH.gov ? FOH.gov.canCurrentUserEditChecklist() : false);
+  const getActiveSheetType = () => (FOH.threeShifts ? FOH.threeShifts.getActiveSheetType() : 'opening');
+  const openSuggestionModal = () => { if (FOH.suggestions) FOH.suggestions.openSuggestionModal(); };
+  const getEffectiveNowHM = () => (FOH.opsLifecycle ? FOH.opsLifecycle.getEffectiveNowHM() : '12:00');
+  const formatTime12Ar = (hm) => (FOH.opsLifecycle ? FOH.opsLifecycle.formatTime12Ar(hm) : hm);
+  const getAppRoleIdentity = () => (FOH.roleIdentity ? FOH.roleIdentity.getAppRoleIdentity() : {});
+  const quickSwitchEmployeeAccount = (u) => { if (FOH.roleIdentity && FOH.roleIdentity.quickSwitchEmployeeAccount) FOH.roleIdentity.quickSwitchEmployeeAccount(u); };
+  const hasSuperPerm = (p) => (FOH.roleIdentity ? FOH.roleIdentity.hasSuperPerm(p) : true);
+  const closeSidebar = () => { if (FOH.navigation) FOH.navigation.closeSidebar(); };
+  const isClosingSheetActive = () => (FOH.opsLifecycle && FOH.opsLifecycle.isClosingSheetActive ? FOH.opsLifecycle.isClosingSheetActive() : (FOH.threeShifts && FOH.threeShifts.getActiveSheetType ? FOH.threeShifts.getActiveSheetType() === 'closing' : false));
+  const toBizMinutes = (hm) => (FOH.opsLifecycle && FOH.opsLifecycle.toBizMinutes ? FOH.opsLifecycle.toBizMinutes(hm) : (FOH.opsConfigStore && FOH.opsConfigStore.toBizMinutes ? FOH.opsConfigStore.toBizMinutes(hm) : 0));
+  const loadOpsConfig = () => (FOH.opsLifecycle && FOH.opsLifecycle.loadOpsConfig ? FOH.opsLifecycle.loadOpsConfig() : (FOH.opsConfigStore && FOH.opsConfigStore.loadOpsConfig ? FOH.opsConfigStore.loadOpsConfig() : {}));
+  const loadOpsDayState = () => (FOH.opsLifecycle && FOH.opsLifecycle.loadOpsDayState ? FOH.opsLifecycle.loadOpsDayState() : (FOH.opsConfigStore && FOH.opsConfigStore.loadOpsDayState ? FOH.opsConfigStore.loadOpsDayState() : {}));
+  const getCurrentSuperRoleKey = () => (FOH.roleIdentity ? FOH.roleIdentity.getCurrentSuperRoleKey() : 'staff');
 
   // ============================================================================
   // 13. SUPER EMPLOYEE v11 ULTRA-CLEAN HEADER & SINGLE-ROW TOOLBAR OVERRIDES
@@ -118,9 +57,13 @@
     const ident = getAppRoleIdentity();
 
     if ($('title')) {
-      $('title').textContent = S.editing
-        ? (ar ? '✎ تعديل الشيك ليست' : '✎ Edit Checklist')
-        : (ar ? ident.titleAr.split('·')[0].trim() : ident.titleEn);
+      if (S.view === 'orders') {
+        $('title').textContent = ar ? '🛒 طلبيات البار والمستودع' : '🛒 Bar & FOH Orders';
+      } else {
+        $('title').textContent = S.editing
+          ? (ar ? '✎ تعديل الشيك ليست' : '✎ Edit Checklist')
+          : (ar ? ident.titleAr.split('·')[0].trim() : ident.titleEn);
+      }
     }
     if ($('restaurantBadge')) {
       $('restaurantBadge').textContent = '🍽 ' + (ar ? (gov.restaurantNameAr || 'مطعم سين') : (gov.restaurantName || 'CEEN Restaurant & Lounge'));

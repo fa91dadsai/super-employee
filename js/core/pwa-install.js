@@ -1,115 +1,210 @@
-// Installable app (PWA): registers the service worker, asks the browser to
-// keep this app's data, and shows an install guide until the app is installed:
-// an "Install" button on Android, step-by-step help on iPhone/iPad.
+// foh-opening/js/core/pwa-install.js
+// Installable App (PWA) Core: Registers Service Worker and manages install state.
+// Decoupled from page flow: Renders in Profile Dialog, Notification Center, or modal on-demand.
 (function (FOH) {
   'use strict';
 
-  const { t } = FOH.i18n;
-  const HIDE_KEY = 'foh-opening.installHiddenUntil';
-  const HIDE_DAYS = 14;
-  let deferred = null; // Android's install prompt, kept for the button
+  let deferredPrompt = null; // Stored beforeinstallprompt event
 
-  FOH.i18n.extend({
-    en: {
-      installTitle: 'Install the app',
-      installText: 'Opens full screen, works without internet, and later sends you reminders.',
-      installBtn: 'Install',
-      iosSteps: '1. Tap Share ⬆︎ at the bottom of Safari\n2. Choose “Add to Home Screen” ➕\n3. Open the app from its new icon',
-      iosNotSafari: 'On iPhone, open this page in Safari to install it.',
-      later: 'Later',
-    },
-    ar: {
-      installTitle: 'ثبّت التطبيق',
-      installText: 'يفتح بملء الشاشة، ويعمل بلا إنترنت، ويرسل لك التنبيهات لاحقًا.',
-      installBtn: 'تثبيت',
-      iosSteps: '1. اضغط زر المشاركة ⬆︎ أسفل Safari\n2. اختر «إضافة إلى الشاشة الرئيسية» ➕\n3. افتح التطبيق من أيقونته الجديدة',
-      iosNotSafari: 'على iPhone افتح هذه الصفحة في Safari لتثبيتها.',
-      later: 'لاحقًا',
-    },
-  });
-
-  const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
-  const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  const isIOSSafari = () => isIOS() && !/crios|fxios|edgios|opios/i.test(navigator.userAgent);
-  const hidden = () => Number(localStorage.getItem(HIDE_KEY) || 0) > Date.now();
-
-  function card() {
-    let box = document.getElementById('installCard');
-    if (!box) {
-      box = document.createElement('section');
-      box.id = 'installCard';
-      box.className = 'card install-card';
-      document.querySelector('main').append(box);
-    }
-    return box;
+  if (FOH.i18n && FOH.i18n.extend) {
+    FOH.i18n.extend({
+      en: {
+        installTitle: 'Install App on Device',
+        installText: 'Run full-screen, offline-ready, and receive instant push updates.',
+        installBtn: '📲 Install App',
+        installInstalled: '✅ App is installed & running full-screen',
+        installGenericGuide: 'To install: Tap your browser menu (⋮ or Share) and select “Add to Home Screen” ➕.',
+        iosSteps: '1. Tap Share ⬆︎ at the bottom of Safari\n2. Choose “Add to Home Screen” ➕\n3. Open the app from its new home screen icon',
+        iosNotSafari: 'On iPhone, open this page in Safari to install it to your home screen.',
+        later: 'Later',
+        close: 'Close',
+      },
+      ar: {
+        installTitle: 'تثبيت التطبيق على الجهاز',
+        installText: 'يعمل بملء الشاشة، بلا إنترنت، مع استقبال الإشعارات الفورية.',
+        installBtn: '📲 تثبيت التطبيق الآن',
+        installInstalled: '✅ التطبيق مثبت على الشاشة الرئيسية ويعمل بلا إنترنت',
+        installGenericGuide: 'للتثبيت: من قائمة المتصفح (⋮ أو المشاركة) اختر «إضافة إلى الشاشة الرئيسية» ➕.',
+        iosSteps: '1. اضغط زر المشاركة ⬆︎ أسفل متصفح Safari\n2. اختر «إضافة إلى الشاشة الرئيسية» ➕\n3. افتح التطبيق من أيقونته الجديدة على الشاشة',
+        iosNotSafari: 'على iPhone افتح هذه الصفحة في Safari لتثبيتها على الشاشة الرئيسية.',
+        later: 'لاحقًا',
+        close: 'إغلاق',
+      },
+    });
   }
 
-  // Draw (or remove) the install guide for this device.
-  function render() {
-    const box = card();
-    const showAndroid = !!deferred;
-    const showIOS = isIOS() && !isStandalone();
-    box.hidden = isStandalone() || hidden() || !(showAndroid || showIOS);
-    if (box.hidden) return;
-    const { el, btn } = FOH.view;
-    box.replaceChildren();
+  const isStandalone = () =>
+    typeof window !== 'undefined' &&
+    (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true);
+  const isIOS = () =>
+    typeof navigator !== 'undefined' &&
+    (/iphone|ipad|ipod/i.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
+  const isIOSSafari = () => isIOS() && !/crios|fxios|edgios|opios/i.test(navigator.userAgent);
+  const canInstall = () => !isStandalone() && (!!deferredPrompt || isIOS());
+
+  // Removes legacy intrusive card from <main> if present
+  function removeIntrusiveCardFromMain() {
+    const old = document.getElementById('installCard');
+    if (old && old.parentElement && old.parentElement.tagName.toLowerCase() === 'main') {
+      old.remove();
+    }
+  }
+
+  // Renders the install section inside a dedicated container (e.g. Profile or Notif Center)
+  function renderInstallSection(container) {
+    if (!container) return;
+    const { el } = FOH.view;
+    const { t } = FOH.i18n;
+
+    const wrap = el('div', 'pwa-install-section-wrap');
+    wrap.id = 'pwaInstallSection';
+
+    if (isStandalone()) {
+      const okCard = el('div', 'install-standalone-badge');
+      okCard.style.cssText =
+        'display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--card, #fff);border:1.5px solid #10b981;border-radius:12px;margin:10px 0;font-size:0.84rem;color:#059669;font-weight:600;';
+      okCard.innerHTML = '<span>📱</span> <span>' + t('installInstalled') + '</span>';
+      wrap.append(okCard);
+      container.append(wrap);
+      return;
+    }
+
+    const card = el('div', 'card install-card');
+    card.style.margin = '10px 0';
+
     const head = el('div', 'install-head');
     const icon = el('img', 'install-icon');
     icon.src = 'icons/icon-192.png';
-    icon.alt = '';
+    icon.alt = 'App Icon';
+    icon.onerror = () => { icon.style.display = 'none'; };
+
     const txt = el('div', 'install-txt');
     txt.append(el('b', '', t('installTitle')), el('span', '', t('installText')));
     head.append(icon, txt);
-    box.append(head);
-    if (showIOS) box.append(el('p', 'install-steps', isIOSSafari() ? t('iosSteps') : t('iosNotSafari')));
-    const actions = el('div', 'install-actions');
-    actions.append(btn('btn', t('later'), 'install-later', {}));
-    if (showAndroid) actions.append(btn('btn primary', t('installBtn'), 'install-go', {}));
-    box.append(actions);
+    card.append(head);
+
+    if (isIOS()) {
+      const guideText = isIOSSafari() ? t('iosSteps') : t('iosNotSafari');
+      card.append(el('p', 'install-steps', guideText));
+    } else if (deferredPrompt) {
+      const actRow = el('div', 'install-actions');
+      const instBtn = el('button', 'btn primary', t('installBtn'));
+      instBtn.type = 'button';
+      instBtn.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        await deferredPrompt.userChoice.catch(() => null);
+        deferredPrompt = null;
+        render();
+      });
+      actRow.append(instBtn);
+      card.append(actRow);
+    } else {
+      card.append(el('p', 'install-steps', t('installGenericGuide')));
+    }
+
+    wrap.append(card);
+    container.append(wrap);
   }
 
-  async function onClick(e) {
-    const b = e.target.closest('button[data-act]');
-    if (!b) return;
-    if (b.dataset.act === 'install-later') {
-      localStorage.setItem(HIDE_KEY, String(Date.now() + HIDE_DAYS * 86400000));
+  // Opens a clean dedicated modal on demand
+  function openInstallModal() {
+    let dlg = document.getElementById('pwaInstallModal');
+    if (!dlg) {
+      dlg = document.createElement('dialog');
+      dlg.id = 'pwaInstallModal';
+      dlg.className = 'sheet';
+      dlg.addEventListener('click', (e) => e.target === dlg && dlg.close());
+      document.body.append(dlg);
     }
-    if (b.dataset.act === 'install-go' && deferred) {
-      deferred.prompt();
-      await deferred.userChoice.catch(() => null);
-      deferred = null;
+    dlg.replaceChildren();
+
+    const box = document.createElement('div');
+    box.style.padding = '16px 18px 24px';
+    const grab = document.createElement('div');
+    grab.className = 'grab';
+    box.append(grab);
+
+    renderInstallSection(box);
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'btn';
+    closeBtn.style.cssText = 'width:100%;margin-top:12px;';
+    closeBtn.textContent = FOH.i18n.t('close');
+    closeBtn.addEventListener('click', () => dlg.close());
+    box.append(closeBtn);
+
+    dlg.append(box);
+    dlg.showModal();
+  }
+
+  async function promptInstall() {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice.catch(() => null);
+      deferredPrompt = null;
+      render();
+    } else {
+      openInstallModal();
     }
-    render();
+  }
+
+  function render() {
+    removeIntrusiveCardFromMain();
+    const existing = document.getElementById('pwaInstallSection');
+    if (existing && existing.parentElement) {
+      const parent = existing.parentElement;
+      existing.remove();
+      renderInstallSection(parent);
+    }
   }
 
   function init() {
-    // Service workers need http(s); opening the file directly skips this part.
+    removeIntrusiveCardFromMain();
+
     if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
       if (window.caches) {
         caches.keys().then((ks) => ks.forEach((k) => {
-          if (k !== 'super-employee-v21') caches.delete(k);
+          if (!k.startsWith('super-employee-')) caches.delete(k);
         })).catch(() => {});
       }
-      navigator.serviceWorker.register('sw.js?v=18', { updateViaCache: 'none' }).then((reg) => {
+      navigator.serviceWorker.register('sw.js?v=20', { updateViaCache: 'none' }).then((reg) => {
         reg.update().catch(() => {});
       }).catch(() => {});
     }
-    // Ask the browser not to clear this app's saved data (lists, counts, photos).
-    if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+
+    if (navigator.storage && navigator.storage.persist) {
+      navigator.storage.persist().catch(() => {});
+    }
+
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
-      deferred = e;
+      deferredPrompt = e;
       render();
     });
+
     window.addEventListener('appinstalled', () => {
-      deferred = null;
+      deferredPrompt = null;
       render();
     });
-    card().addEventListener('click', onClick);
-    render();
-    document.getElementById('langBtn').addEventListener('click', () => setTimeout(render));
+
+    const langBtn = document.getElementById('langBtn');
+    if (langBtn) langBtn.addEventListener('click', () => setTimeout(render, 50));
   }
 
-  FOH.pwa = { init, render, isStandalone };
-  document.addEventListener('DOMContentLoaded', init);
+  FOH.pwa = {
+    init,
+    render,
+    isStandalone,
+    canInstall,
+    prompt: promptInstall,
+    promptInstall,
+    renderInstallSection,
+    openInstallModal,
+  };
+
+  if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
+    document.addEventListener('DOMContentLoaded', init);
+  }
 })(window.FOH = window.FOH || {});

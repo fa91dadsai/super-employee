@@ -6,45 +6,14 @@
 
   'use strict';
 
-
-
   const ORDERS_DB_KEY = 'foh-opening.ceenOrdersDB.v2';
 
   const S = () => FOH.state;
 
-
-
-  function getCatalog() {
-
-    return (FOH.ordersCatalog && FOH.ordersCatalog.ORD_SEED) || { groups: {}, categories: [], items: [] };
-
-  }
-
-
-
-  function getUnits() {
-
-    return (FOH.ordersCatalog && FOH.ordersCatalog.ORD_UNITS) || {};
-
-  }
-
-
-
-  function getPlurals() {
-
-    return (FOH.ordersCatalog && FOH.ordersCatalog.ORD_PLURALS) || {};
-
-  }
-
-
-
-  function getSession() {
-
-    return (FOH.auth && FOH.auth.getSession) ? FOH.auth.getSession() : (FOH.sessionAuth ? FOH.sessionAuth.getSession() : null);
-
-  }
-
-
+  const getCatalog = () => (FOH.ordersCatalog && FOH.ordersCatalog.ORD_SEED) || { groups: {}, categories: [], items: [] };
+  const getUnits = () => (FOH.ordersCatalog && FOH.ordersCatalog.ORD_UNITS) || {};
+  const getPlurals = () => (FOH.ordersCatalog && FOH.ordersCatalog.ORD_PLURALS) || {};
+  const getSession = () => ((FOH.auth && FOH.auth.getSession) ? FOH.auth.getSession() : (FOH.sessionAuth ? FOH.sessionAuth.getSession() : null));
 
   function emptyOrderState() {
 
@@ -84,8 +53,6 @@
 
   }
 
-
-
   function reconcileSeedCatalog(catalog, seed) {
     Object.entries(seed.groups).forEach(([gid, g]) => {
       if (!catalog.groups[gid]) {
@@ -117,7 +84,7 @@
       const raw = FOH.safeJsonParse ? FOH.safeJsonParse(localStorage.getItem(ORDERS_DB_KEY), 'null') : JSON.parse(localStorage.getItem(ORDERS_DB_KEY) || 'null');
       if (raw && raw.version === 2 && raw.catalog && raw.order) {
         reconcileSeedCatalog(raw.catalog, seed);
-        raw.preferences = raw.preferences || { viewMode: 'step' };
+        raw.preferences = raw.preferences || { viewMode: 'list' };
         raw.order.visited = raw.order.visited || {};
         raw.order.skipped = raw.order.skipped || {};
         raw.order.lines = raw.order.lines || {};
@@ -130,15 +97,11 @@
       version: 2,
       catalog: JSON.parse(JSON.stringify(seed)),
       order: emptyOrderState(),
-      preferences: { viewMode: 'step' },
+      preferences: { viewMode: 'list' },
     };
   }
 
-
-
   let ordDB = loadOrdersDB();
-
-
 
   function saveOrdersDB() {
 
@@ -160,13 +123,9 @@
 
   }
 
-
-
   function getDB() { return ordDB; }
 
   function setDB(db) { ordDB = db; saveOrdersDB(); }
-
-
 
   function ordById(id) {
 
@@ -174,23 +133,17 @@
 
   }
 
-
-
   function ordCat(cid) {
 
     return ordDB.catalog.categories.find((c) => c.id === cid);
 
   }
 
-
-
   function ordCatItems(cid) {
 
     return ordDB.catalog.items.filter((i) => i.cat === cid && !i.deletedAt);
 
   }
-
-
 
   function ordLine(id) {
 
@@ -200,15 +153,11 @@
 
   }
 
-
-
   function ordSelectedItems() {
 
     return ordDB.catalog.items.filter((i) => !i.deletedAt && ordLine(i.id).qty > 0);
 
   }
-
-
 
   function ordCatDone(cid) {
 
@@ -216,15 +165,11 @@
 
   }
 
-
-
   function ordCatSkipped(cid) {
 
     return ordCatItems(cid).filter((i) => ordDB.order.skipped[i.id]).length;
 
   }
-
-
 
   function ordPendingItem(cid) {
 
@@ -232,21 +177,23 @@
 
   }
 
-
+  const ORD_AR_UNITS = {
+    bottle: ['قنينة', 'قناني'], piece: ['حبة', 'حبات'], kg: ['كيلو', 'كيلو'],
+    g: ['غم', 'غم'], liter: ['لتر', 'لتر'], pack: ['باكيت', 'باكيتات'],
+    box: ['كرتونة', 'كراتين'], bunch: ['ضمة', 'ضمات'], tray: ['صينية', 'صواني'],
+    bag: ['كيس', 'أكياس'], roll: ['رول', 'رولات'],
+  };
 
   function ordUnitText(n, u) {
-
-    const units = getUnits();
-
-    const plurals = getPlurals();
-
     if (!u) return FOH.i18n && FOH.i18n.lang === 'ar' ? 'اختر الوحدة' : 'unit not set';
-
+    if (FOH.i18n && FOH.i18n.lang === 'ar') {
+      const pair = ORD_AR_UNITS[String(u).toLowerCase()];
+      if (pair) return n === 1 ? pair[0] : pair[1];
+    }
+    const units = getUnits();
+    const plurals = getPlurals();
     return n === 1 ? (units[u] || u).toLowerCase() : plurals[u] || u + 's';
-
   }
-
-
 
   function ordStockDenominator(i) {
 
@@ -255,8 +202,6 @@
     return /^\d+(\.\d+)?$/.test(i.stock || '') ? i.stock + '*' : '—';
 
   }
-
-
 
   function ordStockLabel(i) {
 
@@ -269,8 +214,6 @@
     return i.stock || (FOH.i18n && FOH.i18n.lang === 'ar' ? 'غير مسجّل' : 'Not recorded');
 
   }
-
-
 
   function ordStockRatioHint(i, u) {
 
@@ -300,8 +243,6 @@
 
   }
 
-
-
   function ordSkipRemaining(cid, afterId = null) {
 
     const list = ordCatItems(cid);
@@ -320,147 +261,37 @@
 
   }
 
-
-
   // Delegate to ordersCatalogMutations
-  function isGroupAllowedForUser(...args) {
-    return FOH.ordersCatalogMutations.isGroupAllowedForUser(...args);
-  }
-  function canUserEditGroup(...args) {
-    return FOH.ordersCatalogMutations.canUserEditGroup(...args);
-  }
-  function canCurrentUserManageOrders(...args) {
-    return FOH.ordersCatalogMutations.canCurrentUserManageOrders(...args);
-  }
-  function allowedGroupsForCurrentRole(...args) {
-    return FOH.ordersCatalogMutations.allowedGroupsForCurrentRole(...args);
-  }
-  function updateGroupConfig(...args) {
-    return FOH.ordersCatalogMutations.updateGroupConfig(...args);
-  }
-  function addNewCategory(...args) {
-    return FOH.ordersCatalogMutations.addNewCategory(...args);
-  }
-  function addNewItem(...args) {
-    return FOH.ordersCatalogMutations.addNewItem(...args);
-  }
-  function updateItem(...args) {
-    return FOH.ordersCatalogMutations.updateItem(...args);
-  }
-  function deleteItem(...args) {
-    return FOH.ordersCatalogMutations.deleteItem(...args);
-  }
-  function promptEditStock(...args) {
-    return FOH.ordersCatalogMutations.promptEditStock(...args);
-  }
+  const mut = () => FOH.ordersCatalogMutations;
+  const isGroupAllowedForUser = (...a) => (mut() ? mut().isGroupAllowedForUser(...a) : false);
+  const canUserEditGroup = (...a) => (mut() ? mut().canUserEditGroup(...a) : false);
+  const canCurrentUserManageOrders = (...a) => (mut() ? mut().canCurrentUserManageOrders(...a) : false);
+  const allowedGroupsForCurrentRole = (...a) => (mut() ? mut().allowedGroupsForCurrentRole(...a) : []);
+  const updateGroupConfig = (...a) => (mut() ? mut().updateGroupConfig(...a) : null);
+  const addNewCategory = (...a) => (mut() ? mut().addNewCategory(...a) : null);
+  const addNewItem = (...a) => (mut() ? mut().addNewItem(...a) : null);
+  const updateItem = (...a) => (mut() ? mut().updateItem(...a) : null);
+  const deleteItem = (...a) => (mut() ? mut().deleteItem(...a) : null);
+  const promptEditStock = (...a) => (mut() ? mut().promptEditStock(...a) : null);
 
   // Delegate to ordersLifecycleStore
-  function promptStartNewOrder(...args) {
-    return FOH.ordersLifecycleStore.promptStartNewOrder(...args);
-  }
-  function getOrderStatus(...args) {
-    return FOH.ordersLifecycleStore.getOrderStatus(...args);
-  }
-  function setOrderStatus(...args) {
-    return FOH.ordersLifecycleStore.setOrderStatus(...args);
-  }
-  function addBreakageReplacement(...args) {
-    return FOH.ordersLifecycleStore.addBreakageReplacement(...args);
-  }
-  function confirmOrderReceiving(...args) {
-    return FOH.ordersLifecycleStore.confirmOrderReceiving(...args);
-  }
-  function getOrderHistory(...args) {
-    return FOH.ordersLifecycleStore.getOrderHistory(...args);
-  }
+  const life = () => FOH.ordersLifecycleStore;
+  const promptStartNewOrder = (...a) => (life() ? life().promptStartNewOrder(...a) : null);
+  const getOrderStatus = (...a) => (life() ? life().getOrderStatus(...a) : 'draft');
+  const setOrderStatus = (...a) => (life() ? life().setOrderStatus(...a) : null);
+  const addBreakageReplacement = (...a) => (life() ? life().addBreakageReplacement(...a) : null);
+  const confirmOrderReceiving = (...a) => (life() ? life().confirmOrderReceiving(...a) : null);
+  const getOrderHistory = (...a) => (life() ? life().getOrderHistory(...a) : []);
 
   // ---- Fast Service Cockpit: 10-Minute Cooldown Debounced Replenishment ----
   const COOLDOWNS_KEY = 'foh-opening.quickReplenishCooldowns.v1';
-  const COOLDOWN_DURATION_MS = 10 * 60 * 1000; // 10 minutes
+  const COOLDOWN_DURATION_MS = 10 * 60 * 1000;
 
-  function getCooldowns() {
-    try {
-      return (FOH.safeJsonParse ? FOH.safeJsonParse(localStorage.getItem(COOLDOWNS_KEY), '{}') : JSON.parse(localStorage.getItem(COOLDOWNS_KEY) || '{}')) || {};
-    } catch (err) {
-      /* Storage quota fallback */
-      return {};
-    }
-  }
-
-  function saveCooldowns(cds) {
-    try {
-      localStorage.setItem(COOLDOWNS_KEY, JSON.stringify(cds));
-    } catch (err) {
-      /* Storage quota fallback */
-    }
-  }
-
-  function canQuickReplenish(itemKey, stationId) {
-    const cds = getCooldowns();
-    const entry = cds[itemKey];
-    if (!entry) return { allowed: true, cooldownRemainingSec: 0, lastOrderedBy: '', currentQty: 0 };
-    const elapsed = Date.now() - (entry.orderedAt || 0);
-    if (elapsed >= COOLDOWN_DURATION_MS) {
-      return { allowed: true, cooldownRemainingSec: 0, lastOrderedBy: entry.orderedBy || '', currentQty: entry.lineQty || 0 };
-    }
-    const remainingSec = Math.ceil((COOLDOWN_DURATION_MS - elapsed) / 1000);
-    return {
-      allowed: false,
-      cooldownRemainingSec: remainingSec,
-      lastOrderedBy: entry.orderedBy || 'Staff',
-      currentQty: entry.lineQty || 0,
-    };
-  }
-
-  function quickReplenishItem(itemKey, stationId = 'floor', qtyToAdd = 1) {
-    const it = ordById(itemKey);
-    if (!it) return { success: false, reason: 'ITEM_NOT_FOUND' };
-
-    const session = getSession();
-    const st = S();
-    const orderedBy = (session && session.displayName) || (st.me && st.me.name) || 'Staff';
-
-    if (!ordDB.order.lines[itemKey]) {
-      ordDB.order.lines[itemKey] = {
-        qty: qtyToAdd,
-        unit: it.unit || 'piece',
-        note: 'Quick Replenish (' + stationId + ')',
-        stock: it.stock || '',
-      };
-    } else {
-      ordDB.order.lines[itemKey].qty = (Number(ordDB.order.lines[itemKey].qty) || 0) + qtyToAdd;
-    }
-    ordDB.order.visited[itemKey] = true;
-    saveOrdersDB();
-
-    const cds = getCooldowns();
-    cds[itemKey] = {
-      stationId,
-      orderedBy,
-      orderedAt: Date.now(),
-      lineQty: ordDB.order.lines[itemKey].qty,
-    };
-    saveCooldowns(cds);
-
-    if (FOH.cloudRealtime && FOH.cloudRealtime.broadcast) {
-      FOH.cloudRealtime.broadcast('QUICK_REPLENISH_TRIGGERED', {
-        itemKey,
-        itemName: it.name,
-        stationId,
-        orderedBy,
-        qty: qtyToAdd,
-        totalQty: ordDB.order.lines[itemKey].qty,
-        at: FOH.time ? FOH.time.nowHM() : new Date().toLocaleTimeString(),
-      });
-    }
-
-    return {
-      success: true,
-      item: it,
-      newQty: ordDB.order.lines[itemKey].qty,
-      cooldownRemainingSec: Math.ceil(COOLDOWN_DURATION_MS / 1000),
-    };
-  }
+  const quickStore = () => FOH.ordersQuickReplenishStore;
+  const getCooldowns = () => (quickStore() ? quickStore().getCooldowns() : {});
+  const saveCooldowns = (cds) => (quickStore() ? quickStore().saveCooldowns(cds) : null);
+  const canQuickReplenish = (k, s) => (quickStore() ? quickStore().canQuickReplenish(k, s) : { allowed: true, cooldownRemainingSec: 0 });
+  const quickReplenishItem = (k, s, q) => (quickStore() ? quickStore().quickReplenishItem(k, s, q) : { success: false });
 
   FOH.ordersStore = {
     ORDERS_DB_KEY,

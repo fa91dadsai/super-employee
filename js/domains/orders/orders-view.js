@@ -59,7 +59,7 @@
 
     const db = store().getDB();
     if (groupKey && db.catalog.groups[groupKey]) {
-      nav.append(el('span', '', arrow));
+      nav.append(el('span', 'breadcrumb-sep', arrow));
       const g = db.catalog.groups[groupKey];
       const gBtn = el('button', '', ar ? g.nameAr || g.name : g.name);
       gBtn.type = 'button';
@@ -67,15 +67,17 @@
       nav.append(gBtn);
     }
     if (catId && store().ordCat(catId)) {
-      nav.append(el('span', '', arrow));
+      nav.append(el('span', 'breadcrumb-sep', arrow));
       const c = store().ordCat(catId);
-      const cBtn = el('button', '', ar ? c.nameAr || c.name : c.name);
+      const isCurrent = !tailLabel;
+      const cBtn = el('button', isCurrent ? 'crumb-active' : '', ar ? c.nameAr || c.name : c.name);
       cBtn.type = 'button';
+      cBtn.setAttribute('aria-current', isCurrent ? 'page' : 'false');
       cBtn.addEventListener('click', () => ordGo('products/' + catId));
       nav.append(cBtn);
     }
     if (tailLabel) {
-      nav.append(el('span', '', arrow), el('span', '', tailLabel));
+      nav.append(el('span', 'breadcrumb-sep', arrow), el('span', 'breadcrumb-tail', tailLabel));
     }
     return nav;
   }
@@ -111,20 +113,8 @@
     root.append(bar);
   }
 
-  function appendGeneralBottomBar(root) {
-    const selectedList = store().ordSelectedItems();
-    appendBottomBar(root, (inner) => {
-      const info = el('div', 'bottom-info');
-      info.append(
-        el('strong', '', String(selectedList.length)),
-        el('span', '', isAr() ? ' أصناف مختارة' : ' items selected')
-      );
-      const revBtn = el('button', 'primary', isAr() ? 'مراجعة الطلبية الكاملة ←' : 'Review full order →');
-      revBtn.type = 'button';
-      revBtn.disabled = selectedList.length === 0;
-      revBtn.addEventListener('click', () => ordGo('review'));
-      inner.append(info, revBtn);
-    });
+  function appendGeneralBottomBar() {
+    // Redundant floating bar eliminated: #tabBar provides live Cart 🛒 and review routing
   }
 
   function createReplenishTile(it, dept, ar, drawerRef) {
@@ -189,23 +179,57 @@
     const c = store().ordCat(catId);
     if (!c) { ordGo('home'); return; }
 
-    const viewMode = (db.preferences && db.preferences.viewMode) || 'step';
-    root.append(buildOrdBreadcrumbs(c.group, c.id));
+    const viewMode = (db.preferences && db.preferences.viewMode) || 'list';
+    const itemsCount = store().ordCatItems(c.id).length;
+    const catTitle = ar ? c.nameAr || c.name : c.name;
 
-    const welcome = el('section', 'welcome');
-    welcome.style.margin = '4px 0 14px';
-    welcome.innerHTML =
-      '<div class="kicker">03 / CHOOSE AN ITEM · ' + (ar ? 'اختيار الأصناف' : 'CHOOSE AN ITEM') + '</div>' +
-      '<h1 class="title">' + FOH.escapeHtml(ar ? c.nameAr || c.name : c.name) + '</h1>' +
-      '<p class="sub">' + (ar ? 'اختر الأصناف لتحديد الكميات المطلوبة للخدمة.' : 'Use Next for a guided check, or enter all quantities in Quick list.') + '</p>';
-    root.append(welcome);
-    root.append(buildOrdViewSwitch(c.id, viewMode));
+    // Category Breadcrumbs Top Header (in normal flow, frees upper viewport on scroll)
+    const catHead = el('header', 'ord-cat-breadcrumbs-top');
+    catHead.style.cssText =
+      'display:flex;align-items:center;justify-content:space-between;gap:8px;' +
+      'margin:0 0 6px;padding:4px 0;';
+
+    const bNav = buildOrdBreadcrumbs(c.group, c.id);
+    bNav.style.cssText = 'margin:0;font-size:0.82rem;display:flex;align-items:center;flex-wrap:wrap;gap:4px;';
+
+    const badge = el('span', 'ord-cat-count-pill', itemsCount + ' ' + (ar ? 'أصناف' : 'items'));
+    badge.style.cssText = 'font-size:0.75rem;font-weight:700;color:var(--muted);background:var(--soft);padding:3px 9px;border-radius:12px;white-space:nowrap;';
+
+    catHead.append(bNav, badge);
+    root.append(catHead);
+
+    const switchWrap = buildOrdViewSwitch(c.id, viewMode);
+    switchWrap.style.cssText = 'margin:0 0 8px;';
+    root.append(switchWrap);
 
     if (viewMode === 'list' && FOH.ordersViewQuick) {
       FOH.ordersViewQuick.renderQuickListMode(root, c, ar);
     } else if (FOH.ordersViewStep) {
       FOH.ordersViewStep.renderCategoryStepList(root, c, ar);
     }
+
+    // Docked Thumb Navigation Bar at the Bottom (Docked above Tab Bar for easy 1-handed reach)
+    const bottomNav = el('nav', 'ord-bottom-nav-bar');
+    bottomNav.setAttribute('aria-label', ar ? 'التنقل السريع بين الأقسام' : 'Quick Category Navigation');
+
+    const navLinks = el('div', 'ord-bottom-nav-links');
+    const homeBtn = el('button', 'ord-bottom-nav-btn', ar ? '⌂ الأقسام' : '⌂ Sections');
+    homeBtn.type = 'button';
+    homeBtn.addEventListener('click', () => ordGo('home'));
+
+    const g = db.catalog.groups[c.group];
+    const groupName = ar ? (g && g.nameAr ? g.nameAr : g ? g.name : 'القسم') : (g ? g.name : 'Group');
+    const groupBtn = el('button', 'ord-bottom-nav-btn', (ar ? '‹ ' : '‹ ') + groupName);
+    groupBtn.type = 'button';
+    groupBtn.addEventListener('click', () => ordGo('types/' + c.group));
+
+    navLinks.append(homeBtn, groupBtn);
+
+    const catPill = el('div', 'ord-bottom-nav-current');
+    catPill.innerHTML = '<b>' + FOH.escapeHtml(catTitle) + '</b> <small>(' + itemsCount + ')</small>';
+
+    bottomNav.append(navLinks, catPill);
+    root.append(bottomNav);
   }
 
   function renderOrdersView(root) {

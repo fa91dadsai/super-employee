@@ -285,29 +285,6 @@
     container.append(openTipsBtn);
   }
 
-  function createActivationCodeBox(curCode, ar) {
-    const codeBox = el('div', 'st-invite-box');
-    codeBox.style.marginTop = '10px';
-    const codeRow = el('div', '');
-    codeRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;gap:8px;';
-    codeRow.innerHTML = '<span>🔑 <b>' + (ar ? 'كود التفعيل الخاص بك:' : 'Your Activation Code:') + '</b></span>';
-    const copyWrap = el('div', '');
-    copyWrap.style.cssText = 'display:flex;align-items:center;gap:6px;';
-    const codePill = el('code', 'st-code-pill', curCode);
-    const copyBtn = el('button', 'btn sm', ar ? '📋 نسخ' : '📋 Copy');
-    copyBtn.type = 'button';
-    copyBtn.addEventListener('click', () => {
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(curCode);
-        copyBtn.textContent = ar ? '✓ تم النسخ' : '✓ Copied';
-        setTimeout(() => { copyBtn.textContent = ar ? '📋 نسخ' : '📋 Copy'; }, 2000);
-      }
-    });
-    copyWrap.append(codePill, copyBtn);
-    codeRow.append(copyWrap);
-    codeBox.append(codeRow);
-    return codeBox;
-  }
 
   function applyManagerDirectSave({ newFn, newLn, newNick, newFullName }, { session, staffRec }) {
     session.firstName = newFn;

@@ -225,40 +225,44 @@
     return prodHead;
   }
 
-  function appendItemBottomNav(root, i, c, catItems, curIdx, ctrl, ar) {
-    if (!FOH.ordersView || !FOH.ordersView.appendBottomBar) return;
-    FOH.ordersView.appendBottomBar(root, (inner) => {
-      const prevBtn = el('button', 'prev', ar ? '← السابق' : '← Previous');
-      prevBtn.type = 'button';
-      prevBtn.disabled = curIdx === 0;
-      prevBtn.addEventListener('click', () => {
-        if (curIdx > 0) ordGo('item/' + catItems[curIdx - 1].id);
-      });
+  function appendItemBottomNav(container, i, c, catItems, curIdx, ctrl, ar) {
+    const foot = el('div', 'item-stepper-footer');
+    foot.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:16px;padding-top:14px;border-top:1px solid var(--line);';
 
-      const isLast = curIdx === catItems.length - 1;
-      const nextBtn = el('button', 'primary', ordReturnToReview ? (ar ? 'حفظ والعودة للمراجعة ←' : 'Save & return →') : isLast ? (ar ? 'إنهاء التصنيف ←' : 'Finish category →') : (ar ? 'التالي ←' : 'Next →'));
-      nextBtn.type = 'button';
-      nextBtn.addEventListener('click', () => {
-        commitItemQty(i, ctrl.qIn.value, ctrl.uSel.value, ctrl.taNote.value);
-        if (ordReturnToReview) {
-          ordReturnToReview = false;
-          ordGo('review');
-        } else if (isLast) {
-          ordGo('complete/' + c.id);
-        } else {
-          ordGo('item/' + catItems[curIdx + 1].id);
-        }
-      });
-
-      const skipBtn = el('button', 'skip-rest', ar ? 'تخطي المتبقي' : 'Skip remaining');
-      skipBtn.type = 'button';
-      skipBtn.addEventListener('click', () => {
-        store().ordSkipRemaining(c.id);
-        ordGo('complete/' + c.id);
-      });
-
-      inner.append(prevBtn, nextBtn, skipBtn);
+    const prevBtn = el('button', 'btn', ar ? '← السابق' : '← Previous');
+    prevBtn.type = 'button';
+    prevBtn.style.cssText = 'flex:1;min-height:48px;border-radius:12px;font-weight:700;';
+    prevBtn.disabled = curIdx === 0;
+    prevBtn.addEventListener('click', () => {
+      if (curIdx > 0) ordGo('item/' + catItems[curIdx - 1].id);
     });
+
+    const isLast = curIdx === catItems.length - 1;
+    const nextBtn = el('button', 'btn primary', ordReturnToReview ? (ar ? 'حفظ والعودة للمراجعة ←' : 'Save & return →') : isLast ? (ar ? 'إنهاء التصنيف ←' : 'Finish category →') : (ar ? 'التالي ←' : 'Next →'));
+    nextBtn.type = 'button';
+    nextBtn.style.cssText = 'flex:1.5;min-height:48px;border-radius:12px;font-weight:700;';
+    nextBtn.addEventListener('click', () => {
+      commitItemQty(i, ctrl.qIn.value, ctrl.uSel.value, ctrl.taNote.value);
+      if (ordReturnToReview) {
+        ordReturnToReview = false;
+        ordGo('review');
+      } else if (isLast) {
+        ordGo('complete/' + c.id);
+      } else {
+        ordGo('item/' + catItems[curIdx + 1].id);
+      }
+    });
+
+    const skipBtn = el('button', 'skip-rest', ar ? 'تخطي المتبقي' : 'Skip remaining');
+    skipBtn.type = 'button';
+    skipBtn.style.cssText = 'flex-basis:100%;background:none;border:0;color:var(--muted);font-size:0.78rem;font-weight:600;min-height:36px;cursor:pointer;margin-top:4px;';
+    skipBtn.addEventListener('click', () => {
+      store().ordSkipRemaining(c.id);
+      ordGo('complete/' + c.id);
+    });
+
+    foot.append(prevBtn, nextBtn, skipBtn);
+    container.append(foot);
   }
 
   function renderItemStepperCard(root, itemId) {
@@ -291,9 +295,8 @@
     card.append(prodHead);
 
     const ctrl = buildItemStepperControls(card, i, line, root, ar);
+    appendItemBottomNav(card, i, c, catItems, curIdx, ctrl, ar);
     root.append(card);
-
-    appendItemBottomNav(root, i, c, catItems, curIdx, ctrl, ar);
   }
 
   FOH.ordersViewStep = {

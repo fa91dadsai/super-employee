@@ -129,7 +129,10 @@
       if (FOH.checklistSearch && FOH.checklistSearch.render) FOH.checklistSearch.render();
     } else {
       const searchBar = $('checklistSearchBar');
-      if (searchBar) searchBar.hidden = true;
+      if (searchBar) {
+        searchBar.hidden = true;
+        searchBar.style.display = 'none';
+      }
     }
     if (show.today) FOH.tasksView.today($('today'));
     if (show.mine) FOH.tasksView.mine($('mine'));
@@ -139,6 +142,9 @@
     if (show.inv) FOH.invManage.render($('inv'));
     if (show.sched) FOH.tasksView.schedule($('sched'));
     if (show.rolesView) FOH.tasksView.roles($('rolesView'));
+    if (FOH.headerSubbars && FOH.headerSubbars.renderCleanHeaderText) {
+      FOH.headerSubbars.renderCleanHeaderText();
+    }
     const h = document.querySelector('.top').offsetHeight;
     document.documentElement.style.setProperty('--top-h', h + 'px');
   }

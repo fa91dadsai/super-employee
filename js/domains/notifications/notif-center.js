@@ -287,6 +287,10 @@
 
     box.append(renderLockScreenPushCard(ident, ar));
 
+    if (FOH.pwa && !FOH.pwa.isStandalone() && FOH.pwa.renderInstallSection) {
+      FOH.pwa.renderInstallSection(box);
+    }
+
     const snoozedList = getActiveSnoozeTimersList();
     box.append(renderSnoozedAlertsCard(snoozedList, { onWake: () => drawCenter(dlg, ar), ar }));
     box.append(renderActiveAlertsCard({ onSnooze: () => drawCenter(dlg, ar), ar }));

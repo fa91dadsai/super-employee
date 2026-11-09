@@ -102,7 +102,7 @@
   function renderLastItemResume(root, ar, db) {
     const lastItemId = db.order && db.order.lastItem;
     const allItems = db.catalog.items || [];
-    const lastItemObj = lastItemId && (allItems.find((x) => x.id === lastItemId) || store().ordItem(lastItemId));
+    const lastItemObj = lastItemId && (allItems.find((x) => x.id === lastItemId) || (store().ordById ? store().ordById(lastItemId) : null));
     if (!lastItemObj) return;
 
     const resume = el('div', 'resume');

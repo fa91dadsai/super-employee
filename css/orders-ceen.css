@@ -27,7 +27,6 @@
   --header-height: 56px;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   color: var(--ink);
-  padding-bottom: calc(140px + env(safe-area-inset-bottom, 16px)) !important;
   box-sizing: border-box;
 }
 
@@ -52,32 +51,26 @@ body.dark .ord-ceen-scope {
   --shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
 }
 
-/* --- Responsive Floating Action Bar (Positioned safely above FOH Bottom Nav) --- */
+/* --- Floating Action Bar Suppressed: Clean, unobstructed viewport extending to Tab Bar --- */
 #ordersView .bottom,
 .ord-ceen-scope .bottom {
-  position: fixed !important;
-  bottom: calc(var(--tab-bar-height, 68px) + env(safe-area-inset-bottom, 16px)) !important;
-  left: 0 !important;
-  right: 0 !important;
-  max-width: 680px !important;
-  margin: 0 auto !important;
-  z-index: 850 !important;
-  background: rgba(255, 255, 255, 0.94) !important;
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
-  border: 1px solid var(--line) !important;
-  border-bottom: 0 !important;
-  border-radius: 20px 20px 0 0 !important;
-  box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.1) !important;
-  padding: 10px 16px !important;
-  display: block !important;
+  display: none !important;
 }
 
-body.dark #ordersView .bottom,
-body.dark .ord-ceen-scope .bottom {
-  background: rgba(22, 29, 26, 0.94) !important;
-  border-color: rgba(255, 255, 255, 0.08) !important;
-  box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.5) !important;
+#ordersView,
+.ord-ceen-scope {
+  padding-bottom: calc(var(--tab-bar-height, 68px) + env(safe-area-inset-bottom, 16px) + 54px + 16px) !important;
+}
+
+#ordersView .quick-grid,
+.ord-ceen-scope .quick-grid {
+  padding-bottom: 12px !important;
+}
+
+#ordersView .view-switch,
+.ord-ceen-scope .view-switch {
+  margin: 4px 0 8px !important;
+  padding: 3px !important;
 }
 
 #ordersView .bottom-inner,
@@ -258,14 +251,85 @@ body.dark .ord-ceen-scope .bottom {
 
 #ordersView .breadcrumbs button,
 .ord-ceen-scope .breadcrumbs button {
-  min-width:44px;
-  min-height:44px;
-  padding:5px 0;
+  min-width:38px;
+  min-height:38px;
+  padding:4px 6px;
   border:0;
-  border-radius:4px;
+  border-radius:6px;
   background:var(--clear);
   font-size:12px;
-  color:var(--muted)
+  color:var(--muted);
+  cursor:pointer;
+}
+
+#ordersView .breadcrumbs .crumb-active,
+.ord-ceen-scope .breadcrumbs .crumb-active {
+  font-weight:800 !important;
+  color:var(--ink) !important;
+  cursor:default !important;
+}
+
+#ordersView .ord-bottom-nav-bar,
+.ord-ceen-scope .ord-bottom-nav-bar {
+  position: fixed !important;
+  bottom: calc(var(--tab-bar-height, 68px) + env(safe-area-inset-bottom, 16px) + 6px) !important;
+  left: 10px !important;
+  right: 10px !important;
+  z-index: 15 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 5px 12px !important;
+  min-height: 42px !important;
+  border-radius: 14px !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  box-sizing: border-box !important;
+}
+
+body.dark #ordersView .ord-bottom-nav-bar,
+body.dark .ord-ceen-scope .ord-bottom-nav-bar {
+  background: rgba(22, 29, 26, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45) !important;
+}
+
+#ordersView .ord-bottom-nav-links,
+.ord-ceen-scope .ord-bottom-nav-links {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+#ordersView .ord-bottom-nav-btn,
+.ord-ceen-scope .ord-bottom-nav-btn {
+  min-height: 34px !important;
+  padding: 4px 10px !important;
+  font-size: 0.8rem !important;
+  font-weight: 700 !important;
+  border-radius: 8px !important;
+  border: 1px solid var(--line) !important;
+  background: var(--paper) !important;
+  color: var(--ink) !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+}
+
+#ordersView .ord-bottom-nav-current,
+.ord-ceen-scope .ord-bottom-nav-current {
+  font-size: 0.8rem !important;
+  color: var(--muted) !important;
+  white-space: nowrap !important;
+}
+
+#ordersView .ord-bottom-nav-current b,
+.ord-ceen-scope .ord-bottom-nav-current b {
+  color: var(--ink) !important;
+  font-weight: 800 !important;
+}
 }
 
 #ordersView .kicker,
@@ -502,56 +566,98 @@ body.dark .ord-ceen-scope .bottom {
 
 #ordersView .type-grid,
 .ord-ceen-scope .type-grid {
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:12px;
-  margin-top:24px
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  margin-top: 12px !important;
+  width: 100% !important;
 }
 
 #ordersView .type-card,
 .ord-ceen-scope .type-card {
-  display:flex;
-  flex-direction:column;
-  align-items:flex-start;
-  text-align:left;
-  gap:14px;
-  min-height:160px;
-  padding:19px;
-  border-color:var(--line);
-  border-radius:18px
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  min-height: 52px !important;
+  padding: 10px 14px !important;
+  border-radius: 12px !important;
+  background: var(--paper) !important;
+  border: 1px solid var(--line) !important;
+  text-align: start !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03) !important;
+  box-sizing: border-box !important;
+  position: relative !important;
+  overflow: hidden !important;
+  cursor: pointer !important;
+}
+
+#ordersView .type-card-main,
+.ord-ceen-scope .type-card-main {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  min-width: 0 !important;
+}
+
+#ordersView .type-card-info,
+.ord-ceen-scope .type-card-info {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  min-width: 0 !important;
 }
 
 #ordersView .type-card b,
 .ord-ceen-scope .type-card b {
-  font-size:18px
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  color: var(--ink) !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
 }
 
-#ordersView .type-icon,
-.ord-ceen-scope .type-icon {
-  color:var(--gold);
-  font-size:20px
+#ordersView .type-card small,
+.ord-ceen-scope .type-card small {
+  font-size: 12px !important;
+  color: var(--muted) !important;
 }
 
-#ordersView .type-bottom,
-.ord-ceen-scope .type-bottom {
-  display:flex;
-  justify-content:space-between;
-  gap:8px;
-  flex-wrap:wrap;
-  width:100%;
-  font-size:11px;
-  color:var(--muted);
-  margin-top:auto
+#ordersView .type-card-side,
+.ord-ceen-scope .type-card-side {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  white-space: nowrap !important;
 }
 
-#ordersView .picked,
-.ord-ceen-scope .picked {
-  color:var(--green)
+#ordersView .type-card .picked,
+.ord-ceen-scope .type-card .picked {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  padding: 3px 8px !important;
+  border-radius: 8px !important;
+  background: rgba(16, 185, 129, 0.12) !important;
+  color: var(--green) !important;
+}
+
+#ordersView .type-card .type-arrow,
+.ord-ceen-scope .type-card .type-arrow {
+  font-size: 14px !important;
+  color: var(--muted) !important;
+  font-weight: 700 !important;
 }
 
 #ordersView .type-card .progress-rail,
 .ord-ceen-scope .type-card .progress-rail {
-  margin-top:0
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 3px !important;
+  background: transparent !important;
+  border-radius: 0 !important;
 }
 
 #ordersView .search,
@@ -1468,11 +1574,31 @@ body.dark .ord-ceen-scope .bottom {
   place-items:center;
   min-height:44px;
   width:44px;
-  border:0;
+  border:1.5px solid var(--control, #ced9cb) !important;
   background:var(--raised);
   padding:0;
   color:var(--green);
-  border-radius:12px
+  border-radius:12px;
+  box-shadow:0 1px 3px rgba(0,0,0,0.05);
+}
+
+body.dark #ordersView .review-edit,
+body.dark .ord-ceen-scope .review-edit {
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  background: var(--paper) !important;
+  color: var(--ink) !important;
+}
+
+#ordersView .quick-row.has-order .review-edit,
+.ord-ceen-scope .quick-row.has-order .review-edit {
+  border-color: rgba(36, 91, 72, 0.35) !important;
+  background: var(--paper) !important;
+}
+
+body.dark #ordersView .quick-row.has-order .review-edit,
+body.dark .ord-ceen-scope .quick-row.has-order .review-edit {
+  border-color: rgba(140, 200, 170, 0.4) !important;
+  background: var(--raised) !important;
 }
 
 #ordersView .review-edit svg,
@@ -1632,12 +1758,11 @@ body.dark .ord-ceen-scope .bottom {
   display:flex;
   gap:8px;
   align-items:center;
-  position:sticky;
-  top:calc(var(--header-height) + env(safe-area-inset-top));
+  position:relative;
   z-index:4;
   background:var(--bg);
-  padding:12px 0;
-  margin:8px 0 10px;
+  padding:8px 0;
+  margin:4px 0 10px;
   border-bottom:1px solid var(--line)
 }
 
@@ -3125,17 +3250,98 @@ body.dark .ord-ceen-scope .bottom {
   gap:8px;
   padding:10px 8px;
   min-height:76px;
-  background:var(--paper)
+  background:var(--paper);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.09) !important;
 }
 
-#ordersView .quick-row+.quick-row,
-.ord-ceen-scope .quick-row+.quick-row {
-  border-top:1px solid var(--line)
+body.dark #ordersView .quick-row,
+body.dark .ord-ceen-scope .quick-row {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+#ordersView .quick-row:last-child,
+.ord-ceen-scope .quick-row:last-child {
+  border-bottom: none !important;
 }
 
 #ordersView .quick-row.has-order,
 .ord-ceen-scope .quick-row.has-order {
-  box-shadow:inset 3px 0 var(--green)
+  background: rgba(16, 185, 129, 0.08) !important;
+  border-inline-start: 4px solid var(--green) !important;
+  box-shadow: none !important;
+}
+
+body.dark #ordersView .quick-row.has-order,
+body.dark .ord-ceen-scope .quick-row.has-order {
+  background: rgba(16, 185, 129, 0.12) !important;
+  border-inline-start: 4px solid #34d399 !important;
+  box-shadow: 0 0 12px rgba(52, 211, 153, 0.08) !important;
+}
+
+#ordersView .ord-pill-req,
+.ord-ceen-scope .ord-pill-req {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--green);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+#ordersView .ord-pill-req strong,
+.ord-ceen-scope .ord-pill-req strong {
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: var(--green);
+}
+
+body.dark #ordersView .ord-pill-req strong,
+body.dark .ord-ceen-scope .ord-pill-req strong {
+  color: #34d399 !important;
+}
+
+#ordersView .ord-pill-stock,
+.ord-ceen-scope .ord-pill-stock {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: var(--raised);
+  color: var(--muted);
+  font-size: 0.74rem;
+  margin-inline-start: 4px;
+}
+
+#ordersView .ord-pill-stock b,
+.ord-ceen-scope .ord-pill-stock b {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.ord-receiving-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 6px 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+}
+
+.ord-receiving-qty-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.74rem;
+  font-weight: 800;
 }
 
 #ordersView .quick-heading,
@@ -3190,17 +3396,38 @@ body.dark .ord-ceen-scope .bottom {
   min-width:44px;
   min-height:44px;
   padding:0;
-  border:0;
   border-radius:12px;
   background:var(--raised);
   color:var(--green);
-  font-size:23px
+  font-size:23px;
+  border:1.5px solid var(--control, #ced9cb) !important;
+  box-shadow:0 1px 3px rgba(0,0,0,0.05);
 }
 
 #ordersView .quick-stepper button[data-qplus],
 .ord-ceen-scope .quick-stepper button[data-qplus] {
-  background:var(--action);
-  color:var(--on-action)
+  background:var(--action) !important;
+  color:var(--on-action) !important;
+  border:none !important;
+}
+
+body.dark #ordersView .quick-stepper button[data-qminus],
+body.dark .ord-ceen-scope .quick-stepper button[data-qminus] {
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  background: var(--paper) !important;
+  color: var(--ink) !important;
+}
+
+#ordersView .quick-row.has-order .quick-stepper button[data-qminus],
+.ord-ceen-scope .quick-row.has-order .quick-stepper button[data-qminus] {
+  border-color: rgba(36, 91, 72, 0.35) !important;
+  background: var(--paper) !important;
+}
+
+body.dark #ordersView .quick-row.has-order .quick-stepper button[data-qminus],
+body.dark .ord-ceen-scope .quick-row.has-order .quick-stepper button[data-qminus] {
+  border-color: rgba(140, 200, 170, 0.4) !important;
+  background: var(--raised) !important;
 }
 
 #ordersView .quick-row .quick-error,
@@ -3244,8 +3471,8 @@ html[lang="ar"] #ordersView .search svg {
 html[lang="ar"] #ordersView .group-card .arrow {
   transform: scaleX(-1);
 }
-[dir="rtl"] #ordersView .breadcrumbs span,
-html[lang="ar"] #ordersView .breadcrumbs span {
+[dir="rtl"] #ordersView .breadcrumbs .breadcrumb-sep,
+html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
   display: inline-block;
-  transform: scaleX(-1);
+  opacity: 0.6;
 }

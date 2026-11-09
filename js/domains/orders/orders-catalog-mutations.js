@@ -95,21 +95,13 @@
 
 
   function canCurrentUserManageOrders() {
-
     const session = getSession();
-
-    if (!session) return true;
-
+    if (!session) return false;
     if (session.isManager || session.roleId === 'manager') return true;
-
     const rKey = FOH.roleIdentity ? FOH.roleIdentity.getCurrentSuperRoleKey() : 'staff';
-
     if (rKey === 'super_manager') return true;
-
     if (FOH.gov && FOH.gov.canCurrentUserEditChecklist && FOH.gov.canCurrentUserEditChecklist()) return true;
-
     return false;
-
   }
 
 
@@ -289,19 +281,13 @@
 
 
   function promptEditStock(item, onSaved) {
-
     const ar = FOH.i18n && FOH.i18n.lang === 'ar';
-
+    const currentStock = (store().ordStockLabel ? store().ordStockLabel(item) : (item.stock || '0'));
     const rawQty = prompt(
-
       ar
-
-        ? `تحديث المخزون الفعلي للصنف "${item.name}":\n(القيمة الحالية: ${ordStockLabel(item)})`
-
-        : `Update recorded stock count for "${item.name}":\n(Current: ${ordStockLabel(item)})`,
-
+        ? `تحديث المخزون الفعلي للصنف "${item.name}":\n(القيمة الحالية: ${currentStock})`
+        : `Update recorded stock count for "${item.name}":\n(Current: ${currentStock})`,
       item.stockQty !== null && item.stockQty !== undefined ? String(item.stockQty) : item.stock || '0'
-
     );
 
     if (rawQty === null) return;

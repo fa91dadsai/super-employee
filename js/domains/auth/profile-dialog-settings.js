@@ -5,6 +5,7 @@
 
   const $ = (id) => document.getElementById(id);
   const { el } = FOH.view;
+  const t = (k) => (FOH.i18n && FOH.i18n.t ? FOH.i18n.t(k) : k);
 
   function isAr() {
     return FOH.i18n ? FOH.i18n.lang === 'ar' : false;
@@ -35,6 +36,30 @@
     if (FOH.state && FOH.state.setTheme) {
       FOH.state.setTheme(mode);
     }
+  }
+
+  function createActivationCodeBox(curCode, ar) {
+    const codeBox = el('div', 'st-invite-box');
+    codeBox.style.marginTop = '10px';
+    const codeRow = el('div', '');
+    codeRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;gap:8px;';
+    codeRow.innerHTML = '<span>🔑 <b>' + (ar ? 'كود التفعيل الخاص بك:' : 'Your Activation Code:') + '</b></span>';
+    const copyWrap = el('div', '');
+    copyWrap.style.cssText = 'display:flex;align-items:center;gap:6px;';
+    const codePill = el('code', 'st-code-pill', curCode);
+    const copyBtn = el('button', 'btn sm', ar ? '📋 نسخ' : '📋 Copy');
+    copyBtn.type = 'button';
+    copyBtn.addEventListener('click', () => {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(curCode);
+        copyBtn.textContent = ar ? '✓ تم النسخ' : '✓ Copied';
+        setTimeout(() => { copyBtn.textContent = ar ? '📋 نسخ' : '📋 Copy'; }, 2000);
+      }
+    });
+    copyWrap.append(codePill, copyBtn);
+    codeRow.append(copyWrap);
+    codeBox.append(codeRow);
+    return codeBox;
   }
 
   function renderIdentityForm(container, opts = {}) {
@@ -176,6 +201,11 @@
       renderProfileBody();
     });
     secSet.append(pushBtn);
+
+    if (FOH.pwa && FOH.pwa.renderInstallSection) {
+      FOH.pwa.renderInstallSection(secSet);
+    }
+
     secSet.append(renderPasswordChangeBox(session));
 
     const outBtn = el('button', 'btn danger', '🚪 ' + t('profLogout'));
