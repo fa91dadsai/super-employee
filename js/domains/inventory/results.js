@@ -61,6 +61,7 @@
     const first = isLegacy ? opts : opts.first;
     const again = isLegacy ? arguments[3] : opts.again;
     const sums = isLegacy ? arguments[4] : opts.sums;
+    const isBlindForMe = IS.hasPendingBlindCount && IS.hasPendingBlindCount(S.inv, S.tpl, S.date, S.me && S.me.staffId, cat.id);
 
     c.append(row(t('variantCol'), '', [t('exp'), '✅', '🔧', '❌', t('diff')].map((x) => el('span', '', x)), 'h'));
     const flagged = [];
@@ -73,8 +74,10 @@
         const l = r.l || {};
         const notes = [r.fromAgain ? '↻ ' + t('again') : '', l.unsure ? '🤔' : '', l.photo ? '📷' : ''].filter(Boolean).join(' ');
         const label = multi ? IS.variantLabel(item, r.v) : nm(item);
-        const cells = [r.expected, l.good, l.repair, l.writeoff].map((x) => el('span', '', fmt(x)));
-        const line = row(label, notes, [...cells, diffCell(r)], r.mix ? 'mix' : r.flagged ? 'flagrow' : '');
+        const expDisplay = isBlindForMe ? '🔒' : fmt(r.expected);
+        const cells = [expDisplay, fmt(l.good), fmt(l.repair), fmt(l.writeoff)].map((x) => el('span', '', x));
+        const diffSpan = isBlindForMe ? el('span', '', '🔒') : diffCell(r);
+        const line = row(label, notes, [...cells, diffSpan], r.mix ? 'mix' : r.flagged ? 'flagrow' : '');
         if (l.photo) {
           const img = el('img', 'thumb');
           FOH.photos.show(img, l.photo);
@@ -89,7 +92,9 @@
       if (multi) {
         const tdiff = { diff: tot - exp, flagged: IS.isFlagged(S.inv, exp, tot), mix: false };
         const sum = (k) => rows.reduce((s, r) => s + ((r.l && r.l[k]) || 0), 0);
-        c.append(row(t('totalLbl'), '', [exp, sum('good'), sum('repair'), sum('writeoff')].map((x) => el('span', '', fmt(x))).concat(diffCell(tdiff)), 'tot'));
+        const totalExp = isBlindForMe ? '🔒' : fmt(exp);
+        const totalDiffSpan = isBlindForMe ? el('span', '', '🔒') : diffCell(tdiff);
+        c.append(row(t('totalLbl'), '', [totalExp, sum('good'), sum('repair'), sum('writeoff')].map((x) => el('span', '', fmt(x))).concat(totalDiffSpan), 'tot'));
       }
       if (mix) c.append(el('span', 'mixtag', t('mixTag')));
     });
@@ -97,9 +102,12 @@
   }
 
   function render(root) {
+    const ar = FOH.i18n && FOH.i18n.lang === 'ar';
     const key = M().weekKey();
     const w = IS.week(S.inv, key);
-    const top = M().card('📊', t('countDayLbl', { day: FOH.tasksView.fmtDay(key) }));
+    const submittedCount = S.inv.categories.filter((cat) => w.counts[cat.id] && w.counts[cat.id].submittedAt).length;
+    const progBadge = `${submittedCount} / ${S.inv.categories.length} ` + (ar ? 'مستلم' : 'sent');
+    const top = M().card('📊', t('countDayLbl', { day: FOH.tasksView.fmtDay(key) }), progBadge);
     top.append(M().weekNav(key));
     root.append(top);
     let any = false;
@@ -119,26 +127,32 @@
       });
       c.append(s3);
       const bar = el('div', 'bar2');
-      if (w.approved[cat.id]) bar.append(el('span', 'stamp', t('approved')));
+      if (w.approved[cat.id]) bar.append(el('span', 'stamp', '✓ ' + t('approved')));
       else if (M().can('manage')) {
         if (again && !again.submittedAt) bar.append(el('span', 'tag', t('recountPending', { name: M().staffName(again.staffId) })));
         else if (flagged.length && !again) {
           const who = R.recounter(S.inv, S.tpl, key, cat.id, first.staffId);
           if (who) bar.append(btn('btn', t('recountBtn', { n: flagged.length, name: M().staffName(who) }), 'inv-recount', { cat: cat.id, who, items: flagged.join(',') }));
         }
-        bar.append(btn('btn primary', t('approveBtn'), 'inv-approve', { cat: cat.id }));
+        bar.append(btn('btn primary', '✓ ' + t('approveBtn'), 'inv-approve', { cat: cat.id }));
       }
       c.append(bar);
       root.append(c);
     });
-    if (!any) root.append(el('p', 'empty', t('noCounts')));
+    if (!any) {
+      const emptyBox = el('div', 'inv-empty-box');
+      emptyBox.append(el('p', 'empty inv-empty-compact', '📋 ' + t('noCounts')));
+      top.append(emptyBox);
+    }
     breakage(root);
   }
 
   function breakage(root) {
-    const c = M().card('⚠', t('breakageTitle'), String(S.inv.breakage.filter((b) => !b.approved).length));
+    const pendingCnt = S.inv.breakage.filter((b) => !b.approved).length;
+    const badgeEl = el('span', 'ct' + (pendingCnt > 0 ? ' is-warn' : ''), String(pendingCnt));
+    const c = M().card('⚠', t('breakageTitle'), badgeEl);
     const list = S.inv.breakage.slice(-15).reverse();
-    if (!list.length) c.append(el('p', 'empty', t('noBreakage')));
+    if (!list.length) c.append(el('p', 'empty inv-empty-compact', '✓ ' + t('noBreakage')));
     list.forEach((b) => {
       const f = IS.findVariant(S.inv, b.variantId || b.itemId);
       const label = f ? [nm(f.item), IS.variantLabel(f.item, f.variant)].filter(Boolean).join(' · ') : '—';
@@ -150,12 +164,87 @@
         FOH.photos.show(img, b.photo);
         name.append(img);
       }
-      r.append(name, el('span', '', String(b.qty)));
+      r.append(name, el('span', 'inv-brk-qty', '×' + String(b.qty)));
       if (b.approved) r.append(el('span', 'd0', '✓'));
       else if (M().can('manage')) r.append(btn('mini-btn ok', '✓', 'brk-ok', { id: b.id }), btn('mini-btn no', '✕', 'brk-no', { id: b.id }));
       c.append(r);
     });
     root.append(c);
+  }
+
+  function handleBreakageDecision(act, b) {
+    const br = S.inv.breakage.find((x) => x.id === b.dataset.id);
+    if (!br || br.approved) return;
+    if (act === 'brk-ok') {
+      const id = br.variantId || br.itemId;
+      const f = IS.findVariant(S.inv, id);
+      const countWeek = S.inv.weeks[br.countKey];
+      const incorporated = countWeek && countWeek.approved[br.countCat];
+      if (!incorporated && f && f.variant.expected !== null) f.variant.expected = Math.max(0, f.variant.expected - br.qty);
+      const day = br.at.slice(0, 10);
+      if (br.cond === 'repair') IS.toRepair(S.inv, id, br.qty, day, br.by);
+      else {
+        IS.writeOff(S.inv, id, br.qty, day, 'report', br.by, br.note);
+        if (FOH.ordersStore && FOH.ordersStore.addBreakageReplacement) {
+          const toolName = f ? [nm(f.item), IS.variantLabel(f.item, f.variant)].filter(Boolean).join(' · ') : 'أدوات';
+          FOH.ordersStore.addBreakageReplacement({
+            name: toolName,
+            nameAr: toolName,
+            qty: br.qty,
+            unit: (f && f.item && f.item.unit) || 'piece',
+            note: br.note || (FOH.i18n.lang === 'ar' ? 'تعويض كسر معتمد' : 'Approved breakage writeoff'),
+            group: 'foh',
+            cat: 'foh-0',
+          });
+        }
+      }
+      br.approved = true;
+      br.deductedFromExpected = true;
+      if (FOH.edit && FOH.edit.toast) {
+        FOH.edit.toast(FOH.i18n.lang === 'ar' ? '✓ تم اعتماد تقرير الكسر' : 'Breakage report approved');
+      }
+    } else if (act === 'brk-no') {
+      const cw = S.inv.weeks[br.countKey];
+      if (cw && cw.approved[br.countCat]) return alert(t('approved'));
+      if (br.photo && FOH.photos && FOH.photos.remove) {
+        FOH.photos.remove(br.photo);
+      }
+      S.inv.breakage = S.inv.breakage.filter((x) => x !== br);
+    }
+  }
+
+  function handleApprove(w, cat, key) {
+    const first = w.counts[cat];
+    const isSoleStaff = first && first.staffId && S.me && first.staffId === S.me.staffId;
+    const isSuper = S.me && ['super_manager', 'admin', 'gm', 'owner'].includes(S.me.role);
+    if (isSoleStaff && !isSuper) {
+      alert(t('cannotApproveOwnCount') || 'لا يمكنك اعتماد الجرد الذي قمت بعده بنفسك - يلزم اعتماد مدير آخر.');
+      return;
+    }
+    const c = S.inv.categories.find((x) => x.id === cat);
+    if (!c) return;
+    const deficits = IS.approve(S.inv, key, c, FOH.time.todayISO() + ' ' + FOH.time.nowHM());
+    if (Array.isArray(deficits) && deficits.length && FOH.ordersStore && FOH.ordersStore.addBreakageReplacement) {
+      deficits.forEach((d) => {
+        const vLabel = IS.variantLabel(d.item, d.variant);
+        const fullName = [nm(d.item), vLabel].filter(Boolean).join(' · ');
+        const note = d.reason === 'writeoff'
+          ? (FOH.i18n.lang === 'ar' ? 'شطب تالف معتمد من الجرد' : 'Approved count writeoff')
+          : (FOH.i18n.lang === 'ar' ? 'تعويض نقص جرد معتمد' : 'Approved inventory shortage');
+        FOH.ordersStore.addBreakageReplacement({
+          name: fullName,
+          nameAr: fullName,
+          qty: d.deficit,
+          unit: (d.item && d.item.unit) || 'piece',
+          note,
+          group: 'foh',
+          cat: 'foh-0',
+        });
+      });
+      if (FOH.edit && FOH.edit.toast) {
+        FOH.edit.toast(FOH.i18n.lang === 'ar' ? '🛒 تم تحويل النواقص إلى مسودة الطلبيات تلقائياً' : 'Deficits converted to orders draft');
+      }
+    }
   }
 
   // Returns true when the action was handled here.
@@ -165,26 +254,9 @@
     if (act === 'inv-recount') {
       w.recounts[cat] = { staffId: b.dataset.who, items: b.dataset.items.split(','), lines: {}, submittedAt: null };
     } else if (act === 'inv-approve') {
-      const c = S.inv.categories.find((x) => x.id === cat);
-      if (c) IS.approve(S.inv, key, c, FOH.time.todayISO() + ' ' + FOH.time.nowHM());
+      handleApprove(w, cat, key);
     } else if (act === 'brk-ok' || act === 'brk-no') {
-      const br = S.inv.breakage.find((x) => x.id === b.dataset.id);
-      if (br && !br.approved && act === 'brk-ok') {
-        const id = br.variantId || br.itemId;
-        const f = IS.findVariant(S.inv, id);
-        const countWeek = S.inv.weeks[br.countKey];
-        const incorporated = countWeek && countWeek.approved[br.countCat];
-        if (!incorporated && f && f.variant.expected !== null) f.variant.expected = Math.max(0, f.variant.expected - br.qty);
-        const day = br.at.slice(0, 10);
-        if (br.cond === 'repair') IS.toRepair(S.inv, id, br.qty, day, br.by);
-        else IS.writeOff(S.inv, id, br.qty, day, 'report', br.by, br.note);
-        br.approved = true;
-      }
-      if (br && !br.approved && act === 'brk-no') {
-        const cw = S.inv.weeks[br.countKey];
-        if (cw && cw.approved[br.countCat]) return alert(t('approved'));
-        S.inv.breakage = S.inv.breakage.filter((x) => x !== br);
-      }
+      handleBreakageDecision(act, b);
     } else return false;
     IS.save(S.inv);
     FOH.app.render();

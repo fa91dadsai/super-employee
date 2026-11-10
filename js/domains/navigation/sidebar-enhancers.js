@@ -118,23 +118,9 @@
     nav.append(dmgBtn);
   }
 
-  function injectInventoryDamageCard(ar) {
-    const invRoot = $('inv');
-    if (invRoot && !invRoot.hidden && !invRoot.querySelector('#invDamageReportCard')) {
-      const dmgCard = el('div', 'sec-context-bar');
-      dmgCard.id = 'invDamageReportCard';
-      dmgCard.style.border = '1.5px solid var(--accent)';
-      dmgCard.innerHTML =
-        '<div><b>🔧 ' + (ar ? 'بلاغات الكسر والتالف وطلبات الصيانة' : 'Breakage & Equipment Repair Reports') + '</b>' +
-        '<small style="display:block;color:var(--ink2);">' + (ar ? 'سجّل أي كسر في الكؤوس أو الصحون أو عطل بحاجة لصيانة' : 'Report broken items or request equipment repair') + '</small></div>';
-      const openBrkBtn = el('button', 'btn primary', ar ? '+ تسجيل كسر / طلب صيانة' : '+ Report Damage / Repair');
-      openBrkBtn.type = 'button';
-      openBrkBtn.addEventListener('click', () => {
-        if (FOH.invBreak && FOH.invBreak.open) FOH.invBreak.open();
-      });
-      dmgCard.append(openBrkBtn);
-      invRoot.prepend(dmgCard);
-    }
+  function injectInventoryDamageCard() {
+    const stale = $('invDamageReportCard');
+    if (stale) stale.remove();
   }
 
   function enhanceSidebarAndInventory() {

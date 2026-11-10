@@ -1,7 +1,7 @@
 'use strict';
 
-const CACHE = 'super-employee-v67-tab-bar-fix';
-// Rollback cache version: super-employee-v66-clean-code-decomp
+const CACHE = 'super-employee-v68-inventory-pro-ui';
+// Rollback cache version: super-employee-v67-tab-bar-fix
 const PRECACHE = [
   './',
   './index.html',
@@ -15,6 +15,8 @@ const PRECACHE = [
   './css/checklist.css',
   './css/super-employee.css',
   './css/orders-ceen.css',
+  './css/inventory-pro.css',
+  './css/inventory-items.css',
   // JS Core & Checklist Engine
   './js/core/security.js',
   './js/core/i18n.js',

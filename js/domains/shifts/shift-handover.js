@@ -38,13 +38,16 @@
   }
 
   function collectBreakageCount() {
+    const today = (FOH.time && FOH.time.todayISO) ? FOH.time.todayISO() : (S.date || new Date().toISOString().slice(0, 10));
+    const isShiftBreakage = (b) => !b.approved || (b.at && b.at.startsWith(today));
     if (S.inv && Array.isArray(S.inv.breakage)) {
-      return S.inv.breakage.length;
+      return S.inv.breakage.filter(isShiftBreakage).length;
     }
     try {
       const invData = FOH.safeJsonParse ? FOH.safeJsonParse(localStorage.getItem('foh-opening.inventory.v1'), '{}') : JSON.parse(localStorage.getItem('foh-opening.inventory.v1') || '{}');
-      return (invData && Array.isArray(invData.breakage)) ? invData.breakage.length : 0;
+      return (invData && Array.isArray(invData.breakage)) ? invData.breakage.filter(isShiftBreakage).length : 0;
     } catch {
+      /* Safe fallback when inventory storage parse fails */
       return 0;
     }
   }

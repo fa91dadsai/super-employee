@@ -86,24 +86,26 @@
   }
 
   function addBreakageReplacement(opts = {}) {
-    const { name, qty = 1, note = '' } = opts;
+    const { name, qty = 1, note = '', group = 'foh', cat = 'foh-0', unit = 'piece', nameAr = '' } = opts;
     if (!name) return;
     getOrdDB().order = getOrdDB().order || createEmptyOrder();
     getOrdDB().order.lines = getOrdDB().order.lines || {};
     const match = getOrdDB().catalog.items.find((i) =>
-      i.name.toLowerCase().includes(name.toLowerCase()) || (i.nameAr && i.nameAr.includes(name))
+      (i.name && i.name.toLowerCase().includes(name.toLowerCase())) ||
+      (i.ar && i.ar.includes(name)) ||
+      (i.nameAr && i.nameAr.includes(name))
     );
     let itemId = match ? match.id : null;
     if (!itemId) {
-      itemId = 'break_' + Date.now().toString(36);
+      itemId = 'break_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6);
       getOrdDB().catalog.items.push({
         id: itemId,
-        groupId: 'foh',
-        categoryId: 'foh-supplies',
-        typeId: 'custom',
+        group,
+        cat,
         name,
-        nameAr: name,
-        unit: 'pcs',
+        ar: nameAr || name,
+        nameAr: nameAr || name,
+        unit: unit || 'piece',
         stockQty: 0,
         par: 0,
         quickTrack: true,
@@ -112,8 +114,8 @@
     const prev = getOrdDB().order.lines[itemId] ? getOrdDB().order.lines[itemId].qty : 0;
     getOrdDB().order.lines[itemId] = {
       qty: prev + Number(qty),
-      unit: match ? match.unit : 'pcs',
-      note: note || ((FOH.i18n && FOH.i18n.lang === 'ar') ? 'تعويض كسر زجاجي' : 'Breakage replacement'),
+      unit: match ? (match.unit || unit || 'piece') : (unit || 'piece'),
+      note: note || ((FOH.i18n && FOH.i18n.lang === 'ar') ? 'تعويض نقص/كسر' : 'Deficit/Breakage replenishment'),
     };
     saveOrdersDB();
   }

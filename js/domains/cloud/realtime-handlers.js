@@ -197,6 +197,29 @@
     if (FOH.app && FOH.app.render) FOH.app.render();
   }
 
+  function handleInventoryCountSubmittedBroadcast(data, ar) {
+    const modeLabel = data.mode === 'recount' ? (ar ? 'إعادة عد' : 'recount') : (ar ? 'عد أعمى' : 'blind count');
+    const title = ar
+      ? `📊 تم تسليم جرد (${modeLabel}) بواسطة ${data.byName || 'الموظف'}`
+      : `📊 Inventory ${modeLabel} submitted by ${data.byName || 'Staff'}`;
+    if (typeof fireNativeLockScreenNotification === 'function') {
+      fireNativeLockScreenNotification(title, data.weekKey || '', 'inv_' + Date.now());
+    }
+    if (FOH.edit && FOH.edit.toast) FOH.edit.toast(title);
+    if (FOH.app && FOH.app.render) FOH.app.render();
+  }
+
+  function handleBreakageReportedBroadcast(data, ar) {
+    const title = ar
+      ? `⚠️ بلاغ كسر جديد (${data.qty || 1} قطعة) بواسطة ${data.byName || 'الموظف'}`
+      : `⚠️ New breakage reported (${data.qty || 1} pcs) by ${data.byName || 'Staff'}`;
+    if (typeof fireNativeLockScreenNotification === 'function') {
+      fireNativeLockScreenNotification(title, data.cond || '', 'brk_' + Date.now());
+    }
+    if (FOH.edit && FOH.edit.toast) FOH.edit.toast(title);
+    if (FOH.app && FOH.app.render) FOH.app.render();
+  }
+
   function handleIncomingBroadcast(data) {
     if (!data || !data.type) return;
     const ar = FOH.i18n ? FOH.i18n.lang === 'ar' : true;
@@ -221,6 +244,10 @@
       handleShiftSealDisputeBroadcast(data, ar);
     } else if (data.type === 'QUICK_REPLENISH_TRIGGERED') {
       handleQuickReplenishBroadcast(data, ar);
+    } else if (data.type === 'INVENTORY_COUNT_SUBMITTED') {
+      handleInventoryCountSubmittedBroadcast(data, ar);
+    } else if (data.type === 'BREAKAGE_REPORTED') {
+      handleBreakageReportedBroadcast(data, ar);
     }
   }
 

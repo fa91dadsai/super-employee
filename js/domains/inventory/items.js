@@ -12,22 +12,38 @@
   const ICONS = ['📦', '🍷', '🍴', '🍽', '🥢', '🍸', '🧾', '🕯', '☕', '🧊', '🧺', '🧽'];
   const nm = (x) => pick(x.name, x.nameAr);
   const save = () => IS.save(S.inv);
-  let editCat = null; // category id being edited, or null for new
+  const isAr = () => FOH.i18n && FOH.i18n.lang === 'ar';
+
+  let editCat = null;
+  let activeCatFilter = 'all';
+  let itemSearchQuery = '';
 
   function itemRow(item) {
     const li = el('li', 'item inv-item');
     li.dataset.id = item.id;
-    const row = el('div', 'row');
-    const b = btn('tx', '', 'item-open', { id: item.id });
-    const tags = el('span', 'tags');
+    const row = el('div', 'row inv-item-row');
+    const b = btn('tx inv-item-btn', '', 'item-open', { id: item.id });
     const vs = IS.active(item);
     const units = t('units').split(',');
-    if (item.attrs.length) tags.append(el('span', 'tag', t('variantsN', { n: vs.length })));
+    const unitLbl = units[IS.UNITS.indexOf(item.unit)] || item.unit || 'pcs';
     const total = vs.reduce((s, v) => s + (v.expected || 0), 0);
-    tags.append(el('span', 'tag time', total + ' ' + units[IS.UNITS.indexOf(item.unit)]));
-    tags.append(el('span', 'tag', t(item.cond.repair ? 'countReady' : 'countPresent') + (item.cond.repair ? ' + ' + t('condRepair') : '')));
-    if (item.location) tags.append(el('span', 'tag', '📍 ' + item.location));
-    b.append(el('span', 't', nm(item)), tags);
+
+    const leftCopy = el('div', 'inv-item-copy');
+    leftCopy.append(el('span', 't inv-item-title', nm(item)));
+
+    const metaParts = [];
+    if (item.location) metaParts.push('📍 ' + item.location);
+    if (item.attrs.length) metaParts.push(t('variantsN', { n: vs.length }));
+    metaParts.push(t(item.cond.repair ? 'countReady' : 'countPresent') + (item.cond.repair ? ' · 🔧' : ''));
+    leftCopy.append(el('small', 'inv-item-sub', metaParts.join(' · ')));
+
+    const rightSide = el('div', 'inv-item-right');
+    rightSide.append(
+      el('span', 'inv-qty-badge', total + ' ' + unitLbl),
+      el('span', 'inv-item-arrow', isAr() ? '‹' : '›')
+    );
+
+    b.append(leftCopy, rightSide);
     row.append(el('span', 'handle', '⠿'), b);
     li.append(row);
     return li;
@@ -40,26 +56,84 @@
     FOH.app.render();
   }
 
+  function renderItemsToolbar(root) {
+    const ar = isAr();
+    const bar = el('div', 'inv-items-toolbar');
+    const searchRow = el('div', 'inv-search-row');
+    const searchWrap = el('div', 'inv-search-wrap');
+    const searchIn = el('input', 'in inv-search-in');
+    searchIn.type = 'search';
+    searchIn.placeholder = ar ? '🔍 ابحث عن صنف أو موقع...' : '🔍 Search item or location...';
+    searchIn.value = itemSearchQuery;
+    searchIn.addEventListener('input', (e) => {
+      itemSearchQuery = e.target.value;
+      FOH.app.render();
+      const restored = root.querySelector('.inv-search-in');
+      if (restored) {
+        restored.focus();
+        restored.setSelectionRange(itemSearchQuery.length, itemSearchQuery.length);
+      }
+    });
+    searchWrap.append(searchIn);
+    const addCatBtn = btn('btn inv-add-cat-btn', t('addCategory'), 'cat-add', {});
+    searchRow.append(searchWrap, addCatBtn);
+
+    const pills = el('div', 'inv-cat-pills');
+    const allCount = S.inv.categories.reduce((s, c) => s + c.items.length, 0);
+    const allPill = btn('inv-cat-pill' + (activeCatFilter === 'all' ? ' on' : ''), (ar ? 'الكل' : 'All') + ` (${allCount})`, 'inv-filter-cat', { cat: 'all' });
+    pills.append(allPill);
+    S.inv.categories.forEach((c) => {
+      const p = btn(
+        'inv-cat-pill' + (activeCatFilter === c.id ? ' on' : ''),
+        `${c.icon || '📦'} ${nm(c)} (${c.items.length})`,
+        'inv-filter-cat',
+        { cat: c.id }
+      );
+      pills.append(p);
+    });
+    bar.append(searchRow, pills);
+    root.append(bar);
+  }
+
   function items(root) {
-    S.inv.categories.forEach((cat) => {
-      const c = el('section', 'card');
-      const h = el('div', 'head');
+    if (activeCatFilter !== 'all' && !S.inv.categories.some((c) => c.id === activeCatFilter)) {
+      activeCatFilter = 'all';
+    }
+    renderItemsToolbar(root);
+    const q = itemSearchQuery.trim().toLowerCase();
+    const visibleCats = S.inv.categories.filter((c) => activeCatFilter === 'all' || c.id === activeCatFilter);
+
+    visibleCats.forEach((cat) => {
+      const filteredItems = q
+        ? cat.items.filter((it) => [it.name, it.nameAr, it.location].filter(Boolean).join(' ').toLowerCase().includes(q))
+        : cat.items;
+      if (q && !filteredItems.length) return;
+
+      const c = el('section', 'card inv-card');
+      const h = el('div', 'head inv-head');
       const n = btn('nm', '', 'cat-open', { id: cat.id });
-      n.append(el('span', 'ico', cat.icon), el('span', 'nm-t', nm(cat)));
-      h.append(n, el('span', 'ct', String(IS.leaves(cat).length)));
+      n.append(el('span', 'ico', cat.icon), el('span', 'nm-t', nm(cat)), el('span', 'inv-edit-pen', '✎'));
+      const rightBox = el('div', 'inv-head-actions');
+      rightBox.append(
+        el('span', 'ct', String(IS.leaves(cat).length)),
+        btn('inv-head-add-btn', '+ ' + (isAr() ? 'صنف' : 'Item'), 'item-add', { cat: cat.id })
+      );
+      h.append(n, rightBox);
       const list = el('ol', 'items');
-      cat.items.forEach((it) => list.append(itemRow(it)));
-      FOH.drag.enable(list, (ids) => reorder(cat.items, ids));
+      filteredItems.forEach((it) => list.append(itemRow(it)));
+      if (!q) FOH.drag.enable(list, (ids) => reorder(cat.items, ids));
       c.append(h, list, btn('adds', t('addInvItem'), 'item-add', { cat: cat.id }));
       root.append(c);
     });
-    root.append(btn('btn wide-btn', t('addCategory'), 'cat-add', {}));
   }
 
   // ---- settings ----
-  function field(label, input) {
-    const row = el('label', 'set');
-    row.append(el('span', '', label), input);
+  function field(label, input, hintText) {
+    const row = el('label', 'set inv-set-row');
+    const txt = el('div', 'inv-set-lbl');
+    txt.append(el('span', '', label));
+    if (hintText) txt.append(el('small', '', hintText));
+    row.append(txt, input);
     return row;
   }
 
@@ -74,13 +148,15 @@
   }
 
   function settings(root) {
+    const ar = isAr();
     const s = S.inv.settings;
-    const c = el('section', 'card');
-    const h = el('div', 'head');
+    const c = el('section', 'card inv-card');
+    const h = el('div', 'head inv-head');
     const n = el('span', 'nm');
     n.append(el('span', 'ico', '⚙'), el('span', 'nm-t', t('invSettings')));
     h.append(n);
     c.append(h);
+
     const day = el('select', 'in small-in');
     day.dataset.setting = 'countDay';
     t('daysLong').split(',').forEach((name, d) => {
@@ -94,16 +170,24 @@
     dl.value = s.deadline;
     dl.dataset.setting = 'deadline';
     const flag = el('span', 'flag-in');
-    flag.append(numberInput('flagPcs', 9999), t('pcsWord') + ' ' + t('orWord'), numberInput('flagPct', 100), '%');
-    c.append(field(t('countDayOnly'), day), field(t('deadlineLbl'), dl), field(t('flagLbl'), flag));
-    c.append(field(t('noRepeatLbl'), numberInput('noRepeat', 12)));
+    flag.append(numberInput('flagPcs', 9999), el('span', 'flag-sep', t('pcsWord') + ' ' + t('orWord')), numberInput('flagPct', 100), el('span', 'flag-sep', '%'));
+
+    c.append(
+      field(t('countDayOnly'), day, ar ? 'اليوم الأسبوعي المعتمد للجرد' : 'Weekly scheduled inventory day'),
+      field(t('deadlineLbl'), dl, ar ? 'آخر موعد لتسليم الجرد' : 'Cut-off time for submitting counts'),
+      field(t('flagLbl'), flag, ar ? 'تنبيه عند تجاوز الفرق' : 'Trigger variance alert when exceeded'),
+      field(t('noRepeatLbl'), numberInput('noRepeat', 12), ar ? 'تدوير الفئات بين الموظفين' : 'Minimum weeks before repeating same category')
+    );
+
     [['results', 'canResults'], ['manage', 'canManage']].forEach(([key, label]) => {
-      const box = el('div', 'perm');
+      const box = el('div', 'perm inv-perm-box');
       box.append(el('b', '', t(label)));
-      S.tpl.roles.forEach((r) => box.append(btn('pc' + (s[key].includes(r.id) ? ' on' : ''), r.name, 'perm', { key, id: r.id })));
+      const chips = el('div', 'inv-perm-chips');
+      S.tpl.roles.forEach((r) => chips.append(btn('pc' + (s[key].includes(r.id) ? ' on' : ''), r.name, 'perm', { key, id: r.id })));
+      box.append(chips);
       c.append(box);
     });
-    root.append(c, btn('btn danger wide-btn', t('resetExamples'), 'inv-reset', {}));
+    root.append(c, btn('btn danger wide-btn inv-reset-btn', '⚠️ ' + t('resetExamples'), 'inv-reset', {}));
   }
 
   // ---- category sheet ----
@@ -151,6 +235,10 @@
     const b = e.target.closest('button[data-act]');
     if (!b) return;
     const { act, id } = b.dataset;
+    if (act === 'inv-filter-cat') {
+      activeCatFilter = b.dataset.cat || 'all';
+      return FOH.app.render();
+    }
     if (act === 'cat-open') return openCat(id);
     if (act === 'cat-add') return openCat(null);
     if (act === 'item-open') return FOH.invItemSheet.open(id);

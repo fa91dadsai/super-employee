@@ -82,6 +82,56 @@
     });
   }
 
-  FOH.photos = { add, get, remove, show };
+  // Garbage collection: delete orphaned photos not referenced anywhere in inventory.
+  async function gc(inv) {
+    if (!inv) return 0;
+    const referenced = new Set();
+    if (inv.categories) {
+      inv.categories.forEach((c) => {
+        (c.items || []).forEach((item) => {
+          if (item.photo) referenced.add(item.photo);
+          (item.variants || []).forEach((v) => {
+            if (v.photo) referenced.add(v.photo);
+          });
+        });
+      });
+    }
+    if (Array.isArray(inv.breakage)) {
+      inv.breakage.forEach((b) => {
+        if (b.photo) referenced.add(b.photo);
+      });
+    }
+    if (inv.weeks) {
+      Object.values(inv.weeks).forEach((w) => {
+        ['counts', 'recounts'].forEach((field) => {
+          if (w[field]) {
+            Object.values(w[field]).forEach((c) => {
+              if (c && c.lines) {
+                Object.values(c.lines).forEach((l) => {
+                  if (l && l.photo) referenced.add(l.photo);
+                });
+              }
+            });
+          }
+        });
+      });
+    }
+    try {
+      const keys = await tx('readonly', (s) => s.getAllKeys());
+      let deleted = 0;
+      for (const k of (keys || [])) {
+        if (!referenced.has(k)) {
+          await remove(k);
+          deleted++;
+        }
+      }
+      return deleted;
+    } catch {
+      /* Safe fallback when photo GC fails */
+      return 0;
+    }
+  }
+
+  FOH.photos = { add, get, remove, show, gc };
 })(window.FOH = window.FOH || {});
 

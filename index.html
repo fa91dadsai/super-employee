@@ -10702,6 +10702,559 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
   opacity: 0.6;
 }
 
+/* --- css/inventory-pro.css --- */
+/* foh-opening/css/inventory-pro.css */
+/* Executive Tactile UI/UX for Inventory Shell, Hero, Subtabs, Week & Stock */
+
+#inv {
+  padding-bottom: calc(130px + env(safe-area-inset-bottom, 24px)) !important;
+}
+
+/* 1. Unified Inventory Command Hero Bar */
+.inv-hero-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  border-radius: 16px;
+  background: var(--card, #ffffff);
+  border: 1.5px solid var(--line, #e2e8e2);
+  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.04);
+}
+body.dark .inv-hero-bar {
+  background: var(--card, #17211b);
+  border-color: rgba(255, 255, 255, 0.09);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3);
+}
+.inv-hero-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.inv-hero-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.inv-hero-ico {
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-size: 1.1rem;
+  background: color-mix(in srgb, var(--accent, #2f6b5e) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent, #2f6b5e) 28%, transparent);
+}
+.inv-hero-txt {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.inv-hero-txt strong {
+  font-size: 0.86rem;
+  font-weight: 800;
+  color: var(--ink, #142019);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+body.dark .inv-hero-txt strong {
+  color: #f1f5f9;
+}
+.inv-hero-txt small {
+  font-size: 0.72rem;
+  color: var(--muted, #64748b);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.inv-report-cta {
+  flex: 0 0 auto;
+  min-height: 36px !important;
+  padding: 0 10px !important;
+  border-radius: 10px !important;
+  font-size: 0.75rem !important;
+  font-weight: 800 !important;
+  white-space: nowrap !important;
+}
+
+/* 2. Sub-Tabs Bar with Icons & Badges (Fits 375px cleanly) */
+.inv-subtabs {
+  display: flex !important;
+  gap: 3px !important;
+  margin: 0 0 12px !important;
+  padding: 4px !important;
+  border-radius: 13px !important;
+  background: color-mix(in srgb, var(--ink, #142019) 7%, var(--card, #fff)) !important;
+  border: 1px solid var(--line, #e2e8e2) !important;
+  overflow-x: auto !important;
+  scrollbar-width: none !important;
+}
+.inv-subtabs::-webkit-scrollbar {
+  display: none;
+}
+body.dark .inv-subtabs {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+.inv-subtabs button {
+  flex: 1 1 0% !important;
+  min-width: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 3px !important;
+  min-height: 34px !important;
+  padding: 0 4px !important;
+  border-radius: 9px !important;
+  font-size: 0.71rem !important;
+  font-weight: 700 !important;
+  white-space: nowrap !important;
+}
+.subtab-ico {
+  font-size: 0.78rem;
+}
+.subtab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 99px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  background: rgba(0, 0, 0, 0.12);
+}
+.subtab-badge.warn {
+  background: #e11d48;
+  color: #fff;
+}
+
+/* 3. Fix Card Headers inside #inv (Horizontal Row Layout) */
+#inv .card > .head,
+.inv-card > .inv-head {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  padding: 12px 14px !important;
+}
+#inv .card > .head .nm,
+.inv-card > .inv-head .nm {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 9px !important;
+  min-height: 34px !important;
+}
+#inv .card > .head .ico,
+.inv-card > .inv-head .ico {
+  flex: 0 0 34px !important;
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 10px !important;
+  font-size: 1.1rem !important;
+}
+#inv .card > .head .nm-t,
+.inv-card > .inv-head .nm-t {
+  font-size: 0.94rem !important;
+  font-weight: 800 !important;
+  text-align: start !important;
+}
+.inv-edit-pen {
+  font-size: 0.78rem;
+  opacity: 0.45;
+  margin-inline-start: 4px;
+}
+.inv-head-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+.inv-head-add-btn {
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 99px;
+  border: 1px solid color-mix(in srgb, var(--accent, #2f6b5e) 35%, transparent);
+  background: color-mix(in srgb, var(--accent, #2f6b5e) 12%, transparent);
+  color: var(--accent, #2f6b5e);
+  font-size: 0.74rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+body.dark .inv-head-add-btn {
+  color: #5eead4;
+  border-color: rgba(94, 234, 212, 0.3);
+  background: rgba(94, 234, 212, 0.12);
+}
+
+/* 4. Status & Deadline Pills */
+.inv-status-pill {
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 4px 9px;
+  border-radius: 99px;
+  white-space: nowrap;
+}
+.inv-status-pill.is-pub {
+  background: rgba(16, 185, 129, 0.14);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+body.dark .inv-status-pill.is-pub {
+  color: #34d399;
+}
+.inv-status-pill.is-draft {
+  background: rgba(100, 116, 139, 0.12);
+  color: var(--muted, #64748b);
+  border: 1px solid var(--line, #e2e8e2);
+}
+.inv-week-bar {
+  padding: 8px 14px !important;
+  background: color-mix(in srgb, var(--ink, #142019) 3%, transparent);
+  border-bottom: 1px solid var(--line, #e2e8e2);
+}
+.inv-deadline-pill {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--ink2, #475569);
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: var(--card, #fff);
+  border: 1px solid var(--line, #e2e8e2);
+}
+body.dark .inv-deadline-pill {
+  background: rgba(255, 255, 255, 0.05);
+  color: #cbd5e1;
+}
+
+/* 5. This Week Assignment Rows (.inv-asg-row) — Single Line Horizontal */
+.inv-asg-row {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  padding: 10px 14px !important;
+}
+.inv-asg-left {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex: 1 1 0%;
+  min-width: 0;
+}
+.inv-asg-left .cat {
+  min-width: 0;
+}
+.inv-asg-left .cat b {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.inv-asg-ico {
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-size: 1.1rem;
+  background: color-mix(in srgb, var(--accent, #2f6b5e) 10%, transparent);
+}
+.inv-asg-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: 0 0 auto;
+}
+#inv .inv-asg-controls .who {
+  width: auto !important;
+  min-width: 88px !important;
+  max-width: 112px !important;
+  min-height: 36px !important;
+  padding: 4px 8px !important;
+  font-size: 0.82rem !important;
+}
+#inv .inv-asg-controls .pin {
+  width: 36px !important;
+  height: 36px !important;
+}
+.inv-asg-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 3px;
+}
+
+/* 6. Stock KPI Summary Strip & Collapsible Accordions */
+.inv-kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.inv-kpi-tile {
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: var(--card, #fff);
+  border: 1.5px solid var(--line, #e2e8e2);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+body.dark .inv-kpi-tile {
+  background: var(--card, #17211b);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.inv-kpi-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+.inv-kpi-val {
+  font-size: 1.15rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.inv-kpi-lbl {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted, #64748b);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.inv-accordion > summary {
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+}
+.inv-accordion > summary::-webkit-details-marker {
+  display: none;
+}
+.inv-accordion > summary::after {
+  content: '▾';
+  font-size: 0.9rem;
+  color: var(--muted, #64748b);
+  transition: transform 0.2s ease;
+}
+.inv-accordion[open] > summary::after {
+  transform: rotate(180deg);
+}
+.inv-empty-compact {
+  margin: 0 !important;
+  padding: 14px 16px !important;
+  font-size: 0.82rem !important;
+}
+
+/* --- css/inventory-items.css --- */
+/* foh-opening/css/inventory-items.css */
+/* Executive Tactile UI/UX for Inventory Items Catalog & Settings */
+
+/* 7. Items Toolbar, Category Filter Pills & 2-Column Tactile Item Rows */
+.inv-items-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.inv-search-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.inv-search-wrap {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.inv-search-in {
+  min-height: 40px !important;
+  padding: 6px 12px !important;
+  border-radius: 12px !important;
+  font-size: 0.85rem !important;
+}
+.inv-add-cat-btn {
+  flex: 0 0 auto;
+  min-height: 40px !important;
+  padding: 0 12px !important;
+  border-radius: 12px !important;
+  font-size: 0.8rem !important;
+  font-weight: 800 !important;
+  white-space: nowrap !important;
+}
+.inv-cat-pills {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+.inv-cat-pills::-webkit-scrollbar {
+  display: none;
+}
+.inv-cat-pill {
+  flex: 0 0 auto;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 99px;
+  border: 1px solid var(--line, #e2e8e2);
+  background: var(--card, #fff);
+  color: var(--ink2, #475569);
+  font-size: 0.76rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+body.dark .inv-cat-pill {
+  background: var(--card, #17211b);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+}
+.inv-cat-pill.on {
+  background: var(--accent, #2f6b5e);
+  border-color: var(--accent, #2f6b5e);
+  color: #fff;
+}
+#inv .items .inv-item .inv-item-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 10px 14px !important;
+}
+#inv .items .inv-item .inv-item-btn {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  padding: 0 !important;
+}
+.inv-item-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.inv-item-title {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--ink, #142019);
+}
+body.dark .inv-item-title {
+  color: #f1f5f9;
+}
+.inv-item-sub {
+  font-size: 0.74rem;
+  color: var(--muted, #64748b);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.inv-item-right {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.inv-qty-badge {
+  padding: 4px 10px;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--accent, #2f6b5e) 12%, transparent);
+  color: var(--accent, #2f6b5e);
+  font-size: 0.76rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+body.dark .inv-qty-badge {
+  background: rgba(94, 234, 212, 0.14);
+  color: #5eead4;
+}
+.inv-item-arrow {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--muted, #94a3b8);
+}
+
+/* 8. Settings Rows & Role Chips (No-Wrap Horizontal Inputs) */
+.inv-set-row {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  padding: 12px 14px !important;
+}
+.inv-set-lbl {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 0%;
+  min-width: 0;
+}
+.inv-set-lbl span {
+  font-weight: 700;
+  font-size: 0.86rem;
+}
+.inv-set-lbl small {
+  font-size: 0.71rem;
+  color: var(--muted, #64748b);
+}
+#inv .inv-set-row .small-in {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: 58px !important;
+  min-height: 36px !important;
+  padding: 4px 8px !important;
+  font-size: 0.82rem !important;
+}
+#inv .inv-set-row .flag-in {
+  flex: 0 0 auto !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+#inv .inv-set-row .flag-in .small-in {
+  width: 50px !important;
+  min-width: 50px !important;
+  padding: 4px 6px !important;
+  text-align: center !important;
+}
+#inv .inv-set-row .flag-sep {
+  font-size: 0.75rem;
+  color: var(--muted, #64748b);
+  white-space: nowrap;
+}
+.inv-perm-box {
+  padding: 12px 14px !important;
+}
+.inv-perm-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.inv-reset-btn {
+  margin-top: 8px;
+  margin-bottom: 32px !important;
+}
+
 </style>
   </head>
   <body>
@@ -13558,9 +14111,26 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
   function reference(inv, entry, v) {
     const base = entry && entry.expected && Object.prototype.hasOwnProperty.call(entry.expected, v.id) ? entry.expected[v.id] : v.expected;
     if (base === null) return null;
-    const linked = new Set(entry && entry.damageReportIds || []);
-    const damage = inv.breakage.filter((b) => linked.has(b.id) && b.variantId === v.id).reduce((n, b) => n + b.qty, 0);
+    const linked = new Set((entry && entry.damageReportIds) || []);
+    const damage = inv.breakage
+      .filter((b) => (linked.has(b.id) || (entry && b.countKey === entry.key && b.countCat === entry.catId)) && b.variantId === v.id && !b.deductedFromExpected)
+      .reduce((n, b) => n + b.qty, 0);
     return base - damage;
+  }
+
+  // Check if staff member has an unsubmitted count or recount for category
+  function hasPendingBlindCount(inv, tpl, date, staffId, catId) {
+    if (!staffId || !inv || !inv.weeks) return false;
+    const current = countDate(inv, tpl, date);
+    const w = inv.weeks[current];
+    if (!w || !w.published) return false;
+    if (w.approved && w.approved[catId]) return false;
+    const a = w.assign && w.assign[catId];
+    const entry = w.counts && w.counts[catId];
+    if (a && a.staffId === staffId && (!entry || !entry.submittedAt)) return true;
+    const re = w.recounts && w.recounts[catId];
+    if (re && re.staffId === staffId && !re.submittedAt) return true;
+    return false;
   }
 
   // ---- stock changes ----
@@ -13570,26 +14140,46 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
 
   // Approve a category: good becomes the new expected, repairable go to
   // "in repair", write-offs leave stock. A submitted recount wins per variant.
+  // Returns list of deficits & writeoffs for auto-replenishment.
   function approve(inv, key, opts = {}) {
     const isLegacy = opts && typeof opts === 'object' && !('cat' in opts) && !('category' in opts);
     const cat = isLegacy ? opts : (opts && (opts.cat || opts.category));
     const at = isLegacy ? (arguments[3] || '') : ((opts && opts.at) || '');
-    if (!cat) return;
+    if (!cat) return [];
     const w = week(inv, key);
-    if (w.approved[cat.id]) return;
+    if (w.approved[cat.id]) return [];
     const first = w.counts[cat.id];
     const again = w.recounts[cat.id];
     const by = first && first.by;
+    const deficits = [];
     leaves(cat).forEach((v) => {
       const source = again && again.submittedAt && line(again, v.id) ? again : first;
       const l = line(source, v.id);
       if (!l || l.good === null) return;
+      const refQty = reference(inv, { key, catId: cat.id, ...(source || {}) }, v);
+      const accounted = (l.good || 0) + (l.repair || 0) + (l.writeoff || 0);
+      if (refQty !== null && refQty > accounted) {
+        const f = findVariant(inv, v.id);
+        const amt = refQty - accounted;
+        deficits.push({ variantId: v.id, qty: amt, deficit: amt, item: f && f.item, variant: v, reason: 'deficit' });
+      }
+      if (l.writeoff > 0) {
+        const f = findVariant(inv, v.id);
+        deficits.push({ variantId: v.id, qty: l.writeoff, deficit: l.writeoff, item: f && f.item, variant: v, reason: 'writeoff' });
+      }
       v.expected = l.good;
       toRepair(inv, v.id, l.repair, key, by);
       writeOff(inv, v.id, l.writeoff, key, 'count', by, '');
+      if (!inv.history) inv.history = {};
       (inv.history[v.id] = list(inv.history[v.id])).push({ date: key, qty: l.good });
     });
+    inv.breakage.forEach((b) => {
+      if ((b.countKey === key && b.countCat === cat.id) || (first?.damageReportIds?.includes(b.id))) {
+        b.deductedFromExpected = true;
+      }
+    });
     w.approved[cat.id] = at;
+    return deficits;
   }
 
   FOH.invStore = {
@@ -13609,6 +14199,7 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     week,
     approve,
     reference,
+    hasPendingBlindCount,
     toRepair,
     writeOff,
     normItem,
@@ -13783,7 +14374,57 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     });
   }
 
-  FOH.photos = { add, get, remove, show };
+  // Garbage collection: delete orphaned photos not referenced anywhere in inventory.
+  async function gc(inv) {
+    if (!inv) return 0;
+    const referenced = new Set();
+    if (inv.categories) {
+      inv.categories.forEach((c) => {
+        (c.items || []).forEach((item) => {
+          if (item.photo) referenced.add(item.photo);
+          (item.variants || []).forEach((v) => {
+            if (v.photo) referenced.add(v.photo);
+          });
+        });
+      });
+    }
+    if (Array.isArray(inv.breakage)) {
+      inv.breakage.forEach((b) => {
+        if (b.photo) referenced.add(b.photo);
+      });
+    }
+    if (inv.weeks) {
+      Object.values(inv.weeks).forEach((w) => {
+        ['counts', 'recounts'].forEach((field) => {
+          if (w[field]) {
+            Object.values(w[field]).forEach((c) => {
+              if (c && c.lines) {
+                Object.values(c.lines).forEach((l) => {
+                  if (l && l.photo) referenced.add(l.photo);
+                });
+              }
+            });
+          }
+        });
+      });
+    }
+    try {
+      const keys = await tx('readonly', (s) => s.getAllKeys());
+      let deleted = 0;
+      for (const k of (keys || [])) {
+        if (!referenced.has(k)) {
+          await remove(k);
+          deleted++;
+        }
+      }
+      return deleted;
+    } catch {
+      /* Safe fallback when photo GC fails */
+      return 0;
+    }
+  }
+
+  FOH.photos = { add, get, remove, show, gc };
 })(window.FOH = window.FOH || {});
 
 
@@ -16091,6 +16732,10 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     if (!$('brCond').value) { alert(t('chooseDamage')); $('breakSheet').showModal(); return; }
     if (!$('brItem').value) { alert(t('itemRequired')); $('breakSheet').showModal(); togglePicker(true); return; }
     const reportId = FOH.store.uid();
+    const found = FOH.invStore ? FOH.invStore.findVariant(S.inv, $('brItem').value) : null;
+    const defaultKey = (FOH.invStore && S.tpl && S.inv) ? FOH.invStore.countDate(S.inv, S.tpl, S.date) : '';
+    const countKey = context ? context.key : defaultKey;
+    const countCat = context ? context.catId : (found && found.cat ? found.cat.id : '');
     const report = {
       id: reportId,
       variantId: $('brItem').value,
@@ -16101,12 +16746,20 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
       by: S.me.name || '',
       at: FOH.time.todayISO() + ' ' + FOH.time.nowHM(),
       approved: false,
-      countKey: context ? context.key : '',
-      countCat: context ? context.catId : '',
+      countKey,
+      countCat,
       countMode: context ? context.mode : '',
     };
     S.inv.breakage.push(report);
-    if (context) context.entry.damageReportIds.push(reportId);
+    if (context) {
+      context.entry.damageReportIds.push(reportId);
+    } else if (countKey && countCat && S.inv.weeks && S.inv.weeks[countKey] && S.inv.weeks[countKey].counts[countCat]) {
+      const unsubmitted = S.inv.weeks[countKey].counts[countCat].find((c) => !c.submittedAt);
+      if (unsubmitted) {
+        const entry = unsubmitted.entries.find((e) => e.variantId === $('brItem').value);
+        if (entry && !entry.damageReportIds.includes(reportId)) entry.damageReportIds.push(reportId);
+      }
+    }
     if (!FOH.invStore.save(S.inv)) {
       S.inv.breakage.pop();
       if (context) context.entry.damageReportIds.pop();
@@ -16115,19 +16768,6 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
       return;
     }
     if (context) context.onSaved();
-    if (FOH.ordersStore && FOH.ordersStore.addBreakageReplacement) {
-      const itemVal = $('brItem') ? $('brItem').value : '';
-      const noteVal = $('brNote') ? $('brNote').value.trim() : '';
-      const tool = FOH.invStore ? FOH.invStore.findVariant(S.inv, itemVal) : null;
-      const toolName = tool && tool.item ? (tool.item.name || tool.item.nameAr) : '';
-      if (toolName) {
-        FOH.ordersStore.addBreakageReplacement({
-          name: toolName,
-          qty,
-          note: noteVal || 'تعويض كسر زجاجي',
-        });
-      }
-    }
     FOH.edit.toast(t('breakSaved'));
     FOH.app.render();
   }
@@ -16281,7 +16921,9 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     if (x.entry && x.entry.submittedAt) return FOH.edit.toast(t('sent'));
     const w = IS.week(S.inv, x.key);
     let entry = x.entry;
-    if (!entry) entry = w.counts[catId] = { staffId: S.me.staffId, lines: {}, submittedAt: null };
+    if (!entry) entry = w.counts[catId] = { staffId: S.me.staffId, key: x.key, catId, lines: {}, submittedAt: null };
+    entry.key = x.key;
+    entry.catId = catId;
     if (!entry.expected) entry.expected = Object.fromEntries(IS.leaves(x.cat).map((v) => [v.id, v.expected]));
     if (!entry.damageReportIds) entry.damageReportIds = [];
     C = { key: x.key, cat: x.cat, mode, order: shuffled(x.ids, x.key + catId + S.me.staffId + mode), i: 0, entry };
@@ -16302,6 +16944,10 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     input.min = '0';
     input.value = value === null ? '' : String(value);
     input.dataset.field = field;
+    if (C && C.order && C.order[C.i]) {
+      input.dataset.variant = C.order[C.i];
+      input.dataset.week = C.key;
+    }
     box.append(btn('step', '−', 'dec', { field }), input, btn('step', '+', 'inc', { field }));
     return box;
   }
@@ -16378,6 +17024,9 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     back.disabled = C.i === 0;
     nav.append(back, btn('btn primary', C.i === C.order.length - 1 ? t('review') : t('nextItem'), 'next', {}));
     body.append(nav);
+    if (FOH.batchTally && FOH.batchTally.injectBatchCounter) {
+      FOH.batchTally.injectBatchCounter();
+    }
   }
 
   function review(body) {
@@ -16440,30 +17089,29 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     draw();
   }
 
-  function findSuspiciousVariance(entry, order, catId) {
+  function findSuspiciousVariance(entry, order) {
     if (!entry || !Array.isArray(order)) return null;
-    const base = IS.baseForCat ? IS.baseForCat(S.inv, catId) : null;
     const ar = FOH.i18n ? FOH.i18n.lang === 'ar' : true;
     for (let idx = 0; idx < order.length; idx++) {
       const vid = order[idx];
       const l = IS.line(entry, vid);
       if (!l || l.good === null) continue;
-      const counted = (l.good || 0) + (l.repair || 0);
-      const variant = IS.findVariant(S.inv, vid);
-      const expected = base && base[vid] !== undefined ? base[vid] : (variant && variant.expectedQty);
-      if (expected !== undefined && expected !== null && expected > 0) {
-        const diff = Math.abs(counted - expected);
-        const ratio = diff / expected;
-        if (ratio > 0.3 && diff >= 5) {
-          const item = IS.findItem(S.inv, vid) || { name: 'Item', nameAr: 'صنف' };
-          const label = nm(item);
+      const total = IS.counted(entry, vid);
+      const f = IS.findVariant(S.inv, vid);
+      if (!f) continue;
+      const expected = IS.reference(S.inv, entry, f.variant);
+      if (expected !== null && IS.isFlagged(S.inv, expected, total)) {
+        const diff = Math.abs(total - expected);
+        if (diff >= (S.inv && S.inv.settings ? S.inv.settings.flagPcs : 2)) {
+          const vLabel = IS.variantLabel(f.item, f.variant);
+          const label = [nm(f.item), vLabel].filter(Boolean).join(' · ');
           return {
             idx,
             label,
-            counted,
+            counted: total,
             promptMsg: ar
-              ? `⚠️ يرجى إعادة التأكد من عد الصنف "${label}" فقط للتأكد من الرقم المدخل (${counted}). هل أنت متأكد من دقة هذا الرقم؟`
-              : `⚠️ Please double-check your count for "${label}" (${counted}). Are you certain this count is accurate?`,
+              ? `⚠️ يرجى إعادة التأكد من عد الصنف "${label}" فقط للتأكد من الرقم المدخل (${total}). هل أنت متأكد من دقة هذا الرقم؟`
+              : `⚠️ Please double-check your count for "${label}" (${total}). Are you certain this count is accurate?`,
           };
         }
       }
@@ -16710,12 +17358,21 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     } else if (d.attr !== undefined) {
       draft.item.attrs[Number(d.attr)][d.field] = e.target.value.trim().slice(0, 60);
     } else if (d.vphoto) {
+      const v = draft.item.variants.find((x) => x.id === d.vphoto);
+      const oldPhoto = v && v.photo;
       const id = await FOH.photos.add(e.target.files[0]);
-      if (id) draft.item.variants.find((x) => x.id === d.vphoto).photo = id;
+      if (id && v) {
+        if (oldPhoto && FOH.photos && FOH.photos.remove) FOH.photos.remove(oldPhoto);
+        v.photo = id;
+      }
       draw();
     } else if (e.target.id === 'iiPhotoFile') {
+      const oldPhoto = draft.item.photo;
       const id = await FOH.photos.add(e.target.files[0]);
-      if (id) draft.item.photo = id;
+      if (id) {
+        if (oldPhoto && FOH.photos && FOH.photos.remove) FOH.photos.remove(oldPhoto);
+        draft.item.photo = id;
+      }
       draw();
     }
   }
@@ -16748,6 +17405,12 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     const f = IS.findItem(S.inv, draft.item.id);
     if (!f || !confirm(t('confirmDelItem', { name: pick(f.item.name, f.item.nameAr) }))) return;
     f.cat.items = f.cat.items.filter((x) => x !== f.item);
+    if (f.item.photo && FOH.photos && FOH.photos.remove) {
+      FOH.photos.remove(f.item.photo);
+    }
+    (f.item.variants || []).forEach((v) => {
+      if (v.photo && FOH.photos && FOH.photos.remove) FOH.photos.remove(v.photo);
+    });
     $('invItemSheet').close('deleted');
     IS.save(S.inv);
     FOH.app.render();
@@ -16767,6 +17430,9 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     sheet.addEventListener('close', () => { draft = null; });
     $('iiDelete').addEventListener('click', remove);
     $('iiPhotoRemove').addEventListener('click', () => {
+      if (draft.item.photo && FOH.photos && FOH.photos.remove) {
+        FOH.photos.remove(draft.item.photo);
+      }
       draft.item.photo = '';
       draw();
     });
@@ -16793,22 +17459,38 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
   const ICONS = ['📦', '🍷', '🍴', '🍽', '🥢', '🍸', '🧾', '🕯', '☕', '🧊', '🧺', '🧽'];
   const nm = (x) => pick(x.name, x.nameAr);
   const save = () => IS.save(S.inv);
-  let editCat = null; // category id being edited, or null for new
+  const isAr = () => FOH.i18n && FOH.i18n.lang === 'ar';
+
+  let editCat = null;
+  let activeCatFilter = 'all';
+  let itemSearchQuery = '';
 
   function itemRow(item) {
     const li = el('li', 'item inv-item');
     li.dataset.id = item.id;
-    const row = el('div', 'row');
-    const b = btn('tx', '', 'item-open', { id: item.id });
-    const tags = el('span', 'tags');
+    const row = el('div', 'row inv-item-row');
+    const b = btn('tx inv-item-btn', '', 'item-open', { id: item.id });
     const vs = IS.active(item);
     const units = t('units').split(',');
-    if (item.attrs.length) tags.append(el('span', 'tag', t('variantsN', { n: vs.length })));
+    const unitLbl = units[IS.UNITS.indexOf(item.unit)] || item.unit || 'pcs';
     const total = vs.reduce((s, v) => s + (v.expected || 0), 0);
-    tags.append(el('span', 'tag time', total + ' ' + units[IS.UNITS.indexOf(item.unit)]));
-    tags.append(el('span', 'tag', t(item.cond.repair ? 'countReady' : 'countPresent') + (item.cond.repair ? ' + ' + t('condRepair') : '')));
-    if (item.location) tags.append(el('span', 'tag', '📍 ' + item.location));
-    b.append(el('span', 't', nm(item)), tags);
+
+    const leftCopy = el('div', 'inv-item-copy');
+    leftCopy.append(el('span', 't inv-item-title', nm(item)));
+
+    const metaParts = [];
+    if (item.location) metaParts.push('📍 ' + item.location);
+    if (item.attrs.length) metaParts.push(t('variantsN', { n: vs.length }));
+    metaParts.push(t(item.cond.repair ? 'countReady' : 'countPresent') + (item.cond.repair ? ' · 🔧' : ''));
+    leftCopy.append(el('small', 'inv-item-sub', metaParts.join(' · ')));
+
+    const rightSide = el('div', 'inv-item-right');
+    rightSide.append(
+      el('span', 'inv-qty-badge', total + ' ' + unitLbl),
+      el('span', 'inv-item-arrow', isAr() ? '‹' : '›')
+    );
+
+    b.append(leftCopy, rightSide);
     row.append(el('span', 'handle', '⠿'), b);
     li.append(row);
     return li;
@@ -16821,26 +17503,84 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     FOH.app.render();
   }
 
+  function renderItemsToolbar(root) {
+    const ar = isAr();
+    const bar = el('div', 'inv-items-toolbar');
+    const searchRow = el('div', 'inv-search-row');
+    const searchWrap = el('div', 'inv-search-wrap');
+    const searchIn = el('input', 'in inv-search-in');
+    searchIn.type = 'search';
+    searchIn.placeholder = ar ? '🔍 ابحث عن صنف أو موقع...' : '🔍 Search item or location...';
+    searchIn.value = itemSearchQuery;
+    searchIn.addEventListener('input', (e) => {
+      itemSearchQuery = e.target.value;
+      FOH.app.render();
+      const restored = root.querySelector('.inv-search-in');
+      if (restored) {
+        restored.focus();
+        restored.setSelectionRange(itemSearchQuery.length, itemSearchQuery.length);
+      }
+    });
+    searchWrap.append(searchIn);
+    const addCatBtn = btn('btn inv-add-cat-btn', t('addCategory'), 'cat-add', {});
+    searchRow.append(searchWrap, addCatBtn);
+
+    const pills = el('div', 'inv-cat-pills');
+    const allCount = S.inv.categories.reduce((s, c) => s + c.items.length, 0);
+    const allPill = btn('inv-cat-pill' + (activeCatFilter === 'all' ? ' on' : ''), (ar ? 'الكل' : 'All') + ` (${allCount})`, 'inv-filter-cat', { cat: 'all' });
+    pills.append(allPill);
+    S.inv.categories.forEach((c) => {
+      const p = btn(
+        'inv-cat-pill' + (activeCatFilter === c.id ? ' on' : ''),
+        `${c.icon || '📦'} ${nm(c)} (${c.items.length})`,
+        'inv-filter-cat',
+        { cat: c.id }
+      );
+      pills.append(p);
+    });
+    bar.append(searchRow, pills);
+    root.append(bar);
+  }
+
   function items(root) {
-    S.inv.categories.forEach((cat) => {
-      const c = el('section', 'card');
-      const h = el('div', 'head');
+    if (activeCatFilter !== 'all' && !S.inv.categories.some((c) => c.id === activeCatFilter)) {
+      activeCatFilter = 'all';
+    }
+    renderItemsToolbar(root);
+    const q = itemSearchQuery.trim().toLowerCase();
+    const visibleCats = S.inv.categories.filter((c) => activeCatFilter === 'all' || c.id === activeCatFilter);
+
+    visibleCats.forEach((cat) => {
+      const filteredItems = q
+        ? cat.items.filter((it) => [it.name, it.nameAr, it.location].filter(Boolean).join(' ').toLowerCase().includes(q))
+        : cat.items;
+      if (q && !filteredItems.length) return;
+
+      const c = el('section', 'card inv-card');
+      const h = el('div', 'head inv-head');
       const n = btn('nm', '', 'cat-open', { id: cat.id });
-      n.append(el('span', 'ico', cat.icon), el('span', 'nm-t', nm(cat)));
-      h.append(n, el('span', 'ct', String(IS.leaves(cat).length)));
+      n.append(el('span', 'ico', cat.icon), el('span', 'nm-t', nm(cat)), el('span', 'inv-edit-pen', '✎'));
+      const rightBox = el('div', 'inv-head-actions');
+      rightBox.append(
+        el('span', 'ct', String(IS.leaves(cat).length)),
+        btn('inv-head-add-btn', '+ ' + (isAr() ? 'صنف' : 'Item'), 'item-add', { cat: cat.id })
+      );
+      h.append(n, rightBox);
       const list = el('ol', 'items');
-      cat.items.forEach((it) => list.append(itemRow(it)));
-      FOH.drag.enable(list, (ids) => reorder(cat.items, ids));
+      filteredItems.forEach((it) => list.append(itemRow(it)));
+      if (!q) FOH.drag.enable(list, (ids) => reorder(cat.items, ids));
       c.append(h, list, btn('adds', t('addInvItem'), 'item-add', { cat: cat.id }));
       root.append(c);
     });
-    root.append(btn('btn wide-btn', t('addCategory'), 'cat-add', {}));
   }
 
   // ---- settings ----
-  function field(label, input) {
-    const row = el('label', 'set');
-    row.append(el('span', '', label), input);
+  function field(label, input, hintText) {
+    const row = el('label', 'set inv-set-row');
+    const txt = el('div', 'inv-set-lbl');
+    txt.append(el('span', '', label));
+    if (hintText) txt.append(el('small', '', hintText));
+    row.append(txt, input);
     return row;
   }
 
@@ -16855,13 +17595,15 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
   }
 
   function settings(root) {
+    const ar = isAr();
     const s = S.inv.settings;
-    const c = el('section', 'card');
-    const h = el('div', 'head');
+    const c = el('section', 'card inv-card');
+    const h = el('div', 'head inv-head');
     const n = el('span', 'nm');
     n.append(el('span', 'ico', '⚙'), el('span', 'nm-t', t('invSettings')));
     h.append(n);
     c.append(h);
+
     const day = el('select', 'in small-in');
     day.dataset.setting = 'countDay';
     t('daysLong').split(',').forEach((name, d) => {
@@ -16875,16 +17617,24 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     dl.value = s.deadline;
     dl.dataset.setting = 'deadline';
     const flag = el('span', 'flag-in');
-    flag.append(numberInput('flagPcs', 9999), t('pcsWord') + ' ' + t('orWord'), numberInput('flagPct', 100), '%');
-    c.append(field(t('countDayOnly'), day), field(t('deadlineLbl'), dl), field(t('flagLbl'), flag));
-    c.append(field(t('noRepeatLbl'), numberInput('noRepeat', 12)));
+    flag.append(numberInput('flagPcs', 9999), el('span', 'flag-sep', t('pcsWord') + ' ' + t('orWord')), numberInput('flagPct', 100), el('span', 'flag-sep', '%'));
+
+    c.append(
+      field(t('countDayOnly'), day, ar ? 'اليوم الأسبوعي المعتمد للجرد' : 'Weekly scheduled inventory day'),
+      field(t('deadlineLbl'), dl, ar ? 'آخر موعد لتسليم الجرد' : 'Cut-off time for submitting counts'),
+      field(t('flagLbl'), flag, ar ? 'تنبيه عند تجاوز الفرق' : 'Trigger variance alert when exceeded'),
+      field(t('noRepeatLbl'), numberInput('noRepeat', 12), ar ? 'تدوير الفئات بين الموظفين' : 'Minimum weeks before repeating same category')
+    );
+
     [['results', 'canResults'], ['manage', 'canManage']].forEach(([key, label]) => {
-      const box = el('div', 'perm');
+      const box = el('div', 'perm inv-perm-box');
       box.append(el('b', '', t(label)));
-      S.tpl.roles.forEach((r) => box.append(btn('pc' + (s[key].includes(r.id) ? ' on' : ''), r.name, 'perm', { key, id: r.id })));
+      const chips = el('div', 'inv-perm-chips');
+      S.tpl.roles.forEach((r) => chips.append(btn('pc' + (s[key].includes(r.id) ? ' on' : ''), r.name, 'perm', { key, id: r.id })));
+      box.append(chips);
       c.append(box);
     });
-    root.append(c, btn('btn danger wide-btn', t('resetExamples'), 'inv-reset', {}));
+    root.append(c, btn('btn danger wide-btn inv-reset-btn', '⚠️ ' + t('resetExamples'), 'inv-reset', {}));
   }
 
   // ---- category sheet ----
@@ -16932,6 +17682,10 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     const b = e.target.closest('button[data-act]');
     if (!b) return;
     const { act, id } = b.dataset;
+    if (act === 'inv-filter-cat') {
+      activeCatFilter = b.dataset.cat || 'all';
+      return FOH.app.render();
+    }
     if (act === 'cat-open') return openCat(id);
     if (act === 'cat-add') return openCat(null);
     if (act === 'item-open') return FOH.invItemSheet.open(id);
@@ -17040,6 +17794,7 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     const first = isLegacy ? opts : opts.first;
     const again = isLegacy ? arguments[3] : opts.again;
     const sums = isLegacy ? arguments[4] : opts.sums;
+    const isBlindForMe = IS.hasPendingBlindCount && IS.hasPendingBlindCount(S.inv, S.tpl, S.date, S.me && S.me.staffId, cat.id);
 
     c.append(row(t('variantCol'), '', [t('exp'), '✅', '🔧', '❌', t('diff')].map((x) => el('span', '', x)), 'h'));
     const flagged = [];
@@ -17052,8 +17807,10 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
         const l = r.l || {};
         const notes = [r.fromAgain ? '↻ ' + t('again') : '', l.unsure ? '🤔' : '', l.photo ? '📷' : ''].filter(Boolean).join(' ');
         const label = multi ? IS.variantLabel(item, r.v) : nm(item);
-        const cells = [r.expected, l.good, l.repair, l.writeoff].map((x) => el('span', '', fmt(x)));
-        const line = row(label, notes, [...cells, diffCell(r)], r.mix ? 'mix' : r.flagged ? 'flagrow' : '');
+        const expDisplay = isBlindForMe ? '🔒' : fmt(r.expected);
+        const cells = [expDisplay, fmt(l.good), fmt(l.repair), fmt(l.writeoff)].map((x) => el('span', '', x));
+        const diffSpan = isBlindForMe ? el('span', '', '🔒') : diffCell(r);
+        const line = row(label, notes, [...cells, diffSpan], r.mix ? 'mix' : r.flagged ? 'flagrow' : '');
         if (l.photo) {
           const img = el('img', 'thumb');
           FOH.photos.show(img, l.photo);
@@ -17068,7 +17825,9 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
       if (multi) {
         const tdiff = { diff: tot - exp, flagged: IS.isFlagged(S.inv, exp, tot), mix: false };
         const sum = (k) => rows.reduce((s, r) => s + ((r.l && r.l[k]) || 0), 0);
-        c.append(row(t('totalLbl'), '', [exp, sum('good'), sum('repair'), sum('writeoff')].map((x) => el('span', '', fmt(x))).concat(diffCell(tdiff)), 'tot'));
+        const totalExp = isBlindForMe ? '🔒' : fmt(exp);
+        const totalDiffSpan = isBlindForMe ? el('span', '', '🔒') : diffCell(tdiff);
+        c.append(row(t('totalLbl'), '', [totalExp, sum('good'), sum('repair'), sum('writeoff')].map((x) => el('span', '', fmt(x))).concat(totalDiffSpan), 'tot'));
       }
       if (mix) c.append(el('span', 'mixtag', t('mixTag')));
     });
@@ -17076,9 +17835,12 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
   }
 
   function render(root) {
+    const ar = FOH.i18n && FOH.i18n.lang === 'ar';
     const key = M().weekKey();
     const w = IS.week(S.inv, key);
-    const top = M().card('📊', t('countDayLbl', { day: FOH.tasksView.fmtDay(key) }));
+    const submittedCount = S.inv.categories.filter((cat) => w.counts[cat.id] && w.counts[cat.id].submittedAt).length;
+    const progBadge = `${submittedCount} / ${S.inv.categories.length} ` + (ar ? 'مستلم' : 'sent');
+    const top = M().card('📊', t('countDayLbl', { day: FOH.tasksView.fmtDay(key) }), progBadge);
     top.append(M().weekNav(key));
     root.append(top);
     let any = false;
@@ -17098,26 +17860,32 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
       });
       c.append(s3);
       const bar = el('div', 'bar2');
-      if (w.approved[cat.id]) bar.append(el('span', 'stamp', t('approved')));
+      if (w.approved[cat.id]) bar.append(el('span', 'stamp', '✓ ' + t('approved')));
       else if (M().can('manage')) {
         if (again && !again.submittedAt) bar.append(el('span', 'tag', t('recountPending', { name: M().staffName(again.staffId) })));
         else if (flagged.length && !again) {
           const who = R.recounter(S.inv, S.tpl, key, cat.id, first.staffId);
           if (who) bar.append(btn('btn', t('recountBtn', { n: flagged.length, name: M().staffName(who) }), 'inv-recount', { cat: cat.id, who, items: flagged.join(',') }));
         }
-        bar.append(btn('btn primary', t('approveBtn'), 'inv-approve', { cat: cat.id }));
+        bar.append(btn('btn primary', '✓ ' + t('approveBtn'), 'inv-approve', { cat: cat.id }));
       }
       c.append(bar);
       root.append(c);
     });
-    if (!any) root.append(el('p', 'empty', t('noCounts')));
+    if (!any) {
+      const emptyBox = el('div', 'inv-empty-box');
+      emptyBox.append(el('p', 'empty inv-empty-compact', '📋 ' + t('noCounts')));
+      top.append(emptyBox);
+    }
     breakage(root);
   }
 
   function breakage(root) {
-    const c = M().card('⚠', t('breakageTitle'), String(S.inv.breakage.filter((b) => !b.approved).length));
+    const pendingCnt = S.inv.breakage.filter((b) => !b.approved).length;
+    const badgeEl = el('span', 'ct' + (pendingCnt > 0 ? ' is-warn' : ''), String(pendingCnt));
+    const c = M().card('⚠', t('breakageTitle'), badgeEl);
     const list = S.inv.breakage.slice(-15).reverse();
-    if (!list.length) c.append(el('p', 'empty', t('noBreakage')));
+    if (!list.length) c.append(el('p', 'empty inv-empty-compact', '✓ ' + t('noBreakage')));
     list.forEach((b) => {
       const f = IS.findVariant(S.inv, b.variantId || b.itemId);
       const label = f ? [nm(f.item), IS.variantLabel(f.item, f.variant)].filter(Boolean).join(' · ') : '—';
@@ -17129,12 +17897,87 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
         FOH.photos.show(img, b.photo);
         name.append(img);
       }
-      r.append(name, el('span', '', String(b.qty)));
+      r.append(name, el('span', 'inv-brk-qty', '×' + String(b.qty)));
       if (b.approved) r.append(el('span', 'd0', '✓'));
       else if (M().can('manage')) r.append(btn('mini-btn ok', '✓', 'brk-ok', { id: b.id }), btn('mini-btn no', '✕', 'brk-no', { id: b.id }));
       c.append(r);
     });
     root.append(c);
+  }
+
+  function handleBreakageDecision(act, b) {
+    const br = S.inv.breakage.find((x) => x.id === b.dataset.id);
+    if (!br || br.approved) return;
+    if (act === 'brk-ok') {
+      const id = br.variantId || br.itemId;
+      const f = IS.findVariant(S.inv, id);
+      const countWeek = S.inv.weeks[br.countKey];
+      const incorporated = countWeek && countWeek.approved[br.countCat];
+      if (!incorporated && f && f.variant.expected !== null) f.variant.expected = Math.max(0, f.variant.expected - br.qty);
+      const day = br.at.slice(0, 10);
+      if (br.cond === 'repair') IS.toRepair(S.inv, id, br.qty, day, br.by);
+      else {
+        IS.writeOff(S.inv, id, br.qty, day, 'report', br.by, br.note);
+        if (FOH.ordersStore && FOH.ordersStore.addBreakageReplacement) {
+          const toolName = f ? [nm(f.item), IS.variantLabel(f.item, f.variant)].filter(Boolean).join(' · ') : 'أدوات';
+          FOH.ordersStore.addBreakageReplacement({
+            name: toolName,
+            nameAr: toolName,
+            qty: br.qty,
+            unit: (f && f.item && f.item.unit) || 'piece',
+            note: br.note || (FOH.i18n.lang === 'ar' ? 'تعويض كسر معتمد' : 'Approved breakage writeoff'),
+            group: 'foh',
+            cat: 'foh-0',
+          });
+        }
+      }
+      br.approved = true;
+      br.deductedFromExpected = true;
+      if (FOH.edit && FOH.edit.toast) {
+        FOH.edit.toast(FOH.i18n.lang === 'ar' ? '✓ تم اعتماد تقرير الكسر' : 'Breakage report approved');
+      }
+    } else if (act === 'brk-no') {
+      const cw = S.inv.weeks[br.countKey];
+      if (cw && cw.approved[br.countCat]) return alert(t('approved'));
+      if (br.photo && FOH.photos && FOH.photos.remove) {
+        FOH.photos.remove(br.photo);
+      }
+      S.inv.breakage = S.inv.breakage.filter((x) => x !== br);
+    }
+  }
+
+  function handleApprove(w, cat, key) {
+    const first = w.counts[cat];
+    const isSoleStaff = first && first.staffId && S.me && first.staffId === S.me.staffId;
+    const isSuper = S.me && ['super_manager', 'admin', 'gm', 'owner'].includes(S.me.role);
+    if (isSoleStaff && !isSuper) {
+      alert(t('cannotApproveOwnCount') || 'لا يمكنك اعتماد الجرد الذي قمت بعده بنفسك - يلزم اعتماد مدير آخر.');
+      return;
+    }
+    const c = S.inv.categories.find((x) => x.id === cat);
+    if (!c) return;
+    const deficits = IS.approve(S.inv, key, c, FOH.time.todayISO() + ' ' + FOH.time.nowHM());
+    if (Array.isArray(deficits) && deficits.length && FOH.ordersStore && FOH.ordersStore.addBreakageReplacement) {
+      deficits.forEach((d) => {
+        const vLabel = IS.variantLabel(d.item, d.variant);
+        const fullName = [nm(d.item), vLabel].filter(Boolean).join(' · ');
+        const note = d.reason === 'writeoff'
+          ? (FOH.i18n.lang === 'ar' ? 'شطب تالف معتمد من الجرد' : 'Approved count writeoff')
+          : (FOH.i18n.lang === 'ar' ? 'تعويض نقص جرد معتمد' : 'Approved inventory shortage');
+        FOH.ordersStore.addBreakageReplacement({
+          name: fullName,
+          nameAr: fullName,
+          qty: d.deficit,
+          unit: (d.item && d.item.unit) || 'piece',
+          note,
+          group: 'foh',
+          cat: 'foh-0',
+        });
+      });
+      if (FOH.edit && FOH.edit.toast) {
+        FOH.edit.toast(FOH.i18n.lang === 'ar' ? '🛒 تم تحويل النواقص إلى مسودة الطلبيات تلقائياً' : 'Deficits converted to orders draft');
+      }
+    }
   }
 
   // Returns true when the action was handled here.
@@ -17144,26 +17987,9 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     if (act === 'inv-recount') {
       w.recounts[cat] = { staffId: b.dataset.who, items: b.dataset.items.split(','), lines: {}, submittedAt: null };
     } else if (act === 'inv-approve') {
-      const c = S.inv.categories.find((x) => x.id === cat);
-      if (c) IS.approve(S.inv, key, c, FOH.time.todayISO() + ' ' + FOH.time.nowHM());
+      handleApprove(w, cat, key);
     } else if (act === 'brk-ok' || act === 'brk-no') {
-      const br = S.inv.breakage.find((x) => x.id === b.dataset.id);
-      if (br && !br.approved && act === 'brk-ok') {
-        const id = br.variantId || br.itemId;
-        const f = IS.findVariant(S.inv, id);
-        const countWeek = S.inv.weeks[br.countKey];
-        const incorporated = countWeek && countWeek.approved[br.countCat];
-        if (!incorporated && f && f.variant.expected !== null) f.variant.expected = Math.max(0, f.variant.expected - br.qty);
-        const day = br.at.slice(0, 10);
-        if (br.cond === 'repair') IS.toRepair(S.inv, id, br.qty, day, br.by);
-        else IS.writeOff(S.inv, id, br.qty, day, 'report', br.by, br.note);
-        br.approved = true;
-      }
-      if (br && !br.approved && act === 'brk-no') {
-        const cw = S.inv.weeks[br.countKey];
-        if (cw && cw.approved[br.countCat]) return alert(t('approved'));
-        S.inv.breakage = S.inv.breakage.filter((x) => x !== br);
-      }
+      handleBreakageDecision(act, b);
     } else return false;
     IS.save(S.inv);
     FOH.app.render();
@@ -17177,9 +18003,9 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
 
 <script>
 // --- js/domains/inventory/stock.js ---
-// Inventory → Stock: per item ✅ good (expected), 🔧 in repair, ❌ written off
-// this month; the repair queue ("Back ✓" or "Write off") and this month's
-// write-offs with where they came from.
+// Inventory → Stock: KPI summary strip, per-category stock levels
+// (✅ good, 🔧 in repair, ❌ written off this month), and collapsible
+// repair queue & monthly write-offs log.
 (function (FOH) {
   'use strict';
 
@@ -17190,6 +18016,7 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
   const nm = (x) => pick(x.name, x.nameAr);
   const M = () => FOH.invManage;
   const month = () => S.date.slice(0, 7);
+  const isAr = () => FOH.i18n && FOH.i18n.lang === 'ar';
 
   function label(id) {
     const f = IS.findVariant(S.inv, id);
@@ -17198,20 +18025,65 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
 
   const sumBy = (arr, ids) => arr.filter((x) => ids.has(x.variantId)).reduce((s, x) => s + x.qty, 0);
 
+  function renderKpiStrip(root) {
+    const ar = isAr();
+    const thisMonth = S.inv.writeoffs.filter((w) => (w.date || '').startsWith(month()));
+    const anyBlind = S.inv.categories.some(
+      (cat) => IS.hasPendingBlindCount && IS.hasPendingBlindCount(S.inv, S.tpl, S.date, S.me && S.me.staffId, cat.id)
+    );
+    const totalGood = anyBlind
+      ? '🔒'
+      : S.inv.categories.reduce(
+          (sum, cat) => sum + cat.items.reduce((s2, it) => s2 + IS.active(it).reduce((s3, v) => s3 + (v.expected || 0), 0), 0),
+          0
+        );
+    const totalRepair = S.inv.repairs.reduce((s, r) => s + r.qty, 0);
+    const totalLost = thisMonth.reduce((s, w) => s + w.qty, 0);
+
+    const strip = el('div', 'inv-kpi-strip');
+    [
+      ['kpi-good', '✅', String(totalGood), ar ? 'الرصيد الصالح' : 'Usable Stock'],
+      ['kpi-repair', '🔧', String(totalRepair), t('inRepair')],
+      ['kpi-lost', '❌', String(totalLost), t('writtenOff')],
+    ].forEach(([cls, ico, val, lbl]) => {
+      const tile = el('div', 'inv-kpi-tile ' + cls);
+      const top = el('div', 'inv-kpi-top');
+      top.append(el('span', 'inv-kpi-ico', ico), el('strong', 'inv-kpi-val', val));
+      tile.append(top, el('span', 'inv-kpi-lbl', lbl));
+      strip.append(tile);
+    });
+    root.append(strip);
+  }
+
+  function row(name, cells, cls) {
+    const r = el('div', 'sk-row' + (cls ? ' ' + cls : ''));
+    r.append(el('span', 'n', name), ...cells.map((x, idx) => el('span', 'sk-c' + idx, String(x))));
+    return r;
+  }
+
   function summary(root) {
+    const ar = isAr();
     const thisMonth = S.inv.writeoffs.filter((w) => (w.date || '').startsWith(month()));
     S.inv.categories.forEach((cat) => {
-      const c = M().card(cat.icon, nm(cat));
-      c.append(row('', ['✅', '🔧', '❌'], 'h'));
+      const isBlindForMe = IS.hasPendingBlindCount && IS.hasPendingBlindCount(S.inv, S.tpl, S.date, S.me && S.me.staffId, cat.id);
+      const catGoodTotal = isBlindForMe
+        ? '🔒'
+        : cat.items.reduce((s, it) => s + IS.active(it).reduce((s2, v) => s2 + (v.expected || 0), 0), 0);
+      const rightBadge = isBlindForMe
+        ? '🔒 ' + (ar ? 'جرد معلق' : 'Count pending')
+        : catGoodTotal + ' ' + (ar ? 'قطعة' : 'pcs');
+      const c = M().card(cat.icon, nm(cat), rightBadge);
+      c.append(row(ar ? 'الصنف' : 'Item', ['✅', '🔧', '❌'], 'h'));
       cat.items.forEach((item) => {
         const vs = IS.active(item);
         const ids = new Set(item.variants.map((v) => v.id));
-        const good = vs.reduce((s, v) => s + (v.expected || 0), 0);
+        const good = isBlindForMe ? '🔒' : vs.reduce((s, v) => s + (v.expected || 0), 0);
         c.append(row(nm(item), [good, sumBy(S.inv.repairs, ids), sumBy(thisMonth, ids)], vs.length > 1 ? 'item-h' : ''));
         if (vs.length > 1) {
           vs.forEach((v) => {
             const one = new Set([v.id]);
-            c.append(row(IS.variantLabel(item, v), [v.expected === null ? '—' : v.expected, sumBy(S.inv.repairs, one), sumBy(thisMonth, one)], 'sub'));
+            const expVal = isBlindForMe ? '🔒' : (v.expected === null ? '—' : v.expected);
+            c.append(row('↳ ' + IS.variantLabel(item, v), [expVal, sumBy(S.inv.repairs, one), sumBy(thisMonth, one)], 'sub'));
           });
         }
       });
@@ -17219,30 +18091,48 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     });
   }
 
-  function row(name, cells, cls) {
-    const r = el('div', 'sk-row' + (cls ? ' ' + cls : ''));
-    r.append(el('span', 'n', name), ...cells.map((x) => el('span', '', String(x))));
-    return r;
-  }
-
   function repairs(root) {
-    const c = M().card('🔧', t('inRepair'), String(S.inv.repairs.reduce((s, r) => s + r.qty, 0)));
-    if (!S.inv.repairs.length) c.append(el('p', 'empty', t('nothingRepair')));
+    const total = S.inv.repairs.reduce((s, r) => s + r.qty, 0);
+    const det = el('details', 'card inv-card inv-accordion');
+    if (total > 0) det.open = true;
+    const sum = el('summary', 'head inv-head inv-acc-summary');
+    const n = el('span', 'nm');
+    n.append(el('span', 'ico', '🔧'), el('span', 'nm-t', t('inRepair')));
+    sum.append(n, el('span', 'ct' + (total > 0 ? ' is-warn' : ''), String(total)));
+    det.append(sum);
+
+    const body = el('div', 'inv-acc-body');
+    if (!S.inv.repairs.length) body.append(el('p', 'empty inv-empty-compact', t('nothingRepair')));
     S.inv.repairs.forEach((r) => {
       const line = el('div', 'rq');
       const txt = el('span', 't', label(r.variantId) + ' × ' + r.qty);
       txt.append(el('small', '', [t('since', { date: FOH.tasksView.fmtDay(r.since) }), r.by].filter(Boolean).join(' · ')));
       line.append(txt);
-      if (M().can('manage')) line.append(btn('mini-btn ok wide', t('backBtn'), 'rep-back', { id: r.id }), btn('mini-btn no wide', t('writeOffBtn'), 'rep-off', { id: r.id }));
-      c.append(line);
+      if (M().can('manage')) {
+        line.append(
+          btn('mini-btn ok wide', '✓ ' + t('backBtn'), 'rep-back', { id: r.id }),
+          btn('mini-btn no wide', '✕ ' + t('writeOffBtn'), 'rep-off', { id: r.id })
+        );
+      }
+      body.append(line);
     });
-    root.append(c);
+    det.append(body);
+    root.append(det);
   }
 
   function writeoffs(root) {
     const list = S.inv.writeoffs.filter((w) => (w.date || '').startsWith(month()));
-    const c = M().card('❌', t('writtenOff'), String(list.reduce((s, w) => s + w.qty, 0)));
-    if (!list.length) c.append(el('p', 'empty', t('nothingWriteoff')));
+    const total = list.reduce((s, w) => s + w.qty, 0);
+    const det = el('details', 'card inv-card inv-accordion');
+    if (total > 0) det.open = true;
+    const sum = el('summary', 'head inv-head inv-acc-summary');
+    const n = el('span', 'nm');
+    n.append(el('span', 'ico', '❌'), el('span', 'nm-t', t('writtenOff')));
+    sum.append(n, el('span', 'ct' + (total > 0 ? ' is-danger' : ''), String(total)));
+    det.append(sum);
+
+    const body = el('div', 'inv-acc-body');
+    if (!list.length) body.append(el('p', 'empty inv-empty-compact', t('nothingWriteoff')));
     const src = { count: 'srcCount', report: 'srcReport', repair: 'srcRepair' };
     list
       .slice()
@@ -17252,15 +18142,17 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
         const txt = el('span', 't', label(w.variantId) + ' × ' + w.qty);
         txt.append(el('small', '', [t(src[w.source] || 'srcCount'), FOH.tasksView.fmtDay(w.date), w.by, w.note].filter(Boolean).join(' · ')));
         line.append(txt);
-        c.append(line);
+        body.append(line);
       });
-    root.append(c);
+    det.append(body);
+    root.append(det);
   }
 
   function render(root) {
+    renderKpiStrip(root);
+    summary(root);
     repairs(root);
     writeoffs(root);
-    summary(root);
   }
 
   // Returns true when the action was handled here.
@@ -17300,31 +18192,36 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
   const { el, btn } = FOH.view;
   const nm = (x) => pick(x.name, x.nameAr);
   const save = () => IS.save(S.inv);
+  const isAr = () => FOH.i18n && FOH.i18n.lang === 'ar';
 
   const can = (perm) => !S.previewEmployee && !!S.me.role && S.inv.settings[perm].includes(S.me.role);
   const canSee = () => can('results') || can('manage');
   const TABS = [['week', 'manage'], ['results', 'see'], ['stock', 'see'], ['items', 'manage'], ['settings', 'manage']];
+  const TAB_ICONS = { week: '🗓', results: '📊', stock: '📦', items: '🗂', settings: '⚙' };
   const tabs = () => TABS.filter(([, p]) => (p === 'see' ? canSee() : can(p)));
   const visible = () => tabs().length > 0;
   const weekKey = () => IS.countDate(S.inv, S.tpl, FOH.schedule.addDays(S.date, 7 * S.invWeekOffset));
   const staffName = (id) => (FOH.staff.byId(id) || {}).name || '—';
 
   function card(icon, title, right) {
-    const c = el('section', 'card');
-    const h = el('div', 'head');
+    const c = el('section', 'card inv-card');
+    const h = el('div', 'head inv-head');
     const n = el('span', 'nm');
     n.append(el('span', 'ico', icon), el('span', 'nm-t', title));
     h.append(n);
-    if (right) h.append(typeof right === 'string' ? el('span', 'ct', right) : right);
+    if (right !== undefined && right !== null && right !== '') {
+      h.append(typeof right === 'string' ? el('span', 'ct', right) : right);
+    }
     c.append(h);
     return c;
   }
 
   function weekNav(key) {
-    const bar = el('div', 'week-bar');
+    const bar = el('div', 'week-bar inv-week-bar');
     const nav = el('span', 'week-nav');
-    nav.append(btn('icon-btn', '‹', 'inv-prev', {}), btn('link', t('backToday'), 'inv-today', {}), btn('icon-btn', '›', 'inv-next', {}));
-    bar.append(nav, el('span', 'ct', t('until', { time: S.inv.settings.deadline })));
+    nav.append(btn('icon-btn', '‹', 'inv-prev', {}), btn('link inv-today-btn', t('backToday'), 'inv-today', {}), btn('icon-btn', '›', 'inv-next', {}));
+    const dlPill = el('span', 'inv-deadline-pill', '⏰ ' + t('until', { time: S.inv.settings.deadline }));
+    bar.append(nav, dlPill);
     return bar;
   }
 
@@ -17340,11 +18237,72 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
   }
 
   function status(entry) {
-    if (entry && entry.submittedAt) return el('span', 'stamp', t('sentAt', { time: entry.submittedAt.slice(11) }));
-    return el('span', 'tag', entry && Object.keys(entry.lines).length ? t('statusProgress') : t('statusNot'));
+    if (entry && entry.submittedAt) return el('span', 'stamp', '✓ ' + t('sentAt', { time: entry.submittedAt.slice(11) }));
+    return el('span', 'tag', entry && Object.keys(entry.lines).length ? '⏳ ' + t('statusProgress') : t('statusNot'));
+  }
+
+  function renderHeroBar(root) {
+    const ar = isAr();
+    const hero = el('div', 'inv-hero-bar');
+    const left = el('div', 'inv-hero-copy');
+    const totalCats = S.inv.categories.length;
+    const totalItems = S.inv.categories.reduce((acc, c) => acc + c.items.length, 0);
+    const pendingBrk = (S.inv.breakage || []).filter((b) => !b.approved).length;
+    const titleRow = el('div', 'inv-hero-title');
+    titleRow.append(
+      el('span', 'inv-hero-ico', '📦'),
+      el('div', 'inv-hero-txt', '')
+    );
+    titleRow.lastChild.append(
+      el('strong', '', ar ? 'إدارة الجرد والمعدات' : 'Inventory & Equipment'),
+      el('small', '', (ar ? `${totalCats} فئات · ${totalItems} صنف` : `${totalCats} categories · ${totalItems} items`) + (pendingBrk ? (ar ? ` · ⚠️ ${pendingBrk}` : ` · ⚠️ ${pendingBrk}`) : ''))
+    );
+    left.append(titleRow);
+    const reportBtn = btn('btn primary inv-report-cta', ar ? '🔧 + بلاغ كسر' : '🔧 + Breakage', 'break-open', {});
+    hero.append(left, reportBtn);
+    root.append(hero);
+  }
+
+  function buildAssignmentRow(cat, w, key, people) {
+    const a = w.assign[cat.id] || {};
+    const row = el('div', 'asg inv-asg-row');
+    const left = el('div', 'inv-asg-left');
+    const ico = el('span', 'inv-asg-ico', cat.icon || '📦');
+    const info = el('span', 'cat');
+    const last = lastCounter(key, cat.id);
+    info.append(
+      el('b', '', nm(cat)),
+      el('span', '', t('itemsN', { n: IS.leaves(cat).length }) + ' · ' + (last ? t('lastBy', { name: last }) : t('nobody')))
+    );
+    const ago = a.staffId ? R.weeksSince(S.inv, key, cat.id, a.staffId) : Infinity;
+    const hasWarn = ago <= S.inv.settings.noRepeat;
+    if (hasWarn || w.published) {
+      const meta = el('div', 'inv-asg-meta');
+      if (hasWarn) meta.append(el('span', 'warn', '⚠️ ' + t('sameRecent', { n: ago })));
+      if (w.published) meta.append(status(w.counts[cat.id]));
+      info.append(meta);
+    }
+    left.append(ico, info);
+
+    const controls = el('div', 'inv-asg-controls');
+    const sel = el('select', 'in who');
+    sel.dataset.cat = cat.id;
+    [['', '—'], ...people.map((p) => [p.id, p.name])].forEach(([v, label]) => {
+      const o = el('option', '', label);
+      o.value = v;
+      o.selected = v === (a.staffId || '');
+      sel.append(o);
+    });
+    const pin = btn('pin' + (a.pinned ? ' on' : ''), '📌', 'inv-pin', { cat: cat.id });
+    pin.setAttribute('aria-pressed', String(!!a.pinned));
+    pin.title = isAr() ? 'تثبيت الموظف' : 'Pin staff';
+    controls.append(sel, pin);
+    row.append(left, controls);
+    return row;
   }
 
   function weekView(root) {
+    const ar = isAr();
     const key = weekKey();
     const w = IS.week(S.inv, key);
     const people = R.participants(S.tpl);
@@ -17352,36 +18310,25 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
       R.distribute(S.inv, S.tpl, key);
       save();
     }
-    const c = card('🗓', t('countDayLbl', { day: FOH.tasksView.fmtDay(key) }));
+    const pubBadge = el(
+      'span',
+      'inv-status-pill ' + (w.published ? 'is-pub' : 'is-draft'),
+      w.published ? (ar ? '🟢 منشور' : '🟢 Published') : (ar ? '⚪ مسودة' : '⚪ Draft')
+    );
+    const c = card('🗓', t('countDayLbl', { day: FOH.tasksView.fmtDay(key) }), pubBadge);
     c.classList.add('sched');
     c.append(weekNav(key));
     if (!people.length) c.append(el('p', 'empty', t('noParticipants')));
-    S.inv.categories.forEach((cat) => {
-      const a = w.assign[cat.id] || {};
-      const row = el('div', 'asg');
-      const info = el('span', 'cat');
-      const last = lastCounter(key, cat.id);
-      info.append(el('b', '', cat.icon + ' ' + nm(cat)), el('span', '', t('itemsN', { n: IS.leaves(cat).length }) + ' · ' + (last ? t('lastBy', { name: last }) : t('nobody'))));
-      const sel = el('select', 'in who');
-      sel.dataset.cat = cat.id;
-      [['', '—'], ...people.map((p) => [p.id, p.name])].forEach(([v, label]) => {
-        const o = el('option', '', label);
-        o.value = v;
-        o.selected = v === (a.staffId || '');
-        sel.append(o);
-      });
-      const pin = btn('pin' + (a.pinned ? ' on' : ''), '📌', 'inv-pin', { cat: cat.id });
-      pin.setAttribute('aria-pressed', String(!!a.pinned));
-      row.append(info, sel, pin);
-      const ago = a.staffId ? R.weeksSince(S.inv, key, cat.id, a.staffId) : Infinity;
-      if (ago <= S.inv.settings.noRepeat) row.append(el('span', 'warn', t('sameRecent', { n: ago })));
-      if (w.published) row.append(status(w.counts[cat.id]));
-      c.append(row);
-    });
-    const bar = el('div', 'bar2');
-    bar.append(btn('btn', t('redistribute'), 'inv-redistribute', {}), btn('btn primary', w.published ? t('unpublish') : t('publish'), 'inv-publish', {}));
+    const listWrap = el('div', 'inv-asg-list');
+    S.inv.categories.forEach((cat) => listWrap.append(buildAssignmentRow(cat, w, key, people)));
+    c.append(listWrap);
+    const bar = el('div', 'bar2 inv-action-bar');
+    bar.append(
+      btn('btn inv-btn-sec', '🔄 ' + t('redistribute'), 'inv-redistribute', {}),
+      btn('btn primary inv-btn-pri', (w.published ? '🔒 ' + t('unpublish') : '🚀 ' + t('publish')), 'inv-publish', {})
+    );
     c.append(bar);
-    root.append(c, el('p', 'note', w.published ? t('published') : t('pinNote')));
+    root.append(c, el('p', 'note inv-foot-note', w.published ? t('published') : t('pinNote')));
   }
 
   function render(root) {
@@ -17389,10 +18336,23 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     const allowed = tabs().map(([k]) => k);
     if (!allowed.length) return root.append(el('p', 'empty', t('noAccess')));
     if (!allowed.includes(S.invTab)) S.invTab = allowed[0];
-    const sub = el('nav', 'subtabs');
+
+    renderHeroBar(root);
+
+    const sub = el('nav', 'subtabs inv-subtabs');
     const label = { week: 'invWeek', results: 'invResults', stock: 'invStock', items: 'invItems', settings: 'invSettings' };
-    allowed.forEach((k) => sub.append(btn(k === S.invTab ? 'on' : '', t(label[k]), 'inv-tab', { tab: k })));
+    const pendingBrk = (S.inv.breakage || []).filter((b) => !b.approved).length;
+    const repairCnt = (S.inv.repairs || []).reduce((s, r) => s + (r.qty || 0), 0);
+
+    allowed.forEach((k) => {
+      const b = btn(k === S.invTab ? 'on' : '', '', 'inv-tab', { tab: k });
+      b.append(el('span', 'subtab-ico', TAB_ICONS[k] || ''), el('span', 'subtab-lbl', t(label[k])));
+      if (k === 'results' && pendingBrk > 0) b.append(el('span', 'subtab-badge warn', String(pendingBrk)));
+      if (k === 'stock' && repairCnt > 0) b.append(el('span', 'subtab-badge', String(repairCnt)));
+      sub.append(b);
+    });
     root.append(sub);
+
     if (S.invTab === 'week') weekView(root);
     if (S.invTab === 'results') FOH.invResults.render(root);
     if (S.invTab === 'stock') FOH.invStock.render(root);
@@ -17404,6 +18364,7 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     const b = e.target.closest('button[data-act]');
     if (!b) return;
     const { act, cat } = b.dataset;
+    if (act === 'break-open') return FOH.invBreak && FOH.invBreak.open && FOH.invBreak.open();
     const key = weekKey();
     const w = IS.week(S.inv, key);
     if (act === 'inv-tab') S.invTab = b.dataset.tab;
@@ -17423,7 +18384,7 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     const sel = e.target;
     if (sel.classList.contains('who') && sel.dataset.cat) {
       const w = IS.week(S.inv, weekKey());
-      w.assign[sel.dataset.cat] = { staffId: sel.value, pinned: true }; // a manual choice is kept
+      w.assign[sel.dataset.cat] = { staffId: sel.value, pinned: true };
       save();
       return FOH.app.render();
     }
@@ -19617,13 +20578,17 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
 
   function injectBatchCounter() {
     const countBody = $('countBody');
-    if (!countBody || countBody.querySelector('.batch-box')) return;
+    if (!countBody) return;
     const goodInput = countBody.querySelector('input.count-in[data-field="good"]');
     if (!goodInput) return;
 
+    const existing = countBody.querySelector('.batch-box');
+    if (existing) existing.remove();
+
     const itemTitle = (countBody.querySelector('.iname') || {}).textContent || 'item';
+    const weekKey = goodInput.dataset.week || (S && S.date) || 'today';
     const variantId = (goodInput.dataset && (goodInput.dataset.variant || goodInput.dataset.id)) || (goodInput.closest('[data-id]') || {}).dataset?.id || '';
-    const bKey = S.date + '|' + (variantId ? variantId + '|' : '') + itemTitle;
+    const bKey = weekKey + '|' + (variantId || itemTitle);
     const allBatches = loadBatches();
     const list = Array.isArray(allBatches[bKey]) ? allBatches[bKey] : [];
 
@@ -19653,6 +20618,8 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
       saveBatches(allBatches);
       goodInput.value = String(nextVal);
       goodInput.dispatchEvent(new Event('change', { bubbles: true }));
+      if (navigator.vibrate) navigator.vibrate(10);
+      injectBatchCounter();
     };
 
     [6, 12, 24, 36].forEach((n) => {
@@ -19667,7 +20634,7 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     customBtn.addEventListener('click', () => {
       const raw = prompt(t('batchPrompt'));
       const n = Math.floor(Number(raw));
-      if ( n > 0 && n <= 9999 ) applyBatch(n);
+      if (n > 0 && n <= 9999) applyBatch(n);
     });
     btns.append(customBtn);
 
@@ -19681,6 +20648,8 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
         const cur = Number(goodInput.value) || 0;
         goodInput.value = String(Math.max(0, cur - last));
         goodInput.dispatchEvent(new Event('change', { bubbles: true }));
+        if (navigator.vibrate) navigator.vibrate(10);
+        injectBatchCounter();
       });
       btns.append(undoB);
     }
@@ -21404,29 +22373,47 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
           count_week_key: last.countKey || null,
           count_category_id: last.countCat || null,
         });
+        if (FOH.cloudRealtime && FOH.cloudRealtime.broadcast) {
+          FOH.cloudRealtime.broadcast('BREAKAGE_REPORTED', {
+            reportId: last.id,
+            byName: last.by || (session && session.displayName) || 'Staff',
+            qty: last.qty,
+            cond: last.cond,
+          });
+        }
       });
     }
 
     if ($('countSheet')) {
       $('countSheet').addEventListener('close', () => {
-        const weekKey = FOH.invStore.countDate(S.inv, S.tpl, S.date);
-        const w = S.inv.weeks[weekKey];
-        if (!w) return;
-        ['counts', 'recounts'].forEach((bucket) => {
-          Object.entries(w[bucket] || {}).forEach(([catId, entry]) => {
-            if (entry && entry.submittedAt && !entry._cloudSynced) {
-              entry._cloudSynced = true;
-              apiCall('POST', '/v1/foh-opening/inventory/blind-count', {
-                week_key: weekKey,
-                category_id: catId,
-                mode: bucket === 'recounts' ? 'recount' : 'count',
-                staff_id: entry.staffId || S.me.staffId || 'staff',
-                by_name: entry.by || (session && session.displayName) || 'Staff',
-                lines: entry.lines || {},
-                batches: loadBatches(),
-                damage_report_ids: entry.damageReportIds || [],
-              });
-            }
+        if (!S.inv || !S.inv.weeks) return;
+        Object.entries(S.inv.weeks).forEach(([weekKey, w]) => {
+          if (!w) return;
+          ['counts', 'recounts'].forEach((bucket) => {
+            Object.entries(w[bucket] || {}).forEach(([catId, entry]) => {
+              if (entry && entry.submittedAt && !entry._cloudSynced) {
+                entry._cloudSynced = true;
+                if (FOH.invStore && FOH.invStore.save) FOH.invStore.save(S.inv);
+                apiCall('POST', '/v1/foh-opening/inventory/blind-count', {
+                  week_key: weekKey,
+                  category_id: catId,
+                  mode: bucket === 'recounts' ? 'recount' : 'count',
+                  staff_id: entry.staffId || S.me.staffId || 'staff',
+                  by_name: entry.by || (session && session.displayName) || 'Staff',
+                  lines: entry.lines || {},
+                  batches: loadBatches(),
+                  damage_report_ids: entry.damageReportIds || [],
+                });
+                if (FOH.cloudRealtime && FOH.cloudRealtime.broadcast) {
+                  FOH.cloudRealtime.broadcast('INVENTORY_COUNT_SUBMITTED', {
+                    weekKey,
+                    catId,
+                    mode: bucket === 'recounts' ? 'recount' : 'count',
+                    byName: entry.by || (session && session.displayName) || 'Staff',
+                  });
+                }
+              }
+            });
           });
         });
       });
@@ -21696,6 +22683,29 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     if (FOH.app && FOH.app.render) FOH.app.render();
   }
 
+  function handleInventoryCountSubmittedBroadcast(data, ar) {
+    const modeLabel = data.mode === 'recount' ? (ar ? 'إعادة عد' : 'recount') : (ar ? 'عد أعمى' : 'blind count');
+    const title = ar
+      ? `📊 تم تسليم جرد (${modeLabel}) بواسطة ${data.byName || 'الموظف'}`
+      : `📊 Inventory ${modeLabel} submitted by ${data.byName || 'Staff'}`;
+    if (typeof fireNativeLockScreenNotification === 'function') {
+      fireNativeLockScreenNotification(title, data.weekKey || '', 'inv_' + Date.now());
+    }
+    if (FOH.edit && FOH.edit.toast) FOH.edit.toast(title);
+    if (FOH.app && FOH.app.render) FOH.app.render();
+  }
+
+  function handleBreakageReportedBroadcast(data, ar) {
+    const title = ar
+      ? `⚠️ بلاغ كسر جديد (${data.qty || 1} قطعة) بواسطة ${data.byName || 'الموظف'}`
+      : `⚠️ New breakage reported (${data.qty || 1} pcs) by ${data.byName || 'Staff'}`;
+    if (typeof fireNativeLockScreenNotification === 'function') {
+      fireNativeLockScreenNotification(title, data.cond || '', 'brk_' + Date.now());
+    }
+    if (FOH.edit && FOH.edit.toast) FOH.edit.toast(title);
+    if (FOH.app && FOH.app.render) FOH.app.render();
+  }
+
   function handleIncomingBroadcast(data) {
     if (!data || !data.type) return;
     const ar = FOH.i18n ? FOH.i18n.lang === 'ar' : true;
@@ -21720,6 +22730,10 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
       handleShiftSealDisputeBroadcast(data, ar);
     } else if (data.type === 'QUICK_REPLENISH_TRIGGERED') {
       handleQuickReplenishBroadcast(data, ar);
+    } else if (data.type === 'INVENTORY_COUNT_SUBMITTED') {
+      handleInventoryCountSubmittedBroadcast(data, ar);
+    } else if (data.type === 'BREAKAGE_REPORTED') {
+      handleBreakageReportedBroadcast(data, ar);
     }
   }
 
@@ -24677,24 +25691,26 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
   }
 
   function addBreakageReplacement(opts = {}) {
-    const { name, qty = 1, note = '' } = opts;
+    const { name, qty = 1, note = '', group = 'foh', cat = 'foh-0', unit = 'piece', nameAr = '' } = opts;
     if (!name) return;
     getOrdDB().order = getOrdDB().order || createEmptyOrder();
     getOrdDB().order.lines = getOrdDB().order.lines || {};
     const match = getOrdDB().catalog.items.find((i) =>
-      i.name.toLowerCase().includes(name.toLowerCase()) || (i.nameAr && i.nameAr.includes(name))
+      (i.name && i.name.toLowerCase().includes(name.toLowerCase())) ||
+      (i.ar && i.ar.includes(name)) ||
+      (i.nameAr && i.nameAr.includes(name))
     );
     let itemId = match ? match.id : null;
     if (!itemId) {
-      itemId = 'break_' + Date.now().toString(36);
+      itemId = 'break_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6);
       getOrdDB().catalog.items.push({
         id: itemId,
-        groupId: 'foh',
-        categoryId: 'foh-supplies',
-        typeId: 'custom',
+        group,
+        cat,
         name,
-        nameAr: name,
-        unit: 'pcs',
+        ar: nameAr || name,
+        nameAr: nameAr || name,
+        unit: unit || 'piece',
         stockQty: 0,
         par: 0,
         quickTrack: true,
@@ -24703,8 +25719,8 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     const prev = getOrdDB().order.lines[itemId] ? getOrdDB().order.lines[itemId].qty : 0;
     getOrdDB().order.lines[itemId] = {
       qty: prev + Number(qty),
-      unit: match ? match.unit : 'pcs',
-      note: note || ((FOH.i18n && FOH.i18n.lang === 'ar') ? 'تعويض كسر زجاجي' : 'Breakage replacement'),
+      unit: match ? (match.unit || unit || 'piece') : (unit || 'piece'),
+      note: note || ((FOH.i18n && FOH.i18n.lang === 'ar') ? 'تعويض نقص/كسر' : 'Deficit/Breakage replenishment'),
     };
     saveOrdersDB();
   }
@@ -30374,7 +31390,7 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
       [ar ? 'طلبيات البار والصالة' : 'Active Order Lines', String(badgeOrd), ar ? 'اضغط لفتح قسم الطلبيات' : 'Tap to open Orders', 'orders'],
       [ar ? 'الشهادات الصحية' : 'Health Certificates', healthAlerts.length ? '⚠️ ' + healthAlerts.length : '✅ 100%', healthAlerts.length ? (ar ? 'شهادات تحتاج تجديد!' : 'Certificates need renewal!') : (ar ? 'جميع الشهادات سارية' : 'All certificates valid'), 'profile'],
       [ar ? 'اقتراحات الموظفين' : 'Staff Suggestions', String(sugs.length), ar ? 'اقتراحات لتعديل الـ Checklist' : 'Pending checklist edits', 'opening'],
-      [ar ? 'بلاغات الكسر والتالف' : 'Breakage Reports', String(breakageCount), ar ? 'في سجل الجرد' : 'Logged in Inventory', 'inv'],
+      [ar ? 'بلاغات الكسر المعلقة' : 'Pending Breakage', String(breakageCount), ar ? 'في سجل الجرد' : 'Logged in Inventory', 'inv'],
     ];
 
     cardsData.forEach(([lbl, val, sub, targetView]) => {
@@ -30448,7 +31464,7 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     const schedDone = schedStates.filter((s) => s.status === 'done').length;
     const sugs = loadSuggestions().filter((s) => s.status === 'pending');
     const healthAlerts = getHealthAlerts();
-    const breakageCount = (S.inv && S.inv.breakage ? S.inv.breakage.length : 0);
+    const breakageCount = (S.inv && Array.isArray(S.inv.breakage) ? S.inv.breakage.filter((b) => !b.approved).length : 0);
     const badgeOrd = $('badgeOrders') ? Number($('badgeOrders').textContent || '0') : 0;
 
     const hero = renderDashboardHero({ ar, gov });
@@ -32993,23 +34009,9 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     nav.append(dmgBtn);
   }
 
-  function injectInventoryDamageCard(ar) {
-    const invRoot = $('inv');
-    if (invRoot && !invRoot.hidden && !invRoot.querySelector('#invDamageReportCard')) {
-      const dmgCard = el('div', 'sec-context-bar');
-      dmgCard.id = 'invDamageReportCard';
-      dmgCard.style.border = '1.5px solid var(--accent)';
-      dmgCard.innerHTML =
-        '<div><b>🔧 ' + (ar ? 'بلاغات الكسر والتالف وطلبات الصيانة' : 'Breakage & Equipment Repair Reports') + '</b>' +
-        '<small style="display:block;color:var(--ink2);">' + (ar ? 'سجّل أي كسر في الكؤوس أو الصحون أو عطل بحاجة لصيانة' : 'Report broken items or request equipment repair') + '</small></div>';
-      const openBrkBtn = el('button', 'btn primary', ar ? '+ تسجيل كسر / طلب صيانة' : '+ Report Damage / Repair');
-      openBrkBtn.type = 'button';
-      openBrkBtn.addEventListener('click', () => {
-        if (FOH.invBreak && FOH.invBreak.open) FOH.invBreak.open();
-      });
-      dmgCard.append(openBrkBtn);
-      invRoot.prepend(dmgCard);
-    }
+  function injectInventoryDamageCard() {
+    const stale = $('invDamageReportCard');
+    if (stale) stale.remove();
   }
 
   function enhanceSidebarAndInventory() {
@@ -34572,13 +35574,16 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
   }
 
   function collectBreakageCount() {
+    const today = (FOH.time && FOH.time.todayISO) ? FOH.time.todayISO() : (S.date || new Date().toISOString().slice(0, 10));
+    const isShiftBreakage = (b) => !b.approved || (b.at && b.at.startsWith(today));
     if (S.inv && Array.isArray(S.inv.breakage)) {
-      return S.inv.breakage.length;
+      return S.inv.breakage.filter(isShiftBreakage).length;
     }
     try {
       const invData = FOH.safeJsonParse ? FOH.safeJsonParse(localStorage.getItem('foh-opening.inventory.v1'), '{}') : JSON.parse(localStorage.getItem('foh-opening.inventory.v1') || '{}');
-      return (invData && Array.isArray(invData.breakage)) ? invData.breakage.length : 0;
+      return (invData && Array.isArray(invData.breakage)) ? invData.breakage.filter(isShiftBreakage).length : 0;
     } catch {
+      /* Safe fallback when inventory storage parse fails */
       return 0;
     }
   }

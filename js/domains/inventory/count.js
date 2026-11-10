@@ -89,7 +89,9 @@
     if (x.entry && x.entry.submittedAt) return FOH.edit.toast(t('sent'));
     const w = IS.week(S.inv, x.key);
     let entry = x.entry;
-    if (!entry) entry = w.counts[catId] = { staffId: S.me.staffId, lines: {}, submittedAt: null };
+    if (!entry) entry = w.counts[catId] = { staffId: S.me.staffId, key: x.key, catId, lines: {}, submittedAt: null };
+    entry.key = x.key;
+    entry.catId = catId;
     if (!entry.expected) entry.expected = Object.fromEntries(IS.leaves(x.cat).map((v) => [v.id, v.expected]));
     if (!entry.damageReportIds) entry.damageReportIds = [];
     C = { key: x.key, cat: x.cat, mode, order: shuffled(x.ids, x.key + catId + S.me.staffId + mode), i: 0, entry };
@@ -110,6 +112,10 @@
     input.min = '0';
     input.value = value === null ? '' : String(value);
     input.dataset.field = field;
+    if (C && C.order && C.order[C.i]) {
+      input.dataset.variant = C.order[C.i];
+      input.dataset.week = C.key;
+    }
     box.append(btn('step', '−', 'dec', { field }), input, btn('step', '+', 'inc', { field }));
     return box;
   }
@@ -186,6 +192,9 @@
     back.disabled = C.i === 0;
     nav.append(back, btn('btn primary', C.i === C.order.length - 1 ? t('review') : t('nextItem'), 'next', {}));
     body.append(nav);
+    if (FOH.batchTally && FOH.batchTally.injectBatchCounter) {
+      FOH.batchTally.injectBatchCounter();
+    }
   }
 
   function review(body) {
@@ -248,30 +257,29 @@
     draw();
   }
 
-  function findSuspiciousVariance(entry, order, catId) {
+  function findSuspiciousVariance(entry, order) {
     if (!entry || !Array.isArray(order)) return null;
-    const base = IS.baseForCat ? IS.baseForCat(S.inv, catId) : null;
     const ar = FOH.i18n ? FOH.i18n.lang === 'ar' : true;
     for (let idx = 0; idx < order.length; idx++) {
       const vid = order[idx];
       const l = IS.line(entry, vid);
       if (!l || l.good === null) continue;
-      const counted = (l.good || 0) + (l.repair || 0);
-      const variant = IS.findVariant(S.inv, vid);
-      const expected = base && base[vid] !== undefined ? base[vid] : (variant && variant.expectedQty);
-      if (expected !== undefined && expected !== null && expected > 0) {
-        const diff = Math.abs(counted - expected);
-        const ratio = diff / expected;
-        if (ratio > 0.3 && diff >= 5) {
-          const item = IS.findItem(S.inv, vid) || { name: 'Item', nameAr: 'صنف' };
-          const label = nm(item);
+      const total = IS.counted(entry, vid);
+      const f = IS.findVariant(S.inv, vid);
+      if (!f) continue;
+      const expected = IS.reference(S.inv, entry, f.variant);
+      if (expected !== null && IS.isFlagged(S.inv, expected, total)) {
+        const diff = Math.abs(total - expected);
+        if (diff >= (S.inv && S.inv.settings ? S.inv.settings.flagPcs : 2)) {
+          const vLabel = IS.variantLabel(f.item, f.variant);
+          const label = [nm(f.item), vLabel].filter(Boolean).join(' · ');
           return {
             idx,
             label,
-            counted,
+            counted: total,
             promptMsg: ar
-              ? `⚠️ يرجى إعادة التأكد من عد الصنف "${label}" فقط للتأكد من الرقم المدخل (${counted}). هل أنت متأكد من دقة هذا الرقم؟`
-              : `⚠️ Please double-check your count for "${label}" (${counted}). Are you certain this count is accurate?`,
+              ? `⚠️ يرجى إعادة التأكد من عد الصنف "${label}" فقط للتأكد من الرقم المدخل (${total}). هل أنت متأكد من دقة هذا الرقم؟`
+              : `⚠️ Please double-check your count for "${label}" (${total}). Are you certain this count is accurate?`,
           };
         }
       }

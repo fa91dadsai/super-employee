@@ -193,12 +193,21 @@
     } else if (d.attr !== undefined) {
       draft.item.attrs[Number(d.attr)][d.field] = e.target.value.trim().slice(0, 60);
     } else if (d.vphoto) {
+      const v = draft.item.variants.find((x) => x.id === d.vphoto);
+      const oldPhoto = v && v.photo;
       const id = await FOH.photos.add(e.target.files[0]);
-      if (id) draft.item.variants.find((x) => x.id === d.vphoto).photo = id;
+      if (id && v) {
+        if (oldPhoto && FOH.photos && FOH.photos.remove) FOH.photos.remove(oldPhoto);
+        v.photo = id;
+      }
       draw();
     } else if (e.target.id === 'iiPhotoFile') {
+      const oldPhoto = draft.item.photo;
       const id = await FOH.photos.add(e.target.files[0]);
-      if (id) draft.item.photo = id;
+      if (id) {
+        if (oldPhoto && FOH.photos && FOH.photos.remove) FOH.photos.remove(oldPhoto);
+        draft.item.photo = id;
+      }
       draw();
     }
   }
@@ -231,6 +240,12 @@
     const f = IS.findItem(S.inv, draft.item.id);
     if (!f || !confirm(t('confirmDelItem', { name: pick(f.item.name, f.item.nameAr) }))) return;
     f.cat.items = f.cat.items.filter((x) => x !== f.item);
+    if (f.item.photo && FOH.photos && FOH.photos.remove) {
+      FOH.photos.remove(f.item.photo);
+    }
+    (f.item.variants || []).forEach((v) => {
+      if (v.photo && FOH.photos && FOH.photos.remove) FOH.photos.remove(v.photo);
+    });
     $('invItemSheet').close('deleted');
     IS.save(S.inv);
     FOH.app.render();
@@ -250,6 +265,9 @@
     sheet.addEventListener('close', () => { draft = null; });
     $('iiDelete').addEventListener('click', remove);
     $('iiPhotoRemove').addEventListener('click', () => {
+      if (draft.item.photo && FOH.photos && FOH.photos.remove) {
+        FOH.photos.remove(draft.item.photo);
+      }
       draft.item.photo = '';
       draw();
     });

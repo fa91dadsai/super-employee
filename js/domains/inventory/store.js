@@ -225,9 +225,26 @@
   function reference(inv, entry, v) {
     const base = entry && entry.expected && Object.prototype.hasOwnProperty.call(entry.expected, v.id) ? entry.expected[v.id] : v.expected;
     if (base === null) return null;
-    const linked = new Set(entry && entry.damageReportIds || []);
-    const damage = inv.breakage.filter((b) => linked.has(b.id) && b.variantId === v.id).reduce((n, b) => n + b.qty, 0);
+    const linked = new Set((entry && entry.damageReportIds) || []);
+    const damage = inv.breakage
+      .filter((b) => (linked.has(b.id) || (entry && b.countKey === entry.key && b.countCat === entry.catId)) && b.variantId === v.id && !b.deductedFromExpected)
+      .reduce((n, b) => n + b.qty, 0);
     return base - damage;
+  }
+
+  // Check if staff member has an unsubmitted count or recount for category
+  function hasPendingBlindCount(inv, tpl, date, staffId, catId) {
+    if (!staffId || !inv || !inv.weeks) return false;
+    const current = countDate(inv, tpl, date);
+    const w = inv.weeks[current];
+    if (!w || !w.published) return false;
+    if (w.approved && w.approved[catId]) return false;
+    const a = w.assign && w.assign[catId];
+    const entry = w.counts && w.counts[catId];
+    if (a && a.staffId === staffId && (!entry || !entry.submittedAt)) return true;
+    const re = w.recounts && w.recounts[catId];
+    if (re && re.staffId === staffId && !re.submittedAt) return true;
+    return false;
   }
 
   // ---- stock changes ----
@@ -237,26 +254,46 @@
 
   // Approve a category: good becomes the new expected, repairable go to
   // "in repair", write-offs leave stock. A submitted recount wins per variant.
+  // Returns list of deficits & writeoffs for auto-replenishment.
   function approve(inv, key, opts = {}) {
     const isLegacy = opts && typeof opts === 'object' && !('cat' in opts) && !('category' in opts);
     const cat = isLegacy ? opts : (opts && (opts.cat || opts.category));
     const at = isLegacy ? (arguments[3] || '') : ((opts && opts.at) || '');
-    if (!cat) return;
+    if (!cat) return [];
     const w = week(inv, key);
-    if (w.approved[cat.id]) return;
+    if (w.approved[cat.id]) return [];
     const first = w.counts[cat.id];
     const again = w.recounts[cat.id];
     const by = first && first.by;
+    const deficits = [];
     leaves(cat).forEach((v) => {
       const source = again && again.submittedAt && line(again, v.id) ? again : first;
       const l = line(source, v.id);
       if (!l || l.good === null) return;
+      const refQty = reference(inv, { key, catId: cat.id, ...(source || {}) }, v);
+      const accounted = (l.good || 0) + (l.repair || 0) + (l.writeoff || 0);
+      if (refQty !== null && refQty > accounted) {
+        const f = findVariant(inv, v.id);
+        const amt = refQty - accounted;
+        deficits.push({ variantId: v.id, qty: amt, deficit: amt, item: f && f.item, variant: v, reason: 'deficit' });
+      }
+      if (l.writeoff > 0) {
+        const f = findVariant(inv, v.id);
+        deficits.push({ variantId: v.id, qty: l.writeoff, deficit: l.writeoff, item: f && f.item, variant: v, reason: 'writeoff' });
+      }
       v.expected = l.good;
       toRepair(inv, v.id, l.repair, key, by);
       writeOff(inv, v.id, l.writeoff, key, 'count', by, '');
+      if (!inv.history) inv.history = {};
       (inv.history[v.id] = list(inv.history[v.id])).push({ date: key, qty: l.good });
     });
+    inv.breakage.forEach((b) => {
+      if ((b.countKey === key && b.countCat === cat.id) || (first?.damageReportIds?.includes(b.id))) {
+        b.deductedFromExpected = true;
+      }
+    });
     w.approved[cat.id] = at;
+    return deficits;
   }
 
   FOH.invStore = {
@@ -276,6 +313,7 @@
     week,
     approve,
     reference,
+    hasPendingBlindCount,
     toRepair,
     writeOff,
     normItem,

@@ -27,13 +27,17 @@
 
   function injectBatchCounter() {
     const countBody = $('countBody');
-    if (!countBody || countBody.querySelector('.batch-box')) return;
+    if (!countBody) return;
     const goodInput = countBody.querySelector('input.count-in[data-field="good"]');
     if (!goodInput) return;
 
+    const existing = countBody.querySelector('.batch-box');
+    if (existing) existing.remove();
+
     const itemTitle = (countBody.querySelector('.iname') || {}).textContent || 'item';
+    const weekKey = goodInput.dataset.week || (S && S.date) || 'today';
     const variantId = (goodInput.dataset && (goodInput.dataset.variant || goodInput.dataset.id)) || (goodInput.closest('[data-id]') || {}).dataset?.id || '';
-    const bKey = S.date + '|' + (variantId ? variantId + '|' : '') + itemTitle;
+    const bKey = weekKey + '|' + (variantId || itemTitle);
     const allBatches = loadBatches();
     const list = Array.isArray(allBatches[bKey]) ? allBatches[bKey] : [];
 
@@ -63,6 +67,8 @@
       saveBatches(allBatches);
       goodInput.value = String(nextVal);
       goodInput.dispatchEvent(new Event('change', { bubbles: true }));
+      if (navigator.vibrate) navigator.vibrate(10);
+      injectBatchCounter();
     };
 
     [6, 12, 24, 36].forEach((n) => {
@@ -77,7 +83,7 @@
     customBtn.addEventListener('click', () => {
       const raw = prompt(t('batchPrompt'));
       const n = Math.floor(Number(raw));
-      if ( n > 0 && n <= 9999 ) applyBatch(n);
+      if (n > 0 && n <= 9999) applyBatch(n);
     });
     btns.append(customBtn);
 
@@ -91,6 +97,8 @@
         const cur = Number(goodInput.value) || 0;
         goodInput.value = String(Math.max(0, cur - last));
         goodInput.dispatchEvent(new Event('change', { bubbles: true }));
+        if (navigator.vibrate) navigator.vibrate(10);
+        injectBatchCounter();
       });
       btns.append(undoB);
     }

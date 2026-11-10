@@ -69,7 +69,7 @@
       [ar ? 'طلبيات البار والصالة' : 'Active Order Lines', String(badgeOrd), ar ? 'اضغط لفتح قسم الطلبيات' : 'Tap to open Orders', 'orders'],
       [ar ? 'الشهادات الصحية' : 'Health Certificates', healthAlerts.length ? '⚠️ ' + healthAlerts.length : '✅ 100%', healthAlerts.length ? (ar ? 'شهادات تحتاج تجديد!' : 'Certificates need renewal!') : (ar ? 'جميع الشهادات سارية' : 'All certificates valid'), 'profile'],
       [ar ? 'اقتراحات الموظفين' : 'Staff Suggestions', String(sugs.length), ar ? 'اقتراحات لتعديل الـ Checklist' : 'Pending checklist edits', 'opening'],
-      [ar ? 'بلاغات الكسر والتالف' : 'Breakage Reports', String(breakageCount), ar ? 'في سجل الجرد' : 'Logged in Inventory', 'inv'],
+      [ar ? 'بلاغات الكسر المعلقة' : 'Pending Breakage', String(breakageCount), ar ? 'في سجل الجرد' : 'Logged in Inventory', 'inv'],
     ];
 
     cardsData.forEach(([lbl, val, sub, targetView]) => {
@@ -143,7 +143,7 @@
     const schedDone = schedStates.filter((s) => s.status === 'done').length;
     const sugs = loadSuggestions().filter((s) => s.status === 'pending');
     const healthAlerts = getHealthAlerts();
-    const breakageCount = (S.inv && S.inv.breakage ? S.inv.breakage.length : 0);
+    const breakageCount = (S.inv && Array.isArray(S.inv.breakage) ? S.inv.breakage.filter((b) => !b.approved).length : 0);
     const badgeOrd = $('badgeOrders') ? Number($('badgeOrders').textContent || '0') : 0;
 
     const hero = renderDashboardHero({ ar, gov });

@@ -1,0 +1,193 @@
+/* foh-opening/css/inventory-items.css */
+/* Executive Tactile UI/UX for Inventory Items Catalog & Settings */
+
+/* 7. Items Toolbar, Category Filter Pills & 2-Column Tactile Item Rows */
+.inv-items-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.inv-search-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.inv-search-wrap {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.inv-search-in {
+  min-height: 40px !important;
+  padding: 6px 12px !important;
+  border-radius: 12px !important;
+  font-size: 0.85rem !important;
+}
+.inv-add-cat-btn {
+  flex: 0 0 auto;
+  min-height: 40px !important;
+  padding: 0 12px !important;
+  border-radius: 12px !important;
+  font-size: 0.8rem !important;
+  font-weight: 800 !important;
+  white-space: nowrap !important;
+}
+.inv-cat-pills {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+.inv-cat-pills::-webkit-scrollbar {
+  display: none;
+}
+.inv-cat-pill {
+  flex: 0 0 auto;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 99px;
+  border: 1px solid var(--line, #e2e8e2);
+  background: var(--card, #fff);
+  color: var(--ink2, #475569);
+  font-size: 0.76rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+body.dark .inv-cat-pill {
+  background: var(--card, #17211b);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+}
+.inv-cat-pill.on {
+  background: var(--accent, #2f6b5e);
+  border-color: var(--accent, #2f6b5e);
+  color: #fff;
+}
+#inv .items .inv-item .inv-item-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 10px 14px !important;
+}
+#inv .items .inv-item .inv-item-btn {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  padding: 0 !important;
+}
+.inv-item-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.inv-item-title {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--ink, #142019);
+}
+body.dark .inv-item-title {
+  color: #f1f5f9;
+}
+.inv-item-sub {
+  font-size: 0.74rem;
+  color: var(--muted, #64748b);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.inv-item-right {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.inv-qty-badge {
+  padding: 4px 10px;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--accent, #2f6b5e) 12%, transparent);
+  color: var(--accent, #2f6b5e);
+  font-size: 0.76rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+body.dark .inv-qty-badge {
+  background: rgba(94, 234, 212, 0.14);
+  color: #5eead4;
+}
+.inv-item-arrow {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--muted, #94a3b8);
+}
+
+/* 8. Settings Rows & Role Chips (No-Wrap Horizontal Inputs) */
+.inv-set-row {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  padding: 12px 14px !important;
+}
+.inv-set-lbl {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 0%;
+  min-width: 0;
+}
+.inv-set-lbl span {
+  font-weight: 700;
+  font-size: 0.86rem;
+}
+.inv-set-lbl small {
+  font-size: 0.71rem;
+  color: var(--muted, #64748b);
+}
+#inv .inv-set-row .small-in {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: 58px !important;
+  min-height: 36px !important;
+  padding: 4px 8px !important;
+  font-size: 0.82rem !important;
+}
+#inv .inv-set-row .flag-in {
+  flex: 0 0 auto !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+#inv .inv-set-row .flag-in .small-in {
+  width: 50px !important;
+  min-width: 50px !important;
+  padding: 4px 6px !important;
+  text-align: center !important;
+}
+#inv .inv-set-row .flag-sep {
+  font-size: 0.75rem;
+  color: var(--muted, #64748b);
+  white-space: nowrap;
+}
+.inv-perm-box {
+  padding: 12px 14px !important;
+}
+.inv-perm-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.inv-reset-btn {
+  margin-top: 8px;
+  margin-bottom: 32px !important;
+}
+

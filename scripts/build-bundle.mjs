@@ -15,6 +15,8 @@ const CSS_FILES = [
   'css/checklist.css',
   'css/super-employee.css',
   'css/orders-ceen.css',
+  'css/inventory-pro.css',
+  'css/inventory-items.css',
 ];
 
 const JS_FILES = [

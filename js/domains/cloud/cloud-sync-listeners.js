@@ -144,29 +144,47 @@
           count_week_key: last.countKey || null,
           count_category_id: last.countCat || null,
         });
+        if (FOH.cloudRealtime && FOH.cloudRealtime.broadcast) {
+          FOH.cloudRealtime.broadcast('BREAKAGE_REPORTED', {
+            reportId: last.id,
+            byName: last.by || (session && session.displayName) || 'Staff',
+            qty: last.qty,
+            cond: last.cond,
+          });
+        }
       });
     }
 
     if ($('countSheet')) {
       $('countSheet').addEventListener('close', () => {
-        const weekKey = FOH.invStore.countDate(S.inv, S.tpl, S.date);
-        const w = S.inv.weeks[weekKey];
-        if (!w) return;
-        ['counts', 'recounts'].forEach((bucket) => {
-          Object.entries(w[bucket] || {}).forEach(([catId, entry]) => {
-            if (entry && entry.submittedAt && !entry._cloudSynced) {
-              entry._cloudSynced = true;
-              apiCall('POST', '/v1/foh-opening/inventory/blind-count', {
-                week_key: weekKey,
-                category_id: catId,
-                mode: bucket === 'recounts' ? 'recount' : 'count',
-                staff_id: entry.staffId || S.me.staffId || 'staff',
-                by_name: entry.by || (session && session.displayName) || 'Staff',
-                lines: entry.lines || {},
-                batches: loadBatches(),
-                damage_report_ids: entry.damageReportIds || [],
-              });
-            }
+        if (!S.inv || !S.inv.weeks) return;
+        Object.entries(S.inv.weeks).forEach(([weekKey, w]) => {
+          if (!w) return;
+          ['counts', 'recounts'].forEach((bucket) => {
+            Object.entries(w[bucket] || {}).forEach(([catId, entry]) => {
+              if (entry && entry.submittedAt && !entry._cloudSynced) {
+                entry._cloudSynced = true;
+                if (FOH.invStore && FOH.invStore.save) FOH.invStore.save(S.inv);
+                apiCall('POST', '/v1/foh-opening/inventory/blind-count', {
+                  week_key: weekKey,
+                  category_id: catId,
+                  mode: bucket === 'recounts' ? 'recount' : 'count',
+                  staff_id: entry.staffId || S.me.staffId || 'staff',
+                  by_name: entry.by || (session && session.displayName) || 'Staff',
+                  lines: entry.lines || {},
+                  batches: loadBatches(),
+                  damage_report_ids: entry.damageReportIds || [],
+                });
+                if (FOH.cloudRealtime && FOH.cloudRealtime.broadcast) {
+                  FOH.cloudRealtime.broadcast('INVENTORY_COUNT_SUBMITTED', {
+                    weekKey,
+                    catId,
+                    mode: bucket === 'recounts' ? 'recount' : 'count',
+                    byName: entry.by || (session && session.displayName) || 'Staff',
+                  });
+                }
+              }
+            });
           });
         });
       });

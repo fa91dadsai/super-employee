@@ -181,6 +181,10 @@
     if (!$('brCond').value) { alert(t('chooseDamage')); $('breakSheet').showModal(); return; }
     if (!$('brItem').value) { alert(t('itemRequired')); $('breakSheet').showModal(); togglePicker(true); return; }
     const reportId = FOH.store.uid();
+    const found = FOH.invStore ? FOH.invStore.findVariant(S.inv, $('brItem').value) : null;
+    const defaultKey = (FOH.invStore && S.tpl && S.inv) ? FOH.invStore.countDate(S.inv, S.tpl, S.date) : '';
+    const countKey = context ? context.key : defaultKey;
+    const countCat = context ? context.catId : (found && found.cat ? found.cat.id : '');
     const report = {
       id: reportId,
       variantId: $('brItem').value,
@@ -191,12 +195,20 @@
       by: S.me.name || '',
       at: FOH.time.todayISO() + ' ' + FOH.time.nowHM(),
       approved: false,
-      countKey: context ? context.key : '',
-      countCat: context ? context.catId : '',
+      countKey,
+      countCat,
       countMode: context ? context.mode : '',
     };
     S.inv.breakage.push(report);
-    if (context) context.entry.damageReportIds.push(reportId);
+    if (context) {
+      context.entry.damageReportIds.push(reportId);
+    } else if (countKey && countCat && S.inv.weeks && S.inv.weeks[countKey] && S.inv.weeks[countKey].counts[countCat]) {
+      const unsubmitted = S.inv.weeks[countKey].counts[countCat].find((c) => !c.submittedAt);
+      if (unsubmitted) {
+        const entry = unsubmitted.entries.find((e) => e.variantId === $('brItem').value);
+        if (entry && !entry.damageReportIds.includes(reportId)) entry.damageReportIds.push(reportId);
+      }
+    }
     if (!FOH.invStore.save(S.inv)) {
       S.inv.breakage.pop();
       if (context) context.entry.damageReportIds.pop();
@@ -205,19 +217,6 @@
       return;
     }
     if (context) context.onSaved();
-    if (FOH.ordersStore && FOH.ordersStore.addBreakageReplacement) {
-      const itemVal = $('brItem') ? $('brItem').value : '';
-      const noteVal = $('brNote') ? $('brNote').value.trim() : '';
-      const tool = FOH.invStore ? FOH.invStore.findVariant(S.inv, itemVal) : null;
-      const toolName = tool && tool.item ? (tool.item.name || tool.item.nameAr) : '';
-      if (toolName) {
-        FOH.ordersStore.addBreakageReplacement({
-          name: toolName,
-          qty,
-          note: noteVal || 'تعويض كسر زجاجي',
-        });
-      }
-    }
     FOH.edit.toast(t('breakSaved'));
     FOH.app.render();
   }
