@@ -12,13 +12,13 @@ Supabase cloud synchronization and WebSocket realtime pub/sub relay. Provides li
 
 ## Invariants
 - HTTP requests to cloud APIs require active session token, tenant ID, and branch ID `[cloud-sync.js:apiCall]`
-- Incoming task broadcasts ignore self-generated events (`data.originUser === curUser`) `[realtime-broadcast.js:handleIncomingRealtimeBroadcast]`
+- Incoming task broadcasts ignore self-generated events (`data.originUser === curUser`) `[realtime-handlers.js:handleIncomingBroadcast]`
 - Live connection indicator updates visual status (`#cloudRealtimeIndicator`) based on WebSocket heartbeat `[realtime-broadcast.js:updateRealtimeIndicator]`
 
 ## Side Effects
 - Opens persistent WebSocket connection to `wss://jncnbwwhjmouxptqfjaz.supabase.co/realtime/v1/websocket` `[realtime-broadcast.js:REALTIME_WS_URL]`
 - Performs authenticated network HTTP requests against Supabase backend `[cloud-sync.js:apiCall]`
-- Dispatches lock screen / push notifications via browser Notification API `[realtime-broadcast.js:fireNativeLockScreenNotification]`
+- Dispatches lock screen / push notifications via browser Notification API `[realtime-handlers.js:fireNativeLockScreenNotification]`
 
 ## Verification
 - Run: `node --test tests/*.test.mjs`

@@ -4,16 +4,13 @@
   'use strict';
 
   const $ = (id) => document.getElementById(id);
-  const S = FOH.state;
-  const { t } = FOH.i18n;
   const { el } = FOH.view;
-  const SESSION_KEY = 'foh-opening.erpSession.v1';
 
   const ACADEMY_CATALOG_KEY = 'super-employee.academy.catalog.v2';
   const ACADEMY_PROGRESS_KEY = 'super-employee.academy.progress.v1';
 
   function isAr() {
-    return FOH.i18n.lang === 'ar';
+    return FOH.i18n ? FOH.i18n.lang === 'ar' : false;
   }
 
   function getSession() {
@@ -28,25 +25,29 @@
     if (FOH.tipsView) FOH.tipsView.saveTipsData(d);
   }
 
+  function getDefaultCatalog() {
+    return (FOH.academyCatalogData && FOH.academyCatalogData.DEFAULT_ACADEMY_ITEMS) || [];
+  }
+
   function loadAcademyCatalog() {
     try {
-      const raw = FOH.safeJsonParse(localStorage.getItem(ACAD_KEY), 'null');
+      const raw = FOH.safeJsonParse(localStorage.getItem(ACADEMY_CATALOG_KEY), 'null');
       if (Array.isArray(raw) && raw.length) return raw;
-    } catch (err) { /* Storage read/write fallback */ }
-    return DEFAULT_ACADEMY_ITEMS;
+    } catch (err) { /* Storage read fallback */ }
+    return getDefaultCatalog();
   }
 
   function saveAcademyCatalog(list) {
     try {
-      localStorage.setItem(ACAD_KEY, JSON.stringify(list));
-    } catch (err) { /* Storage read/write fallback */ }
+      localStorage.setItem(ACADEMY_CATALOG_KEY, JSON.stringify(list));
+    } catch (err) { /* Storage write fallback */ }
   }
 
   function loadAcadProgress() {
     try {
-      const raw = FOH.safeJsonParse(localStorage.getItem(ACAD_PROG_KEY), 'null');
+      const raw = FOH.safeJsonParse(localStorage.getItem(ACADEMY_PROGRESS_KEY), 'null');
       if (raw && typeof raw === 'object') return raw;
-    } catch (err) { /* Storage read/write fallback */ }
+    } catch (err) { /* Storage read fallback */ }
     return {
       fadi: { xp: 140, masteredIds: ['dish_wagyu', 'dish_burrata', 'drink_ceen_mule'], studiedIds: ['dish_wagyu', 'dish_burrata', 'drink_ceen_mule'], quizAnswered: 14, quizCorrect: 13 },
       ali: { xp: 100, masteredIds: ['dish_wagyu', 'dish_burrata'], studiedIds: ['dish_wagyu', 'dish_burrata'], quizAnswered: 10, quizCorrect: 9 },
@@ -57,8 +58,8 @@
 
   function saveAcadProgress(prog) {
     try {
-      localStorage.setItem(ACAD_PROG_KEY, JSON.stringify(prog));
-    } catch (err) { /* Storage read/write fallback */ }
+      localStorage.setItem(ACADEMY_PROGRESS_KEY, JSON.stringify(prog));
+    } catch (err) { /* Storage write fallback */ }
   }
 
   function getMyAcadRecord() {
@@ -76,7 +77,7 @@
   function syncAcademyBonusToTips(uname, xp) {
     const bonusPts = Math.min(15, Math.floor((xp || 0) / 100) * 5);
     const tipsDB = loadTipsData();
-    if (tipsDB.staff && tipsDB.staff[uname]) {
+    if (tipsDB && tipsDB.staff && tipsDB.staff[uname]) {
       if (typeof tipsDB.staff[uname].basePoints !== 'number') {
         tipsDB.staff[uname].basePoints = tipsDB.staff[uname].points;
       }
@@ -88,10 +89,6 @@
   }
 
   let acadCatFilter = 'all';
-
-  // ============================================================================
-  // Academy Sub-Renderers (< 80 lines each)
-  // ============================================================================
 
   function renderAcademyHero(opts) {
     const { uname, rec, masteredCount, catalogLength, masteryPct, bonusPts, isMgr, ar, onPopQuiz, onAddItem } = opts;
@@ -267,121 +264,27 @@
     root.append(grid);
   }
 
-  // ============================================================================
-  // Interactive 3-Option Quiz Sub-Renderers (< 80 lines each)
-  // ============================================================================
-
-
   function openQuizModal(targetItem) {
     if (FOH.academyQuiz && FOH.academyQuiz.openQuizModal) {
       return FOH.academyQuiz.openQuizModal(targetItem);
     }
   }
 
-  function buildAddAcademyFormFields(ar) {
-    const catSel = el('select', 'in');
-    catSel.innerHTML =
-      '<option value="food">🍽 ' + (ar ? 'طبق طعام (Food)' : 'Food Dish') + '</option>' +
-      '<option value="drink">🍸 ' + (ar ? 'مشروب / كوكتيل بار (Drink)' : 'Bar Drink / Cocktail') + '</option>';
-
-    const nameIn = el('input', 'in');
-    nameIn.placeholder = ar ? 'اسم الطبق أو المشروب (مثال: ريزوتو الفطر البري)' : 'Item Name';
-
-    const descIn = el('textarea', 'in');
-    descIn.rows = 2;
-    descIn.placeholder = ar ? 'التوصيف القصصي وطريقة تقديمه للزبون...' : 'Description & selling pitch...';
-
-    const ingIn = el('input', 'in');
-    ingIn.placeholder = ar ? 'المكونات الأساسية ومسببات الحساسية...' : 'Ingredients & allergens...';
-
-    const qIn = el('input', 'in');
-    qIn.placeholder = ar ? 'سؤال الاختبار لهذا الصنف...' : 'Verification question...';
-
-    const opt1 = el('input', 'in');
-    opt1.placeholder = ar ? 'الخيار ١ (الإجابة الصحيحة ✓)' : 'Option 1 (Correct Answer ✓)';
-    const opt2 = el('input', 'in');
-    opt2.placeholder = ar ? 'الخيار ٢ (خاطئ)' : 'Option 2 (Wrong)';
-    const opt3 = el('input', 'in');
-    opt3.placeholder = ar ? 'الخيار ٣ (خاطئ)' : 'Option 3 (Wrong)';
-
-    return { catSel, nameIn, descIn, ingIn, qIn, opt1, opt2, opt3 };
-  }
-
-  function saveNewAcademyItem(fields, ar) {
-    const { catSel, nameIn, descIn, ingIn, qIn, opt1, opt2, opt3 } = fields;
-    const list = loadAcademyCatalog();
-    const isFood = catSel.value === 'food';
-    list.unshift({
-      id: 'acad_' + Date.now(),
-      cat: catSel.value,
-      catLabelAr: isFood ? '🍽 أطباق المنيو' : '🍸 مشروبات البار',
-      catLabelEn: isFood ? '🍽 Menu Dishes' : '🍸 Bar Drinks',
-      nameAr: nameIn.value.trim(),
-      nameEn: nameIn.value.trim(),
-      descAr: descIn.value.trim() || nameIn.value.trim(),
-      descEn: descIn.value.trim() || nameIn.value.trim(),
-      ingredientsAr: ingIn.value.trim() || 'حسب الوصفة المعتمدة',
-      allergensAr: '⚠️ راجع دليل الحساسية مع الشيف / الكابتن',
-      pairingAr: '💡 يُقدّم حسب معايير الخدمة المعتمدة في المطعم',
-      questions: [
-        {
-          qAr: qIn.value.trim(),
-          qEn: qIn.value.trim(),
-          options: [opt1.value.trim(), opt2.value.trim() || 'خيار بديل ١', opt3.value.trim() || 'خيار بديل ٢'],
-          correct: 0,
-        },
-      ],
-    });
-    saveAcademyCatalog(list);
-    FOH.edit.toast(ar ? 'تمت إضافة الصنف وسؤال الاختبار إلى الأكاديمية ✓' : 'Item added to Academy ✓');
-    FOH.app.render();
-  }
-
   function openAddAcademyItemModal() {
-    const ar = isAr();
-    let dlg = $('addAcadDialog');
-    if (!dlg) {
-      dlg = el('dialog', 'sheet');
-      dlg.id = 'addAcadDialog';
-      document.body.append(dlg);
+    if (FOH.academyAddModal && FOH.academyAddModal.openAddAcademyItemModal) {
+      return FOH.academyAddModal.openAddAcademyItemModal();
     }
-    dlg.replaceChildren();
-
-    const form = el('form', '');
-    form.method = 'dialog';
-    form.innerHTML =
-      '<div class="grab"></div>' +
-      '<h2>➕ ' + (ar ? 'إضافة طبق أو مشروب جديد للأكاديمية مع سؤال الاختبار' : 'Add Dish / Drink & Verification Question') + '</h2>';
-
-    const f = buildAddAcademyFormFields(ar);
-
-    const actions = el('div', 'sheet-actions');
-    const cancelB = el('button', 'btn', ar ? 'إلغاء' : 'Cancel');
-    cancelB.type = 'button';
-    cancelB.addEventListener('click', () => dlg.close());
-
-    const saveB = el('button', 'btn primary', ar ? '💾 حفظ الصنف وسؤال الاختبار' : '💾 Save Item & Quiz');
-    saveB.type = 'button';
-    saveB.addEventListener('click', () => {
-      if (!f.nameIn.value.trim() || !f.qIn.value.trim() || !f.opt1.value.trim()) return f.nameIn.focus();
-      saveNewAcademyItem(f, ar);
-      dlg.close();
-    });
-
-    actions.append(cancelB, saveB);
-    form.append(f.catSel, f.nameIn, f.descIn, f.ingIn, f.qIn, f.opt1, f.opt2, f.opt3, actions);
-    dlg.append(form);
-    dlg.showModal();
   }
 
   FOH.academyView = {
+    render: renderAcademyView,
+    renderAcademyView,
     loadAcademyCatalog,
     saveAcademyCatalog,
     loadAcadProgress,
     saveAcadProgress,
     getMyAcadRecord,
     syncAcademyBonusToTips,
-    renderAcademyView,
     openQuizModal,
     openAddAcademyItemModal,
   };

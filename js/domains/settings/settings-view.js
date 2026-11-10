@@ -41,9 +41,9 @@
       (ar ? 'ترخيص المنشأة الموحد في نظام ERP (Enterprise Tenant Identity)' : 'Unified ERP Tenant License & Database Schema') +
       '</div>' +
       '<div class="etb-grid">' +
-      '<div><small>' + (ar ? 'المطعم / المشترك:' : 'Tenant Name:') + '</small> <b>' + (gov.restaurantName || 'CEEN') + '</b></div>' +
-      '<div><small>' + (ar ? 'السكيمة في قاعدة البيانات:' : 'DB Schema:') + '</small> <code>' + (gov.tenantSchema || 't_ceen') + '</code></div>' +
-      '<div><small>' + (ar ? 'الفرع والموقع:' : 'Branch Code:') + '</small> <b>' + (gov.branchName || 'Amman Main') + ' (MAIN)</b></div>' +
+      '<div><small>' + (ar ? 'المطعم / المشترك:' : 'Tenant Name:') + '</small> <b>' + (FOH.escapeHtml(gov.restaurantName || 'CEEN')) + '</b></div>' +
+      '<div><small>' + (ar ? 'السكيمة في قاعدة البيانات:' : 'DB Schema:') + '</small> <code>' + (FOH.escapeHtml(gov.tenantSchema || 't_ceen')) + '</code></div>' +
+      '<div><small>' + (ar ? 'الفرع والموقع:' : 'Branch Code:') + '</small> <b>' + (FOH.escapeHtml(gov.branchName || 'Amman Main')) + ' (MAIN)</b></div>' +
       '<div><small>' + (ar ? 'حالة الحزمة:' : 'License Status:') + '</small> <span class="etb-status-pill">✓ ' + (ar ? 'مرخّص ومفعّل' : 'Active Provisioned') + '</span></div>' +
       '</div>' +
       '<p class="etb-note">' +
@@ -209,7 +209,7 @@
       const it = el('div', 'pac-item');
       it.innerHTML =
         '<div class="pac-item-info">' +
-        '<b>' + st.name + '</b> (' + (st.role || 'Staff') + ')<br>' +
+        '<b>' + FOH.escapeHtml(st.name) + '</b> (' + FOH.escapeHtml(st.role || 'Staff') + ')<br>' +
         (ar ? 'الاسم الجديد المطلوب:' : 'Requested Legal Name:') + ' <b style="color:var(--accent);">' + (FOH.escapeHtml(req.reqFullName || (req.reqFirstName + ' ' + req.reqLastName))) + '</b><br>' +
         (ar ? 'الـ Nickname المقترح:' : 'Requested Nickname:') + ' <b style="color:#10b981;">🏷️ ' + (FOH.escapeHtml(req.reqNickname || '—')) + '</b>' +
         '</div>';
@@ -250,12 +250,12 @@
     const it = el('div', 'pac-item');
     it.style.background = 'var(--card)';
     it.style.border = '1px solid var(--line)';
-    const nickStr = st.nickname ? '<span class="tag role" style="margin-inline-start:6px;">🏷️ ' + st.nickname + '</span>' : '';
+    const nickStr = st.nickname ? '<span class="tag role" style="margin-inline-start:6px;">🏷️ ' + FOH.escapeHtml(st.nickname) + '</span>' : '';
     const codeStr = st.inviteCode || 'CEEN-XXXX';
     it.innerHTML =
       '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">' +
-      '<div><b>' + st.name + '</b>' + nickStr + '<br><small style="color:var(--ink2);">' + (st.email || 'No email') + ' · ' + (st.phone || 'No phone') + '</small></div>' +
-      '<div style="display:flex;align-items:center;gap:6px;"><code class="st-code-pill">' + codeStr + '</code></div>' +
+      '<div><b>' + FOH.escapeHtml(st.name) + '</b>' + nickStr + '<br><small style="color:var(--ink2);">' + FOH.escapeHtml(st.email || 'No email') + ' · ' + FOH.escapeHtml(st.phone || 'No phone') + '</small></div>' +
+      '<div style="display:flex;align-items:center;gap:6px;"><code class="st-code-pill">' + FOH.escapeHtml(codeStr) + '</code></div>' +
       '</div>';
 
     const copyBtn = el('button', 'btn small', ar ? '📋 نسخ كود التفعيل' : '📋 Copy Invite Code');

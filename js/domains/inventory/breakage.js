@@ -206,13 +206,15 @@
     }
     if (context) context.onSaved();
     if (FOH.ordersStore && FOH.ordersStore.addBreakageReplacement) {
-      const tool = FOH.invStore ? FOH.invStore.findVariant(S.inv, brItem.value) : null;
+      const itemVal = $('brItem') ? $('brItem').value : '';
+      const noteVal = $('brNote') ? $('brNote').value.trim() : '';
+      const tool = FOH.invStore ? FOH.invStore.findVariant(S.inv, itemVal) : null;
       const toolName = tool && tool.item ? (tool.item.name || tool.item.nameAr) : '';
       if (toolName) {
         FOH.ordersStore.addBreakageReplacement({
           name: toolName,
           qty,
-          note: brNote.value.trim() || 'تعويض كسر زجاجي',
+          note: noteVal || 'تعويض كسر زجاجي',
         });
       }
     }

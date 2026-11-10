@@ -5,7 +5,6 @@
 
   const $ = (id) => document.getElementById(id);
   const S = FOH.state;
-  const SESSION_KEY = 'foh-opening.erpSession.v1';
 
   function isAr() {
     return FOH.i18n.lang === 'ar';
@@ -17,22 +16,6 @@
 
   function loadGov() {
     return FOH.gov ? FOH.gov.loadGov() : {};
-  }
-
-  function saveGov(gov) {
-    if (FOH.gov && FOH.gov.saveGov) FOH.gov.saveGov(gov);
-  }
-
-  function openSidebar() {
-    if (FOH.navigation && FOH.navigation.openSidebar) FOH.navigation.openSidebar();
-  }
-
-  function closeSidebar() {
-    if (FOH.navigation && FOH.navigation.closeSidebar) FOH.navigation.closeSidebar();
-  }
-
-  function switchView(v) {
-    if (FOH.navigation && FOH.navigation.switchView) FOH.navigation.switchView(v);
   }
 
   function ensureStaffHealthAndPerms() {
@@ -47,186 +30,16 @@
     return FOH.roleIdentity ? FOH.roleIdentity.getAppRoleIdentity() : { allowedViews: ['opening', 'mine'] };
   }
 
-  function canCurrentUserAccessOrders() {
-    return FOH.roleIdentity ? FOH.roleIdentity.canCurrentUserAccessOrders() : true;
-  }
-
   function getHealthAlerts() {
     return FOH.gov ? FOH.gov.getHealthAlerts() : [];
-  }
-
-  function getCurrentSuperRoleKey() {
-    return FOH.roleIdentity ? FOH.roleIdentity.getCurrentSuperRoleKey() : 'staff';
-  }
-
-  function updateNotifBellUI() {
-    if (FOH.notifCenter && FOH.notifCenter.updateNotifBellUI) FOH.notifCenter.updateNotifBellUI();
   }
 
   function loadSuggestions() {
     return FOH.suggestions ? FOH.suggestions.loadSuggestions() : [];
   }
 
-  function ensureUpgradedClosingSections() {
-    if (FOH.opsLifecycle) FOH.opsLifecycle.ensureUpgradedClosingSections();
-  }
-
-  function ensureNotifBellInHeader() {
-    if (FOH.notifCenter) FOH.notifCenter.ensureNotifBellInHeader();
-  }
-
-  function renderHealthBanner() {
-    if (FOH.gov) FOH.gov.renderHealthBanner();
-  }
-
-  function renderSmartAlertBanners() {
-    if (FOH.snoozeEngine) FOH.snoozeEngine.renderSmartAlertBanners();
-  }
-
-  function renderOpsLifecycleBar() {
-    if (FOH.opsLifecycle) FOH.opsLifecycle.renderOpsLifecycleBar();
-  }
-
-  function renderChecklistGovBar() {
-    if (FOH.suggestions) FOH.suggestions.renderChecklistGovBar();
-  }
-
-  function enhanceChecklistContextAndRoleScope() {
-    if (FOH.navigation) FOH.navigation.enhanceChecklistContextAndRoleScope();
-  }
-
-  function renderClosingDeptFilterBar() {
-    if (FOH.opsLifecycle) FOH.opsLifecycle.renderClosingDeptFilterBar();
-  }
-
-  function injectChecklistItemNotes() {
-    if (FOH.suggestions) FOH.suggestions.injectChecklistItemNotes();
-  }
-
-  function enhanceSidebarAndInventory() {
-    if (FOH.navigation) FOH.navigation.enhanceSidebarAndInventory();
-  }
-
-  function wireAutomaticTaskCreationNotifications() {
-    if (FOH.taskInbox) FOH.taskInbox.wireAutomaticTaskCreationNotifications();
-  }
-
-  function enforceTimeBasedSheetSchedule() {
-    if (FOH.threeShifts) FOH.threeShifts.enforceTimeBasedSheetSchedule();
-  }
-
-  function relocateHeaderSubbarsToMain() {
-    if (FOH.headerSubbars) FOH.headerSubbars.relocateHeaderSubbarsToMain();
-  }
-
-  function renderCleanHeaderText() {
-    if (FOH.headerSubbars) FOH.headerSubbars.renderCleanHeaderText();
-  }
-
-  function collapseOpsLifecycleBarToOneLine() {
-    if (FOH.headerSubbars) FOH.headerSubbars.collapseOpsLifecycleBarToOneLine();
-  }
-
-  function renderUnifiedSingleRowChecklistBar() {
-    if (FOH.headerSubbars) FOH.headerSubbars.renderUnifiedSingleRowChecklistBar();
-  }
-
-  function renderUnifiedThreeSheetNav() {
-    if (FOH.threeShifts) FOH.threeShifts.renderUnifiedThreeSheetNav();
-  }
-
-  function renderRoleSpecificLandingHero() {
-    if (FOH.landingHero) FOH.landingHero.renderRoleSpecificLandingHero();
-  }
-
-  function renderAssignedTaskBadgesAndFilter() {
-    if (FOH.taskAssignment) FOH.taskAssignment.renderAssignedTaskBadgesAndFilter();
-  }
-
-  function injectAssignTaskBtnIntoToolbarAndMine() {
-    if (FOH.taskAssignment) FOH.taskAssignment.injectAssignTaskBtnIntoToolbarAndMine();
-  }
-
-  function injectRoleSwitcherInSidebar() {
-    if (FOH.headerSubbars) FOH.headerSubbars.injectRoleSwitcherInSidebar();
-  }
-
-  function renderAcademyView(el) {
-    if (FOH.academyView) FOH.academyView.renderAcademyView(el);
-  }
-
-  function renderTipsView(el) {
-    if (FOH.tipsView) FOH.tipsView.renderTipsView(el);
-  }
-
-  function renderDashboardView(el) {
-    if (FOH.dashboardView) FOH.dashboardView.renderDashboardView(el);
-  }
-
-  function renderProfilePageView(el) {
-    if (FOH.healthProfileView && FOH.healthProfileView.renderProfilePageView) {
-      FOH.healthProfileView.renderProfilePageView(el);
-    } else if (FOH.healthProfile && FOH.healthProfile.renderProfilePageView) {
-      FOH.healthProfile.renderProfilePageView(el);
-    }
-  }
-
-  function renderSettingsView(el) {
-    if (FOH.settingsView) FOH.settingsView.renderSettingsView(el);
-  }
-
-  function appendHoursAndSuperRolesSettings(el) {
-    if (FOH.hoursSettings) FOH.hoursSettings.appendHoursAndSuperRolesSettings(el);
-  }
-
   function checkExpiredSnoozeTimers() {
     if (FOH.snoozeEngine) FOH.snoozeEngine.checkExpiredSnoozeTimers();
-  }
-
-  function syncBrandAndTitles(opts) {
-    const { ar, gov, ident, restName, canEdit, isMgr } = opts;
-    if ($('loginTitle')) $('loginTitle').textContent = 'Super Employee';
-    if ($('loginSubtitle')) $('loginSubtitle').textContent = restName + ' · ' + (ar ? 'منصة العمليات الذكية للمطعم والبار' : 'Smart Restaurant & Bar Operations');
-    const brandPill = document.querySelector('.login-brand-pill');
-    if (brandPill) brandPill.textContent = '🍽 ' + restName;
-
-    if ($('title')) {
-      $('title').textContent = S.editing
-        ? (ar ? 'تعديل الشيك ليست' : 'Edit Checklist')
-        : (ar ? ident.titleAr : ident.titleEn);
-    }
-    document.title = (ar ? ident.titleAr : ident.titleEn) + ' · ' + restName;
-    if ($('restaurantBadge')) $('restaurantBadge').textContent = '🍽 ' + restName;
-    if ($('activeSectionBadge')) $('activeSectionBadge').style.display = 'none';
-    if ($('checklistLockPill')) $('checklistLockPill').style.display = 'none';
-
-    if ($('ordersTab')) $('ordersTab').hidden = !canCurrentUserAccessOrders();
-    if ($('lockBtn')) {
-      $('lockBtn').hidden = !isMgr || S.editing;
-      $('lockBtn').textContent = gov.checklistLocked ? '🔒' : '🔓';
-      $('lockBtn').title = gov.checklistLocked ? (ar ? 'فتح قفل الشيك ليست' : 'Unlock Checklist') : (ar ? 'قفل الشيك ليست' : 'Lock Checklist');
-    }
-    if ($('modeBtn')) {
-      $('modeBtn').style.display = (canEdit || S.editing) ? '' : 'none';
-    }
-    document.body.classList.toggle('focused-non-opening', !S.editing && S.view !== 'opening');
-  }
-
-  function renderActiveNonOpeningViews() {
-    if (S.editing) return;
-    if (S.view === 'academy' && $('academyView')) renderAcademyView($('academyView'));
-    if (S.view === 'tips' && $('tipsView')) renderTipsView($('tipsView'));
-    if (S.view === 'dashboard' && $('dashboardView')) renderDashboardView($('dashboardView'));
-    if (S.view === 'profile' && $('profilePageView')) renderProfilePageView($('profilePageView'));
-    if (S.view === 'dayoff' && $('dayoffView') && FOH.dayOff && FOH.dayOff.buildDayOffSection) {
-      $('dayoffView').replaceChildren();
-      const sec = FOH.dayOff.buildDayOffSection(false);
-      if (sec) $('dayoffView').append(sec);
-    }
-    if (S.view === 'settings' && $('settingsView')) {
-      renderSettingsView($('settingsView'));
-      appendHoursAndSuperRolesSettings($('settingsView'));
-    }
   }
 
   function syncSuperEmployeeUI() {
@@ -243,7 +56,9 @@
     const restName = ar ? gov.restaurantNameAr : gov.restaurantName;
     const ident = getAppRoleIdentity();
 
-    syncBrandAndTitles({ ar, gov, ident, restName, canEdit, isMgr });
+    if (FOH.superEmployeeWire) {
+      FOH.superEmployeeWire.syncBrandAndTitles({ ar, gov, ident, restName, canEdit, isMgr });
+    }
 
     const alerts = getHealthAlerts();
     const pendingSugs = loadSuggestions().filter((s) => s.status === 'pending');
@@ -251,73 +66,40 @@
       $('sbAlertDot').hidden = !(alerts.length > 0 || (isMgr && pendingSugs.length > 0));
     }
 
-    ensureUpgradedClosingSections();
-    ensureNotifBellInHeader();
-    renderHealthBanner();
-    renderSmartAlertBanners();
-    renderOpsLifecycleBar();
-    renderChecklistGovBar();
-    enhanceChecklistContextAndRoleScope();
-    renderClosingDeptFilterBar();
-    injectChecklistItemNotes();
-    enhanceSidebarAndInventory();
-    wireAutomaticTaskCreationNotifications();
-    enforceTimeBasedSheetSchedule();
-    relocateHeaderSubbarsToMain();
-    renderCleanHeaderText();
-    collapseOpsLifecycleBarToOneLine();
-    renderUnifiedSingleRowChecklistBar();
-    renderUnifiedThreeSheetNav();
-    renderRoleSpecificLandingHero();
-    renderAssignedTaskBadgesAndFilter();
-    injectAssignTaskBtnIntoToolbarAndMine();
-    injectRoleSwitcherInSidebar();
+    if (FOH.opsLifecycle) FOH.opsLifecycle.ensureUpgradedClosingSections();
+    if (FOH.notifCenter) FOH.notifCenter.ensureNotifBellInHeader();
+    if (FOH.gov) FOH.gov.renderHealthBanner();
+    if (FOH.snoozeEngine) FOH.snoozeEngine.renderSmartAlertBanners();
+    if (FOH.opsLifecycle) FOH.opsLifecycle.renderOpsLifecycleBar();
+    if (FOH.suggestions) FOH.suggestions.renderChecklistGovBar();
+    if (FOH.navigation) FOH.navigation.enhanceChecklistContextAndRoleScope();
+    if (FOH.opsLifecycle) FOH.opsLifecycle.renderClosingDeptFilterBar();
+    if (FOH.suggestions) FOH.suggestions.injectChecklistItemNotes();
+    if (FOH.navigation) FOH.navigation.enhanceSidebarAndInventory();
+    if (FOH.taskInbox) FOH.taskInbox.wireAutomaticTaskCreationNotifications();
+    if (FOH.threeShifts) FOH.threeShifts.enforceTimeBasedSheetSchedule();
+    if (FOH.headerSubbars) {
+      FOH.headerSubbars.relocateHeaderSubbarsToMain();
+      FOH.headerSubbars.renderCleanHeaderText();
+      FOH.headerSubbars.collapseOpsLifecycleBarToOneLine();
+      FOH.headerSubbars.renderUnifiedSingleRowChecklistBar();
+      FOH.headerSubbars.injectRoleSwitcherInSidebar();
+    }
+    if (FOH.threeShifts) FOH.threeShifts.renderUnifiedThreeSheetNav();
+    if (FOH.landingHero) FOH.landingHero.renderRoleSpecificLandingHero();
+    if (FOH.taskAssignment) {
+      FOH.taskAssignment.renderAssignedTaskBadgesAndFilter();
+      FOH.taskAssignment.injectAssignTaskBtnIntoToolbarAndMine();
+    }
     if (FOH.sectionAssignment && FOH.sectionAssignment.injectSectionControls) {
       FOH.sectionAssignment.injectSectionControls();
     }
     if (FOH.bottomBar && FOH.bottomBar.syncBottomBar) FOH.bottomBar.syncBottomBar();
     if (FOH.modeDeptPanels && FOH.modeDeptPanels.syncPanels) FOH.modeDeptPanels.syncPanels();
 
-    renderActiveNonOpeningViews();
-  }
-
-  function wireSidebarControls() {
-    if ($('sidebarToggleBtn')) $('sidebarToggleBtn').addEventListener('click', openSidebar);
-    if ($('sbCloseBtn')) $('sbCloseBtn').addEventListener('click', closeSidebar);
-    if ($('sidebarBackdrop')) $('sidebarBackdrop').addEventListener('click', closeSidebar);
-
-    if ($('sbThemeToggle')) {
-      $('sbThemeToggle').addEventListener('click', () => {
-        if (FOH.erpPwa && FOH.erpPwa.setTheme) {
-          FOH.erpPwa.setTheme(document.body.classList.contains('dark') ? 'light' : 'dark');
-        }
-      });
+    if (FOH.superEmployeeWire) {
+      FOH.superEmployeeWire.renderActiveNonOpeningViews();
     }
-    if ($('sbLogoutBtn')) {
-      $('sbLogoutBtn').addEventListener('click', () => {
-        localStorage.removeItem(SESSION_KEY);
-        sessionStorage.removeItem(SESSION_KEY);
-        closeSidebar();
-        location.reload();
-      });
-    }
-  }
-
-  function wireChecklistLockGuards() {
-    if ($('lockBtn')) {
-      $('lockBtn').addEventListener('click', () => {
-        const gov = loadGov();
-        const sess = getSession();
-        gov.checklistLocked = !gov.checklistLocked;
-        gov.lockedBy = (sess && sess.displayName) || 'Supervisor';
-        if (gov.checklistLocked) S.editing = false;
-        saveGov(gov);
-        FOH.edit.toast(gov.checklistLocked ? (isAr() ? 'تم قفل الشيك ليست 🔒' : 'Checklist locked 🔒') : (isAr() ? 'تم فتح قفل الشيك ليست 🔓' : 'Checklist unlocked 🔓'));
-        FOH.app.render();
-      });
-    }
-
-    // Operational task checking is never blocked for staff during active shift
   }
 
   function init() {
@@ -332,8 +114,10 @@
       syncSuperEmployeeUI();
     };
 
-    wireSidebarControls();
-    wireChecklistLockGuards();
+    if (FOH.superEmployeeWire) {
+      FOH.superEmployeeWire.wireSidebarControls();
+      FOH.superEmployeeWire.wireChecklistLockGuards();
+    }
 
     setInterval(checkExpiredSnoozeTimers, 2000);
     if ('serviceWorker' in navigator) {
@@ -350,9 +134,9 @@
 
   FOH.superEmployee = {
     init,
-    openSidebar: () => (FOH.navigation && FOH.navigation.openSidebar()),
-    closeSidebar: () => (FOH.navigation && FOH.navigation.closeSidebar()),
-    switchView: (v) => (FOH.navigation && FOH.navigation.switchView(v)),
+    openSidebar: () => (FOH.navigation && FOH.navigation.openSidebar && FOH.navigation.openSidebar()),
+    closeSidebar: () => (FOH.navigation && FOH.navigation.closeSidebar && FOH.navigation.closeSidebar()),
+    switchView: (v) => (FOH.navigation && FOH.navigation.switchView && FOH.navigation.switchView(v)),
     syncSuperEmployeeUI,
   };
 

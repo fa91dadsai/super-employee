@@ -46,6 +46,24 @@
     revBtn.addEventListener('click', () => ordGo('review'));
     draftCard.append(revBtn);
     root.append(draftCard);
+
+    const boMap = store().getBackorders ? store().getBackorders() : {};
+    const boCount = Object.keys(boMap).length;
+    if (boCount > 0) {
+      const boPill = el('div', 'backorder-pill');
+      boPill.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:8px 12px;margin:8px 0;border-radius:12px;background:var(--amber-soft);border:1px solid var(--amber);font-size:13px;';
+      boPill.innerHTML = `<span>⚠️ <b>${ar ? 'نواقص سابقة:' : 'Backorders:'}</b> ${boCount} ${ar ? 'أصناف غير مستلمة' : 'undelivered items'}</span>`;
+      const addBoBtn = el('button', 'btn tiny primary', ar ? '+ إضافة للمسودة' : '+ Add to Draft');
+      addBoBtn.type = 'button';
+      addBoBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const applied = store().applyBackordersToCurrentOrder ? store().applyBackordersToCurrentOrder() : 0;
+        if (FOH.edit && FOH.edit.toast) FOH.edit.toast(ar ? `تمت إضافة ${applied} صنف من النواقص للمسودة ✓` : `Added ${applied} backorders to draft ✓`);
+        ordGo('home');
+      });
+      boPill.append(addBoBtn);
+      root.append(boPill);
+    }
   }
 
   function createGroupCard(gid, g, db, ar) {

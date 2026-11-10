@@ -1,308 +1,6 @@
-// Default FOH opening checklist, transcribed from the paper "Opening Sheet FOH",
-// in English and Arabic. The original sheet number is kept in a comment per line.
-// Words the staff use in English (Expeditor, Cash Float, Centerpiece, Terrace)
-// stay in English inside the Arabic text. "was"/"wasAr" = earlier wording, so
-// lists saved on a device pick up the fix. "children" = sub-items (one level).
-(function (FOH) {
-  'use strict';
-
-  FOH.DEFAULT_SECTIONS = [
-    {
-      id: 'sec-bar',
-      dept: 'bar',
-      icon: '🍸',
-      title: 'Bar & Beverage Station',
-      titleAr: 'قسم البار والمشروبات',
-      assignedRoleKey: 'super_bartender',
-      assignedRoleLabel: '🍸 Super Bartender',
-      assignedUsername: 'maher',
-      items: [
-        { text: 'Make sure the bar is clean, polished and service-ready', ar: 'التأكد من نظافة البار ومحطات التحضير وجاهزيتها للخدمة' },
-        { text: 'Top up ice wells, draft lines & beverage coolers', ar: 'تعبئة أحواض الثلج وتبريد زجاجات المشروبات والنبيذ' },
-        { text: 'Check espresso machine, steam wands & grinder hopper', ar: 'فحص ماكينة الإسبريسو ومطحنة القهوة والتأكد من نقاء البن' },
-        { text: 'Cut fresh garnishes (lemon/lime/mint) & prep house syrups', ar: 'تقطيع وتجهيز الغارنيش الطازج والنعناع وفحص العصائر والـ Syrups' },
-        { text: 'Wash, polish and inspect all cocktail and wine glasses', ar: 'تلميع وفحص كؤوس الكوكتيل والنبيذ وكاسات التقديم' },
-      ],
-    },
-    {
-      id: 'sec-floor',
-      dept: 'floor',
-      icon: '🍽️',
-      title: 'Floor & Dining Tables',
-      titleAr: 'قسم الصالة والطاولات',
-      assignedRoleKey: 'super_waiter',
-      assignedRoleLabel: '⭐ Super Waiter',
-      assignedUsername: 'sara',
-      items: [
-        { text: 'Clean the table tops (Indoor & Outdoor)', ar: 'تنظيف أسطح الطاولات (داخلي وخارجي)' },
-        {
-          text: 'Set the table (service plate, cutlery, chopsticks, water glass, ashtray, table lamp, centerpiece)',
-          ar: 'تجهيز الطاولة (صحن الخدمة، أدوات المائدة، العيدان، كأس الماء، منفضة السجائر، مصباح الطاولة، الـ Centerpiece)',
-          children: [
-            { text: 'Place the service plate on the table', ar: 'وضع صحن الخدمة على الطاولة' },
-            { text: 'Arrange the cutlery (fork and knife in napkin, right of plate)', ar: 'ترتيب أدوات المائدة (الشوكة والسكين داخل المنديل يمين الصحن)' },
-            { text: 'Position chopsticks to the right of cutlery', ar: 'وضع العيدان على يمين أدوات المائدة' },
-            { text: 'Set the water glass above the cutlery', ar: 'وضع كأس الماء فوق أدوات المائدة' },
-            { text: 'Place the centerpiece and table lamp in middle of table', ar: 'وضع الـ Centerpiece ومصباح الطاولة في منتصف الطاولة' },
-            { text: 'Place the ashtray in the middle of single tables (1 per 2 guests)', ar: 'وضع منفضة السجائر في منتصف الطاولات المفردة (منفضة لكل شخصين)' },
-          ],
-        },
-        { text: 'Double-check every table is positioned and aligned according to floor plan', ar: 'التأكد من أن كل طاولة في مكانها ومحاذاتها حسب مخطط الصالة' },
-        { text: 'Check there is enough clearance for chairs & clean chair seats', ar: 'التأكد من وجود مسافة كافية للكراسي وتنظيف المقاعد' },
-        { text: 'Ensure side tables and ice buckets are cleaned & positioned', ar: 'التأكد من أن الطاولات الجانبية ودلاء الثلج في مكانها الصحيح' },
-        { text: 'Wipe and clean table bases (Indoor & Outdoor)', ar: 'مسح وتنظيف قواعد الطاولات (داخلي وخارجي)' },
-        { text: 'Make sure the terrace is clean & outdoor cushions set', ar: 'التأكد من نظافة التراس وتجهيز الوسائد الخارجية' },
-      ],
-    },
-    {
-      id: 'sec-back',
-      dept: 'back',
-      icon: '🚪',
-      title: 'Back Area & Service Station',
-      titleAr: 'قسم المنطقة الخلفية والمحطات',
-      assignedRoleKey: 'super_waiter',
-      assignedRoleLabel: '⭐ Super Waiter / Runner',
-      assignedUsername: '',
-      items: [
-        { text: 'Clean and prepare the expeditor station', ar: 'تنظيف وتجهيز محطة التنسيق (Expeditor)' },
-        { text: 'Clean the back area and service corridors', ar: 'تنظيف وترتيب المنطقة الخلفية وممر الخدمة' },
-        { text: 'Clean the stations & wipe condiment trays', ar: 'تنظيف المحطات ومسح صواني الإضافات' },
-        { text: 'Clean soy sauce bottles, salt & pepper, then refill them', ar: 'تنظيف زجاجات الصويا صوص والملاحات ثم تعبئتها' },
-        { text: 'Clean all service trays and bill folders', ar: 'تنظيف جميع صواني الخدمة وحافظات الفواتير' },
-        { text: 'Clean tissue boxes and refill them', ar: 'تنظيف علب المناديل وتعبئتها' },
-        { text: 'Make sure the W.C. restrooms are clean & stocked', ar: 'التأكد من نظافة دورات المياه وتعبئة الصابون والمحارم' },
-        { text: 'Make sure window glass is clean', ar: 'التأكد من نظافة زجاج النوافذ' },
-        { text: 'Bring the order from warehouse (ensure enough stock for 2 days)', ar: 'إحضار الطلبية من المستودع (التأكد من أن كل شيء يكفي ليومين)' },
-      ],
-    },
-    {
-      id: 'sec-host',
-      dept: 'host',
-      icon: '🛎️',
-      title: 'Host & Reception Desk',
-      titleAr: 'قسم الاستقبال والهوست',
-      assignedRoleKey: 'super_captain',
-      assignedRoleLabel: '🎖️ Super Captain / Host',
-      assignedUsername: 'ali',
-      items: [
-        { text: 'Inspect and clean the Host Stand & welcome entrance', ar: 'فحص وتنظيف كاونتر الاستقبال (Host Stand) ومدخل الصالة' },
-        { text: 'Review evening reservations, VIP notes & table plan with Floor Captain', ar: 'مراجعة حجوزات المساء وطلبات الـ VIP وتوزيع الطاولات مع الكابتن' },
-        { text: 'Clean and sanitize all food, wine & cocktail menus', ar: 'تنظيف وتعقيم كافة قوائم الطعام والمشروبات والنبيذ' },
-        { text: 'Turn on music playlist & adjust ambient lighting', ar: 'تشغيل الموسيقى وضبط الإضاءة الترحيبية والتكييف', due: '15:50' },
-        { text: 'Wear uniform, inspect grooming & be ready for service', ar: 'ارتداء الزي الرسمي والجاهزية التامة لاستقبال الضيوف', due: '15:50' },
-      ],
-    },
-    {
-      id: 'sec-cash',
-      dept: 'cash',
-      icon: '💳',
-      title: 'Cashier, POS & Tech',
-      titleAr: 'قسم الكاشير والأجهزة',
-      assignedRoleKey: 'super_manager',
-      assignedRoleLabel: '👑 Super Manager',
-      assignedUsername: 'fadi',
-      items: [
-        { text: 'Make sure all Visa machines and ordering tablets are charged', ar: 'التأكد من شحن جميع أجهزة الفيزا والتابلت' },
-        { text: 'Verify and change the cash float in till drawer', ar: 'استلام وتبديل نقد الفكة (Cash Float) في درج الكاشير' },
-        { text: 'Ensure POS terminals are online and printers ready', ar: 'التأكد من تشغيل نظام نقاط البيع (POS) وجاهزية الطابعات' },
-        { text: 'Check the safe vault and set out the daily tip sheet', ar: 'التحقق من الخزنة ووضع ورقة التبس مع تاريخ اليوم' },
-      ],
-    },
-  ];
-
-  // Positions; the owner can add, rename and remove them.
-  FOH.DEFAULT_ROLES = [
-    'Supervisor',
-    'Captain',
-    'Assistant Captain',
-    'Waiter',
-    'Bartender',
-    'Host',
-    'Runner',
-    'Steward',
-  ];
-
-  // Example scheduled tasks; every field can be changed from edit mode.
-  // rule.type: 'weekly' (days: 0 = Sunday … 6 = Saturday) or 'interval'
-  // (every N days, counted from the last time the task was done).
-  FOH.DEFAULT_TASKS = [
-    {
-      text: 'Water the trees (terrace & entrance)',
-      ar: 'سقاية الأشجار (التراس والمدخل)',
-      icon: '💧',
-      rule: { type: 'weekly', days: [0, 3] },
-      time: '10:00',
-      role: 'Steward',
-    },
-    {
-      text: 'Change & clean the soy sauce bottles',
-      ar: 'تبديل وتنظيف زجاجات الصويا',
-      icon: '🥢',
-      rule: { type: 'interval', every: 3 },
-      time: '14:00',
-      role: 'Captain',
-    },
-  ];
-})(window.FOH = window.FOH || {});
-
-// Example staff and restaurant equipment for the blind inventory count.
-// Everything here can be changed in the app; these are only starting points.
-//
-// An item is counted per variant. Variants come from up to two attributes
-// (e.g. Type × Size); only the combinations that really exist are listed.
-// cond: which damaged states apply ('repair' = can be repaired, 'writeoff').
-(function (FOH) {
-  'use strict';
-
-  // role = position name from FOH.DEFAULT_ROLES; inv = takes part in counts.
-  FOH.DEFAULT_STAFF = [
-    { name: 'Fadi', role: 'Supervisor', inv: false },
-    { name: 'Ali', role: 'Captain', inv: true },
-    { name: 'Omar', role: 'Assistant Captain', inv: true },
-    { name: 'Sara', role: 'Waiter', inv: true },
-    { name: 'Lina', role: 'Waiter', inv: true },
-    { name: 'Maher', role: 'Bartender', inv: true },
-    { name: 'Rami', role: 'Runner', inv: true },
-    { name: 'Yousef', role: 'Host', inv: true },
-  ];
-
-  const BREAKS = ['writeoff']; // glass and china: good or write-off
-  const ALL = ['repair', 'writeoff'];
-
-  // Simple item: one variant. [en, ar, expected, location, opts]
-  const i = (name, ar, expected, location, opts) => ({ name, ar, expected, location, cond: BREAKS, ...opts });
-
-  // Item with attributes: a1/a2 = [en, ar, [[valueEn, valueAr], …]]
-  // v = [[index in a1, index in a2 (or -1), expected], …]
-  const iv = (name, ar, location, a1, a2, v, opts) => ({ name, ar, location, a1, a2, v, cond: BREAKS, ...opts });
-
-  FOH.DEFAULT_INVENTORY = [
-    {
-      name: 'Glassware',
-      ar: 'الكاسات',
-      icon: '🍷',
-      items: [
-        i('Water glass', 'كأس ماء', 120, 'Bar · glass racks'),
-        iv('Wine glass', 'كأس نبيذ', 'Bar · top shelf', ['Type', 'النوع', [['Red', 'أحمر'], ['White', 'أبيض'], ['Rosé', 'روزيه']]], null, [
-          [0, -1, 48],
-          [1, -1, 48],
-        ]),
-        i('Champagne flute', 'كأس شمبانيا', 24, 'Bar · top shelf'),
-        i('Highball', 'كأس هاي بول', 60, 'Bar · back counter'),
-        i('Rocks glass', 'كأس روكس', 40, 'Bar · back counter'),
-        i('Martini glass', 'كأس مارتيني', 24, 'Bar · freezer shelf'),
-      ],
-    },
-    {
-      name: 'Cutlery',
-      ar: 'أدوات المائدة',
-      icon: '🍴',
-      items: [
-        i('Dinner fork', 'شوكة', 150, 'Station 1 & 2'),
-        i('Dinner knife', 'سكين', 150, 'Station 1 & 2'),
-        i('Steak knife', 'سكين ستيك', 60, 'Station 1'),
-        i('Dessert spoon', 'ملعقة حلويات', 100, 'Station 2'),
-        i('Teaspoon', 'ملعقة شاي', 100, 'Coffee station'),
-      ],
-    },
-    {
-      name: 'Plates & bowls',
-      ar: 'الصحون والأوعية',
-      icon: '🍽',
-      items: [
-        i('Service plate', 'صحن خدمة', 80, 'Store · shelf A'),
-        i('Main plate', 'صحن رئيسي', 120, 'Kitchen pass'),
-        i('Side plate', 'صحن جانبي', 120, 'Kitchen pass'),
-        i('Sushi board', 'لوح سوشي', 40, 'Sushi counter', { cond: ALL }),
-        iv(
-          'Soy ramekin',
-          'رامكين صويا',
-          'Kitchen pass',
-          ['Shape', 'الشكل', [['Round', 'دائري'], ['Square', 'مربع']]],
-          ['Size', 'القياس', [['2 oz', '2 أونصة'], ['3 oz', '3 أونصة'], ['4 oz', '4 أونصة']]],
-          [
-            [0, 0, 60],
-            [0, 1, 40],
-            [0, 2, 30],
-            [1, 1, 30],
-          ],
-          { hint: '2 oz fits in a closed hand · 4 oz is as wide as a teacup', hintAr: '2 أونصة بحجم قبضة اليد · 4 أونصة بعرض فنجان الشاي' }
-        ),
-        i('Rice bowl', 'وعاء أرز', 80, 'Kitchen pass'),
-      ],
-    },
-    {
-      name: 'Chopsticks & rests',
-      ar: 'العيدان ومساندها',
-      icon: '🥢',
-      items: [
-        i('Chopsticks', 'عيدان', 200, 'Station 1 & 2', { unit: 'pairs' }),
-        i('Chopstick rest', 'مسند عيدان', 150, 'Station 1 & 2'),
-      ],
-    },
-    {
-      name: 'Bar tools',
-      ar: 'أدوات البار',
-      icon: '🍸',
-      items: [
-        i('Shaker', 'شيكر', 8, 'Bar', { cond: ALL }),
-        i('Jigger', 'جيغر', 10, 'Bar', { cond: ALL }),
-        i('Bar spoon', 'ملعقة بار', 10, 'Bar', { cond: ALL }),
-        i('Strainer', 'مصفاة', 8, 'Bar', { cond: ALL }),
-        iv(
-          'Ice bucket',
-          'دلو ثلج',
-          'Bar · under counter',
-          ['Type', 'النوع', [['Stainless', 'ستانلس'], ['Acrylic', 'أكريليك'], ['Wooden', 'خشب']]],
-          ['Size', 'الحجم', [['Small · 3 L', 'صغير · 3 لتر'], ['Large · 5 L', 'كبير · 5 لتر']]],
-          [
-            [0, 0, 4],
-            [0, 1, 6],
-            [1, 1, 2],
-            [2, 1, 3],
-          ],
-          { cond: ALL, hint: 'Large = 5 L with two handles · Small has no handles', hintAr: 'الكبير 5 لتر وله مقبضان · الصغير بلا مقابض' }
-        ),
-        i('Ice tongs', 'ملقط ثلج', 12, 'Bar · under counter', { cond: ALL }),
-      ],
-    },
-    {
-      name: 'Table décor',
-      ar: 'ديكور الطاولات',
-      icon: '🕯',
-      items: [
-        iv(
-          'Centerpiece',
-          'Centerpiece',
-          'Store · décor shelf',
-          ['Type', 'النوع', [['Lamp', 'مصباح'], ['Vase', 'مزهرية'], ['Candle holder', 'حامل شموع']]],
-          ['Finish', 'التشطيب', [['Brass', 'نحاسي'], ['Glass', 'زجاج'], ['Black', 'أسود']]],
-          [
-            [0, 0, 30],
-            [1, 1, 20],
-            [2, 2, 25],
-          ],
-          { cond: ALL, hint: 'Count the complete set; candles are not counted', hintAr: 'عُدّ الطقم كاملًا؛ الشموع لا تُعدّ' }
-        ),
-        i('Ashtray', 'منفضة سجائر', 40, 'Terrace station'),
-      ],
-    },
-    {
-      name: 'Bill folders & menus',
-      ar: 'ملفات الفواتير والقوائم',
-      icon: '🧾',
-      items: [
-        i('Bill folder', 'ملف فاتورة', 30, 'Cashier', { cond: ALL }),
-        i('Food menu', 'قائمة الطعام', 40, 'Host stand', { cond: ALL }),
-        i('Drinks menu', 'قائمة المشروبات', 40, 'Host stand', { cond: ALL }),
-        i('Wine list', 'قائمة النبيذ', 20, 'Host stand', { cond: ALL }),
-      ],
-    },
-  ];
-})(window.FOH = window.FOH || {});
-
+// foh-opening/js/core/state.js
 // Local persistence: the editable template and one "run" (ticks + names) per date.
-// Everything stays in this browser's localStorage; nothing is sent anywhere.
+// Seed catalogs (DEFAULT_SECTIONS, DEFAULT_ROLES, etc.) are loaded from seed-data.js.
 //
 // Template v2: sections[] -> items[] -> children[] (sub-items, one level only).
 // A v1 list (no sub-items) is upgraded on load: see migrateV1 / fillDefaults.
@@ -485,9 +183,14 @@
     return normalize({
       ...defaultRolesAndTasks(),
       sections: FOH.DEFAULT_SECTIONS.map((s) => ({
+        id: s.id,
         title: s.title,
-        titleAr: s.ar,
+        titleAr: s.titleAr || s.ar || '',
         icon: s.icon,
+        dept: s.dept || '',
+        assignedRoleKey: s.assignedRoleKey || '',
+        assignedRoleLabel: s.assignedRoleLabel || '',
+        assignedUsername: s.assignedUsername || '',
         items: s.items.map(conv),
       })),
     });
@@ -547,7 +250,10 @@
     };
     tpl.sections.forEach((s) => {
       const def = idx.sections.get(s.title);
-      if (def && !s.titleAr) s.titleAr = def.ar;
+      if (def && !s.titleAr) s.titleAr = def.titleAr || def.ar || '';
+      if (def && !s.id && def.id) s.id = def.id;
+      if (def && !s.dept && def.dept) s.dept = def.dept;
+      if (def && !s.assignedRoleKey && def.assignedRoleKey) s.assignedRoleKey = def.assignedRoleKey;
       if (def && s.icon === DEFAULT_ICON) s.icon = def.icon;
       s.items.forEach(fix);
     });
@@ -593,6 +299,12 @@
       return tpl;
     },
     saveTemplate(tpl) {
+      if (FOH.sheetState && FOH.sheetState.getSheetType && FOH.sheetState.getSheetType() !== 'opening') {
+        const raw = read(TPL_KEY);
+        const openingBackup = (FOH.sheetState.getOpeningBackup && FOH.sheetState.getOpeningBackup()) || (raw && raw.sections) || tpl.sections;
+        const safeTpl = { ...tpl, sections: openingBackup };
+        return write(TPL_KEY, safeTpl);
+      }
       return write(TPL_KEY, tpl);
     },
     defaultTemplate: fromDefaults,

@@ -300,8 +300,10 @@
     const activeKey = isMgr && selectedTipsUser && tipsDB.staff[selectedTipsUser] ? selectedTipsUser : (tipsDB.staff[myKey] ? myKey : 'fadi');
     const emp = tipsDB.staff[activeKey];
 
-    // Auto-sync attendance if staff member has active checklist entries today
-    FOH.tipsStore.syncAttendanceFromRuns(activeKey);
+    // Auto-sync attendance only for active logged-in employee (not arbitrary user selected by manager)
+    if (myKey && !isMgr) {
+      FOH.tipsStore.syncAttendanceFromRuns(myKey);
+    }
 
     // Pure Hamilton / Largest-Remainder calculation
     const split = FOH.tipsCalc.calculateStaffShares({ totalPoolJOD: tipsDB.totalPoolJOD, staff: tipsDB.staff });

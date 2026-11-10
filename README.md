@@ -6,10 +6,10 @@ Mobile-first Progressive Web Application (PWA) designed for high-tempo restauran
 ## Local Interface & Invariants
 - `sw.js`: Service Worker caching application shell and domain modules `[sw.js:CACHE]`
 - `index.html`: Entrypoint shell providing Fluent / Material 3 styling tokens, bilingual viewport configuration, and root DOM containers `[index.html]`
-- Invariant: Service worker cache version (`CACHE = 'super-employee-v54-fast-cockpit'`) must be incremented whenever CSS or JS distribution assets are modified to prevent stale asset serving `[sw.js:CACHE]`
+- Invariant: Service worker cache version (`CACHE = 'super-employee-v65-cloud-outbox-and-seed-decomp'`) must be incremented whenever CSS or JS distribution assets are modified to prevent stale asset serving `[sw.js:CACHE]`
 - Invariant: App shell precaches all core scripts and domain modules to ensure 100% offline functionality `[sw.js:PRECACHE]`
 - Invariant: Fast Service Cockpit provides $\le 42\text{px}$ compact bar, 10-minute debounced 2-tap emergency replenishment, and Asynchronous Optimistic Shift Sealing with SHA-256 audit digests `[js/domains/shifts/shift-sealing.js]`
-- Side Effect: Caches static responses in browser `CacheStorage` and intercepts fetch requests with cache-first strategy `[sw.js:fetch]`
+- Side Effect: Caches static responses in browser `CacheStorage` and intercepts fetch requests with network-first API bypass and cache-first static strategy `[sw.js:handleFetch]`
 
 ## Subdirectories & System Boundaries
 - [Client Application Layer (js)](./js/README.md): Shared foundational services (`core`) and 16 modular operational domains (`domains`).

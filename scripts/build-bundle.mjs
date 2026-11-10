@@ -20,13 +20,19 @@ const CSS_FILES = [
 const JS_FILES = [
   'js/core/security.js',
   'js/core/i18n.js',
+  'js/core/seed-data.js',
   'js/core/state.js',
   'js/domains/checklist/model.js',
   'js/core/time.js',
   'js/core/modal-picker.js',
+  'js/core/drag-sort.js',
   'js/domains/inventory/store.js',
+  'js/domains/inventory/inventory-rotate.js',
+  'js/domains/inventory/inventory-photos.js',
+  'js/domains/checklist/edit-row.js',
   'js/domains/checklist/view.js',
   'js/domains/checklist/checklist-search.js',
+  'js/domains/tasks/task-roles-view.js',
   'js/domains/tasks/tasks-view.js',
   'js/domains/tasks/reminders.js',
   'js/domains/checklist/app.js',
@@ -48,32 +54,42 @@ const JS_FILES = [
   'js/domains/auth/auth-i18n.js',
   'js/domains/auth/auth-accounts-data.js',
   'js/domains/auth/pending-approvals.js',
+  'js/domains/auth/demo-auth.js',
   'js/domains/auth/session-auth.js',
   'js/domains/auth/profile-dialog-settings.js',
+  'js/domains/auth/profile-dialog-tabs.js',
   'js/domains/auth/profile-dialog.js',
   // Domain: Inventory
   'js/domains/inventory/batch-tally.js',
   // Domain: Shifts State & Claims
   'js/domains/shifts/sheet-state.js',
   'js/domains/shifts/section-claims.js',
+  'js/domains/checklist/section-modal-fields.js',
   'js/domains/checklist/section-assignment-modal.js',
   'js/domains/checklist/section-assignment.js',
   // Domain: Cloud & Sync
+  'js/domains/cloud/cloud-outbox.js',
   'js/domains/cloud/cloud-sync.js',
+  'js/domains/cloud/cloud-sync-listeners.js',
+  'js/domains/cloud/realtime-handlers.js',
   'js/domains/cloud/realtime-broadcast.js',
   // Domain: Tasks
   'js/domains/tasks/day-off.js',
   'js/domains/tasks/task-inbox-notif.js',
   'js/domains/tasks/task-assignment-state.js',
+  'js/domains/tasks/task-recurrence-panels.js',
   'js/domains/tasks/task-recurrence-card.js',
+  'js/domains/tasks/task-assign-inputs.js',
   'js/domains/tasks/task-assign-modal.js',
   'js/domains/tasks/task-assignment.js',
   // Domain: Orders
   'js/domains/orders/orders-catalog-data.js',
+  'js/domains/orders/orders-quick-replenish-store.js',
   'js/domains/orders/orders-store.js',
   'js/domains/orders/orders-catalog-mutations.js',
   'js/domains/orders/orders-lifecycle-store.js',
   'js/domains/orders/orders-dispatch.js',
+  'js/domains/orders/orders-add-modals.js',
   'js/domains/orders/orders-settings-modal.js',
   'js/domains/orders/orders-view-home.js',
   'js/domains/orders/orders-view-categories.js',
@@ -83,12 +99,16 @@ const JS_FILES = [
   'js/domains/orders/orders-view.js',
   // Domain: Governance & Identity
   'js/domains/governance/restaurant-gov.js',
+  'js/domains/governance/checklist-item-notes.js',
+  'js/domains/governance/suggestion-modal.js',
   'js/domains/governance/suggestions.js',
   'js/domains/shifts/role-identity.js',
   // Domain: Operations & Lifecycle
   'js/domains/operations/ops-config-store.js',
   'js/domains/operations/ops-close-dialog.js',
   'js/domains/operations/ops-lifecycle.js',
+  'js/domains/operations/ops-lifecycle-bar.js',
+  'js/domains/operations/delegation-settings.js',
   'js/domains/operations/hours-settings.js',
   // Domain: Tips, Dashboard, Settings, Profile & Academy
   'js/domains/tips/tips-calc.js',
@@ -98,12 +118,16 @@ const JS_FILES = [
   'js/domains/dashboard/dashboard-view.js',
   'js/domains/profile/health-profile-view.js',
   'js/domains/settings/settings-view.js',
+  'js/domains/academy/academy-catalog-data.js',
   'js/domains/academy/academy-quiz.js',
+  'js/domains/academy/academy-add-modal.js',
   'js/domains/academy/academy-view.js',
   // Domain: Notifications & Navigation
+  'js/domains/notifications/alert-banners.js',
   'js/domains/notifications/snooze-engine.js',
   'js/domains/notifications/notif-bell-ui.js',
   'js/domains/notifications/notif-center.js',
+  'js/domains/navigation/sidebar-enhancers.js',
   'js/domains/navigation/sidebar-nav.js',
   'js/domains/navigation/bottom-bar.js',
   'js/domains/navigation/mode-dept-panels.js',
@@ -111,8 +135,10 @@ const JS_FILES = [
   'js/domains/shifts/header-subbars.js',
   'js/domains/shifts/three-shifts-nav.js',
   'js/domains/shifts/shift-handover.js',
+  'js/domains/shifts/shift-sealing.js',
   'js/domains/shifts/landing-hero.js',
   'js/domains/shifts/signoff-gate.js',
+  'js/domains/shifts/super-employee-wire.js',
   'js/domains/shifts/super-employee-init.js',
 ];
 
@@ -153,6 +179,17 @@ const distDir = path.join(rootDir, 'dist');
 if (!fs.existsSync(distDir)) fs.mkdirSync(distDir, { recursive: true });
 fs.writeFileSync(path.join(distDir, 'index.html'), finalHtml, 'utf8');
 console.log(`✓ Dist bundle: ${path.join(distDir, 'index.html')}`);
+
+// 2b. Sync icons to dist/icons
+const iconsSrc = path.join(rootDir, 'icons');
+const iconsDst = path.join(distDir, 'icons');
+if (fs.existsSync(iconsSrc)) {
+  if (!fs.existsSync(iconsDst)) fs.mkdirSync(iconsDst, { recursive: true });
+  fs.readdirSync(iconsSrc).forEach((f) => {
+    fs.copyFileSync(path.join(iconsSrc, f), path.join(iconsDst, f));
+  });
+  console.log(`✓ Synced icons to: ${iconsDst}`);
+}
 
 // 3. Write to gh-pages-deploy/index.html
 const ghPagesPath = path.resolve('C:/Users/fadia/.gemini/antigravity/brain/f6d3cbe1-721a-41a5-86f4-bc87cbabb4d2/scratch/gh-pages-deploy/index.html');

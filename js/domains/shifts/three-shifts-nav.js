@@ -190,11 +190,16 @@
     }
   }
 
+  function setManualSheetOverride(val) {
+    manualSheetOverride = !!val;
+  }
+
   FOH.threeShifts = {
     getActiveSheetType,
     getSheetScheduleWindows,
     getScheduledSheetForNow,
     enforceTimeBasedSheetSchedule,
     renderUnifiedThreeSheetNav,
+    setManualSheetOverride,
   };
 })(window.FOH = window.FOH || {});

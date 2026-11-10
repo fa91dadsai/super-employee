@@ -281,6 +281,9 @@
   const setOrderStatus = (...a) => (life() ? life().setOrderStatus(...a) : null);
   const addBreakageReplacement = (...a) => (life() ? life().addBreakageReplacement(...a) : null);
   const confirmOrderReceiving = (...a) => (life() ? life().confirmOrderReceiving(...a) : null);
+  const getBackorders = (...a) => (life() ? life().getBackorders(...a) : {});
+  const dismissBackorder = (...a) => (life() ? life().dismissBackorder(...a) : null);
+  const applyBackordersToCurrentOrder = (...a) => (life() ? life().applyBackordersToCurrentOrder(...a) : 0);
   const getOrderHistory = (...a) => (life() ? life().getOrderHistory(...a) : []);
 
   // ---- Fast Service Cockpit: 10-Minute Cooldown Debounced Replenishment ----
@@ -322,6 +325,9 @@
     setOrderStatus,
     addBreakageReplacement,
     confirmOrderReceiving,
+    getBackorders,
+    dismissBackorder,
+    applyBackordersToCurrentOrder,
     getOrderHistory,
     isGroupAllowedForUser,
     canUserEditGroup,

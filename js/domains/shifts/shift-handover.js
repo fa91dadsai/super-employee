@@ -12,7 +12,9 @@
   }
 
   function getCurShiftType() {
-    return (FOH.sheetState && FOH.sheetState.getActiveSheetType) ? FOH.sheetState.getActiveSheetType() : 'opening';
+    return (FOH.sheetState && (FOH.sheetState.getSheetType || FOH.sheetState.getActiveSheetType))
+      ? (FOH.sheetState.getSheetType ? FOH.sheetState.getSheetType() : FOH.sheetState.getActiveSheetType())
+      : 'opening';
   }
 
   function getNextShiftType(cur) {
@@ -36,12 +38,13 @@
   }
 
   function collectBreakageCount() {
+    if (S.inv && Array.isArray(S.inv.breakage)) {
+      return S.inv.breakage.length;
+    }
     try {
-      const raw = localStorage.getItem('foh-opening.breakage.v1');
-      const list = raw ? JSON.parse(raw) : [];
-      return Array.isArray(list) ? list.length : 0;
+      const invData = FOH.safeJsonParse ? FOH.safeJsonParse(localStorage.getItem('foh-opening.inventory.v1'), '{}') : JSON.parse(localStorage.getItem('foh-opening.inventory.v1') || '{}');
+      return (invData && Array.isArray(invData.breakage)) ? invData.breakage.length : 0;
     } catch {
-      /* Safe storage fallback */
       return 0;
     }
   }
@@ -60,21 +63,17 @@
   function rolloverTasksToNextShift(tasks, targetShift) {
     if (!tasks || !tasks.length) return false;
     const ar = isAr();
-    const tplKey = targetShift === 'closing' ? 'foh-opening.closingTemplate' : 'foh-opening.midTemplate';
-    let targetTpl = null;
-    try {
-      const raw = localStorage.getItem(tplKey);
-      targetTpl = raw ? JSON.parse(raw) : null;
-    } catch {
-      /* Safe storage fallback */
-      targetTpl = null;
+    let sections = null;
+    if (targetShift === 'closing') {
+      sections = FOH.sheetState && FOH.sheetState.loadClosingSections ? FOH.sheetState.loadClosingSections() : [];
+    } else {
+      sections = FOH.sheetState && FOH.sheetState.loadMidSections ? FOH.sheetState.loadMidSections() : [];
+    }
+    if (!Array.isArray(sections) || !sections.length) {
+      sections = JSON.parse(JSON.stringify(S.tpl.sections || []));
     }
 
-    if (!targetTpl || !Array.isArray(targetTpl.sections) || !targetTpl.sections.length) {
-      targetTpl = JSON.parse(JSON.stringify(S.tpl));
-    }
-
-    let rolloverSec = targetTpl.sections.find((s) => s.id === 'sec-rollover');
+    let rolloverSec = sections.find((s) => s.id === 'sec-rollover');
     if (!rolloverSec) {
       rolloverSec = {
         id: 'sec-rollover',
@@ -83,27 +82,36 @@
         dept: 'floor',
         items: [],
       };
-      targetTpl.sections.unshift(rolloverSec);
+      sections.unshift(rolloverSec);
     }
 
-    const tag = ar ? ' [مُرحّل من الشفت السابق]' : ' [Shift Rollover]';
+    const tag = ar ? ' [مُرحّل]' : ' [Rollover]';
     tasks.forEach((t) => {
-      const newId = 'roll_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
-      rolloverSec.items.push({
-        id: newId,
-        text: (t.text || '') + tag,
-        textAr: (t.textAr || t.text || '') + tag,
-        due: t.due || '',
-        isCritical: !!t.isCritical,
-        children: [],
-      });
+      const baseText = (t.text || '').replace(/\s*\[(مُرحّل|Rollover|Shift Rollover)[^\]]*\]/g, '').trim();
+      const baseTextAr = (t.textAr || t.text || '').replace(/\s*\[(مُرحّل|Rollover|Shift Rollover)[^\]]*\]/g, '').trim();
+      const newId = 'roll_' + (t.id || Date.now());
+      if (!rolloverSec.items.some((it) => it.id === newId || it.text === baseText + tag)) {
+        rolloverSec.items.push({
+          id: newId,
+          text: baseText + tag,
+          textAr: baseTextAr + tag,
+          due: t.due || '',
+          isCritical: !!t.isCritical,
+          children: [],
+        });
+      }
     });
 
     try {
-      localStorage.setItem(tplKey, JSON.stringify(targetTpl));
+      if (targetShift === 'closing') {
+        if (FOH.sheetState && FOH.sheetState.saveClosingSections) FOH.sheetState.saveClosingSections(sections);
+        else localStorage.setItem('foh-opening.closingSections.v1', JSON.stringify(sections));
+      } else {
+        if (FOH.sheetState && FOH.sheetState.saveMidSections) FOH.sheetState.saveMidSections(sections);
+        else localStorage.setItem('foh-opening.midSections.v1', JSON.stringify(sections));
+      }
       return true;
     } catch {
-      /* Storage quota fallback */
       return false;
     }
   }

@@ -3,6 +3,9 @@
 (function (FOH) {
   'use strict';
 
+  const SUPABASE_URL = 'https://jncnbwwhjmouxptqfjaz.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_82pr7lscQZiCiyxUT_TTEA_J9IhKuz1';
+
   const $ = (id) => document.getElementById(id);
   const { el } = FOH.view;
   const t = (k) => (FOH.i18n && FOH.i18n.t ? FOH.i18n.t(k) : k);
@@ -33,7 +36,9 @@
   }
 
   function setTheme(mode) {
-    if (FOH.state && FOH.state.setTheme) {
+    if (FOH.sessionAuth && FOH.sessionAuth.setTheme) {
+      FOH.sessionAuth.setTheme(mode);
+    } else if (FOH.state && FOH.state.setTheme) {
       FOH.state.setTheme(mode);
     }
   }
@@ -114,13 +119,17 @@
     saveProfBtn.type = 'button';
     saveProfBtn.style.cssText = 'margin-top:12px;width:100%;';
     saveProfBtn.addEventListener('click', () => {
-      handleProfileSave({
+      const vals = {
         newEmail: emailIn.value.trim(),
         newPhone: phoneIn.value.trim(),
         newFn: fnIn.value.trim() || session.firstName,
         newLn: lnIn.value.trim(),
         newNick: nickIn.value.trim(),
-      }, { session, staffRec, isMgr, ar });
+      };
+      const pOpts = { session, staffRec, isMgr, ar };
+      if (FOH.profileDialog && FOH.profileDialog.handleProfileSave) {
+        FOH.profileDialog.handleProfileSave(vals, pOpts);
+      }
     });
 
     secProf.append(rowContact, nickWrap, rowNames, codeBox, saveProfBtn);
@@ -174,7 +183,9 @@
     themeBtn.style.cssText = 'width:100%;margin-bottom:10px;';
     themeBtn.addEventListener('click', () => {
       setTheme(document.body.classList.contains('dark') ? 'light' : 'dark');
-      renderProfileBody();
+      if (FOH.profileDialog && FOH.profileDialog.renderProfileBody) {
+        FOH.profileDialog.renderProfileBody();
+      }
     });
     secSet.append(themeBtn);
 
@@ -198,7 +209,9 @@
         }
         FOH.edit.toast(t('profPushSent'));
       }
-      renderProfileBody();
+      if (FOH.profileDialog && FOH.profileDialog.renderProfileBody) {
+        FOH.profileDialog.renderProfileBody();
+      }
     });
     secSet.append(pushBtn);
 
@@ -213,8 +226,12 @@
     outBtn.style.cssText = 'width:100%;margin-top:8px;';
     outBtn.addEventListener('click', () => {
       $('profileSheet').close();
-      saveSession(null, { remember: false });
-      applyAuthUI();
+      if (FOH.sessionAuth && FOH.sessionAuth.saveSession) {
+        FOH.sessionAuth.saveSession(null, { remember: false });
+      }
+      if (FOH.sessionAuth && FOH.sessionAuth.applyAuthUI) {
+        FOH.sessionAuth.applyAuthUI();
+      }
     });
     secSet.append(outBtn);
     container.append(secSet);

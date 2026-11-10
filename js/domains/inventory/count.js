@@ -248,8 +248,53 @@
     draw();
   }
 
+  function findSuspiciousVariance(entry, order, catId) {
+    if (!entry || !Array.isArray(order)) return null;
+    const base = IS.baseForCat ? IS.baseForCat(S.inv, catId) : null;
+    const ar = FOH.i18n ? FOH.i18n.lang === 'ar' : true;
+    for (let idx = 0; idx < order.length; idx++) {
+      const vid = order[idx];
+      const l = IS.line(entry, vid);
+      if (!l || l.good === null) continue;
+      const counted = (l.good || 0) + (l.repair || 0);
+      const variant = IS.findVariant(S.inv, vid);
+      const expected = base && base[vid] !== undefined ? base[vid] : (variant && variant.expectedQty);
+      if (expected !== undefined && expected !== null && expected > 0) {
+        const diff = Math.abs(counted - expected);
+        const ratio = diff / expected;
+        if (ratio > 0.3 && diff >= 5) {
+          const item = IS.findItem(S.inv, vid) || { name: 'Item', nameAr: 'صنف' };
+          const label = nm(item);
+          return {
+            idx,
+            label,
+            counted,
+            promptMsg: ar
+              ? `⚠️ يرجى إعادة التأكد من عد الصنف "${label}" فقط للتأكد من الرقم المدخل (${counted}). هل أنت متأكد من دقة هذا الرقم؟`
+              : `⚠️ Please double-check your count for "${label}" (${counted}). Are you certain this count is accurate?`,
+          };
+        }
+      }
+    }
+    return null;
+  }
+
   function send() {
     if (C.order.some((id) => !IS.line(C.entry, id) || IS.line(C.entry, id).good === null)) return alert(t('countMissing'));
+
+    // TRIZ Zero-Knowledge Variance Oracle
+    const susp = findSuspiciousVariance(C.entry, C.order, C.cat && C.cat.id);
+    if (susp && !C._oracleVerified) {
+      const ar = FOH.i18n ? FOH.i18n.lang === 'ar' : true;
+      const ok = confirm(susp.promptMsg + (ar ? '\n\nاضغط "موافق" لتأكيد الرقم، أو "إلغاء" للعودة للصنف وتعديله.' : '\n\nPress "OK" if accurate, or "Cancel" to go back and recount.'));
+      if (!ok) {
+        C.i = susp.idx;
+        draw();
+        return;
+      }
+      C._oracleVerified = true;
+    }
+
     if (!confirm(t('confirmSend'))) return;
     C.entry.submittedAt = nowStamp();
     C.entry.by = S.me.name;

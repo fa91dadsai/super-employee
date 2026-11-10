@@ -84,9 +84,14 @@
 
     // If petty cash advance requested, record it cleanly against the weekly tips store
     if (advanceFils > 0 && FOH.tipsStore && FOH.tipsStore.addAdvance) {
-      const empId = (session && session.staffId) || outgoingUser;
+      const staffKey = (session && session.username) ? session.username.toLowerCase() : outgoingUser.toLowerCase().replace(/\s+/g, '_');
       const amountJOD = advanceFils / 1000;
-      FOH.tipsStore.addAdvance(empId, amountJOD, advanceNote || 'Shift Handover Petty Advance', managerName || 'Manager');
+      FOH.tipsStore.addAdvance({
+        staffKey,
+        amountJOD,
+        note: advanceNote || 'Shift Handover Petty Advance',
+        recordedBy: managerName || 'Manager',
+      });
     }
 
     const record = {

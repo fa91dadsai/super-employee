@@ -107,21 +107,14 @@
 
 
   function allowedGroupsForCurrentRole(forceAll = false) {
-
     const entries = Object.entries(getOrdDB().catalog.groups);
-
     const session = getSession();
-
-    const isMgr = !session || !!(session.isManager || session.roleId === 'manager');
-
+    const hasAuth = !!(FOH.sessionAuth && typeof FOH.sessionAuth.loadSession === 'function');
+    const isMgr = (!hasAuth && !session) || !!(session && (session.isManager || session.roleId === 'manager'));
     if (forceAll || isMgr) return entries;
-
     const rKey = FOH.roleIdentity ? FOH.roleIdentity.getCurrentSuperRoleKey() : 'staff';
-
     const uname = (session && session.username) || '';
-
     return entries.filter(([gid]) => isGroupAllowedForUser(gid, rKey, uname, false));
-
   }
 
 

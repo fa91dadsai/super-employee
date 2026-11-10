@@ -23,6 +23,16 @@
   const formatTime12Ar = (hm) => (FOH.opsConfigStore && FOH.opsConfigStore.formatTime12Ar ? FOH.opsConfigStore.formatTime12Ar(hm) : hm);
   const saveOpsDayState = (d, st) => (FOH.opsConfigStore && FOH.opsConfigStore.saveOpsDayState ? FOH.opsConfigStore.saveOpsDayState(d, st) : null);
   const loadOpsDayState = (d) => (FOH.opsConfigStore && FOH.opsConfigStore.loadOpsDayState ? FOH.opsConfigStore.loadOpsDayState(d) : {});
+  const loadOpsConfig = () => (FOH.opsConfigStore && FOH.opsConfigStore.loadOpsConfig ? FOH.opsConfigStore.loadOpsConfig() : (FOH.opsConfigStore && FOH.opsConfigStore.DEFAULT_OPS_CONFIG) || {});
+  const toBizMinutes = (hm) => (FOH.opsConfigStore && FOH.opsConfigStore.toBizMinutes ? FOH.opsConfigStore.toBizMinutes(hm) : 0);
+  const renderOpsLifecycleBar = () => (FOH.opsLifecycle && FOH.opsLifecycle.renderOpsLifecycleBar ? FOH.opsLifecycle.renderOpsLifecycleBar() : null);
+  const loadTipsData = () => (FOH.tipsStore && FOH.tipsStore.loadTipsData ? FOH.tipsStore.loadTipsData() : null);
+  const saveTipsData = (d) => (FOH.tipsStore && FOH.tipsStore.saveTipsData ? FOH.tipsStore.saveTipsData(d) : null);
+  const activateClosingSheet = (d) => (FOH.opsLifecycle && FOH.opsLifecycle.activateClosingSheet ? FOH.opsLifecycle.activateClosingSheet(d) : null);
+  const ensureUpgradedClosingSections = () => (FOH.opsLifecycle && FOH.opsLifecycle.ensureUpgradedClosingSections ? FOH.opsLifecycle.ensureUpgradedClosingSections() : null);
+  const isClosingSheetActive = () => (FOH.opsLifecycle && FOH.opsLifecycle.isClosingSheetActive ? FOH.opsLifecycle.isClosingSheetActive() : false);
+  const hasSuperPerm = (p) => (FOH.roleIdentity && FOH.roleIdentity.hasSuperPerm ? FOH.roleIdentity.hasSuperPerm(p) : false);
+  const getSuperRoleMeta = (k) => ((FOH.roleIdentity && FOH.roleIdentity.SUPER_ROLES_META && FOH.roleIdentity.SUPER_ROLES_META[k]) || { badge: 'Staff' });
 
   function renderClosePermissionDenied(dlg, roleMeta, ar) {
     const box = el('div', '');
@@ -189,7 +199,7 @@
     const sess = getSession();
     const myName = (sess && sess.displayName) || S.me.name || 'Supervisor';
     const roleKey = getCurrentSuperRoleKey();
-    const roleMeta = SUPER_ROLES_META[roleKey] || SUPER_ROLES_META.staff;
+    const roleMeta = getSuperRoleMeta(roleKey);
     const canClose = hasSuperPerm('canCloseRestaurant');
     const canOverrideEarly = hasSuperPerm('canEarlyCloseOverride');
 
@@ -215,7 +225,7 @@
     }
 
     ensureUpgradedClosingSections();
-    const closingSecs = FOH.safeJsonParse(localStorage.getItem('foh-opening.closingSections.v1'), 'null') || DEPT_CLOSING_SECTIONS;
+    const closingSecs = FOH.safeJsonParse(localStorage.getItem('foh-opening.closingSections.v1'), 'null') || ((FOH.opsLifecycle && FOH.opsLifecycle.DEPT_CLOSING_SECTIONS) || []);
     const closingRun = FOH.safeJsonParse(localStorage.getItem('foh-opening.closingRun.' + S.date), '{"checked":{}}');
     const checkedMap = (isClosingSheetActive() ? S.run.checked : closingRun.checked) || {};
     const allClosingLeaves = closingSecs.flatMap((s) => s.items || []);

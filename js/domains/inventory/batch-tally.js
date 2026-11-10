@@ -32,7 +32,8 @@
     if (!goodInput) return;
 
     const itemTitle = (countBody.querySelector('.iname') || {}).textContent || 'item';
-    const bKey = S.date + '|' + itemTitle;
+    const variantId = (goodInput.dataset && (goodInput.dataset.variant || goodInput.dataset.id)) || (goodInput.closest('[data-id]') || {}).dataset?.id || '';
+    const bKey = S.date + '|' + (variantId ? variantId + '|' : '') + itemTitle;
     const allBatches = loadBatches();
     const list = Array.isArray(allBatches[bKey]) ? allBatches[bKey] : [];
 

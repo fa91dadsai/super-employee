@@ -1,7 +1,7 @@
 'use strict';
 
-const CACHE = 'super-employee-v63-floating-nav-capsule';
-// Rollback cache version: super-employee-v62-orders-ui-polish
+const CACHE = 'super-employee-v66-clean-code-decomp';
+// Rollback cache version: super-employee-v65-cloud-outbox-and-seed-decomp
 const PRECACHE = [
   './',
   './index.html',
@@ -18,12 +18,19 @@ const PRECACHE = [
   // JS Core & Checklist Engine
   './js/core/security.js',
   './js/core/i18n.js',
+  './js/core/seed-data.js',
   './js/core/state.js',
   './js/domains/checklist/model.js',
   './js/core/time.js',
   './js/core/modal-picker.js',
+  './js/core/drag-sort.js',
   './js/domains/inventory/store.js',
+  './js/domains/inventory/inventory-rotate.js',
+  './js/domains/inventory/inventory-photos.js',
+  './js/domains/checklist/edit-row.js',
   './js/domains/checklist/view.js',
+  './js/domains/checklist/checklist-search.js',
+  './js/domains/tasks/task-roles-view.js',
   './js/domains/tasks/tasks-view.js',
   './js/domains/tasks/reminders.js',
   './js/domains/checklist/app.js',
@@ -42,19 +49,34 @@ const PRECACHE = [
   './js/core/pwa-install.js',
   './js/core/preview-demo.js',
   // JS Domain Modules: Auth & Inventory
+  './js/domains/auth/auth-i18n.js',
+  './js/domains/auth/auth-accounts-data.js',
   './js/domains/auth/pending-approvals.js',
+  './js/domains/auth/demo-auth.js',
   './js/domains/auth/session-auth.js',
+  './js/domains/auth/profile-dialog-settings.js',
+  './js/domains/auth/profile-dialog-tabs.js',
   './js/domains/auth/profile-dialog.js',
   './js/domains/inventory/batch-tally.js',
   // JS Domain Modules: Shifts & Cloud
   './js/domains/shifts/sheet-state.js',
   './js/domains/shifts/section-claims.js',
+  './js/domains/checklist/section-modal-fields.js',
+  './js/domains/checklist/section-assignment-modal.js',
   './js/domains/checklist/section-assignment.js',
+  './js/domains/cloud/cloud-outbox.js',
   './js/domains/cloud/cloud-sync.js',
+  './js/domains/cloud/cloud-sync-listeners.js',
+  './js/domains/cloud/realtime-handlers.js',
   './js/domains/cloud/realtime-broadcast.js',
   // JS Domain Modules: Tasks & Orders
   './js/domains/tasks/day-off.js',
   './js/domains/tasks/task-inbox-notif.js',
+  './js/domains/tasks/task-assignment-state.js',
+  './js/domains/tasks/task-recurrence-panels.js',
+  './js/domains/tasks/task-recurrence-card.js',
+  './js/domains/tasks/task-assign-inputs.js',
+  './js/domains/tasks/task-assign-modal.js',
   './js/domains/tasks/task-assignment.js',
   './js/domains/orders/orders-catalog-data.js',
   './js/domains/orders/orders-quick-replenish-store.js',
@@ -72,10 +94,16 @@ const PRECACHE = [
   './js/domains/orders/orders-view.js',
   // JS Domain Modules: Governance & Identity
   './js/domains/governance/restaurant-gov.js',
+  './js/domains/governance/checklist-item-notes.js',
+  './js/domains/governance/suggestion-modal.js',
   './js/domains/governance/suggestions.js',
   './js/domains/shifts/role-identity.js',
   // JS Domain Modules: Operations & Lifecycle
+  './js/domains/operations/ops-config-store.js',
+  './js/domains/operations/ops-close-dialog.js',
   './js/domains/operations/ops-lifecycle.js',
+  './js/domains/operations/ops-lifecycle-bar.js',
+  './js/domains/operations/delegation-settings.js',
   './js/domains/operations/hours-settings.js',
   // JS Domain Modules: Tips, Dashboard, Settings, Profile & Academy
   './js/domains/tips/tips-calc.js',
@@ -85,11 +113,16 @@ const PRECACHE = [
   './js/domains/dashboard/dashboard-view.js',
   './js/domains/profile/health-profile-view.js',
   './js/domains/settings/settings-view.js',
+  './js/domains/academy/academy-catalog-data.js',
+  './js/domains/academy/academy-quiz.js',
+  './js/domains/academy/academy-add-modal.js',
   './js/domains/academy/academy-view.js',
   // JS Domain Modules: Notifications & Navigation
+  './js/domains/notifications/alert-banners.js',
   './js/domains/notifications/snooze-engine.js',
   './js/domains/notifications/notif-bell-ui.js',
   './js/domains/notifications/notif-center.js',
+  './js/domains/navigation/sidebar-enhancers.js',
   './js/domains/navigation/sidebar-nav.js',
   './js/domains/navigation/bottom-bar.js',
   './js/domains/navigation/mode-dept-panels.js',
@@ -97,8 +130,10 @@ const PRECACHE = [
   './js/domains/shifts/header-subbars.js',
   './js/domains/shifts/three-shifts-nav.js',
   './js/domains/shifts/shift-sealing.js',
+  './js/domains/shifts/shift-handover.js',
   './js/domains/shifts/landing-hero.js',
   './js/domains/shifts/signoff-gate.js',
+  './js/domains/shifts/super-employee-wire.js',
   './js/domains/shifts/super-employee-init.js',
 ];
 
@@ -122,29 +157,29 @@ self.addEventListener('activate', (event) => {
     ).then(() => self.clients.claim()).then(() =>
       self.clients.matchAll({ type: 'window' }).then((windowClients) => {
         windowClients.forEach((client) => {
-          if (client.url && 'navigate' in client) {
-            client.navigate(client.url);
-          }
+          client.postMessage({ type: 'SW_ACTIVATED', cache: CACHE });
         });
       })
     )
   );
 });
 
-self.addEventListener('fetch', (event) => {
+function handleFetch(event) {
   const req = event.request;
   if (req.method !== 'GET') return;
 
   const url = new URL(req.url);
 
-  // Network-first for navigation (HTML), dynamic API routes, and realtime channels
+  // Network-first for navigation (HTML), dynamic API routes, Supabase functions, and realtime channels
   if (
     req.mode === 'navigate' ||
     url.pathname.endsWith('/index.html') ||
     url.pathname.endsWith('/') ||
     url.pathname.includes('/rest/v1/') ||
     url.pathname.includes('/realtime/v1/') ||
-    url.pathname.includes('/auth/v1/')
+    url.pathname.includes('/auth/v1/') ||
+    url.pathname.includes('/functions/v1/') ||
+    (url.origin !== self.location.origin && !url.pathname.match(/\.(png|jpg|jpeg|svg|css|woff2?)$/i))
   ) {
     event.respondWith(
       fetch(req).catch(() =>
@@ -176,7 +211,9 @@ self.addEventListener('fetch', (event) => {
       });
     })
   );
-});
+}
+
+self.addEventListener('fetch', handleFetch);
 
 // Precision Push & Background Alarms for Due Tasks
 self.addEventListener('message', (event) => {

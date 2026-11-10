@@ -31,17 +31,13 @@
     }
 
     const comp = el('div', 'completion');
-    comp.innerHTML =
-      '<div class="complete-icon">✓</div>' +
-      '<h1>' + (pending ? (ar ? 'تم حفظ كمياتك' : 'Your quantities are saved') : (ar ? 'اكتمل فحص الكاتيجوري' : 'Category finished')) + '</h1>' +
-      '<p class="sub">' + (pending ? (ar ? 'بعض الأصناف غير مفحوصة بعد.' : 'Some items are still unchecked.') : (ar ? 'تم حفظ الكميات وجاهزة في الطلبية.' : 'Your quantities are saved in the order.')) + '</p>';
+    const compTitle = pending ? (ar ? 'تم حفظ كمياتك' : 'Your quantities are saved') : (ar ? 'اكتمل فحص الكاتيجوري' : 'Category finished');
+    const compSub = pending ? (ar ? 'بعض الأصناف غير مفحوصة بعد.' : 'Some items are still unchecked.') : (ar ? 'تم حفظ الكميات وجاهزة في الطلبية.' : 'Your quantities are saved in the order.');
+    comp.innerHTML = `<div class="complete-icon">✓</div><h1>${compTitle}</h1><p class="sub">${compSub}</p>`;
     root.append(comp);
 
     const stats = el('div', 'stats completion-stats');
-    stats.innerHTML =
-      '<div class="stat"><strong>' + n + '</strong><span>' + (ar ? 'مطلوب' : 'Requested') + '</span></div>' +
-      '<div class="stat"><strong>' + done + '</strong><span>' + (ar ? 'تم فحصها' : 'Checked') + '</span></div>' +
-      '<div class="stat"><strong>' + skipped + '</strong><span>' + (ar ? 'تخطي' : 'Skipped') + '</span></div>';
+    stats.innerHTML = `<div class="stat"><strong>${n}</strong><span>${ar ? 'مطلوب' : 'Requested'}</span></div><div class="stat"><strong>${done}</strong><span>${ar ? 'تم فحصها' : 'Checked'}</span></div><div class="stat"><strong>${skipped}</strong><span>${ar ? 'تخطي' : 'Skipped'}</span></div>`;
     root.append(stats);
 
     const acts = el('div', 'complete-actions');
@@ -72,26 +68,26 @@
     const aside = el('aside', 'review-sidebar');
     aside.innerHTML =
       '<div class="review-summary">' +
-        '<span>🛍️</span>' +
-        '<span>' + catsCount + ' ' + (ar ? 'تصنيفات' : 'categories') + ' · ' + groupsCount + ' ' + (ar ? 'أقسام' : 'sections') + '<br>' +
-        (ar ? 'طلبية موحدة جاهزة لفريقك.' : 'One order, ready for your team.') + '</span>' +
+      '<span>🛍️</span>' +
+      '<span>' + catsCount + ' ' + (ar ? 'تصنيفات' : 'categories') + ' · ' + groupsCount + ' ' + (ar ? 'أقسام' : 'sections') + '<br>' +
+      (ar ? 'طلبية موحدة جاهزة لفريقك.' : 'One order, ready for your team.') + '</span>' +
       '</div>' +
       '<div class="share-actions">' +
-        '<button type="button" class="primary" data-action="wa">' + (ar ? 'واتساب ↗' : 'WhatsApp ↗') + '</button>' +
-        '<button type="button" data-action="copy">' + (ar ? 'نسخ الطلبية' : 'Copy order') + '</button>' +
+      '<button type="button" class="primary" data-action="wa">' + (ar ? 'واتساب ↗' : 'WhatsApp ↗') + '</button>' +
+      '<button type="button" data-action="copy">' + (ar ? 'نسخ الطلبية' : 'Copy order') + '</button>' +
       '</div>' +
       '<details class="review-meta" id="orderDetails">' +
-        '<summary>' + (ar ? 'تفاصيل وملاحظات الطلبية' : 'Order details') + ' <span>' + FOH.escapeHtml(requester) + ' · ' + FOH.escapeHtml(m.orderDate || '') + '</span></summary>' +
-        '<div class="review-meta-fields">' +
-          '<div class="field">' +
-            '<label for="requester">' + (ar ? 'معدّ الطلبية:' : 'Prepared by:') + '</label>' +
-            '<input id="requester" value="' + FOH.escapeHtml(requester) + '">' +
-          '</div>' +
-          '<div class="field">' +
-            '<label for="orderNote">' + (ar ? 'ملاحظة عامة على الطلبية:' : 'General note:') + '</label>' +
-            '<textarea id="orderNote" rows="2" placeholder="' + (ar ? 'ملاحظات تسليم، وقت مطلوب...' : 'e.g. Please deliver before 5 pm') + '">' + FOH.escapeHtml(m.orderNote || '') + '</textarea>' +
-          '</div>' +
-        '</div>' +
+      '<summary>' + (ar ? 'تفاصيل وملاحظات الطلبية' : 'Order details') + ' <span>' + FOH.escapeHtml(requester) + ' · ' + FOH.escapeHtml(m.orderDate || '') + '</span></summary>' +
+      '<div class="review-meta-fields">' +
+      '<div class="field">' +
+      '<label for="requester">' + (ar ? 'معدّ الطلبية:' : 'Prepared by:') + '</label>' +
+      '<input id="requester" value="' + FOH.escapeHtml(requester) + '">' +
+      '</div>' +
+      '<div class="field">' +
+      '<label for="orderNote">' + (ar ? 'ملاحظة عامة على الطلبية:' : 'General note:') + '</label>' +
+      '<textarea id="orderNote" rows="2" placeholder="' + (ar ? 'ملاحظات تسليم، وقت مطلوب...' : 'e.g. Please deliver before 5 pm') + '">' + FOH.escapeHtml(m.orderNote || '') + '</textarea>' +
+      '</div>' +
+      '</div>' +
       '</details>';
 
     const waBtn = aside.querySelector('[data-action=wa]');
@@ -137,8 +133,8 @@
         const sec = el('section', 'review-group');
         sec.innerHTML =
           '<h2 class="review-section">' +
-            '<span>' + FOH.escapeHtml((g ? (ar ? g.nameAr || g.name : g.name) : '') + ' / ' + (c ? (ar ? c.nameAr || c.name : c.name) : '')) + '</span>' +
-            '<small>' + countInCat + '</small>' +
+          '<span>' + FOH.escapeHtml((g ? (ar ? g.nameAr || g.name : g.name) : '') + ' / ' + (c ? (ar ? c.nameAr || c.name : c.name) : '')) + '</span>' +
+          '<small>' + countInCat + '</small>' +
           '</h2>';
         secList = el('div', 'review-list');
         sec.append(secList);
@@ -148,20 +144,20 @@
       const art = el('article', 'review-line');
       art.innerHTML =
         '<div class="review-line-main">' +
-          '<b class="review-name">' + FOH.escapeHtml(ar && i.ar ? i.ar + ' · ' + i.name : i.name) + (l.note ? ' <span class="note-mark" title="Note added">•</span>' : '') + '</b>' +
-          '<div class="review-quantity">' +
-            '<div><strong>' + l.qty + '</strong><span> / ' + FOH.escapeHtml(store().ordStockDenominator(i)) + '</span></div>' +
-            '<small>' + FOH.escapeHtml(store().ordUnitText(l.qty, l.unit || i.unit)) + '</small>' +
-          '</div>' +
-          '<button type="button" class="review-edit" aria-label="Edit">' +
-            '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 5 4 4M4 20l4-1L20 7a2.8 2.8 0 0 0-4-4L4 15z"/></svg>' +
-          '</button>' +
+        '<b class="review-name">' + FOH.escapeHtml(ar && i.ar ? i.ar + ' · ' + i.name : i.name) + (l.note ? ' <span class="note-mark" title="Note added">•</span>' : '') + '</b>' +
+        '<div class="review-quantity">' +
+        '<div><strong>' + l.qty + '</strong><span> / ' + FOH.escapeHtml(store().ordStockDenominator(i)) + '</span></div>' +
+        '<small>' + FOH.escapeHtml(store().ordUnitText(l.qty, l.unit || i.unit)) + '</small>' +
+        '</div>' +
+        '<button type="button" class="review-edit" aria-label="Edit">' +
+        '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 5 4 4M4 20l4-1L20 7a2.8 2.8 0 0 0-4-4L4 15z"/></svg>' +
+        '</button>' +
         '</div>' +
         '<div class="review-line-detail" style="display:' + (ordShowDetails ? 'block' : 'none') + '">' +
-          (i.packSize ? '<p>' + (ar ? 'الحجم: ' : 'Size: ') + FOH.escapeHtml(i.packSize) + '</p>' : '') +
-          (l.note ? '<p>' + (ar ? 'ملاحظة: ' : 'Note: ') + FOH.escapeHtml(l.note) + '</p>' : '') +
-          '<p>' + (ar ? 'المخزون المسجل: ' : 'Stock: ') + FOH.escapeHtml(store().ordStockLabel(i)) + '</p>' +
-          '<button type="button" class="danger-text">' + (ar ? 'إلغاء من الطلبية' : 'Remove from order') + '</button>' +
+        (i.packSize ? '<p>' + (ar ? 'الحجم: ' : 'Size: ') + FOH.escapeHtml(i.packSize) + '</p>' : '') +
+        (l.note ? '<p>' + (ar ? 'ملاحظة: ' : 'Note: ') + FOH.escapeHtml(l.note) + '</p>' : '') +
+        '<p>' + (ar ? 'المخزون المسجل: ' : 'Stock: ') + FOH.escapeHtml(store().ordStockLabel(i)) + '</p>' +
+        '<button type="button" class="danger-text">' + (ar ? 'إلغاء من الطلبية' : 'Remove from order') + '</button>' +
         '</div>';
 
       const editBtn = art.querySelector('.review-edit');
@@ -197,8 +193,8 @@
     const compRev = el('section', 'compact-review');
     compRev.innerHTML =
       '<div class="review-title">' +
-        '<h1>' + (ar ? 'مراجعة الطلبية' : 'Review order') + '</h1>' +
-        '<span>' + list.length + ' ' + (ar ? 'أصناف' : 'items') + '</span>' +
+      '<h1>' + (ar ? 'مراجعة الطلبية' : 'Review order') + '</h1>' +
+      '<span>' + list.length + ' ' + (ar ? 'أصناف' : 'items') + '</span>' +
       '</div>';
 
     const layout = el('div', 'review-layout');
@@ -207,8 +203,8 @@
     const ordersBox = el('div', 'review-orders');
     ordersBox.innerHTML =
       '<div class="review-list-tools">' +
-        '<label><input type="checkbox" id="reviewDetails" ' + (ordShowDetails ? 'checked' : '') + '> ' + (ar ? 'إظهار التفاصيل والملاحظات' : 'Show item details') + '</label>' +
-        '<span>' + (ar ? 'طلب / مخزون' : 'Order / Stock') + '</span>' +
+      '<label><input type="checkbox" id="reviewDetails" ' + (ordShowDetails ? 'checked' : '') + '> ' + (ar ? 'إظهار التفاصيل والملاحظات' : 'Show item details') + '</label>' +
+      '<span>' + (ar ? 'طلب / مخزون' : 'Order / Stock') + '</span>' +
       '</div>';
 
     const chk = ordersBox.querySelector('#reviewDetails');
@@ -254,9 +250,38 @@
       receivedMap[i.id] = line.qty;
       const row = el('div', 'ord-receiving-item');
       row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin:6px 0;padding:8px 10px;border-radius:10px;background:var(--bg);border:1px solid var(--line);';
-      row.innerHTML = '<div><b>' + FOH.escapeHtml(ar && i.ar ? i.ar + ' · ' + i.name : i.name) + '</b><small style="display:block;color:var(--muted);">' +
-        (ar ? 'المطلوب: ' : 'Requested: ') + line.qty + ' ' + FOH.escapeHtml(line.unit || i.unit || '') + '</small></div>';
-      row.append(el('span', 'ord-receiving-qty-badge', '✓ ' + line.qty));
+      const info = el('div', '');
+      info.innerHTML = '<b>' + FOH.escapeHtml(ar && i.ar ? i.ar + ' · ' + i.name : i.name) + '</b><small style="display:block;color:var(--muted);">' +
+        (ar ? 'المطلوب: ' : 'Requested: ') + line.qty + ' ' + FOH.escapeHtml(line.unit || i.unit || '') + '</small>';
+
+      const ctr = el('div', '');
+      ctr.style.cssText = 'display:flex;align-items:center;gap:6px;';
+      const decBtn = el('button', 'btn tiny', '−');
+      decBtn.type = 'button';
+      decBtn.style.cssText = 'width:32px;height:32px;padding:0;min-height:unset;line-height:30px;';
+      const qtyBadge = el('span', 'ord-receiving-qty-badge', String(line.qty));
+      qtyBadge.style.cssText = 'min-width:32px;text-align:center;font-weight:700;';
+      const incBtn = el('button', 'btn tiny', '+');
+      incBtn.type = 'button';
+      incBtn.style.cssText = 'width:32px;height:32px;padding:0;min-height:unset;line-height:30px;';
+
+      decBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (receivedMap[i.id] > 0) {
+          receivedMap[i.id]--;
+          qtyBadge.textContent = String(receivedMap[i.id]);
+          qtyBadge.style.color = receivedMap[i.id] < line.qty ? 'var(--danger)' : '';
+        }
+      });
+      incBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        receivedMap[i.id]++;
+        qtyBadge.textContent = String(receivedMap[i.id]);
+        qtyBadge.style.color = receivedMap[i.id] < line.qty ? 'var(--danger)' : '';
+      });
+
+      ctr.append(decBtn, qtyBadge, incBtn);
+      row.append(info, ctr);
       itemsBox.append(row);
     });
 
@@ -267,7 +292,7 @@
     cancelBtn.type = 'button';
     cancelBtn.addEventListener('click', () => overlay.remove());
 
-    const confirmBtn = el('button', 'btn primary', ar ? '✓ تأكيد الاستلام بالكامل' : '✓ Confirm Full Receipt');
+    const confirmBtn = el('button', 'btn primary', ar ? '✓ تأكيد الاستلام والتوريد' : '✓ Confirm Receipt & Ingest');
     confirmBtn.type = 'button';
     confirmBtn.addEventListener('click', () => {
       store().confirmOrderReceiving({
@@ -275,7 +300,14 @@
         receiverName: (getSession() && getSession().displayName) || 'Staff',
       });
       overlay.remove();
-      if (FOH.edit && FOH.edit.toast) FOH.edit.toast(ar ? 'تم تأكيد استلام الطلبية والتوريد بنجاح ✓' : 'Order received & archived ✓');
+      const hasShortages = Object.keys(store().getBackorders ? store().getBackorders() : {}).length > 0;
+      if (FOH.edit && FOH.edit.toast) {
+        FOH.edit.toast(
+          hasShortages
+            ? (ar ? 'تم تأكيد الاستلام وترحيل النواقص لطلبية قادمة ⚠️' : 'Order received; shortages moved to backorder ⚠️')
+            : (ar ? 'تم تأكيد استلام الطلبية والتوريد بنجاح ✓' : 'Order received & archived ✓')
+        );
+      }
       ordGo('home');
     });
 

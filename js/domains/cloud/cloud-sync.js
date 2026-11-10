@@ -36,9 +36,14 @@
   }
 
   // ---- Cloud API Client (/v1/foh-opening/*) ----
-  async function apiCall(method, path, body) {
+  async function apiCall(method, path, body, enqueueIfOffline = true) {
     const session = getSession();
-    if (!session || !session.accessToken || !session.tenantId || !session.branchId) return null;
+    if (!session || !session.accessToken || !session.tenantId || !session.branchId) {
+      if (method !== 'GET' && enqueueIfOffline && FOH.cloudOutbox && typeof FOH.cloudOutbox.enqueue === 'function') {
+        FOH.cloudOutbox.enqueue({ method, path, body });
+      }
+      return null;
+    }
     try {
       const headers = {
         apikey: SUPABASE_ANON_KEY,
@@ -49,7 +54,7 @@
       if (method !== 'GET') {
         headers['Content-Type'] = 'application/json';
         headers['Idempotency-Key'] =
-          (window.crypto && crypto.randomUUID && crypto.randomUUID()) ||
+          (typeof crypto !== 'undefined' && crypto.randomUUID && crypto.randomUUID()) ||
           'foh_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
       }
       const res = await fetch(`${SUPABASE_URL}/functions/v1/api${path}`, {
@@ -57,10 +62,18 @@
         headers,
         body: body ? JSON.stringify(body) : undefined,
       });
-      if (!res.ok) return null;
+      if (!res.ok) {
+        if (method !== 'GET' && enqueueIfOffline && res.status >= 500 && FOH.cloudOutbox) {
+          FOH.cloudOutbox.enqueue({ method, path, body });
+        }
+        return null;
+      }
       const json = await res.json();
       return json.data || json;
     } catch {
+      if (method !== 'GET' && enqueueIfOffline && FOH.cloudOutbox && typeof FOH.cloudOutbox.enqueue === 'function') {
+        FOH.cloudOutbox.enqueue({ method, path, body });
+      }
       return null;
     }
   }

@@ -69,11 +69,20 @@
 
   function getTodayDayCode() {
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const bDate = (FOH.time && FOH.time.businessDateISO) ? FOH.time.businessDateISO() : ((FOH.state && FOH.state.date) ? FOH.state.date : null);
+    if (bDate) {
+      const d = new Date(bDate + 'T12:00:00');
+      if (!isNaN(d.getTime())) return days[d.getDay()];
+    }
     return days[new Date().getDay()];
   }
 
-  function addAdvance(opts = {}) {
-    const { staffKey, amountJOD, note, recordedBy } = opts;
+  function addAdvance(opts = {}, maybeAmount, maybeNote, maybeRecorder) {
+    const isObj = typeof opts === 'object' && opts !== null && !Array.isArray(opts);
+    const staffKey = isObj ? opts.staffKey : String(opts || '');
+    const amountJOD = isObj ? opts.amountJOD : maybeAmount;
+    const note = isObj ? opts.note : maybeNote;
+    const recordedBy = isObj ? opts.recordedBy : maybeRecorder;
     const db = loadTipsData();
     if (!db.staff || !db.staff[staffKey]) return null;
     const emp = db.staff[staffKey];
@@ -120,9 +129,25 @@
 
   function syncAttendanceFromRuns(staffKey) {
     const st = FOH.state;
-    if (!st || !st.run || !st.run.checked) return false;
-    const hasActivity = Object.keys(st.run.checked).length > 0;
-    if (!hasActivity) return false;
+    if (!st || !st.run || !st.run.checked || !staffKey) return false;
+
+    // Check if staff actually holds an active section claim or sealed a shift today
+    let workedToday = false;
+    if (FOH.sheetState && FOH.sheetState.loadClaims) {
+      const claims = FOH.sheetState.loadClaims();
+      const sType = (FOH.sheetState.getSheetType || FOH.sheetState.getActiveSheetType) ? (FOH.sheetState.getSheetType ? FOH.sheetState.getSheetType() : FOH.sheetState.getActiveSheetType()) : 'opening';
+      const runKey = (st.date || '') + '|' + sType;
+      const activeClaims = claims[runKey] || {};
+      workedToday = Object.values(activeClaims).some((c) => {
+        const by = (c.by || '').toLowerCase();
+        return by === staffKey.toLowerCase() || by.includes(staffKey.toLowerCase());
+      });
+    }
+    if (!workedToday && FOH.shiftSealing && FOH.shiftSealing.getSeals) {
+      const seals = Object.values(FOH.shiftSealing.getSeals() || {});
+      workedToday = seals.some((s) => (s.outgoingUser || '').toLowerCase().includes(staffKey.toLowerCase()) || (s.incomingUser || '').toLowerCase().includes(staffKey.toLowerCase()));
+    }
+    if (!workedToday) return false;
 
     const todayCode = getTodayDayCode();
     const db = loadTipsData();

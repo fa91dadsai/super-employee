@@ -71,10 +71,12 @@ const JS_FILES = [
   'js/domains/tasks/task-assignment.js',
   // Domain: Orders
   'js/domains/orders/orders-catalog-data.js',
+  'js/domains/orders/orders-quick-replenish-store.js',
   'js/domains/orders/orders-store.js',
   'js/domains/orders/orders-catalog-mutations.js',
   'js/domains/orders/orders-lifecycle-store.js',
   'js/domains/orders/orders-dispatch.js',
+  'js/domains/orders/orders-add-modals.js',
   'js/domains/orders/orders-settings-modal.js',
   'js/domains/orders/orders-view-home.js',
   'js/domains/orders/orders-view-categories.js',
@@ -127,4 +129,16 @@ const modularHtml = skeleton
 
 fs.writeFileSync(path.join(rootDir, 'index.modular.html'), modularHtml, 'utf8');
 fs.writeFileSync(path.join(rootDir, 'index.html'), modularHtml, 'utf8');
+
+const ghPagesModular = path.resolve('C:/Users/fadia/.gemini/antigravity/brain/f6d3cbe1-721a-41a5-86f4-bc87cbabb4d2/scratch/gh-pages-deploy/index.html');
+if (fs.existsSync(path.dirname(ghPagesModular))) {
+  fs.writeFileSync(ghPagesModular, modularHtml, 'utf8');
+  fs.writeFileSync(path.join(path.dirname(ghPagesModular), 'index.modular.html'), modularHtml, 'utf8');
+}
+
+const wtModular = path.resolve('wt-foh-opening/apps/foh-opening/index.modular.html');
+if (fs.existsSync(path.dirname(wtModular))) {
+  fs.writeFileSync(wtModular, modularHtml, 'utf8');
+}
+
 console.log(`✓ Successfully generated foh-opening/index.html & index.modular.html with ${JS_FILES.length} clean modules`);

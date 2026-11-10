@@ -270,7 +270,7 @@
     },
   };
 
-  FOH.erpPwa = FOH.ordersView;
+  FOH.erpPwa = Object.assign(FOH.erpPwa || {}, FOH.ordersView);
   FOH.renderOrdersView = renderOrdersView;
   FOH.updateOrderBadge = updateOrderBadge;
 })(window.FOH = window.FOH || {});

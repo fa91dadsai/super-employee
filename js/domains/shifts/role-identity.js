@@ -26,14 +26,14 @@
 
   function getCurrentSuperRoleKey() {
     const sess = getSession();
+    if (!sess) return 'staff';
     const cfg = loadOpsConfig();
-    const uname = (sess && sess.username ? sess.username.toLowerCase() : 'fadi');
-    if (cfg.staffSuperRoles && cfg.staffSuperRoles[uname]) {
+    const uname = (sess.username ? sess.username.toLowerCase() : '');
+    if (uname && cfg.staffSuperRoles && cfg.staffSuperRoles[uname]) {
       return cfg.staffSuperRoles[uname];
     }
-    if (sess && sess.isManager) return 'super_manager';
-    if (sess && sess.isCaptain) return 'super_captain';
-    if (!sess) return 'staff';
+    if (sess.isManager) return 'super_manager';
+    if (sess.isCaptain) return 'super_captain';
     return 'staff';
   }
 
@@ -46,7 +46,7 @@
 
   function canCurrentUserAccessOrders() {
     const sess = getSession();
-    if (!sess) return true;
+    if (!sess) return false;
     if (sess.isManager) return true;
     const cfg = loadOpsConfig();
     const del = cfg.orderingDelegation || { roles: ['super_manager', 'super_bartender'], staffUsernames: ['sara'] };
@@ -59,7 +59,7 @@
 
   function canCurrentUserAssignTasks() {
     const sess = getSession();
-    if (!sess) return true;
+    if (!sess) return false;
     if (sess.isManager) return true;
     const cfg = loadOpsConfig();
     const del = cfg.taskAssignmentDelegation || { roles: ['super_manager', 'super_captain'], staffUsernames: ['ali'] };

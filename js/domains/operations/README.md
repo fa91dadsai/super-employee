@@ -17,7 +17,7 @@ Restaurant business hours, service lifecycle stages, operational day states, and
 ## Side Effects
 - Mutates `super-employee.opsConfig.v2` in `localStorage` `[ops-lifecycle.js:saveOpsConfig]`
 - Mutates `super-employee.opsDayState.v1` in `localStorage` `[ops-lifecycle.js:saveOpsDayState]`
-- Broadcasts operational lifecycle events (`LAST_ORDER_TRIGGERED`, `RESTAURANT_CLOSED`) via Supabase Realtime `[ops-lifecycle.js:createLastOrderButtons]`
+- Broadcasts operational lifecycle events (`LAST_ORDER_TRIGGERED`, `RESTAURANT_CLOSED`) via Supabase Realtime `[ops-lifecycle-bar.js:createLastOrderButtons]`
 
 ## Verification
 - Run: `node --test tests/*.test.mjs`

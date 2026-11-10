@@ -93,7 +93,22 @@
     const match = getOrdDB().catalog.items.find((i) =>
       i.name.toLowerCase().includes(name.toLowerCase()) || (i.nameAr && i.nameAr.includes(name))
     );
-    const itemId = match ? match.id : 'break_' + Date.now().toString(36);
+    let itemId = match ? match.id : null;
+    if (!itemId) {
+      itemId = 'break_' + Date.now().toString(36);
+      getOrdDB().catalog.items.push({
+        id: itemId,
+        groupId: 'foh',
+        categoryId: 'foh-supplies',
+        typeId: 'custom',
+        name,
+        nameAr: name,
+        unit: 'pcs',
+        stockQty: 0,
+        par: 0,
+        quickTrack: true,
+      });
+    }
     const prev = getOrdDB().order.lines[itemId] ? getOrdDB().order.lines[itemId].qty : 0;
     getOrdDB().order.lines[itemId] = {
       qty: prev + Number(qty),
@@ -105,6 +120,36 @@
 
   function confirmOrderReceiving(opts = {}) {
     const { receivedLines, receiverName, notes } = opts;
+    const lines = receivedLines || (getOrdDB().order && getOrdDB().order.lines) || {};
+    Object.entries(lines).forEach(([id, rec]) => {
+      const q = typeof rec === 'object' && rec !== null ? Number(rec.qty || 0) : Number(rec || 0);
+      const item = getOrdDB().catalog.items.find((i) => i.id === id);
+      if (item && q > 0) {
+        item.stockQty = (Number(item.stockQty) || 0) + q;
+        item.stockUpdatedAt = Date.now();
+      }
+    });
+
+    // Record shortages into persistent Backorders for the next order
+    const reqLines = (getOrdDB().order && getOrdDB().order.lines) || {};
+    getOrdDB().backorders = getOrdDB().backorders || {};
+    Object.entries(reqLines).forEach(([id, line]) => {
+      const requested = Number((line && line.qty) || 0);
+      const rec = lines[id];
+      const received = typeof rec === 'object' && rec !== null ? Number(rec.qty || 0) : Number(rec !== undefined ? rec : requested);
+      if (requested > received) {
+        getOrdDB().backorders[id] = {
+          itemId: id,
+          shortageQty: requested - received,
+          unit: (line && line.unit) || 'bottle',
+          date: FOH.time ? FOH.time.todayISO() : '',
+          token: getOrdDB().order.orderToken || '',
+        };
+      } else if (getOrdDB().backorders[id]) {
+        delete getOrdDB().backorders[id];
+      }
+    });
+
     getOrdDB().history = getOrdDB().history || [];
     getOrdDB().history.unshift({
       orderToken: getOrdDB().order.orderToken,
@@ -118,15 +163,45 @@
     });
     getOrdDB().order = createEmptyOrder();
     saveOrdersDB();
-
   }
 
+  function getBackorders() {
+    return getOrdDB().backorders || {};
+  }
 
+  function dismissBackorder(itemId) {
+    if (getOrdDB().backorders && getOrdDB().backorders[itemId]) {
+      delete getOrdDB().backorders[itemId];
+      saveOrdersDB();
+    }
+  }
+
+  function applyBackordersToCurrentOrder() {
+    const bo = getBackorders();
+    let count = 0;
+    const db = getOrdDB();
+    db.order = db.order || createEmptyOrder();
+    db.order.lines = db.order.lines || {};
+    Object.entries(bo).forEach(([id, item]) => {
+      if (item && item.shortageQty > 0) {
+        const prev = db.order.lines[id] ? Number(db.order.lines[id].qty || 0) : 0;
+        const it = db.catalog.items.find((x) => x.id === id);
+        db.order.lines[id] = {
+          qty: prev + item.shortageQty,
+          unit: (it && it.unit) || item.unit || 'bottle',
+          note: (db.order.lines[id] && db.order.lines[id].note) || '',
+          stock: '',
+        };
+        count++;
+      }
+    });
+    db.backorders = {};
+    saveOrdersDB();
+    return count;
+  }
 
   function getOrderHistory() {
-
     return getOrdDB().history || [];
-
   }
 
   FOH.ordersLifecycleStore = {
@@ -135,6 +210,9 @@
     setOrderStatus,
     addBreakageReplacement,
     confirmOrderReceiving,
+    getBackorders,
+    dismissBackorder,
+    applyBackordersToCurrentOrder,
     getOrderHistory,
   };
 })(window.FOH = window.FOH || {});
