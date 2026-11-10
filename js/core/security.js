@@ -108,4 +108,8 @@
   FOH.escapeHtml = escapeHtml;
   FOH.safeJsonParse = safeJsonParse;
   FOH.debounce = debounce;
+
+  if (typeof window !== 'undefined' && !window.$) {
+    window.$ = (id) => document.getElementById(id);
+  }
 })(window.FOH = window.FOH || {});

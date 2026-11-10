@@ -6,8 +6,13 @@
 
   window.FOH = window.FOH || {};
 
+  const $ = (id) => document.getElementById(id);
+  const el = (...args) => (FOH.view && FOH.view.el ? FOH.view.el(...args) : document.createElement(args[0]));
+  const S = () => FOH.state || {};
+
   function roleName(id) {
-    const r = (S.tpl.roles || []).find((x) => x.id === id);
+    const roles = (S() && S().tpl && S().tpl.roles) || [];
+    const r = roles.find((x) => x.id === id);
     return r ? r.name : id;
   }
 

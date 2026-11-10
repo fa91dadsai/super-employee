@@ -6,6 +6,10 @@
 
   window.FOH = window.FOH || {};
 
+  const $ = (id) => document.getElementById(id);
+  const el = (...args) => (FOH.view && FOH.view.el ? FOH.view.el(...args) : document.createElement(args[0]));
+  const S = FOH.state;
+
   function isAr() {
     return FOH.i18n && FOH.i18n.lang === 'ar';
   }

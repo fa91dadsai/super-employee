@@ -169,7 +169,7 @@
           if (!k.startsWith('super-employee-')) caches.delete(k);
         })).catch(() => {});
       }
-      navigator.serviceWorker.register('sw.js?v=20', { updateViaCache: 'none' }).then((reg) => {
+      navigator.serviceWorker.register('sw.js?v=21', { updateViaCache: 'none' }).then((reg) => {
         reg.update().catch(() => {});
       }).catch(() => {});
     }

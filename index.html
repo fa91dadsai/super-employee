@@ -11250,6 +11250,10 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
   FOH.escapeHtml = escapeHtml;
   FOH.safeJsonParse = safeJsonParse;
   FOH.debounce = debounce;
+
+  if (typeof window !== 'undefined' && !window.$) {
+    window.$ = (id) => document.getElementById(id);
+  }
 })(window.FOH = window.FOH || {});
 
 </script>
@@ -11928,7 +11932,7 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     },
   });
 
-  FOH.i18n.extend({"en": {"quickDamageReport": "Report damage / request repair", "repairQuestion": "Can this item be repaired?", "repairNo": "No — for example, glasses and plates", "repairYes": "Yes — for example, centerpieces and lamps", "countPreviewNo": "During counting: one field for the usable quantity present.", "countPreviewYes": "During counting: ready for use + newly needing repair.", "damageSeparate": "Final damage is recorded separately using Report damage, not counted again here.", "optionalVariants": "Optional: types or sizes", "expectedHelp": "Recorded usable quantity before counting. Hidden from staff during the blind count.", "qtyBaseline": "Current reference quantity", "variantBaseline": "Types and sizes · reference quantity", "countPresent": "Quantity present", "countReady": "Ready for use", "newRepair": "Newly needs repair", "newRepairHelp": "Do not include items already registered as under repair.", "existingRepair": "Already under repair: {n}. Excluded from this count; do not enter again.", "reportFromCount": "Report damage", "countRules": "Count each piece once. Exclude final damage; use Report damage for a new incident.", "reportLinked": "This report is linked to this count to prevent a duplicate deduction.", "reportsLinked": "Damage reports linked to this count: {n}. Do not add them to the count fields.", "countMissing": "Count every item before saving. Enter 0 when none are present.", "localCountSaved": "Count saved on this device", "countLocalSend": "Save count on this device", "condRepair": "Needs repair", "condWriteoff": "Final damage", "condRepairHint": "New cases only; exclude previously registered repairs.", "changeItem": "Change", "findItem": "Search in Arabic or English", "chooseTool": "Choose an item", "allCategories": "All", "noTools": "No matching items. Try another name or category.", "matchingTools": "{n} results", "itemRequired": "Choose an item before saving.", "breakTitle": "Report damage / request repair", "equipmentReport": "RESTAURANT EQUIPMENT", "reportStep1": "1 · Choose item", "reportStep2": "2 · Report details", "searchExample": "Search: water glass, spoon…", "pickCategory": "What type of item?", "pickCategoryHint": "Choose a category, or search directly above.", "pickTool": "Choose the item", "pickToolHint": "One card per item. Types and sizes come next.", "pickVariant": "Which type or size?", "pickVariantHint": "Choose the exact version of this item.", "toolCount": "{n} items", "typeCount": "{n} types / sizes", "recentTools": "Recently reported", "searchResults": "Search results", "backCategories": "Categories", "backTools": "Items", "whatHappened": "What happened?", "howMany": "How many?", "piecesAffected": "Number of affected pieces", "extraDetails": "Add a note or photo (optional)", "reportReviewNote": "Saved on this device, pending manager review.", "saveReport": "Save report", "backToReport": "Back to report", "writeoffExplain": "Cannot be used again.", "repairExplain": "Keep aside for inspection or repair.", "searchAll": "Search all categories", "searchEmptyHint": "Try a shorter name or go back to categories.", "quantityRequired": "Enter a whole number from 1 to 9999.", "chooseDamage": "Choose the type of damage.", "previewManager": "Manager view · preview", "previewEmployee": "Employee view · preview", "previewEmployeeButton": "Preview employee", "previewManagerButton": "Back to manager", "previewAs": "View as", "previewEmployeeHelp": "Shows this employee’s assignments and shared checklists. Changes use the same local preview data.", "noPreviewStaff": "Add an active employee first.", "employeeChecklist": "Checklist", "assignedCounts": "Assigned inventory counts", "countStart": "Start counting", "countResume": "Continue counting", "countRecount": "Recount requested", "countWaiting": "Waiting for review", "countApproved": "Approved", "countScheduled": "Scheduled inventory count", "countProgress": "{done} / {total} items counted", "countExplanation": "Your count assignments appear here. Open a task to enter quantities; it cannot be completed with a checkbox.", "countDeadline": "Due: {date} · {time}", "reminderLead": "Show reminder before the deadline", "reminderOff": "Off", "reminderAt": "At the deadline", "reminderMinutes": "{n} minutes before", "reminderCustom": "Custom duration", "reminderCustomLabel": "Minutes before (0–1440)", "reminderHelp": "In-app banner only. Applies when a time is set; separate from the late threshold.", "countDemoButton": "Try counting white & red wine glasses", "countDemoStop": "End count example", "countDemoNote": "Practice example: counts stay in this preview only. Original inventory is restored when you end it.", "countDemoTitle": "White & red wine glasses", "countDemoHint": "Count usable glasses only. Enter 0 if none are present.", "countDemoHelp": "Open My tasks → Start counting. Count each glass type, enter the quantity, then review and save."}, "ar": {"quickDamageReport": "تسجيل تالف / طلب إصلاح", "repairQuestion": "هل يمكن إصلاح هذه الأداة؟", "repairNo": "لا — مثل الكؤوس والصحون", "repairYes": "نعم — مثل الـ Centerpiece ومصابيح الطاولات", "countPreviewNo": "أثناء الجرد: حقل واحد لعدد القطع الموجودة الصالحة للاستخدام.", "countPreviewYes": "أثناء الجرد: جاهز للاستخدام + يحتاج إصلاحًا جديدًا.", "damageSeparate": "التالف النهائي يُسجّل من «تسجيل تالف»، ولا يُعدّ مرة أخرى هنا.", "optionalVariants": "اختياري: أنواع أو مقاسات", "expectedHelp": "العدد الصالح للاستخدام المسجل قبل الجرد. يُخفى عن الموظف أثناء العدّ.", "qtyBaseline": "الكمية المرجعية الحالية", "variantBaseline": "الأنواع والمقاسات · الكمية المرجعية", "countPresent": "العدد الموجود", "countReady": "جاهز للاستخدام", "newRepair": "يحتاج إصلاحًا — حالات جديدة", "newRepairHelp": "لا تشمل القطع المسجلة سابقًا تحت الإصلاح.", "existingRepair": "مسجل سابقًا تحت الإصلاح: {n}. خارج هذا الجرد؛ لا تُدخله مرة أخرى.", "reportFromCount": "تسجيل تالف", "countRules": "احسب كل قطعة مرة واحدة. استبعد التالف النهائي وسجّل الحالة الجديدة عبر «تسجيل تالف».", "reportLinked": "هذا البلاغ مرتبط بالجرد الحالي لمنع خصم الكمية مرتين.", "reportsLinked": "بلاغات ضرر مرتبطة بهذا الجرد: {n}. لا تضفها إلى حقول العدّ.", "countMissing": "أكمل عدّ جميع الأصناف قبل الحفظ. أدخل صفرًا عندما لا توجد قطع.", "localCountSaved": "تم حفظ الجرد على هذا الجهاز", "countLocalSend": "حفظ الجرد على الجهاز", "condRepair": "يحتاج إصلاحًا", "condWriteoff": "تالف نهائيًا", "condRepairHint": "حالات جديدة فقط؛ استبعد المسجل سابقًا تحت الإصلاح.", "changeItem": "تغيير", "findItem": "ابحث بالعربية أو الإنجليزية", "chooseTool": "اختر الأداة", "allCategories": "الكل", "noTools": "لا توجد أدوات مطابقة. جرّب اسمًا آخر أو فئة أخرى.", "matchingTools": "{n} نتيجة", "itemRequired": "اختر الأداة قبل الحفظ.", "breakTitle": "تسجيل تالف / طلب إصلاح", "equipmentReport": "أدوات المطعم", "reportStep1": "١ · اختيار الأداة", "reportStep2": "٢ · تفاصيل البلاغ", "searchExample": "ابحث: كأس ماء، ملعقة…", "pickCategory": "ما نوع الأداة؟", "pickCategoryHint": "اختر الفئة، أو ابحث مباشرة من الأعلى.", "pickTool": "اختر الأداة", "pickToolHint": "بطاقة واحدة لكل أداة. النوع والمقاس في الخطوة التالية.", "pickVariant": "أي نوع أو مقاس؟", "pickVariantHint": "اختر النسخة المطابقة للأداة التي أمامك.", "toolCount": "{n} أدوات", "typeCount": "{n} أنواع / مقاسات", "recentTools": "آخر الأدوات المسجّل عليها بلاغ", "searchResults": "نتائج البحث", "backCategories": "الفئات", "backTools": "الأدوات", "whatHappened": "ما حالة الأداة؟", "howMany": "كم قطعة؟", "piecesAffected": "عدد القطع المتضررة", "extraDetails": "إضافة ملاحظة أو صورة (اختياري)", "reportReviewNote": "يُحفظ على هذا الجهاز بانتظار مراجعة المسؤول.", "saveReport": "حفظ البلاغ", "backToReport": "العودة للبلاغ", "writeoffExplain": "لا يمكن استخدامها مرة أخرى.", "repairExplain": "تُعزل للفحص أو الإصلاح.", "searchAll": "البحث في جميع الفئات", "searchEmptyHint": "جرّب اسمًا أقصر أو ارجع للفئات.", "quantityRequired": "أدخل عددًا صحيحًا بين ١ و٩٩٩٩.", "chooseDamage": "اختر نوع الضرر.", "previewManager": "عرض المدير · معاينة", "previewEmployee": "عرض الموظف · معاينة", "previewEmployeeButton": "معاينة الموظف", "previewManagerButton": "العودة لعرض المدير", "previewAs": "المعاينة باسم", "previewEmployeeHelp": "يعرض تكليفات الموظف والشيكليست المشتركة. التغييرات تستخدم نفس بيانات التجربة المحلية.", "noPreviewStaff": "أضف موظفًا نشطًا أولًا.", "employeeChecklist": "الشيكليست", "assignedCounts": "الجرد المكلّف به", "countStart": "ابدأ الجرد", "countResume": "متابعة الجرد", "countRecount": "مطلوب إعادة عدّ", "countWaiting": "بانتظار المراجعة", "countApproved": "معتمد", "countScheduled": "جرد قادم", "countProgress": "تم عدّ {done} من {total} صنف", "countExplanation": "تظهر تكليفات الجرد هنا. افتح المهمة لإدخال الأعداد؛ لا تُنجز بعلامة صح فقط.", "countDeadline": "الموعد: {date} · {time}", "reminderLead": "إظهار التنبيه قبل الموعد", "reminderOff": "بدون تنبيه", "reminderAt": "عند الموعد فقط", "reminderMinutes": "قبل الموعد بـ {n} دقيقة", "reminderCustom": "مدة مخصصة", "reminderCustomLabel": "عدد الدقائق قبل الموعد (٠–١٤٤٠)", "reminderHelp": "تنبيه داخل الصفحة عند تحديد موعد للمهمة، وهو مستقل عن وقت اعتبارها متأخرة.", "countDemoButton": "جرّب جرد كؤوس White wine وRed wine", "countDemoStop": "إنهاء مثال الجرد", "countDemoNote": "مثال للتجربة: الأعداد تبقى داخل هذه المعاينة فقط، ويعود الجرد الأصلي عند إنهائه.", "countDemoTitle": "كؤوس White wine وRed wine", "countDemoHint": "عُدّ الكؤوس الصالحة للاستخدام فقط. أدخل صفرًا إذا لم توجد قطع.", "countDemoHelp": "افتح «مهامي» ثم «ابدأ الجرد». أدخل عدد كل نوع، ثم راجع الأعداد واحفظها."}});
+  FOH.i18n.extend({ "en": { "quickDamageReport": "Report damage / request repair", "repairQuestion": "Can this item be repaired?", "repairNo": "No — for example, glasses and plates", "repairYes": "Yes — for example, centerpieces and lamps", "countPreviewNo": "During counting: one field for the usable quantity present.", "countPreviewYes": "During counting: ready for use + newly needing repair.", "damageSeparate": "Final damage is recorded separately using Report damage, not counted again here.", "optionalVariants": "Optional: types or sizes", "expectedHelp": "Recorded usable quantity before counting. Hidden from staff during the blind count.", "qtyBaseline": "Current reference quantity", "variantBaseline": "Types and sizes · reference quantity", "countPresent": "Quantity present", "countReady": "Ready for use", "newRepair": "Newly needs repair", "newRepairHelp": "Do not include items already registered as under repair.", "existingRepair": "Already under repair: {n}. Excluded from this count; do not enter again.", "reportFromCount": "Report damage", "countRules": "Count each piece once. Exclude final damage; use Report damage for a new incident.", "reportLinked": "This report is linked to this count to prevent a duplicate deduction.", "reportsLinked": "Damage reports linked to this count: {n}. Do not add them to the count fields.", "countMissing": "Count every item before saving. Enter 0 when none are present.", "localCountSaved": "Count saved on this device", "countLocalSend": "Save count on this device", "condRepair": "Needs repair", "condWriteoff": "Final damage", "condRepairHint": "New cases only; exclude previously registered repairs.", "changeItem": "Change", "findItem": "Search in Arabic or English", "chooseTool": "Choose an item", "allCategories": "All", "noTools": "No matching items. Try another name or category.", "matchingTools": "{n} results", "itemRequired": "Choose an item before saving.", "breakTitle": "Report damage / request repair", "equipmentReport": "RESTAURANT EQUIPMENT", "reportStep1": "1 · Choose item", "reportStep2": "2 · Report details", "searchExample": "Search: water glass, spoon…", "pickCategory": "What type of item?", "pickCategoryHint": "Choose a category, or search directly above.", "pickTool": "Choose the item", "pickToolHint": "One card per item. Types and sizes come next.", "pickVariant": "Which type or size?", "pickVariantHint": "Choose the exact version of this item.", "toolCount": "{n} items", "typeCount": "{n} types / sizes", "recentTools": "Recently reported", "searchResults": "Search results", "backCategories": "Categories", "backTools": "Items", "whatHappened": "What happened?", "howMany": "How many?", "piecesAffected": "Number of affected pieces", "extraDetails": "Add a note or photo (optional)", "reportReviewNote": "Saved on this device, pending manager review.", "saveReport": "Save report", "backToReport": "Back to report", "writeoffExplain": "Cannot be used again.", "repairExplain": "Keep aside for inspection or repair.", "searchAll": "Search all categories", "searchEmptyHint": "Try a shorter name or go back to categories.", "quantityRequired": "Enter a whole number from 1 to 9999.", "chooseDamage": "Choose the type of damage.", "previewManager": "Manager view · preview", "previewEmployee": "Employee view · preview", "previewEmployeeButton": "Preview employee", "previewManagerButton": "Back to manager", "previewAs": "View as", "previewEmployeeHelp": "Shows this employee’s assignments and shared checklists. Changes use the same local preview data.", "noPreviewStaff": "Add an active employee first.", "employeeChecklist": "Checklist", "assignedCounts": "Assigned inventory counts", "countStart": "Start counting", "countResume": "Continue counting", "countRecount": "Recount requested", "countWaiting": "Waiting for review", "countApproved": "Approved", "countScheduled": "Scheduled inventory count", "countProgress": "{done} / {total} items counted", "countExplanation": "Your count assignments appear here. Open a task to enter quantities; it cannot be completed with a checkbox.", "countDeadline": "Due: {date} · {time}", "reminderLead": "Show reminder before the deadline", "reminderOff": "Off", "reminderAt": "At the deadline", "reminderMinutes": "{n} minutes before", "reminderCustom": "Custom duration", "reminderCustomLabel": "Minutes before (0–1440)", "reminderHelp": "In-app banner only. Applies when a time is set; separate from the late threshold.", "countDemoButton": "Try counting white & red wine glasses", "countDemoStop": "End count example", "countDemoNote": "Practice example: counts stay in this preview only. Original inventory is restored when you end it.", "countDemoTitle": "White & red wine glasses", "countDemoHint": "Count usable glasses only. Enter 0 if none are present.", "countDemoHelp": "Open My tasks → Start counting. Count each glass type, enter the quantity, then review and save." }, "ar": { "quickDamageReport": "تسجيل تالف / طلب إصلاح", "repairQuestion": "هل يمكن إصلاح هذه الأداة؟", "repairNo": "لا — مثل الكؤوس والصحون", "repairYes": "نعم — مثل الـ Centerpiece ومصابيح الطاولات", "countPreviewNo": "أثناء الجرد: حقل واحد لعدد القطع الموجودة الصالحة للاستخدام.", "countPreviewYes": "أثناء الجرد: جاهز للاستخدام + يحتاج إصلاحًا جديدًا.", "damageSeparate": "التالف النهائي يُسجّل من «تسجيل تالف»، ولا يُعدّ مرة أخرى هنا.", "optionalVariants": "اختياري: أنواع أو مقاسات", "expectedHelp": "العدد الصالح للاستخدام المسجل قبل الجرد. يُخفى عن الموظف أثناء العدّ.", "qtyBaseline": "الكمية المرجعية الحالية", "variantBaseline": "الأنواع والمقاسات · الكمية المرجعية", "countPresent": "العدد الموجود", "countReady": "جاهز للاستخدام", "newRepair": "يحتاج إصلاحًا — حالات جديدة", "newRepairHelp": "لا تشمل القطع المسجلة سابقًا تحت الإصلاح.", "existingRepair": "مسجل سابقًا تحت الإصلاح: {n}. خارج هذا الجرد؛ لا تُدخله مرة أخرى.", "reportFromCount": "تسجيل تالف", "countRules": "احسب كل قطعة مرة واحدة. استبعد التالف النهائي وسجّل الحالة الجديدة عبر «تسجيل تالف».", "reportLinked": "هذا البلاغ مرتبط بالجرد الحالي لمنع خصم الكمية مرتين.", "reportsLinked": "بلاغات ضرر مرتبطة بهذا الجرد: {n}. لا تضفها إلى حقول العدّ.", "countMissing": "أكمل عدّ جميع الأصناف قبل الحفظ. أدخل صفرًا عندما لا توجد قطع.", "localCountSaved": "تم حفظ الجرد على هذا الجهاز", "countLocalSend": "حفظ الجرد على الجهاز", "condRepair": "يحتاج إصلاحًا", "condWriteoff": "تالف نهائيًا", "condRepairHint": "حالات جديدة فقط؛ استبعد المسجل سابقًا تحت الإصلاح.", "changeItem": "تغيير", "findItem": "ابحث بالعربية أو الإنجليزية", "chooseTool": "اختر الأداة", "allCategories": "الكل", "noTools": "لا توجد أدوات مطابقة. جرّب اسمًا آخر أو فئة أخرى.", "matchingTools": "{n} نتيجة", "itemRequired": "اختر الأداة قبل الحفظ.", "breakTitle": "تسجيل تالف / طلب إصلاح", "equipmentReport": "أدوات المطعم", "reportStep1": "١ · اختيار الأداة", "reportStep2": "٢ · تفاصيل البلاغ", "searchExample": "ابحث: كأس ماء، ملعقة…", "pickCategory": "ما نوع الأداة؟", "pickCategoryHint": "اختر الفئة، أو ابحث مباشرة من الأعلى.", "pickTool": "اختر الأداة", "pickToolHint": "بطاقة واحدة لكل أداة. النوع والمقاس في الخطوة التالية.", "pickVariant": "أي نوع أو مقاس؟", "pickVariantHint": "اختر النسخة المطابقة للأداة التي أمامك.", "toolCount": "{n} أدوات", "typeCount": "{n} أنواع / مقاسات", "recentTools": "آخر الأدوات المسجّل عليها بلاغ", "searchResults": "نتائج البحث", "backCategories": "الفئات", "backTools": "الأدوات", "whatHappened": "ما حالة الأداة؟", "howMany": "كم قطعة؟", "piecesAffected": "عدد القطع المتضررة", "extraDetails": "إضافة ملاحظة أو صورة (اختياري)", "reportReviewNote": "يُحفظ على هذا الجهاز بانتظار مراجعة المسؤول.", "saveReport": "حفظ البلاغ", "backToReport": "العودة للبلاغ", "writeoffExplain": "لا يمكن استخدامها مرة أخرى.", "repairExplain": "تُعزل للفحص أو الإصلاح.", "searchAll": "البحث في جميع الفئات", "searchEmptyHint": "جرّب اسمًا أقصر أو ارجع للفئات.", "quantityRequired": "أدخل عددًا صحيحًا بين ١ و٩٩٩٩.", "chooseDamage": "اختر نوع الضرر.", "previewManager": "عرض المدير · معاينة", "previewEmployee": "عرض الموظف · معاينة", "previewEmployeeButton": "معاينة الموظف", "previewManagerButton": "العودة لعرض المدير", "previewAs": "المعاينة باسم", "previewEmployeeHelp": "يعرض تكليفات الموظف والشيكليست المشتركة. التغييرات تستخدم نفس بيانات التجربة المحلية.", "noPreviewStaff": "أضف موظفًا نشطًا أولًا.", "employeeChecklist": "الشيكليست", "assignedCounts": "الجرد المكلّف به", "countStart": "ابدأ الجرد", "countResume": "متابعة الجرد", "countRecount": "مطلوب إعادة عدّ", "countWaiting": "بانتظار المراجعة", "countApproved": "معتمد", "countScheduled": "جرد قادم", "countProgress": "تم عدّ {done} من {total} صنف", "countExplanation": "تظهر تكليفات الجرد هنا. افتح المهمة لإدخال الأعداد؛ لا تُنجز بعلامة صح فقط.", "countDeadline": "الموعد: {date} · {time}", "reminderLead": "إظهار التنبيه قبل الموعد", "reminderOff": "بدون تنبيه", "reminderAt": "عند الموعد فقط", "reminderMinutes": "قبل الموعد بـ {n} دقيقة", "reminderCustom": "مدة مخصصة", "reminderCustomLabel": "عدد الدقائق قبل الموعد (٠–١٤٤٠)", "reminderHelp": "تنبيه داخل الصفحة عند تحديد موعد للمهمة، وهو مستقل عن وقت اعتبارها متأخرة.", "countDemoButton": "جرّب جرد كؤوس White wine وRed wine", "countDemoStop": "إنهاء مثال الجرد", "countDemoNote": "مثال للتجربة: الأعداد تبقى داخل هذه المعاينة فقط، ويعود الجرد الأصلي عند إنهائه.", "countDemoTitle": "كؤوس White wine وRed wine", "countDemoHint": "عُدّ الكؤوس الصالحة للاستخدام فقط. أدخل صفرًا إذا لم توجد قطع.", "countDemoHelp": "افتح «مهامي» ثم «ابدأ الجرد». أدخل عدد كل نوع، ثم راجع الأعداد واحفظها." } });
 
   FOH.i18n.extend({
     en: {
@@ -13322,6 +13326,7 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
   FOH.drag = { enable };
 })(window.FOH = window.FOH || {});
 
+
 </script>
 
 <script>
@@ -13689,6 +13694,7 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
   FOH.rotate = { participants, weeksSince, tooSoon, distribute, recounter };
 })(window.FOH = window.FOH || {});
 
+
 </script>
 
 <script>
@@ -13780,6 +13786,7 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
   FOH.photos = { add, get, remove, show };
 })(window.FOH = window.FOH || {});
 
+
 </script>
 
 <script>
@@ -13849,6 +13856,7 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     editRow,
   };
 })(window.FOH = window.FOH || {});
+
 
 </script>
 
@@ -14378,6 +14386,7 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
 
   FOH.taskRolesView = { roles, roleUses };
 })(window.FOH = window.FOH || {});
+
 
 </script>
 
@@ -17787,7 +17796,7 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
           if (!k.startsWith('super-employee-')) caches.delete(k);
         })).catch(() => {});
       }
-      navigator.serviceWorker.register('sw.js?v=20', { updateViaCache: 'none' }).then((reg) => {
+      navigator.serviceWorker.register('sw.js?v=21', { updateViaCache: 'none' }).then((reg) => {
         reg.update().catch(() => {});
       }).catch(() => {});
     }
@@ -18527,6 +18536,7 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     renderLoginDemoGrid,
   };
 })();
+
 
 </script>
 
@@ -19286,6 +19296,7 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
   };
 })();
 
+
 </script>
 
 <script>
@@ -19564,6 +19575,7 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
   }
 
   FOH.profileDialog = {
+    open: openProfile,
     openProfile,
     renderProfileBody,
     handleProfileSave,
@@ -20448,6 +20460,7 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     applyRoleCascade,
   };
 })();
+
 
 </script>
 
@@ -21478,6 +21491,7 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     wireAuthAndProfileUI,
   };
 })();
+
 
 </script>
 
@@ -23375,6 +23389,7 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     createAssigneeCard,
   };
 })(window.FOH = window.FOH || {});
+
 
 </script>
 
@@ -26240,26 +26255,26 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     const aside = el('aside', 'review-sidebar');
     aside.innerHTML =
       '<div class="review-summary">' +
-        '<span>🛍️</span>' +
-        '<span>' + catsCount + ' ' + (ar ? 'تصنيفات' : 'categories') + ' · ' + groupsCount + ' ' + (ar ? 'أقسام' : 'sections') + '<br>' +
-        (ar ? 'طلبية موحدة جاهزة لفريقك.' : 'One order, ready for your team.') + '</span>' +
+      '<span>🛍️</span>' +
+      '<span>' + catsCount + ' ' + (ar ? 'تصنيفات' : 'categories') + ' · ' + groupsCount + ' ' + (ar ? 'أقسام' : 'sections') + '<br>' +
+      (ar ? 'طلبية موحدة جاهزة لفريقك.' : 'One order, ready for your team.') + '</span>' +
       '</div>' +
       '<div class="share-actions">' +
-        '<button type="button" class="primary" data-action="wa">' + (ar ? 'واتساب ↗' : 'WhatsApp ↗') + '</button>' +
-        '<button type="button" data-action="copy">' + (ar ? 'نسخ الطلبية' : 'Copy order') + '</button>' +
+      '<button type="button" class="primary" data-action="wa">' + (ar ? 'واتساب ↗' : 'WhatsApp ↗') + '</button>' +
+      '<button type="button" data-action="copy">' + (ar ? 'نسخ الطلبية' : 'Copy order') + '</button>' +
       '</div>' +
       '<details class="review-meta" id="orderDetails">' +
-        '<summary>' + (ar ? 'تفاصيل وملاحظات الطلبية' : 'Order details') + ' <span>' + FOH.escapeHtml(requester) + ' · ' + FOH.escapeHtml(m.orderDate || '') + '</span></summary>' +
-        '<div class="review-meta-fields">' +
-          '<div class="field">' +
-            '<label for="requester">' + (ar ? 'معدّ الطلبية:' : 'Prepared by:') + '</label>' +
-            '<input id="requester" value="' + FOH.escapeHtml(requester) + '">' +
-          '</div>' +
-          '<div class="field">' +
-            '<label for="orderNote">' + (ar ? 'ملاحظة عامة على الطلبية:' : 'General note:') + '</label>' +
-            '<textarea id="orderNote" rows="2" placeholder="' + (ar ? 'ملاحظات تسليم، وقت مطلوب...' : 'e.g. Please deliver before 5 pm') + '">' + FOH.escapeHtml(m.orderNote || '') + '</textarea>' +
-          '</div>' +
-        '</div>' +
+      '<summary>' + (ar ? 'تفاصيل وملاحظات الطلبية' : 'Order details') + ' <span>' + FOH.escapeHtml(requester) + ' · ' + FOH.escapeHtml(m.orderDate || '') + '</span></summary>' +
+      '<div class="review-meta-fields">' +
+      '<div class="field">' +
+      '<label for="requester">' + (ar ? 'معدّ الطلبية:' : 'Prepared by:') + '</label>' +
+      '<input id="requester" value="' + FOH.escapeHtml(requester) + '">' +
+      '</div>' +
+      '<div class="field">' +
+      '<label for="orderNote">' + (ar ? 'ملاحظة عامة على الطلبية:' : 'General note:') + '</label>' +
+      '<textarea id="orderNote" rows="2" placeholder="' + (ar ? 'ملاحظات تسليم، وقت مطلوب...' : 'e.g. Please deliver before 5 pm') + '">' + FOH.escapeHtml(m.orderNote || '') + '</textarea>' +
+      '</div>' +
+      '</div>' +
       '</details>';
 
     const waBtn = aside.querySelector('[data-action=wa]');
@@ -26305,8 +26320,8 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
         const sec = el('section', 'review-group');
         sec.innerHTML =
           '<h2 class="review-section">' +
-            '<span>' + FOH.escapeHtml((g ? (ar ? g.nameAr || g.name : g.name) : '') + ' / ' + (c ? (ar ? c.nameAr || c.name : c.name) : '')) + '</span>' +
-            '<small>' + countInCat + '</small>' +
+          '<span>' + FOH.escapeHtml((g ? (ar ? g.nameAr || g.name : g.name) : '') + ' / ' + (c ? (ar ? c.nameAr || c.name : c.name) : '')) + '</span>' +
+          '<small>' + countInCat + '</small>' +
           '</h2>';
         secList = el('div', 'review-list');
         sec.append(secList);
@@ -26316,20 +26331,20 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
       const art = el('article', 'review-line');
       art.innerHTML =
         '<div class="review-line-main">' +
-          '<b class="review-name">' + FOH.escapeHtml(ar && i.ar ? i.ar + ' · ' + i.name : i.name) + (l.note ? ' <span class="note-mark" title="Note added">•</span>' : '') + '</b>' +
-          '<div class="review-quantity">' +
-            '<div><strong>' + l.qty + '</strong><span> / ' + FOH.escapeHtml(store().ordStockDenominator(i)) + '</span></div>' +
-            '<small>' + FOH.escapeHtml(store().ordUnitText(l.qty, l.unit || i.unit)) + '</small>' +
-          '</div>' +
-          '<button type="button" class="review-edit" aria-label="Edit">' +
-            '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 5 4 4M4 20l4-1L20 7a2.8 2.8 0 0 0-4-4L4 15z"/></svg>' +
-          '</button>' +
+        '<b class="review-name">' + FOH.escapeHtml(ar && i.ar ? i.ar + ' · ' + i.name : i.name) + (l.note ? ' <span class="note-mark" title="Note added">•</span>' : '') + '</b>' +
+        '<div class="review-quantity">' +
+        '<div><strong>' + l.qty + '</strong><span> / ' + FOH.escapeHtml(store().ordStockDenominator(i)) + '</span></div>' +
+        '<small>' + FOH.escapeHtml(store().ordUnitText(l.qty, l.unit || i.unit)) + '</small>' +
+        '</div>' +
+        '<button type="button" class="review-edit" aria-label="Edit">' +
+        '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 5 4 4M4 20l4-1L20 7a2.8 2.8 0 0 0-4-4L4 15z"/></svg>' +
+        '</button>' +
         '</div>' +
         '<div class="review-line-detail" style="display:' + (ordShowDetails ? 'block' : 'none') + '">' +
-          (i.packSize ? '<p>' + (ar ? 'الحجم: ' : 'Size: ') + FOH.escapeHtml(i.packSize) + '</p>' : '') +
-          (l.note ? '<p>' + (ar ? 'ملاحظة: ' : 'Note: ') + FOH.escapeHtml(l.note) + '</p>' : '') +
-          '<p>' + (ar ? 'المخزون المسجل: ' : 'Stock: ') + FOH.escapeHtml(store().ordStockLabel(i)) + '</p>' +
-          '<button type="button" class="danger-text">' + (ar ? 'إلغاء من الطلبية' : 'Remove from order') + '</button>' +
+        (i.packSize ? '<p>' + (ar ? 'الحجم: ' : 'Size: ') + FOH.escapeHtml(i.packSize) + '</p>' : '') +
+        (l.note ? '<p>' + (ar ? 'ملاحظة: ' : 'Note: ') + FOH.escapeHtml(l.note) + '</p>' : '') +
+        '<p>' + (ar ? 'المخزون المسجل: ' : 'Stock: ') + FOH.escapeHtml(store().ordStockLabel(i)) + '</p>' +
+        '<button type="button" class="danger-text">' + (ar ? 'إلغاء من الطلبية' : 'Remove from order') + '</button>' +
         '</div>';
 
       const editBtn = art.querySelector('.review-edit');
@@ -26365,8 +26380,8 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     const compRev = el('section', 'compact-review');
     compRev.innerHTML =
       '<div class="review-title">' +
-        '<h1>' + (ar ? 'مراجعة الطلبية' : 'Review order') + '</h1>' +
-        '<span>' + list.length + ' ' + (ar ? 'أصناف' : 'items') + '</span>' +
+      '<h1>' + (ar ? 'مراجعة الطلبية' : 'Review order') + '</h1>' +
+      '<span>' + list.length + ' ' + (ar ? 'أصناف' : 'items') + '</span>' +
       '</div>';
 
     const layout = el('div', 'review-layout');
@@ -26375,8 +26390,8 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     const ordersBox = el('div', 'review-orders');
     ordersBox.innerHTML =
       '<div class="review-list-tools">' +
-        '<label><input type="checkbox" id="reviewDetails" ' + (ordShowDetails ? 'checked' : '') + '> ' + (ar ? 'إظهار التفاصيل والملاحظات' : 'Show item details') + '</label>' +
-        '<span>' + (ar ? 'طلب / مخزون' : 'Order / Stock') + '</span>' +
+      '<label><input type="checkbox" id="reviewDetails" ' + (ordShowDetails ? 'checked' : '') + '> ' + (ar ? 'إظهار التفاصيل والملاحظات' : 'Show item details') + '</label>' +
+      '<span>' + (ar ? 'طلب / مخزون' : 'Order / Stock') + '</span>' +
       '</div>';
 
     const chk = ordersBox.querySelector('#reviewDetails');
@@ -27190,6 +27205,7 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
   };
 })();
 
+
 </script>
 
 <script>
@@ -27345,6 +27361,7 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     openSuggestionModal,
   };
 })();
+
 
 </script>
 
@@ -28444,7 +28461,7 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     return FOH.roleIdentity ? FOH.roleIdentity.hasSuperPerm(p) : true;
   }
 
-    // ============================================================================
+  // ============================================================================
   // 11. Operational Hours, Shift Prep, Department Last Order, Closing Sheet
   //     by Department, "Close Restaurant (Last Guest)" Gate & Super Roles (v9)
   // ============================================================================
@@ -28670,6 +28687,10 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
   'use strict';
 
   window.FOH = window.FOH || {};
+
+  const $ = (id) => document.getElementById(id);
+  const el = (...args) => (FOH.view && FOH.view.el ? FOH.view.el(...args) : document.createElement(args[0]));
+  const S = FOH.state;
 
   function isAr() {
     return FOH.i18n && FOH.i18n.lang === 'ar';
@@ -28921,6 +28942,7 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
   };
 })();
 
+
 </script>
 
 <script>
@@ -28933,8 +28955,13 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
 
   window.FOH = window.FOH || {};
 
+  const $ = (id) => document.getElementById(id);
+  const el = (...args) => (FOH.view && FOH.view.el ? FOH.view.el(...args) : document.createElement(args[0]));
+  const S = () => FOH.state || {};
+
   function roleName(id) {
-    const r = (S.tpl.roles || []).find((x) => x.id === id);
+    const roles = (S() && S().tpl && S().tpl.roles) || [];
+    const r = roles.find((x) => x.id === id);
     return r ? r.name : id;
   }
 
@@ -29208,6 +29235,7 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     renderTaskDelegationCard,
   };
 })();
+
 
 </script>
 
@@ -31280,6 +31308,7 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
   };
 })(window.FOH = window.FOH || {});
 
+
 </script>
 
 <script>
@@ -31594,6 +31623,7 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
   };
 })(window.FOH = window.FOH || {});
 
+
 </script>
 
 <script>
@@ -31877,13 +31907,14 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
   }
 
   FOH.academyView = {
+    render: renderAcademyView,
+    renderAcademyView,
     loadAcademyCatalog,
     saveAcademyCatalog,
     loadAcadProgress,
     saveAcadProgress,
     getMyAcadRecord,
     syncAcademyBonusToTips,
-    renderAcademyView,
     openQuizModal,
     openAddAcademyItemModal,
   };
@@ -32114,6 +32145,7 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     renderSmartAlertBanners,
   };
 })();
+
 
 </script>
 
@@ -32994,6 +33026,7 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
   };
 })();
 
+
 </script>
 
 <script>
@@ -33204,10 +33237,10 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     const hcTxt = hcDays === null
       ? '🏥 —'
       : hcDays < 0
-      ? (ar ? '🏥 🚨 منتهية' : '🏥 🚨 Expired')
-      : hcDays <= 30
-      ? (ar ? '🏥 ⚠️ باقي ' + hcDays + 'ي' : '🏥 ⚠️ ' + hcDays + 'd left')
-      : (ar ? '🏥 ✓ صالحة' : '🏥 ✓ Valid');
+        ? (ar ? '🏥 🚨 منتهية' : '🏥 🚨 Expired')
+        : hcDays <= 30
+          ? (ar ? '🏥 ⚠️ باقي ' + hcDays + 'ي' : '🏥 ⚠️ ' + hcDays + 'd left')
+          : (ar ? '🏥 ✓ صالحة' : '🏥 ✓ Valid');
 
     const top = el('div', 'sb-prof-top');
     top.append(
@@ -33224,10 +33257,10 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     const isClosingNav = v === 'closing_sheet';
     const meta = isClosingNav
       ? {
-          ico: '🌙',
-          title: ar ? 'شيت الإغلاق و Last Order' : 'Closing Sheet & Last Order',
-          sub: ar ? 'إغلاق البار والصالة والكاشير مع آخر زبون' : 'Dept closing & last-guest lockup',
-        }
+        ico: '🌙',
+        title: ar ? 'شيت الإغلاق و Last Order' : 'Closing Sheet & Last Order',
+        sub: ar ? 'إغلاق البار والصالة والكاشير مع آخر زبون' : 'Dept closing & last-guest lockup',
+      }
       : getSectionMeta(v);
     const isActive = isClosingNav
       ? (!S.editing && S.view === 'opening' && isClosingSheetActive())
@@ -35826,6 +35859,7 @@ html[lang="ar"] #ordersView .breadcrumbs .breadcrumb-sep {
     wireChecklistLockGuards,
   };
 })(window.FOH = window.FOH || {});
+
 
 </script>
 

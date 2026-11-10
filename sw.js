@@ -1,7 +1,7 @@
 'use strict';
 
-const CACHE = 'super-employee-v66-clean-code-decomp';
-// Rollback cache version: super-employee-v65-cloud-outbox-and-seed-decomp
+const CACHE = 'super-employee-v67-tab-bar-fix';
+// Rollback cache version: super-employee-v66-clean-code-decomp
 const PRECACHE = [
   './',
   './index.html',
