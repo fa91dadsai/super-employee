@@ -10745,8 +10745,8 @@ body.dark .inv-hero-bar {
   display: grid;
   place-items: center;
   font-size: 1.1rem;
-  background: color-mix(in srgb, var(--accent, #2f6b5e) 14%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent, #2f6b5e) 28%, transparent);
+  background: rgba(47, 107, 94, 0.14);
+  border: 1px solid rgba(47, 107, 94, 0.28);
 }
 .inv-hero-txt {
   min-width: 0;
@@ -10790,10 +10790,9 @@ body.dark .inv-hero-txt strong {
   margin: 0 0 12px !important;
   padding: 4px !important;
   border-radius: 13px !important;
-  background: color-mix(in srgb, var(--ink, #142019) 7%, var(--card, #fff)) !important;
+  background: rgba(20, 32, 25, 0.06) !important;
   border: 1px solid var(--line, #e2e8e2) !important;
   overflow-x: auto !important;
-  scrollbar-width: none !important;
 }
 .inv-subtabs::-webkit-scrollbar {
   display: none;
@@ -10886,8 +10885,8 @@ body.dark .inv-subtabs {
   min-height: 30px;
   padding: 0 10px;
   border-radius: 99px;
-  border: 1px solid color-mix(in srgb, var(--accent, #2f6b5e) 35%, transparent);
-  background: color-mix(in srgb, var(--accent, #2f6b5e) 12%, transparent);
+  border: 1px solid rgba(47, 107, 94, 0.35);
+  background: rgba(47, 107, 94, 0.12);
   color: var(--accent, #2f6b5e);
   font-size: 0.74rem;
   font-weight: 800;
@@ -10922,7 +10921,7 @@ body.dark .inv-status-pill.is-pub {
 }
 .inv-week-bar {
   padding: 8px 14px !important;
-  background: color-mix(in srgb, var(--ink, #142019) 3%, transparent);
+  background: rgba(20, 32, 25, 0.03);
   border-bottom: 1px solid var(--line, #e2e8e2);
 }
 .inv-deadline-pill {
@@ -10971,7 +10970,7 @@ body.dark .inv-deadline-pill {
   display: grid;
   place-items: center;
   font-size: 1.1rem;
-  background: color-mix(in srgb, var(--accent, #2f6b5e) 10%, transparent);
+  background: rgba(47, 107, 94, 0.1);
 }
 .inv-asg-controls {
   display: inline-flex;
@@ -11041,6 +11040,7 @@ body.dark .inv-kpi-tile {
 .inv-accordion > summary {
   list-style: none;
   cursor: pointer;
+  -webkit-user-select: none;
   user-select: none;
 }
 .inv-accordion > summary::-webkit-details-marker {
@@ -11101,7 +11101,6 @@ body.dark .inv-kpi-tile {
   gap: 6px;
   overflow-x: auto;
   padding-bottom: 2px;
-  scrollbar-width: none;
 }
 .inv-cat-pills::-webkit-scrollbar {
   display: none;
@@ -11176,7 +11175,7 @@ body.dark .inv-item-title {
 .inv-qty-badge {
   padding: 4px 10px;
   border-radius: 99px;
-  background: color-mix(in srgb, var(--accent, #2f6b5e) 12%, transparent);
+  background: rgba(47, 107, 94, 0.12);
   color: var(--accent, #2f6b5e);
   font-size: 0.76rem;
   font-weight: 800;
@@ -11254,6 +11253,7 @@ body.dark .inv-qty-badge {
   margin-top: 8px;
   margin-bottom: 32px !important;
 }
+
 
 </style>
   </head>

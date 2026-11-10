@@ -37,7 +37,6 @@
   gap: 6px;
   overflow-x: auto;
   padding-bottom: 2px;
-  scrollbar-width: none;
 }
 .inv-cat-pills::-webkit-scrollbar {
   display: none;
@@ -112,7 +111,7 @@ body.dark .inv-item-title {
 .inv-qty-badge {
   padding: 4px 10px;
   border-radius: 99px;
-  background: color-mix(in srgb, var(--accent, #2f6b5e) 12%, transparent);
+  background: rgba(47, 107, 94, 0.12);
   color: var(--accent, #2f6b5e);
   font-size: 0.76rem;
   font-weight: 800;
