@@ -190,3 +190,50 @@ body.dark .inv-qty-badge {
   margin-bottom: 32px !important;
 }
 
+/* 9. Clean Inline-Style Replacements for Login & Staff Modals */
+.login-topbar-actions {
+  display: flex;
+  gap: 8px;
+}
+.login-remember-lbl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.login-cloud-badge {
+  color: var(--accent, #2f6b5e);
+  font-weight: 700;
+}
+.invite-code-lbl {
+  font-weight: 700;
+}
+.invite-code-in {
+  text-align: center;
+  font-weight: 800;
+  letter-spacing: 2px;
+  font-size: 1.15rem;
+  margin-top: 6px;
+}
+.invite-submit-btn {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 8px;
+}
+.invite-cancel-btn,
+.st-copy-invite-btn {
+  width: 100%;
+  margin-top: 6px;
+}
+.st-invite-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.prof-sheet-top {
+  margin-bottom: 10px;
+}
+.prof-sheet-title {
+  margin: 0;
+}
+

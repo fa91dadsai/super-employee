@@ -3,7 +3,6 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#1d2733" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Super Employee" />
@@ -11254,6 +11253,53 @@ body.dark .inv-qty-badge {
   margin-bottom: 32px !important;
 }
 
+/* 9. Clean Inline-Style Replacements for Login & Staff Modals */
+.login-topbar-actions {
+  display: flex;
+  gap: 8px;
+}
+.login-remember-lbl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.login-cloud-badge {
+  color: var(--accent, #2f6b5e);
+  font-weight: 700;
+}
+.invite-code-lbl {
+  font-weight: 700;
+}
+.invite-code-in {
+  text-align: center;
+  font-weight: 800;
+  letter-spacing: 2px;
+  font-size: 1.15rem;
+  margin-top: 6px;
+}
+.invite-submit-btn {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 8px;
+}
+.invite-cancel-btn,
+.st-copy-invite-btn {
+  width: 100%;
+  margin-top: 6px;
+}
+.st-invite-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.prof-sheet-top {
+  margin-bottom: 10px;
+}
+.prof-sheet-title {
+  margin: 0;
+}
+
 
 </style>
   </head>
@@ -11262,7 +11308,7 @@ body.dark .inv-qty-badge {
       <div class="login-shell">
         <div class="login-topbar">
           <span class="login-brand-pill">🌿 Oasis ERP · FOH</span>
-          <div style="display:flex;gap:8px;">
+          <div class="login-topbar-actions">
             <button type="button" id="loginThemeBtn" class="ib" aria-label="Toggle theme">🌙</button>
             <button type="button" id="loginLangBtn" class="ib">ع</button>
           </div>
@@ -11277,7 +11323,7 @@ body.dark .inv-qty-badge {
           <form id="loginForm" novalidate>
             <label class="login-field">
               <span id="loginUserLbl">Username</span>
-              <input id="loginUser" class="in" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="e.g. fadi, ali, sara" required />
+              <input id="loginUser" class="in" type="text" autocomplete="username" spellcheck="false" placeholder="e.g. fadi, ali, sara" required />
             </label>
             <label class="login-field">
               <span id="loginPassLbl">Password</span>
@@ -11287,11 +11333,11 @@ body.dark .inv-qty-badge {
               </div>
             </label>
             <div class="login-remember">
-              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+              <label class="login-remember-lbl">
                 <input type="checkbox" id="loginRemember" checked />
                 <span id="loginRememberLbl">Keep me signed in on this phone</span>
               </label>
-              <small id="loginCloudBadge" style="color:var(--accent);font-weight:700;">⚡ Supabase ERP</small>
+              <small id="loginCloudBadge" class="login-cloud-badge">⚡ Supabase ERP</small>
             </div>
             <button type="submit" id="loginSubmitBtn" class="btn primary login-submit">Sign In</button>
           </form>
@@ -11303,11 +11349,11 @@ body.dark .inv-qty-badge {
           </button>
           <div id="inviteCodeBox" class="invite-code-form" hidden>
             <label class="login-field">
-              <span id="inviteCodeLbl" style="font-weight:700;">🔑 أدخل كود التفعيل الممنوح لك من الإدارة:</span>
-              <input id="inviteCodeIn" class="in" type="text" autocapitalize="characters" spellcheck="false" placeholder="e.g. CEEN-3003" style="text-align:center;font-weight:800;letter-spacing:2px;font-size:1.15rem;margin-top:6px;" />
+              <span id="inviteCodeLbl" class="invite-code-lbl">🔑 أدخل كود التفعيل الممنوح لك من الإدارة:</span>
+              <input id="inviteCodeIn" class="in invite-code-in" type="text" spellcheck="false" placeholder="e.g. CEEN-3003" />
             </label>
-            <button type="button" id="inviteSubmitBtn" class="btn primary" style="width:100%;min-height:44px;margin-top:8px;">🚀 تفعيل الحساب والدخول للبروفايل</button>
-            <button type="button" id="cancelInviteCodeBtn" class="btn small" style="width:100%;margin-top:6px;">العودة للدخول بكلمة المرور</button>
+            <button type="button" id="inviteSubmitBtn" class="btn primary invite-submit-btn">🚀 تفعيل الحساب والدخول للبروفايل</button>
+            <button type="button" id="cancelInviteCodeBtn" class="btn small invite-cancel-btn">العودة للدخول بكلمة المرور</button>
           </div>
           <div class="login-demo-box">
             <p class="login-demo-title">
@@ -11321,10 +11367,10 @@ body.dark .inv-qty-badge {
     </section>
 
     <aside class="preview-toolbar">
-      <div class="preview-mode"><span id="previewModeLabel"></span><button type="button" id="previewToggle" class="btn"></button></div>
-      <label id="previewPersonRow" hidden><span data-i18n="previewAs"></span><select id="previewPerson" class="in"></select></label>
+      <div class="preview-mode"><span id="previewModeLabel"></span><button type="button" id="previewToggle" class="btn" title="Switch view">Switch</button></div>
+      <label id="previewPersonRow" hidden><span data-i18n="previewAs">Preview as</span><select id="previewPerson" class="in" aria-label="Preview as employee"></select></label>
       <p id="previewHelp" hidden data-i18n="previewEmployeeHelp"></p>
-      <button type="button" id="previewCountDemo" class="btn" hidden></button>
+      <button type="button" id="previewCountDemo" class="btn" title="Try a sample count" hidden>Sample count</button>
       <p id="previewDemoNote" hidden data-i18n="countDemoNote"></p>
     </aside>
     <div id="sidebarBackdrop" class="sb-backdrop" hidden></div>
@@ -11362,7 +11408,7 @@ body.dark .inv-qty-badge {
             <span id="restaurantBadge" class="rest-badge">🍽 CEEN</span>
             <span id="cloudRealtimeIndicator" class="realtime-status-pill connecting" title="Supabase Realtime Live Sync"><span class="realtime-dot"></span> ⚡ Live</span>
           </div>
-          <button type="button" id="metaBtn" class="meta-pill run-only" hidden></button>
+          <button type="button" id="metaBtn" class="meta-pill run-only" title="Shift details" hidden>Details</button>
           <span class="autosave edit-only" data-i18n="autosave" hidden></span>
         </div>
         <div class="top-right-actions">
@@ -11382,19 +11428,19 @@ body.dark .inv-qty-badge {
       <div id="healthAlertBanner" class="health-banner" hidden></div>
       <p class="banner" id="banner" role="status" hidden></p>
       <nav class="tabs run-only" aria-label="Views" hidden>
-        <button type="button" data-view="opening"><span data-i18n="tabOpening"></span><b id="badgeOpening"></b></button>
-        <button type="button" data-view="mine"><span data-i18n="tabMine"></span><b id="badgeMine"></b></button>
+        <button type="button" data-view="opening"><span data-i18n="tabOpening">Opening</span><b id="badgeOpening"></b></button>
+        <button type="button" data-view="mine"><span data-i18n="tabMine">My Tasks</span><b id="badgeMine"></b></button>
         <button type="button" data-view="orders" id="ordersTab"><span id="ordersTabLbl">🛒 Orders</span><b id="badgeOrders" hidden>0</b></button>
-        <button type="button" data-view="inv" id="invTab"><span data-i18n="tabInv"></span></button>
+        <button type="button" data-view="inv" id="invTab"><span data-i18n="tabInv">Inventory</span></button>
         <button type="button" data-view="tips" id="tipsTab"><span>💰 Tips</span></button>
         <button type="button" data-view="dashboard" id="dashTab"><span>📊 Dashboard</span></button>
         <button type="button" data-view="profile" id="profTab"><span>👤 Profile</span></button>
         <button type="button" data-view="settings" id="setTab"><span>⚙️ Settings</span></button>
       </nav>
       <nav class="tabs edit-only" aria-label="Edit">
-        <button type="button" data-etab="list" data-i18n="tabChecklist"></button>
-        <button type="button" data-etab="sched" data-i18n="tabScheduled"></button>
-        <button type="button" data-etab="roles" data-i18n="tabRoles"></button>
+        <button type="button" data-etab="list" data-i18n="tabChecklist">Checklist</button>
+        <button type="button" data-etab="sched" data-i18n="tabScheduled">Scheduled</button>
+        <button type="button" data-etab="roles" data-i18n="tabRoles">Positions &amp; staff</button>
       </nav>
       <nav class="chips run-only" id="chips"></nav>
     </header>
@@ -11402,11 +11448,11 @@ body.dark .inv-qty-badge {
 
     <main id="appMain">
       <section class="meta-panel run-only" id="metaPanel" hidden>
-        <label><span data-i18n="date"></span><input type="date" id="date" /></label>
-        <label><span data-i18n="day"></span><output id="day"></output></label>
-        <label><span data-i18n="supervisor"></span><input id="supervisor" autocomplete="off" maxlength="300" /></label>
-        <label><span data-i18n="captain"></span><input id="captain" autocomplete="off" maxlength="300" /></label>
-        <label class="wide"><span data-i18n="assistant"></span><input id="assistant" autocomplete="off" maxlength="300" /></label>
+        <label><span data-i18n="date">Date</span><input type="date" id="date" /></label>
+        <label><span data-i18n="day">Day</span><output id="day"></output></label>
+        <label><span data-i18n="supervisor">Supervisor</span><input id="supervisor" autocomplete="off" maxlength="300" /></label>
+        <label><span data-i18n="captain">Captain</span><input id="captain" autocomplete="off" maxlength="300" /></label>
+        <label class="wide"><span data-i18n="assistant">Assistant</span><input id="assistant" autocomplete="off" maxlength="300" /></label>
       </section>
 
       <div id="checklistGovBar" class="gov-bar run-only" hidden></div>
@@ -11428,8 +11474,8 @@ body.dark .inv-qty-badge {
       <div class="filter run-only">
         <span id="doneOf"></span>
         <div class="seg" role="group">
-          <button type="button" data-filter="all" data-i18n="all"></button>
-          <button type="button" data-filter="left" data-i18n="remaining"></button>
+          <button type="button" data-filter="all" data-i18n="all">All</button>
+          <button type="button" data-filter="left" data-i18n="remaining">Remaining</button>
         </div>
       </div>
 
@@ -11437,14 +11483,14 @@ body.dark .inv-qty-badge {
       <section id="signoffBox" class="signoff-card run-only" hidden></section>
 
       <div class="tools edit-only">
-        <button type="button" id="addSectionBtn" class="btn" data-i18n="addSection"></button>
-        <button type="button" id="exportBtn" class="btn" data-i18n="export"></button>
-        <label class="btn"><span data-i18n="import"></span><input type="file" id="importInput" accept="application/json,.json" hidden /></label>
-        <button type="button" id="resetTplBtn" class="btn danger" data-i18n="restore"></button>
+        <button type="button" id="addSectionBtn" class="btn" data-i18n="addSection">+ Add section</button>
+        <button type="button" id="exportBtn" class="btn" data-i18n="export">Export JSON</button>
+        <label class="btn"><span data-i18n="import">Import JSON</span><input type="file" id="importInput" accept="application/json,.json" hidden /></label>
+        <button type="button" id="resetTplBtn" class="btn danger" data-i18n="restore">Restore default</button>
       </div>
       <div class="tools run-only">
-        <button type="button" id="printBtn" class="btn" data-i18n="print"></button>
-        <button type="button" id="clearDayBtn" class="btn danger" data-i18n="clearTicks"></button>
+        <button type="button" id="printBtn" class="btn" data-i18n="print">Print / PDF</button>
+        <button type="button" id="clearDayBtn" class="btn danger" data-i18n="clearTicks">Clear today's ticks</button>
       </div>
 
       <div class="signatures print-only">
@@ -11453,7 +11499,7 @@ body.dark .inv-qty-badge {
       </div>
     </main>
     <aside class="quick-report run-only">
-      <button type="button" class="btn" id="quickReportBtn" data-act="break-open" data-i18n="quickDamageReport"></button>
+      <button type="button" class="btn" id="quickReportBtn" data-act="break-open" data-i18n="quickDamageReport">+ Report Damage / Repair</button>
     </aside>
 
     <dialog id="sheet" class="sheet">
@@ -11461,23 +11507,23 @@ body.dark .inv-qty-badge {
         <div class="grab" aria-hidden="true"></div>
         <h2 id="sheetTitle"></h2>
         <p class="sub-of" id="subOf" hidden></p>
-        <label><span data-i18n="taskEn"></span><textarea id="dlgText" class="in" rows="2" maxlength="300" dir="ltr" lang="en"></textarea></label>
-        <label><span data-i18n="taskAr"></span><textarea id="dlgTextAr" class="in" rows="2" maxlength="300" dir="rtl" lang="ar"></textarea></label>
+        <label><span data-i18n="taskEn">Task (English)</span><textarea id="dlgText" class="in" rows="2" maxlength="300" dir="ltr" lang="en"></textarea></label>
+        <label><span data-i18n="taskAr">Task (Arabic)</span><textarea id="dlgTextAr" class="in" rows="2" maxlength="300" dir="rtl" lang="ar"></textarea></label>
         <div class="two">
-          <label id="sectionField"><span data-i18n="section"></span><select id="dlgSection" class="in"></select></label>
-          <label class="due-field"><span data-i18n="dueBy"></span><input type="time" id="dlgDue" class="in" /></label>
+          <label id="sectionField"><span data-i18n="section">Section</span><select id="dlgSection" class="in"></select></label>
+          <label class="due-field"><span data-i18n="dueBy">Due by</span><input type="time" id="dlgDue" class="in" /></label>
         </div>
         <div id="dlgReminder"></div>
-        <label><span data-i18n="responsible"></span><select id="dlgRole" class="in"></select></label>
+        <label><span data-i18n="responsible">Responsible</span><select id="dlgRole" class="in"></select></label>
         <div id="subsBlock">
-          <p class="lb"><span data-i18n="subItems"></span><span id="subCount"></span></p>
+          <p class="lb"><span data-i18n="subItems">Sub-items</span><span id="subCount"></span></p>
           <ol class="sub-list" id="subList"></ol>
-          <button type="button" id="addSubBtn" class="add-sub" data-i18n="addSub"></button>
+          <button type="button" id="addSubBtn" class="add-sub" data-i18n="addSub">+ Add sub-item</button>
         </div>
         <div class="sheet-actions">
-          <button type="button" id="dlgDelete" class="btn danger" data-i18n="delete"></button>
-          <button value="cancel" class="btn" formnovalidate data-i18n="cancel"></button>
-          <button value="save" class="btn primary" data-i18n="save"></button>
+          <button type="button" id="dlgDelete" class="btn danger" data-i18n="delete">Delete</button>
+          <button type="submit" value="cancel" class="btn" formnovalidate data-i18n="cancel">Cancel</button>
+          <button type="submit" value="save" class="btn primary" data-i18n="save">Save</button>
         </div>
       </form>
     </dialog>
@@ -11488,16 +11534,16 @@ body.dark .inv-qty-badge {
         <h2 id="taskTitle"></h2>
         <div class="icon-row">
           <select id="tkIcon" class="in icon-sel" aria-label="Icon"></select>
-          <label><span data-i18n="taskEn"></span><input id="tkText" class="in" maxlength="300" dir="ltr" lang="en" /></label>
+          <label><span data-i18n="taskEn">Task (English)</span><input id="tkText" class="in" maxlength="300" dir="ltr" lang="en" /></label>
         </div>
-        <label><span data-i18n="taskAr"></span><input id="tkTextAr" class="in" maxlength="300" dir="rtl" lang="ar" /></label>
+        <label><span data-i18n="taskAr">Task (Arabic)</span><input id="tkTextAr" class="in" maxlength="300" dir="rtl" lang="ar" /></label>
         <p class="lb" data-i18n="repeat"></p>
         <div class="seg wide" id="tkType">
-          <button type="button" data-rt="weekly" data-i18n="weekly"></button>
-          <button type="button" data-rt="interval" data-i18n="interval"></button>
-          <button type="button" data-rt="once" data-i18n="once"></button>
+          <button type="button" data-rt="weekly" data-i18n="weekly">Weekly</button>
+          <button type="button" data-rt="interval" data-i18n="interval">Every N days</button>
+          <button type="button" data-rt="once" data-i18n="once">One-time</button>
         </div>
-        <label id="tkOnceRow"><span data-i18n="onDate"></span><input type="date" id="tkOnce" class="in" /></label>
+        <label id="tkOnceRow"><span data-i18n="onDate">On date</span><input type="date" id="tkOnce" class="in" /></label>
         <div class="days" id="tkDays"></div>
         <div class="two" id="tkIntervalRow">
           <div class="stepper">
@@ -11507,24 +11553,24 @@ body.dark .inv-qty-badge {
             <button type="button" id="tkPlus" aria-label="+">+</button>
             <span data-i18n="daysWord"></span>
           </div>
-          <label><span data-i18n="startOn"></span><input type="date" id="tkStart" class="in" /></label>
+          <label><span data-i18n="startOn">Start on</span><input type="date" id="tkStart" class="in" /></label>
         </div>
         <div class="two">
-          <label><span data-i18n="time"></span><input type="time" id="tkTime" class="in" /></label>
-          <label><span data-i18n="lateAfter"></span><select id="tkLate" class="in"></select></label>
+          <label><span data-i18n="time">Time</span><input type="time" id="tkTime" class="in" /></label>
+          <label><span data-i18n="lateAfter">Late after</span><select id="tkLate" class="in"></select></label>
         </div>
         <div id="tkReminder"></div>
         <div class="two">
-          <label><span data-i18n="responsible"></span><select id="tkRole" class="in"></select></label>
-          <label><span data-i18n="person"></span><input id="tkPerson" class="in" maxlength="60" /></label>
+          <label><span data-i18n="responsible">Responsible</span><select id="tkRole" class="in"></select></label>
+          <label><span data-i18n="person">Person</span><input id="tkPerson" class="in" maxlength="60" /></label>
         </div>
-        <label class="tog"><span data-i18n="carry"></span><input type="checkbox" id="tkCarry" class="sw" /></label>
-        <label class="tog"><span data-i18n="paused"></span><input type="checkbox" id="tkPaused" class="sw" /></label>
+        <label class="tog"><span data-i18n="carry">Carry over</span><input type="checkbox" id="tkCarry" class="sw" /></label>
+        <label class="tog"><span data-i18n="paused">Paused</span><input type="checkbox" id="tkPaused" class="sw" /></label>
         <p class="next" id="tkNext"></p>
         <div class="sheet-actions">
-          <button type="button" id="tkDelete" class="btn danger" data-i18n="delete"></button>
-          <button value="cancel" class="btn" formnovalidate data-i18n="cancel"></button>
-          <button value="save" class="btn primary" data-i18n="save"></button>
+          <button type="button" id="tkDelete" class="btn danger" data-i18n="delete">Delete</button>
+          <button type="submit" value="cancel" class="btn" formnovalidate data-i18n="cancel">Cancel</button>
+          <button type="submit" value="save" class="btn primary" data-i18n="save">Save</button>
         </div>
       </form>
     </dialog>
@@ -11534,11 +11580,11 @@ body.dark .inv-qty-badge {
         <div class="grab" aria-hidden="true"></div>
         <h2 id="pickTitle"></h2>
         <p class="sub-of" id="pickMsg" hidden></p>
-        <select id="pickSelect" class="in"></select>
-        <label id="pickNameRow"><span data-i18n="yourName"></span><input id="pickName" class="in" maxlength="60" /></label>
+        <select id="pickSelect" class="in" aria-label="Select option"></select>
+        <label id="pickNameRow"><span data-i18n="yourName">Your name</span><input id="pickName" class="in" maxlength="60" /></label>
         <div class="sheet-actions">
-          <button value="cancel" class="btn" formnovalidate data-i18n="cancel"></button>
-          <button value="ok" class="btn primary" data-i18n="ok"></button>
+          <button type="submit" value="cancel" class="btn" formnovalidate data-i18n="cancel">Cancel</button>
+          <button type="submit" value="ok" class="btn primary" data-i18n="ok">OK</button>
         </div>
       </form>
     </dialog>
@@ -11555,28 +11601,28 @@ body.dark .inv-qty-badge {
       <form method="dialog" id="breakForm">
         <header class="report-head">
           <div><p class="report-eyebrow" data-i18n="equipmentReport"></p><h2 data-i18n="breakTitle"></h2></div>
-          <button value="cancel" class="report-close" formnovalidate aria-label="Close">✕</button>
+          <button type="submit" value="cancel" class="report-close" formnovalidate aria-label="Close">✕</button>
         </header>
         <div class="report-steps" aria-hidden="true"><span id="brStep1" data-i18n="reportStep1"></span><span id="brStep2" data-i18n="reportStep2"></span></div>
         <select id="brItem" hidden aria-hidden="true" tabindex="-1"></select>
         <section id="brPicker">
-          <div class="report-search"><span aria-hidden="true">⌕</span><input id="brSearch" type="search" autocomplete="off" maxlength="100" data-i18n-placeholder="searchExample" /><button type="button" id="brClearSearch" hidden aria-label="Clear search">✕</button></div>
-          <div class="report-browse-head"><button type="button" id="brBack" class="report-back" hidden></button><div><h3 id="brBrowseTitle"></h3><p id="brBrowseHint"></p></div></div>
+          <div class="report-search"><span aria-hidden="true">⌕</span><input id="brSearch" type="search" autocomplete="off" maxlength="100" aria-label="Search item" data-i18n-placeholder="searchExample" /><button type="button" id="brClearSearch" hidden aria-label="Clear search">✕</button></div>
+          <div class="report-browse-head"><button type="button" id="brBack" class="report-back" hidden>Back</button><div><h3 id="brBrowseTitle"></h3><p id="brBrowseHint"></p></div></div>
           <div id="brCategories" class="report-category-grid"></div>
           <p id="brMatches" class="report-result-count" role="status" aria-live="polite"></p>
           <div id="brResults" class="report-results"></div>
         </section>
         <section id="brDetails" hidden>
           <p id="brLinkInfo" class="count-info" hidden></p>
-          <div class="report-selected"><div id="brSelectedImage" class="report-selected-image"></div><div class="report-selected-text"><strong id="brSelected"></strong><small id="brSelectedMeta"></small></div><button type="button" id="brChoose" class="report-change" data-i18n="changeItem"></button></div>
+          <div class="report-selected"><div id="brSelectedImage" class="report-selected-image"></div><div class="report-selected-text"><strong id="brSelected"></strong><small id="brSelectedMeta"></small></div><button type="button" id="brChoose" class="report-change" data-i18n="changeItem">Change item</button></div>
           <select id="brCond" hidden aria-hidden="true" tabindex="-1"><option value=""></option><option value="repair"></option><option value="writeoff"></option></select>
           <h3 class="report-field-title" data-i18n="whatHappened"></h3>
           <div id="brConditionCards" class="report-condition-grid"></div>
-          <div class="report-quantity"><div><h3 data-i18n="howMany"></h3><p data-i18n="piecesAffected"></p></div><div class="report-stepper"><button type="button" id="brMinus" aria-label="Decrease quantity">−</button><input type="number" id="brQty" min="1" max="9999" step="1" inputmode="numeric" /><button type="button" id="brPlus" aria-label="Increase quantity">+</button></div></div>
-          <details class="report-extra" id="brExtra"><summary data-i18n="extraDetails"></summary><label><span data-i18n="note"></span><textarea id="brNote" class="in" rows="2" maxlength="200"></textarea></label><label class="camera"><span id="brPhotoLbl"></span><input type="file" id="brPhoto" accept="image/*" capture="environment" hidden /></label></details>
+          <div class="report-quantity"><div><h3 data-i18n="howMany"></h3><p data-i18n="piecesAffected"></p></div><div class="report-stepper"><button type="button" id="brMinus" aria-label="Decrease quantity">−</button><input type="number" id="brQty" min="1" max="9999" step="1" inputmode="numeric" aria-label="Quantity" /><button type="button" id="brPlus" aria-label="Increase quantity">+</button></div></div>
+          <details class="report-extra" id="brExtra"><summary data-i18n="extraDetails"></summary><label><span data-i18n="note">Note</span><textarea id="brNote" class="in" rows="2" maxlength="200"></textarea></label><label class="camera"><span id="brPhotoLbl">Add photo</span><input type="file" id="brPhoto" accept="image/*" hidden /></label></details>
           <p class="report-local-note" data-i18n="reportReviewNote"></p>
         </section>
-        <footer class="report-footer"><button value="cancel" class="btn" formnovalidate data-i18n="cancel"></button><button type="button" id="brReturnDetails" class="btn primary" hidden data-i18n="backToReport"></button><button id="brSave" value="save" class="btn primary" data-i18n="saveReport" hidden disabled></button></footer>
+        <footer class="report-footer"><button type="submit" value="cancel" class="btn" formnovalidate data-i18n="cancel">Cancel</button><button type="button" id="brReturnDetails" class="btn primary" hidden data-i18n="backToReport">Back to report</button><button type="submit" id="brSave" value="save" class="btn primary" data-i18n="saveReport" hidden disabled>Send report</button></footer>
       </form>
     </dialog>
 
@@ -11585,32 +11631,32 @@ body.dark .inv-qty-badge {
         <div class="grab" aria-hidden="true"></div>
         <h2 id="staffTitle"></h2>
         <div class="two">
-          <label><span data-i18n="staffName"></span><input id="stName" class="in" maxlength="60" placeholder="e.g. Sara Nabeel Khoury" required /></label>
+          <label><span data-i18n="staffName">Name</span><input id="stName" class="in" maxlength="60" placeholder="e.g. Sara Nabeel Khoury" required /></label>
           <label><span id="stNickLbl">🏷️ الاسم المستعار / Floor Nickname (Tip &amp; Schedule)</span><input id="stNickname" class="in" maxlength="30" placeholder="e.g. Sara, Simo, Leo" /></label>
         </div>
         <div class="two">
-          <label><span data-i18n="position"></span><select id="stRole" class="in"></select></label>
+          <label><span data-i18n="position">Position</span><select id="stRole" class="in"></select></label>
           <label><span id="stPhoneLbl">📱 رقم الهاتف والواتساب / Phone</span><input type="tel" id="stPhone" class="in" placeholder="+962 7 9xxx xxxx" /></label>
         </div>
         <label><span id="stEmailLbl">📧 البريد الإلكتروني / Email</span><input type="email" id="stEmail" class="in" placeholder="employee@ceenlounge.com" /></label>
         <div id="stInviteBox" class="st-invite-box">
-          <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div class="st-invite-row">
             <span>🔑 <b>كود التفعيل للموظف (Activation Code):</b></span>
             <code id="stInviteCodeDisplay" class="st-code-pill">CEEN-XXXX</code>
           </div>
-          <button type="button" id="stCopyInviteBtn" class="btn small" style="margin-top:6px;width:100%;">📋 نسخ كود التفعيل لإرساله للموظف عبر واتساب</button>
+          <button type="button" id="stCopyInviteBtn" class="btn small st-copy-invite-btn">📋 نسخ كود التفعيل لإرساله للموظف عبر واتساب</button>
         </div>
         <div class="two">
           <label><span id="stHealthNoLbl">🪪 رقم الشهادة الصحية / Health Cert #</span><input id="stHealthNo" class="in" maxlength="60" placeholder="HC-2026-..." /></label>
-          <label><span id="stHealthExpLbl">📅 تاريخ انتهاء الشهادة / Expiry Date</span><input type="date" id="stHealthExp" class="in" /></label>
+          <label><span id="stHealthExpLbl">📅 تاريخ انتهاء الشهادة / Expiry Date</span><input id="stHealthExp" type="date" class="in" /></label>
         </div>
         <label class="tog"><span id="stCanEditLbl">✎ السماح للموظف بتعديل الشيك ليست (Allow Checklist Edit)</span><input type="checkbox" id="stCanEdit" class="sw" /></label>
-        <label class="tog"><span data-i18n="takesPart"></span><input type="checkbox" id="stInv" class="sw" /></label>
-        <label class="tog"><span data-i18n="activeLbl"></span><input type="checkbox" id="stActive" class="sw" /></label>
+        <label class="tog"><span data-i18n="takesPart">Takes part in inventory</span><input type="checkbox" id="stInv" class="sw" /></label>
+        <label class="tog"><span data-i18n="activeLbl">Active</span><input type="checkbox" id="stActive" class="sw" /></label>
         <div class="sheet-actions">
-          <button type="button" id="stDelete" class="btn danger" data-i18n="delete"></button>
-          <button value="cancel" class="btn" formnovalidate data-i18n="cancel"></button>
-          <button value="save" class="btn primary" data-i18n="save"></button>
+          <button type="button" id="stDelete" class="btn danger" data-i18n="delete">Delete</button>
+          <button type="submit" value="cancel" class="btn" formnovalidate data-i18n="cancel">Cancel</button>
+          <button type="submit" value="save" class="btn primary" data-i18n="save">Save</button>
         </div>
       </form>
     </dialog>
@@ -11621,13 +11667,13 @@ body.dark .inv-qty-badge {
         <h2 id="icTitle"></h2>
         <div class="icon-row">
           <select id="icIcon" class="in icon-sel" aria-label="Icon"></select>
-          <label><span data-i18n="nameEn"></span><input id="icName" class="in" maxlength="120" dir="ltr" /></label>
+          <label><span data-i18n="nameEn">Name (English)</span><input id="icName" class="in" maxlength="120" dir="ltr" /></label>
         </div>
-        <label><span data-i18n="nameAr"></span><input id="icNameAr" class="in" maxlength="120" dir="rtl" /></label>
+        <label><span data-i18n="nameAr">Name (Arabic)</span><input id="icNameAr" class="in" maxlength="120" dir="rtl" /></label>
         <div class="sheet-actions">
-          <button type="button" id="icDelete" class="btn danger" data-i18n="delete"></button>
-          <button value="cancel" class="btn" formnovalidate data-i18n="cancel"></button>
-          <button value="save" class="btn primary" data-i18n="save"></button>
+          <button type="button" id="icDelete" class="btn danger" data-i18n="delete">Delete</button>
+          <button type="submit" value="cancel" class="btn" formnovalidate data-i18n="cancel">Cancel</button>
+          <button type="submit" value="save" class="btn primary" data-i18n="save">Save</button>
         </div>
       </form>
     </dialog>
@@ -11637,22 +11683,22 @@ body.dark .inv-qty-badge {
         <div class="grab" aria-hidden="true"></div>
         <h2 id="iiTitle"></h2>
         <div class="two">
-          <label><span data-i18n="nameEn"></span><input id="iiName" class="in" maxlength="120" dir="ltr" /></label>
-          <label><span data-i18n="nameAr"></span><input id="iiNameAr" class="in" maxlength="120" dir="rtl" /></label>
+          <label><span data-i18n="nameEn">Name (English)</span><input id="iiName" class="in" maxlength="120" dir="ltr" /></label>
+          <label><span data-i18n="nameAr">Name (Arabic)</span><input id="iiNameAr" class="in" maxlength="120" dir="rtl" /></label>
         </div>
         <div class="two">
-          <label><span data-i18n="location"></span><input id="iiLocation" class="in" maxlength="120" /></label>
-          <label><span data-i18n="unit"></span><select id="iiUnit" class="in"></select></label>
+          <label><span data-i18n="location">Location</span><input id="iiLocation" class="in" maxlength="120" /></label>
+          <label><span data-i18n="unit">Unit</span><select id="iiUnit" class="in"></select></label>
         </div>
         <div class="two">
-          <label><span data-i18n="hintLbl"></span><input id="iiHint" class="in" maxlength="200" dir="ltr" /></label>
-          <label><span data-i18n="hintArLbl"></span><input id="iiHintAr" class="in" maxlength="200" dir="rtl" /></label>
+          <label><span data-i18n="hintLbl">Hint (English)</span><input id="iiHint" class="in" maxlength="200" dir="ltr" /></label>
+          <label><span data-i18n="hintArLbl">Hint (Arabic)</span><input id="iiHintAr" class="in" maxlength="200" dir="rtl" /></label>
         </div>
         <section class="damage-setting">
           <h3 data-i18n="repairQuestion"></h3>
-          <select id="iiRepair" class="in">
-            <option value="no" data-i18n="repairNo"></option>
-            <option value="yes" data-i18n="repairYes"></option>
+          <select id="iiRepair" class="in" aria-label="Can it be repaired">
+            <option value="no" data-i18n="repairNo">No</option>
+            <option value="yes" data-i18n="repairYes">Yes</option>
           </select>
           <p id="iiCountPreview" class="setting-note" role="status"></p>
           <p class="setting-note" data-i18n="damageSeparate"></p>
@@ -11664,27 +11710,26 @@ body.dark .inv-qty-badge {
         <p class="lb" data-i18n="refPhoto"></p>
         <div class="photo-row">
           <img id="iiPhotoImg" class="photo-prev" alt="" hidden />
-          <label class="camera"><span data-i18n="addPhoto"></span><input type="file" id="iiPhotoFile" accept="image/*" hidden /></label>
-          <button type="button" id="iiPhotoRemove" class="btn danger" data-i18n="removePhoto" hidden></button>
+          <label class="camera"><span data-i18n="addPhoto">Add photo</span><input type="file" id="iiPhotoFile" accept="image/*" hidden /></label>
+          <button type="button" id="iiPhotoRemove" class="btn danger" data-i18n="removePhoto" hidden>Remove photo</button>
         </div>
         <div class="sheet-actions">
-          <button type="button" id="iiDelete" class="btn danger" data-i18n="delete"></button>
-          <button value="cancel" class="btn" formnovalidate data-i18n="cancel"></button>
-          <button value="save" class="btn primary" data-i18n="save"></button>
+          <button type="button" id="iiDelete" class="btn danger" data-i18n="delete">Delete</button>
+          <button type="submit" value="cancel" class="btn" formnovalidate data-i18n="cancel">Cancel</button>
+          <button type="submit" value="save" class="btn primary" data-i18n="save">Save</button>
         </div>
       </form>
     </dialog>
 
     <div id="toast" class="toast" role="status" hidden>
       <span id="toastMsg"></span>
-      <button type="button" id="toastUndo" data-i18n="undo"></button>
+      <button type="button" id="toastUndo" data-i18n="undo">Undo</button>
     </div>
 
-    
     <dialog id="profileSheet" class="sheet">
       <div class="grab" aria-hidden="true"></div>
-      <div class="count-top" style="margin-bottom:10px;">
-        <h2 id="profSheetTitle" style="margin:0;">Employee Profile</h2>
+      <div class="count-top prof-sheet-top">
+        <h2 id="profSheetTitle" class="prof-sheet-title">Employee Profile</h2>
         <button type="button" id="profCloseBtn" class="ib-close" aria-label="Close">✕</button>
       </div>
       <div id="profSheetBody"></div>
